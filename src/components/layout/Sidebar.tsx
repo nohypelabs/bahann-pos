@@ -192,9 +192,12 @@ export function Sidebar() {
       <div className={`border-b-2 border-gray-200 dark:border-gray-800 flex items-center justify-between ${isCollapsed ? 'p-4' : 'p-6'} transition-all duration-300`}>
         {!isCollapsed ? (
           <>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Laku POS</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Warehouse & Point of Sale</p>
+            <div className="flex items-center gap-3">
+              <img src="/logo.svg" alt="Laku POS" className="w-9 h-9 rounded-xl" />
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Laku POS</h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Point of Sale</p>
+              </div>
             </div>
             <button
               onClick={toggleCollapse}

@@ -71,7 +71,7 @@ export default function LandingPage() {
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center gap-2">
               <span className="text-3xl">🏷️</span>
-              <span className="text-2xl font-bold text-blue-600">Laku POS</span>
+              <img src="/logo.svg" alt="Laku POS" className="w-8 h-8 rounded-lg" /><span className="text-2xl font-bold text-blue-600">Laku POS</span>
             </div>
             <nav className="hidden md:flex gap-8">
               <a href="#features" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors">Fitur</a>

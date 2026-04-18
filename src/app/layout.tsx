@@ -19,9 +19,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Laku POS - Warehouse & Point of Sale",
-  description: "Modern warehouse and POS management system by Laku POS",
+  title: "Laku POS - Point of Sale untuk Warung",
+  description: "Aplikasi kasir modern untuk warung dan toko kecil Indonesia",
   manifest: "/manifest.json",
+  icons: { icon: "/logo.svg", apple: "/logo.svg" },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

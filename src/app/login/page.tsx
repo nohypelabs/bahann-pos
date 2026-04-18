@@ -67,6 +67,7 @@ function LoginContent() {
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-3"><img src="/logo.svg" alt="Laku POS" className="w-16 h-16 rounded-2xl shadow-md" /></div>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">Laku POS</h1>
           <p className="text-gray-600 dark:text-gray-400">Warehouse & Point of Sale System</p>
         </div>
