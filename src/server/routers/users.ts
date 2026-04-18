@@ -9,6 +9,7 @@ import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
 import { TRPCError } from '@trpc/server'
 import bcrypt from 'bcryptjs'
+import { getLimits, isUnlimited } from '@/lib/plans'
 
 export const usersRouter = router({
   /**
@@ -61,6 +62,37 @@ export const usersRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('plan')
+        .eq('id', ctx.userId)
+        .single()
+
+      const limits = getLimits(userData?.plan ?? 'free')
+
+      if (!isUnlimited(limits.maxCashiers)) {
+        const { count } = await supabase
+          .from('users')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'user')
+          .in(
+            'outlet_id',
+            (
+              await supabase
+                .from('outlets')
+                .select('id')
+                .eq('owner_id', ctx.userId)
+            ).data?.map((o) => o.id) ?? []
+          )
+
+        if ((count ?? 0) >= limits.maxCashiers) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: `Plan kamu hanya mendukung ${limits.maxCashiers} kasir. Upgrade untuk menambah lebih banyak.`,
+          })
+        }
+      }
+
       // Verify the outlet belongs to this admin
       const { data: outlet } = await supabase
         .from('outlets')

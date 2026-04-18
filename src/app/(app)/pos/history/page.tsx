@@ -11,6 +11,9 @@ export default function SalesHistoryPage() {
   const [selectedOutletId, setSelectedOutletId] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
 
+  const { data: planData } = trpc.auth.getPlan.useQuery()
+  const canExport = planData?.plan !== 'free'
+
   // Fetch outlets for filter
   const { data: outletsResponse } = trpc.outlets.getAll.useQuery()
   const outlets = outletsResponse?.outlets || []
@@ -330,20 +333,28 @@ export default function SalesHistoryPage() {
           <CardTitle>Export Data</CardTitle>
         </CardHeader>
         <CardBody>
-          <div className="flex items-center gap-4">
-            <Button variant="secondary" disabled>
-              📊 Export to CSV
-            </Button>
-            <Button variant="secondary" disabled>
-              📄 Export to PDF
-            </Button>
-            <Button variant="secondary" disabled>
-              📧 Email Report
-            </Button>
-            <p className="text-sm text-gray-500 dark:text-gray-400 ml-auto">
-              Export functionality coming soon
-            </p>
-          </div>
+          {canExport ? (
+            <div className="flex items-center gap-4">
+              <Button variant="secondary" disabled>
+                📊 Export to CSV
+              </Button>
+              <Button variant="secondary" disabled>
+                📄 Export to PDF
+              </Button>
+              <p className="text-sm text-gray-500 dark:text-gray-400 ml-auto">
+                Export functionality coming soon
+              </p>
+            </div>
+          ) : (
+            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
+                🔒 Fitur export tersedia mulai plan <strong>Warung</strong> ke atas.
+              </p>
+              <a href="/settings/subscriptions" className="text-sm text-amber-700 dark:text-amber-300 underline mt-1 inline-block">
+                Upgrade sekarang →
+              </a>
+            </div>
+          )}
         </CardBody>
       </Card>
     </div>

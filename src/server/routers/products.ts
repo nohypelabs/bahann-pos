@@ -1,8 +1,10 @@
 import { z } from 'zod'
+import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure, adminProcedure } from '../trpc'
 import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
 import { getTenantOwnerId, assertProductBelongsToTenant } from '@/server/lib/tenant'
+import { getLimits, isUnlimited } from '@/lib/plans'
 
 export const productsRouter = router({
   /**
@@ -101,6 +103,28 @@ export const productsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('plan')
+        .eq('id', ctx.userId)
+        .single()
+
+      const limits = getLimits(userData?.plan ?? 'free')
+
+      if (!isUnlimited(limits.maxProducts)) {
+        const { count } = await supabase
+          .from('products')
+          .select('*', { count: 'exact', head: true })
+          .eq('owner_id', ctx.userId)
+
+        if ((count ?? 0) >= limits.maxProducts) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: `Plan kamu hanya mendukung ${limits.maxProducts} produk. Upgrade untuk menambah lebih banyak.`,
+          })
+        }
+      }
+
       const { data, error } = await supabase
         .from('products')
         .insert({

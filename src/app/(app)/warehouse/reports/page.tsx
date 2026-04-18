@@ -21,6 +21,9 @@ export default function ReportsPage() {
   const [dateRange, setDateRange] = useState<7 | 14 | 30 | 0>(30)
   const [showExporter, setShowExporter] = useState(false)
 
+  const { data: planData } = trpc.auth.getPlan.useQuery()
+  const canExport = planData?.plan !== 'free'
+
   // Fetch data
   const { data: outletsResponse } = trpc.outlets.getAll.useQuery()
   const outlets = outletsResponse?.outlets || []
@@ -319,15 +322,34 @@ export default function ReportsPage() {
       <Card variant="default" padding="lg">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Export Report</h3>
-          <Button
-            variant="primary"
-            onClick={() => setShowExporter(!showExporter)}
-          >
-            📥 Export Data
-          </Button>
+          {canExport ? (
+            <Button
+              variant="primary"
+              onClick={() => setShowExporter(!showExporter)}
+            >
+              📥 Export Data
+            </Button>
+          ) : (
+            <a href="/settings/subscriptions">
+              <Button variant="secondary">
+                🔒 Upgrade untuk Export
+              </Button>
+            </a>
+          )}
         </div>
 
-        {showExporter && (
+        {!canExport && (
+          <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
+              Fitur export tersedia mulai plan <strong>Warung</strong> ke atas.
+            </p>
+            <a href="/settings/subscriptions" className="text-sm text-amber-700 dark:text-amber-300 underline mt-1 inline-block">
+              Lihat pilihan upgrade →
+            </a>
+          </div>
+        )}
+
+        {canExport && showExporter && (
           <Suspense fallback={<ExportLoadingSkeleton />}>
             <ReportExporter
               data={{
