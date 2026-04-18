@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { PLAN_LIMITS, isUnlimited } from '@/lib/plans'
 
 // Initialize Resend lazily to avoid build-time errors
 let resendInstance: Resend | null = null
@@ -330,13 +331,17 @@ const PLAN_LABEL: Record<string, string> = {
   enterprise: 'Enterprise',
 }
 
-const PLAN_LIMITS_DISPLAY: Record<string, { outlets: string; products: string; cashiers: string }> = {
-  free:         { outlets: '1', products: '50', cashiers: '1' },
-  warung:       { outlets: '2', products: '200', cashiers: '3' },
-  starter:      { outlets: '5', products: '1.000', cashiers: '10' },
-  professional: { outlets: '15', products: '5.000', cashiers: '30' },
-  business:     { outlets: '50', products: 'Tak terbatas', cashiers: '100' },
-  enterprise:   { outlets: 'Tak terbatas', products: 'Tak terbatas', cashiers: 'Tak terbatas' },
+function formatLimit(n: number): string {
+  return isUnlimited(n) ? 'Tak terbatas' : n.toString()
+}
+
+function getPlanDisplay(planId: string) {
+  const limits = PLAN_LIMITS[planId as keyof typeof PLAN_LIMITS] ?? PLAN_LIMITS.free
+  return {
+    outlets: formatLimit(limits.maxOutlets),
+    cashiers: formatLimit(limits.maxCashiers),
+    canExport: limits.canExport,
+  }
 }
 
 export interface SendPlanUpgradeEmailParams {
@@ -350,9 +355,9 @@ export interface SendPlanUpgradeEmailParams {
  * Confirmation email sent to user when their subscription plan is changed
  */
 export async function sendPlanUpgradeEmail({ to, name, oldPlan, newPlan }: SendPlanUpgradeEmailParams) {
-  const isUpgrade = ['free', 'warung', 'starter', 'professional', 'business'].indexOf(oldPlan) <
-                    ['free', 'warung', 'starter', 'professional', 'business', 'enterprise'].indexOf(newPlan)
-  const limits = PLAN_LIMITS_DISPLAY[newPlan] || PLAN_LIMITS_DISPLAY.free
+  const planOrder = ['free', 'warung', 'starter', 'professional', 'business', 'enterprise']
+  const isUpgrade = planOrder.indexOf(oldPlan) < planOrder.indexOf(newPlan)
+  const limits = getPlanDisplay(newPlan)
   const newLabel = PLAN_LABEL[newPlan] || newPlan
   const oldLabel = PLAN_LABEL[oldPlan] || oldPlan
   const action = isUpgrade ? 'diupgrade' : 'diubah'
@@ -416,12 +421,12 @@ export async function sendPlanUpgradeEmail({ to, name, oldPlan, newPlan }: SendP
                     <td style="padding:8px 0;border-bottom:1px solid #d1fae5;color:#166534;font-size:14px;font-weight:700;text-align:right;">${limits.outlets}</td>
                   </tr>
                   <tr>
-                    <td style="padding:8px 0;border-bottom:1px solid #d1fae5;color:#374151;font-size:14px;">🏷️ Jumlah Produk</td>
-                    <td style="padding:8px 0;border-bottom:1px solid #d1fae5;color:#166534;font-size:14px;font-weight:700;text-align:right;">${limits.products}</td>
+                    <td style="padding:8px 0;border-bottom:1px solid #d1fae5;color:#374151;font-size:14px;">👤 Jumlah Kasir</td>
+                    <td style="padding:8px 0;border-bottom:1px solid #d1fae5;color:#166534;font-size:14px;font-weight:700;text-align:right;">${limits.cashiers}</td>
                   </tr>
                   <tr>
-                    <td style="padding:8px 0;color:#374151;font-size:14px;">👤 Jumlah Kasir</td>
-                    <td style="padding:8px 0;color:#166534;font-size:14px;font-weight:700;text-align:right;">${limits.cashiers}</td>
+                    <td style="padding:8px 0;color:#374151;font-size:14px;">📊 Export Laporan</td>
+                    <td style="padding:8px 0;color:#166534;font-size:14px;font-weight:700;text-align:right;">${limits.canExport ? '✅ Tersedia' : '❌ Tidak tersedia'}</td>
                   </tr>
                 </table>
               </div>
