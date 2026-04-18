@@ -67,8 +67,8 @@ export default function ReportsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Financial Reports</h1>
-        <p className="text-gray-600">Comprehensive revenue and sales analytics</p>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">Financial Reports</h1>
+        <p className="text-gray-600 dark:text-gray-400">Comprehensive revenue and sales analytics</p>
       </div>
 
       {/* Filters */}
@@ -110,41 +110,41 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card variant="default" padding="lg">
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-500">Total Revenue</p>
+            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Total Revenue</p>
             <p className="text-3xl font-bold text-green-600">
               {formatCurrency(stats?.totalRevenue || 0)}
             </p>
-            <p className="text-sm text-gray-600">{dateRange} days</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{dateRange} days</p>
           </div>
         </Card>
 
         <Card variant="default" padding="lg">
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-500">Avg Daily Revenue</p>
+            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Avg Daily Revenue</p>
             <p className="text-3xl font-bold text-blue-600">
               {formatCurrency(averageDailyRevenue)}
             </p>
-            <p className="text-sm text-gray-600">Per day</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Per day</p>
           </div>
         </Card>
 
         <Card variant="default" padding="lg">
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-500">Total Transactions</p>
+            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Total Transactions</p>
             <p className="text-3xl font-bold text-purple-600">
               {stats?.transactionCount || 0}
             </p>
-            <p className="text-sm text-gray-600">Completed sales</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Completed sales</p>
           </div>
         </Card>
 
         <Card variant="default" padding="lg">
           <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-500">Avg Items/Day</p>
+            <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Avg Items/Day</p>
             <p className="text-3xl font-bold text-orange-600">
               {Math.round(averageItemsPerDay)}
             </p>
-            <p className="text-sm text-gray-600">Units sold</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Units sold</p>
           </div>
         </Card>
       </div>
@@ -164,7 +164,7 @@ export default function ReportsPage() {
               />
             </Suspense>
           ) : (
-            <div className="h-80 flex items-center justify-center text-gray-500">
+            <div className="h-80 flex items-center justify-center text-gray-500 dark:text-gray-400">
               No revenue data available for the selected period
             </div>
           )}
@@ -185,7 +185,7 @@ export default function ReportsPage() {
               />
             </Suspense>
           ) : (
-            <div className="h-80 flex items-center justify-center text-gray-500">
+            <div className="h-80 flex items-center justify-center text-gray-500 dark:text-gray-400">
               No sales data available
             </div>
           )}
@@ -216,8 +216,8 @@ export default function ReportsPage() {
                             #{index + 1}
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-900">{product.productName}</p>
-                            <p className="text-xs text-gray-500">
+                            <p className="font-semibold text-gray-900 dark:text-gray-100">{product.productName}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
                               {product.totalQuantity} units • SKU: {product.productSku}
                             </p>
                           </div>
@@ -226,10 +226,10 @@ export default function ReportsPage() {
                           <p className="font-bold text-green-600">
                             {formatCurrency(product.totalRevenue)}
                           </p>
-                          <p className="text-xs text-gray-500">{percentage.toFixed(1)}%</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{percentage.toFixed(1)}%</p>
                         </div>
                       </div>
-                      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                         <div
                           className="h-full transition-all duration-500"
                           style={{
@@ -243,7 +243,7 @@ export default function ReportsPage() {
                 })}
               </div>
             ) : (
-              <div className="py-12 text-center text-gray-500">
+              <div className="py-12 text-center text-gray-500 dark:text-gray-400">
                 No sales data available
               </div>
             )}
@@ -264,7 +264,7 @@ export default function ReportsPage() {
                 />
               </Suspense>
             ) : (
-              <div className="h-80 flex items-center justify-center text-gray-500">
+              <div className="h-80 flex items-center justify-center text-gray-500 dark:text-gray-400">
                 No revenue distribution data
               </div>
             )}
@@ -279,23 +279,23 @@ export default function ReportsPage() {
         </CardHeader>
         <CardBody>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="p-4 bg-green-50 rounded-xl border-2 border-green-200">
-              <p className="text-sm text-green-700 font-semibold mb-2">Highest Daily Revenue</p>
-              <p className="text-2xl font-bold text-green-900">
+            <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-xl border-2 border-green-200 dark:border-green-800">
+              <p className="text-sm text-green-700 dark:text-green-400 font-semibold mb-2">Highest Daily Revenue</p>
+              <p className="text-2xl font-bold text-green-900 dark:text-green-200">
                 {formatCurrency(highestRevenue)}
               </p>
             </div>
 
-            <div className="p-4 bg-red-50 rounded-xl border-2 border-red-200">
-              <p className="text-sm text-red-700 font-semibold mb-2">Lowest Daily Revenue</p>
-              <p className="text-2xl font-bold text-red-900">
+            <div className="p-4 bg-red-50 dark:bg-red-900/30 rounded-xl border-2 border-red-200 dark:border-red-800">
+              <p className="text-sm text-red-700 dark:text-red-400 font-semibold mb-2">Lowest Daily Revenue</p>
+              <p className="text-2xl font-bold text-red-900 dark:text-red-200">
                 {formatCurrency(lowestRevenue)}
               </p>
             </div>
 
-            <div className="p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
-              <p className="text-sm text-blue-700 font-semibold mb-2">Avg Transaction Value</p>
-              <p className="text-2xl font-bold text-blue-900">
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl border-2 border-blue-200 dark:border-blue-800">
+              <p className="text-sm text-blue-700 dark:text-blue-400 font-semibold mb-2">Avg Transaction Value</p>
+              <p className="text-2xl font-bold text-blue-900 dark:text-blue-200">
                 {formatCurrency(
                   stats?.transactionCount && stats.transactionCount > 0
                     ? stats.totalRevenue / stats.transactionCount
@@ -304,9 +304,9 @@ export default function ReportsPage() {
               </p>
             </div>
 
-            <div className="p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
-              <p className="text-sm text-purple-700 font-semibold mb-2">Total Items Sold</p>
-              <p className="text-2xl font-bold text-purple-900">
+            <div className="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-xl border-2 border-purple-200 dark:border-purple-800">
+              <p className="text-sm text-purple-700 dark:text-purple-400 font-semibold mb-2">Total Items Sold</p>
+              <p className="text-2xl font-bold text-purple-900 dark:text-purple-200">
                 {stats?.totalItemsSold.toLocaleString() || 0}
               </p>
             </div>
@@ -341,9 +341,9 @@ export default function ReportsPage() {
       </Card>
 
       {/* Info Box */}
-      <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
-        <p className="text-sm text-blue-900 font-semibold mb-2">💡 About Financial Reports:</p>
-        <ul className="text-xs text-blue-800 space-y-1">
+      <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
+        <p className="text-sm text-blue-900 dark:text-blue-200 font-semibold mb-2">💡 About Financial Reports:</p>
+        <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
           <li>• Track revenue trends and sales performance over time</li>
           <li>• Analyze top-performing products and their contribution to total revenue</li>
           <li>• Monitor daily performance metrics and identify peak sales periods</li>

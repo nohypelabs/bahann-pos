@@ -107,16 +107,16 @@ export default function ProductsPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">🏷️ Products Management</h1>
-        <p className="text-gray-600">Manage your product catalog</p>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">🏷️ Products Management</h1>
+        <p className="text-gray-600 dark:text-gray-400">Manage your product catalog</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card variant="default" padding="lg">
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-1">Total Products</p>
-            <p className="text-3xl font-bold text-gray-900">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Products</p>
+            <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
               {products?.length || 0}
             </p>
           </div>
@@ -124,7 +124,7 @@ export default function ProductsPage() {
 
         <Card variant="default" padding="lg">
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-1">Categories</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Categories</p>
             <p className="text-3xl font-bold text-blue-600">
               {categories?.length || 0}
             </p>
@@ -133,7 +133,7 @@ export default function ProductsPage() {
 
         <Card variant="default" padding="lg">
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-1">With Price</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">With Price</p>
             <p className="text-3xl font-bold text-green-600">
               {products?.filter((p) => p.price).length || 0}
             </p>
@@ -142,7 +142,7 @@ export default function ProductsPage() {
 
         <Card variant="default" padding="lg">
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-1">Without Price</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Without Price</p>
             <p className="text-3xl font-bold text-yellow-600">
               {products?.filter((p) => !p.price).length || 0}
             </p>
@@ -152,10 +152,10 @@ export default function ProductsPage() {
 
       {/* Batch Action Toolbar */}
       {selectedProducts.size > 0 && (
-        <Card variant="elevated" padding="lg" className="bg-blue-50 border-2 border-blue-200">
+        <Card variant="elevated" padding="lg" className="bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="text-sm font-semibold text-blue-900">
+              <span className="text-sm font-semibold text-blue-900 dark:text-blue-200">
                 {selectedProducts.size} product{selectedProducts.size > 1 ? 's' : ''} selected
               </span>
             </div>
@@ -214,14 +214,14 @@ export default function ProductsPage() {
         <CardBody>
           {isLoading ? (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-gray-900"></div>
-              <p className="mt-4 text-gray-600">Loading products...</p>
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 dark:border-gray-600 border-t-gray-900"></div>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">Loading products...</p>
             </div>
           ) : !products || products.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📦</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">No Products Found</h3>
-              <p className="text-gray-600 mb-4">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">No Products Found</h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
                 {searchTerm || categoryFilter
                   ? 'No products match your filters. Try adjusting your search.'
                   : 'Start by adding your first product.'}
@@ -236,7 +236,7 @@ export default function ProductsPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b-2 border-gray-200">
+                  <tr className="border-b-2 border-gray-200 dark:border-gray-700">
                     <th className="text-center py-3 px-4 w-12">
                       <input
                         type="checkbox"
@@ -245,11 +245,11 @@ export default function ProductsPage() {
                         className="w-4 h-4 cursor-pointer"
                       />
                     </th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">SKU</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Category</th>
-                    <th className="text-right py-3 px-4 font-semibold text-gray-700">Price</th>
-                    <th className="text-center py-3 px-4 font-semibold text-gray-700">Actions</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">SKU</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Name</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Category</th>
+                    <th className="text-right py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Price</th>
+                    <th className="text-center py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -257,9 +257,9 @@ export default function ProductsPage() {
                     <tr
                       key={product.id}
                       className={`
-                        border-b border-gray-100 hover:bg-gray-50 transition-colors
-                        ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
-                        ${selectedProducts.has(product.id) ? 'bg-blue-50' : ''}
+                        border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 transition-colors
+                        ${index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-800'}
+                        ${selectedProducts.has(product.id) ? 'bg-blue-50 dark:bg-blue-900/30' : ''}
                       `}
                     >
                       <td className="py-4 px-4 text-center">
@@ -271,22 +271,22 @@ export default function ProductsPage() {
                         />
                       </td>
                       <td className="py-4 px-4">
-                        <span className="font-mono text-sm text-gray-900">{product.sku}</span>
+                        <span className="font-mono text-sm text-gray-900 dark:text-gray-100">{product.sku}</span>
                       </td>
                       <td className="py-4 px-4">
-                        <span className="font-semibold text-gray-900">{product.name}</span>
+                        <span className="font-semibold text-gray-900 dark:text-gray-100">{product.name}</span>
                       </td>
                       <td className="py-4 px-4">
                         {product.category ? (
-                          <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                          <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300">
                             {product.category}
                           </span>
                         ) : (
-                          <span className="text-sm text-gray-400 italic">No category</span>
+                          <span className="text-sm text-gray-400 dark:text-gray-500 italic">No category</span>
                         )}
                       </td>
                       <td className="py-4 px-4 text-right">
-                        <span className="font-semibold text-gray-900">
+                        <span className="font-semibold text-gray-900 dark:text-gray-100">
                           {formatCurrency(product.price)}
                         </span>
                       </td>
@@ -294,13 +294,13 @@ export default function ProductsPage() {
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleEdit(product)}
-                            className="px-3 py-1 text-sm font-semibold text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="px-3 py-1 text-sm font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-300 hover:bg-blue-50 dark:bg-blue-900/30 rounded-lg transition-colors"
                           >
                             ✏️ Edit
                           </button>
                           <button
                             onClick={() => handleDelete(product.id, product.name)}
-                            className="px-3 py-1 text-sm font-semibold text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                            className="px-3 py-1 text-sm font-semibold text-red-600 hover:text-red-800 dark:text-red-300 hover:bg-red-50 dark:bg-red-900/30 rounded-lg transition-colors"
                             disabled={deleteProduct.isPending}
                           >
                             🗑️ Delete
@@ -427,7 +427,7 @@ function ProductFormModal({ product, onClose, onSuccess }: ProductFormModalProps
             <CardTitle>{product ? 'Edit Product' : 'Add New Product'}</CardTitle>
             <button
               onClick={onClose}
-              className="text-2xl text-gray-500 hover:text-gray-700"
+              className="text-2xl text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300"
             >
               ✕
             </button>
@@ -554,7 +554,7 @@ function BatchUpdateCategoryModal({
             <CardTitle>Batch Update Category</CardTitle>
             <button
               onClick={onClose}
-              className="text-2xl text-gray-500 hover:text-gray-700"
+              className="text-2xl text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300"
             >
               ✕
             </button>
@@ -562,11 +562,11 @@ function BatchUpdateCategoryModal({
         </CardHeader>
 
         <CardBody>
-          <div className="mb-4 p-3 bg-blue-50 border-2 border-blue-200 rounded-xl">
-            <p className="text-sm text-blue-900 font-semibold">
+          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
+            <p className="text-sm text-blue-900 dark:text-blue-200 font-semibold">
               {selectedCount} product{selectedCount > 1 ? 's' : ''} selected
             </p>
-            <p className="text-xs text-blue-700 mt-1">
+            <p className="text-xs text-blue-700 dark:text-blue-400 mt-1">
               The category will be updated for all selected products
             </p>
           </div>
@@ -584,14 +584,14 @@ function BatchUpdateCategoryModal({
               />
               {categories.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-xs text-gray-600 mb-1">Existing categories:</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Existing categories:</p>
                   <div className="flex flex-wrap gap-1">
                     {categories.map((cat) => (
                       <button
                         key={cat}
                         type="button"
                         onClick={() => setNewCategory(cat)}
-                        className="px-2 py-1 text-xs bg-gray-100 hover:bg-blue-100 text-gray-700 hover:text-blue-900 rounded-md transition-colors"
+                        className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:bg-blue-900/50 text-gray-700 dark:text-gray-300 hover:text-blue-900 dark:text-blue-200 rounded-md transition-colors"
                       >
                         {cat}
                       </button>
@@ -670,7 +670,7 @@ function BatchDeleteModal({
             <CardTitle className="text-red-600">⚠️ Confirm Bulk Delete</CardTitle>
             <button
               onClick={onClose}
-              className="text-2xl text-gray-500 hover:text-gray-700"
+              className="text-2xl text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300"
             >
               ✕
             </button>
@@ -678,18 +678,18 @@ function BatchDeleteModal({
         </CardHeader>
 
         <CardBody>
-          <div className="mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl">
-            <p className="text-sm text-red-900 font-semibold mb-2">
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/30 border-2 border-red-200 dark:border-red-800 rounded-xl">
+            <p className="text-sm text-red-900 dark:text-red-200 font-semibold mb-2">
               You are about to delete {selectedCount} product{selectedCount > 1 ? 's' : ''}
             </p>
-            <p className="text-xs text-red-700 mb-3">
+            <p className="text-xs text-red-700 dark:text-red-400 mb-3">
               This action cannot be undone!
             </p>
 
             {/* Show product list */}
             <div className="max-h-48 overflow-y-auto space-y-1">
               {products.map((product) => (
-                <div key={product.id} className="flex items-center gap-2 text-xs text-red-800 bg-red-100 px-2 py-1 rounded">
+                <div key={product.id} className="flex items-center gap-2 text-xs text-red-800 dark:text-red-300 bg-red-100 dark:bg-red-900/50 px-2 py-1 rounded">
                   <span className="font-mono">{product.sku}</span>
                   <span>-</span>
                   <span className="font-semibold">{product.name}</span>

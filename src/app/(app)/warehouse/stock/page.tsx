@@ -82,13 +82,13 @@ export default function StockManagementPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Stock Management</h1>
-        <p className="text-gray-600">Record daily stock movements and monitor inventory</p>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">Stock Management</h1>
+        <p className="text-gray-600 dark:text-gray-400">Record daily stock movements and monitor inventory</p>
       </div>
 
       {/* Success Message */}
       {showSuccess && (
-        <div className="p-4 bg-green-50 border-2 border-green-200 rounded-xl">
+        <div className="p-4 bg-green-50 dark:bg-green-900/30 border-2 border-green-200 dark:border-green-800 rounded-xl">
           <p className="text-sm font-semibold text-green-600">
             ✅ Stock recorded successfully!
           </p>
@@ -97,7 +97,7 @@ export default function StockManagementPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+        <div className="p-4 bg-red-50 dark:bg-red-900/30 border-2 border-red-200 dark:border-red-800 rounded-xl">
           <p className="text-sm font-semibold text-red-600">
             ❌ {error}
           </p>
@@ -129,10 +129,10 @@ export default function StockManagementPage() {
 
               {/* Show selected product details */}
               {selectedProduct && (
-                <div className="p-3 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
                   <p className="text-xs text-blue-600 font-semibold">Selected Product:</p>
-                  <p className="text-sm font-semibold text-blue-900">{selectedProduct.name}</p>
-                  <p className="text-xs text-blue-700">
+                  <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">{selectedProduct.name}</p>
+                  <p className="text-xs text-blue-700 dark:text-blue-400">
                     SKU: {selectedProduct.sku} • Category: {selectedProduct.category || 'N/A'}
                   </p>
                 </div>
@@ -155,10 +155,10 @@ export default function StockManagementPage() {
 
               {/* Show selected outlet details */}
               {selectedOutlet && (
-                <div className="p-3 bg-purple-50 border-2 border-purple-200 rounded-xl">
+                <div className="p-3 bg-purple-50 dark:bg-purple-900/30 border-2 border-purple-200 dark:border-purple-800 rounded-xl">
                   <p className="text-xs text-purple-600 font-semibold">Selected Outlet:</p>
-                  <p className="text-sm font-semibold text-purple-900">{selectedOutlet.name}</p>
-                  <p className="text-xs text-purple-700">{selectedOutlet.address}</p>
+                  <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">{selectedOutlet.name}</p>
+                  <p className="text-xs text-purple-700 dark:text-purple-400">{selectedOutlet.address}</p>
                 </div>
               )}
 
@@ -256,31 +256,31 @@ export default function StockManagementPage() {
           </CardHeader>
           <CardBody>
             <div className="space-y-4">
-              <div className="p-4 bg-gray-50 rounded-xl">
-                <p className="text-sm text-gray-600">Total Products in System</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                <p className="text-sm text-gray-600 dark:text-gray-400">Total Products in System</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {stats?.totalProducts.toLocaleString() || 0}
                 </p>
               </div>
 
-              <div className="p-4 bg-blue-50 rounded-xl">
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
                 <p className="text-sm text-blue-600">Total Outlets</p>
-                <p className="text-2xl font-bold text-blue-900">
+                <p className="text-2xl font-bold text-blue-900 dark:text-blue-200">
                   {stats?.totalOutlets || 0}
                 </p>
               </div>
 
-              <div className="p-4 bg-green-50 rounded-xl">
+              <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-xl">
                 <p className="text-sm text-green-600">Items Sold (All Time)</p>
-                <p className="text-2xl font-bold text-green-900">
+                <p className="text-2xl font-bold text-green-900 dark:text-green-200">
                   {stats?.totalItemsSold.toLocaleString() || 0}
                 </p>
               </div>
 
               {(stats?.lowStockCount || 0) > 0 && (
-                <div className="p-4 bg-yellow-50 rounded-xl border-2 border-yellow-200">
-                  <p className="text-sm text-yellow-800 font-semibold">⚠️ Low Stock Alert</p>
-                  <p className="text-lg font-bold text-yellow-900">
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-xl border-2 border-yellow-200 dark:border-yellow-800">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-300 font-semibold">⚠️ Low Stock Alert</p>
+                  <p className="text-lg font-bold text-yellow-900 dark:text-yellow-200">
                     {stats?.lowStockCount} items need restocking
                   </p>
                 </div>
@@ -296,7 +296,7 @@ export default function StockManagementPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>⚠️ Items Requiring Attention</CardTitle>
-              <span className="px-3 py-1 bg-red-100 text-red-800 text-sm font-semibold rounded-full">
+              <span className="px-3 py-1 bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 text-sm font-semibold rounded-full">
                 {lowStock.length} items
               </span>
             </div>
@@ -305,24 +305,24 @@ export default function StockManagementPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b-2 border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Product</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">SKU</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">Outlet</th>
-                    <th className="text-right py-3 px-4 font-semibold text-gray-700">Current Stock</th>
+                  <tr className="border-b-2 border-gray-200 dark:border-gray-700">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Product</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">SKU</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Outlet</th>
+                    <th className="text-right py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">Current Stock</th>
                   </tr>
                 </thead>
                 <tbody>
                   {lowStock.map((item) => (
                     <tr
                       key={`${item.productId}-${item.outletId}`}
-                      className="border-b border-gray-100 hover:bg-red-50 transition-colors"
+                      className="border-b border-gray-100 dark:border-gray-700 hover:bg-red-50 dark:bg-red-900/30 transition-colors"
                     >
-                      <td className="py-3 px-4 font-semibold text-gray-900">{item.productName}</td>
-                      <td className="py-3 px-4 text-gray-600 font-mono text-sm">{item.productSku}</td>
-                      <td className="py-3 px-4 text-gray-600">{item.outletName}</td>
+                      <td className="py-3 px-4 font-semibold text-gray-900 dark:text-gray-100">{item.productName}</td>
+                      <td className="py-3 px-4 text-gray-600 dark:text-gray-400 font-mono text-sm">{item.productSku}</td>
+                      <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{item.outletName}</td>
                       <td className="py-3 px-4 text-right">
-                        <span className="px-3 py-1 bg-red-100 text-red-800 font-bold rounded-full">
+                        <span className="px-3 py-1 bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 font-bold rounded-full">
                           {item.currentStock} units
                         </span>
                       </td>
@@ -336,9 +336,9 @@ export default function StockManagementPage() {
       )}
 
       {/* Info Box */}
-      <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
-        <p className="text-sm text-blue-900 font-semibold mb-2">💡 How to use:</p>
-        <ul className="text-xs text-blue-800 space-y-1">
+      <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
+        <p className="text-sm text-blue-900 dark:text-blue-200 font-semibold mb-2">💡 How to use:</p>
+        <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
           <li>• Select a product and outlet from the dropdowns</li>
           <li>• Enter stock beginning (Stock Awal), received (Stock In), and sold (Stock Out)</li>
           <li>• Click "Auto Calculate" to automatically compute Stock Akhir</li>

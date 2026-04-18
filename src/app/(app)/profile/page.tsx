@@ -78,11 +78,11 @@ export default function ProfilePage() {
   const getRoleBadge = (role: string) => {
     switch (role) {
       case 'admin':
-        return { label: 'Administrator', color: 'bg-red-100 text-red-800', icon: '👑' }
+        return { label: 'Administrator', color: 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300', icon: '👑' }
       case 'manager':
-        return { label: 'Manager', color: 'bg-yellow-100 text-yellow-800', icon: '⭐' }
+        return { label: 'Manager', color: 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300', icon: '⭐' }
       default:
-        return { label: 'User (Cashier)', color: 'bg-green-100 text-green-800', icon: '👤' }
+        return { label: 'User (Cashier)', color: 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300', icon: '👤' }
     }
   }
 
@@ -90,8 +90,8 @@ export default function ProfilePage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-gray-900 mb-4"></div>
-          <p className="text-gray-600">Loading profile...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 dark:border-gray-600 border-t-gray-900 mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
         </div>
       </div>
     )
@@ -103,8 +103,8 @@ export default function ProfilePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">User Profile</h1>
-        <p className="text-gray-600">Manage your account settings and information</p>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">User Profile</h1>
+        <p className="text-gray-600 dark:text-gray-400">Manage your account settings and information</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -117,8 +117,8 @@ export default function ProfilePage() {
               </div>
 
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">{userData.name}</h2>
-                <p className="text-sm text-gray-500">{userData.email}</p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{userData.name}</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{userData.email}</p>
               </div>
 
               <div className="flex justify-center">
@@ -127,17 +127,17 @@ export default function ProfilePage() {
                 </span>
               </div>
 
-              <div className="pt-4 border-t-2 border-gray-200">
-                <p className="text-xs text-gray-500 mb-1">User ID</p>
-                <p className="text-xs font-mono text-gray-700 break-all">
+              <div className="pt-4 border-t-2 border-gray-200 dark:border-gray-700">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">User ID</p>
+                <p className="text-xs font-mono text-gray-700 dark:text-gray-300 break-all">
                   {userData.id}
                 </p>
               </div>
 
               {userData.outletId && (
                 <div className="pt-2">
-                  <p className="text-xs text-gray-500 mb-1">Assigned Outlet ID</p>
-                  <p className="text-xs font-mono text-gray-700 break-all">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Assigned Outlet ID</p>
+                  <p className="text-xs font-mono text-gray-700 dark:text-gray-300 break-all">
                     {userData.outletId}
                   </p>
                 </div>
@@ -203,25 +203,25 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="p-4 bg-gray-50 rounded-xl">
-                    <p className="text-sm text-gray-600 mb-1">Full Name</p>
-                    <p className="text-lg font-semibold text-gray-900">{userData.name}</p>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Full Name</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{userData.name}</p>
                   </div>
 
-                  <div className="p-4 bg-gray-50 rounded-xl">
-                    <p className="text-sm text-gray-600 mb-1">Email Address</p>
-                    <p className="text-lg font-semibold text-gray-900">{userData.email}</p>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Email Address</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{userData.email}</p>
                   </div>
 
-                  <div className="p-4 bg-gray-50 rounded-xl">
-                    <p className="text-sm text-gray-600 mb-1">Role</p>
-                    <p className="text-lg font-semibold text-gray-900">{roleBadge.label}</p>
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Role</p>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">{roleBadge.label}</p>
                   </div>
 
                   {userData.outletId && (
-                    <div className="p-4 bg-gray-50 rounded-xl">
-                      <p className="text-sm text-gray-600 mb-1">Assigned Outlet</p>
-                      <p className="text-sm font-mono text-gray-700">{userData.outletId}</p>
+                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Assigned Outlet</p>
+                      <p className="text-sm font-mono text-gray-700 dark:text-gray-300">{userData.outletId}</p>
                     </div>
                   )}
                 </div>
@@ -236,11 +236,11 @@ export default function ProfilePage() {
             </CardHeader>
             <CardBody>
               <div className="space-y-4">
-                <div className="p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
-                  <p className="text-sm text-yellow-900 font-semibold mb-2">
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 border-2 border-yellow-200 dark:border-yellow-800 rounded-xl">
+                  <p className="text-sm text-yellow-900 dark:text-yellow-200 font-semibold mb-2">
                     ⚠️ Password Change
                   </p>
-                  <p className="text-xs text-yellow-800 mb-3">
+                  <p className="text-xs text-yellow-800 dark:text-yellow-300 mb-3">
                     Password changes are currently not supported in this interface. Please contact your system administrator.
                   </p>
                   <Button variant="outline" size="sm" disabled>
@@ -248,20 +248,20 @@ export default function ProfilePage() {
                   </Button>
                 </div>
 
-                <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
-                  <p className="text-sm text-blue-900 font-semibold mb-2">
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
+                  <p className="text-sm text-blue-900 dark:text-blue-200 font-semibold mb-2">
                     🔐 Session Information
                   </p>
-                  <p className="text-xs text-blue-800">
+                  <p className="text-xs text-blue-800 dark:text-blue-300">
                     Your session is valid for 7 days. You'll be automatically logged out after that period.
                   </p>
                 </div>
 
-                <div className="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
-                  <p className="text-sm text-red-900 font-semibold mb-2">
+                <div className="p-4 bg-red-50 dark:bg-red-900/30 border-2 border-red-200 dark:border-red-800 rounded-xl">
+                  <p className="text-sm text-red-900 dark:text-red-200 font-semibold mb-2">
                     🚨 Danger Zone
                   </p>
-                  <p className="text-xs text-red-800 mb-3">
+                  <p className="text-xs text-red-800 dark:text-red-300 mb-3">
                     Once you logout, you'll need to sign in again with your credentials.
                   </p>
                   <Button
@@ -289,44 +289,44 @@ export default function ProfilePage() {
             </CardHeader>
             <CardBody>
               <div className="space-y-3">
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div>
-                    <p className="font-semibold text-gray-900">Dashboard</p>
-                    <p className="text-xs text-gray-500">View analytics and reports</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">Dashboard</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">View analytics and reports</p>
                   </div>
                   <span className="text-green-600 font-bold">✓</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div>
-                    <p className="font-semibold text-gray-900">Stock Management</p>
-                    <p className="text-xs text-gray-500">Record and manage inventory</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">Stock Management</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Record and manage inventory</p>
                   </div>
                   <span className="text-green-600 font-bold">✓</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div>
-                    <p className="font-semibold text-gray-900">POS Sales</p>
-                    <p className="text-xs text-gray-500">Process transactions</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">POS Sales</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Process transactions</p>
                   </div>
                   <span className="text-green-600 font-bold">✓</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div>
-                    <p className="font-semibold text-gray-900">Products & Outlets</p>
-                    <p className="text-xs text-gray-500">Manage master data</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">Products & Outlets</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Manage master data</p>
                   </div>
                   <span className="text-green-600 font-bold">✓</span>
                 </div>
 
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div>
-                    <p className="font-semibold text-gray-900">User Management</p>
-                    <p className="text-xs text-gray-500">Create and manage users</p>
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">User Management</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Create and manage users</p>
                   </div>
-                  <span className={userData.role === 'admin' ? 'text-green-600' : 'text-gray-400'}>
+                  <span className={userData.role === 'admin' ? 'text-green-600' : 'text-gray-400 dark:text-gray-500'}>
                     {userData.role === 'admin' ? '✓' : '✗'}
                   </span>
                 </div>
@@ -337,9 +337,9 @@ export default function ProfilePage() {
       </div>
 
       {/* Info Box */}
-      <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
-        <p className="text-sm text-blue-900 font-semibold mb-2">💡 Profile Information:</p>
-        <ul className="text-xs text-blue-800 space-y-1">
+      <div className="p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
+        <p className="text-sm text-blue-900 dark:text-blue-200 font-semibold mb-2">💡 Profile Information:</p>
+        <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
           <li>• Your profile information is stored locally on this device</li>
           <li>• Contact your administrator to change your role or assigned outlet</li>
           <li>• Keep your email address up to date for important notifications</li>

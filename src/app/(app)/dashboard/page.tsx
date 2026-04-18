@@ -74,8 +74,8 @@ export default function DashboardPage() {
       <div>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 mb-3 md:mb-4">
           <div>
-            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-1 md:mb-2">{t('dashboard.title')}</h1>
-            <p className="text-sm md:text-base text-gray-600">{t('dashboard.overview')}</p>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-1 md:mb-2">{t('dashboard.title')}</h1>
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">{t('dashboard.overview')}</p>
           </div>
 
           {/* Filters */}
@@ -108,25 +108,25 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <Card variant="default" padding="lg">
           <div className="space-y-2">
-            <p className="text-xs md:text-sm font-semibold text-gray-500">{t('dashboard.totalProducts')}</p>
+            <p className="text-xs md:text-sm font-semibold text-gray-500 dark:text-gray-400">{t('dashboard.totalProducts')}</p>
             {statsLoading ? (
-              <div className="h-8 md:h-9 bg-gray-200 rounded animate-pulse" />
+              <div className="h-8 md:h-9 bg-gray-200 dark:bg-gray-600 rounded animate-pulse" />
             ) : (
-              <p className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
+              <p className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {stats?.totalProducts.toLocaleString() || 0}
               </p>
             )}
-            <p className="text-xs md:text-sm text-gray-600">In inventory</p>
+            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">In inventory</p>
           </div>
         </Card>
 
         <Card variant="default" padding="lg">
           <div className="space-y-2">
-            <p className="text-xs md:text-sm font-semibold text-gray-500">{t('dashboard.totalRevenue')}</p>
+            <p className="text-xs md:text-sm font-semibold text-gray-500 dark:text-gray-400">{t('dashboard.totalRevenue')}</p>
             {statsLoading ? (
-              <div className="h-8 md:h-9 bg-gray-200 rounded animate-pulse" />
+              <div className="h-8 md:h-9 bg-gray-200 dark:bg-gray-600 rounded animate-pulse" />
             ) : (
-              <p className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
+              <p className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {formatCurrency(stats?.totalRevenue || 0)}
               </p>
             )}
@@ -136,11 +136,11 @@ export default function DashboardPage() {
 
         <Card variant="default" padding="lg">
           <div className="space-y-2">
-            <p className="text-xs md:text-sm font-semibold text-gray-500">{t('dashboard.lowStock')}</p>
+            <p className="text-xs md:text-sm font-semibold text-gray-500 dark:text-gray-400">{t('dashboard.lowStock')}</p>
             {statsLoading ? (
-              <div className="h-8 md:h-9 bg-gray-200 rounded animate-pulse" />
+              <div className="h-8 md:h-9 bg-gray-200 dark:bg-gray-600 rounded animate-pulse" />
             ) : (
-              <p className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
+              <p className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {stats?.lowStockCount || 0}
               </p>
             )}
@@ -152,15 +152,15 @@ export default function DashboardPage() {
 
         <Card variant="default" padding="lg">
           <div className="space-y-2">
-            <p className="text-xs md:text-sm font-semibold text-gray-500">{t('dashboard.totalOutlets')}</p>
+            <p className="text-xs md:text-sm font-semibold text-gray-500 dark:text-gray-400">{t('dashboard.totalOutlets')}</p>
             {statsLoading ? (
-              <div className="h-8 md:h-9 bg-gray-200 rounded animate-pulse" />
+              <div className="h-8 md:h-9 bg-gray-200 dark:bg-gray-600 rounded animate-pulse" />
             ) : (
-              <p className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
+              <p className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {stats?.totalOutlets || 0}
               </p>
             )}
-            <p className="text-xs md:text-sm text-gray-600">Active locations</p>
+            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Active locations</p>
           </div>
         </Card>
       </div>
@@ -172,7 +172,7 @@ export default function DashboardPage() {
         </CardHeader>
         <CardBody>
           {trendLoading ? (
-            <div className="h-48 md:h-64 bg-gray-100 rounded animate-pulse" />
+            <div className="h-48 md:h-64 bg-gray-100 dark:bg-gray-700 rounded animate-pulse" />
           ) : (
             <RevenueLineChart
               data={salesTrend || []}
@@ -185,7 +185,7 @@ export default function DashboardPage() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Quick Actions</h2>
+        <h2 className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Button variant="primary" size="lg" onClick={() => router.push('/warehouse/stock')}>
             📦 Record Stock
@@ -208,7 +208,7 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>⚠️ Low Stock Alert</CardTitle>
-              <span className="px-3 py-1 bg-red-100 text-red-800 text-sm font-semibold rounded-full">
+              <span className="px-3 py-1 bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 text-sm font-semibold rounded-full">
                 {lowStock.length} items
               </span>
             </div>
@@ -217,7 +217,7 @@ export default function DashboardPage() {
             {lowStockLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
+                  <div key={i} className="h-16 bg-gray-100 dark:bg-gray-700 rounded animate-pulse" />
                 ))}
               </div>
             ) : (
@@ -225,17 +225,17 @@ export default function DashboardPage() {
                 {lowStock.map((item) => (
                   <div
                     key={item.productId}
-                    className="flex items-center justify-between p-4 bg-red-50 border-2 border-red-200 rounded-xl"
+                    className="flex items-center justify-between p-4 bg-red-50 dark:bg-red-900/30 border-2 border-red-200 dark:border-red-800 rounded-xl"
                   >
                     <div>
-                      <p className="font-semibold text-gray-900">{item.productName}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">{item.productName}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         {item.outletName} • SKU: {item.productSku}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold text-red-600">{item.currentStock}</p>
-                      <p className="text-xs text-gray-500">units left</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">units left</p>
                     </div>
                   </div>
                 ))}
@@ -256,7 +256,7 @@ export default function DashboardPage() {
             {topProductsLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
+                  <div key={i} className="h-16 bg-gray-100 dark:bg-gray-700 rounded animate-pulse" />
                 ))}
               </div>
             ) : topProducts && topProducts.length > 0 ? (
@@ -264,26 +264,26 @@ export default function DashboardPage() {
                 {topProducts.map((product, index) => (
                   <div
                     key={product.productId}
-                    className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                    className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 last:border-0"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
                         #{index + 1}
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900">{product.productName}</p>
-                        <p className="text-sm text-gray-500">SKU: {product.productSku}</p>
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">{product.productName}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">SKU: {product.productSku}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-gray-900">{product.totalQuantity} units</p>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">{product.totalQuantity} units</p>
                       <p className="text-sm text-green-600">{formatCurrency(product.totalRevenue)}</p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="py-8 text-center text-gray-500">
+              <div className="py-8 text-center text-gray-500 dark:text-gray-400">
                 No sales data available
               </div>
             )}
@@ -299,7 +299,7 @@ export default function DashboardPage() {
             {transactionsLoading ? (
               <div className="space-y-3">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
+                  <div key={i} className="h-16 bg-gray-100 dark:bg-gray-700 rounded animate-pulse" />
                 ))}
               </div>
             ) : recentTransactions && recentTransactions.length > 0 ? (
@@ -307,23 +307,23 @@ export default function DashboardPage() {
                 {recentTransactions.map((transaction) => (
                   <div
                     key={transaction.id}
-                    className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                    className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700 last:border-0"
                   >
                     <div>
-                      <p className="font-semibold text-gray-900">{transaction.productName}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">{transaction.productName}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {transaction.outletName} • {formatDateTime(transaction.date)}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-gray-900">{transaction.quantity} units</p>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">{transaction.quantity} units</p>
                       <p className="text-sm text-green-600">{formatCurrency(transaction.revenue)}</p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="py-8 text-center text-gray-500">
+              <div className="py-8 text-center text-gray-500 dark:text-gray-400">
                 No recent transactions
               </div>
             )}

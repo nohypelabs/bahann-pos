@@ -66,29 +66,29 @@ export default function UsersManagementPage() {
 
   const getRoleBadgeColor = (role: string) => {
     switch(role) {
-      case 'admin': return 'bg-red-100 text-red-800 border border-red-300'
-      case 'manager': return 'bg-yellow-100 text-yellow-800 border border-yellow-300'
-      default: return 'bg-green-100 text-green-800 border border-green-300'
+      case 'admin': return 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 border border-red-300'
+      case 'manager': return 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300 border border-yellow-300'
+      default: return 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300 border border-green-300'
     }
   }
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">User Management</h1>
-        <p className="text-gray-600">Manage user roles and permissions</p>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">User Management</h1>
+        <p className="text-gray-600 dark:text-gray-400">Manage user roles and permissions</p>
       </div>
 
       <Card variant="default" padding="lg">
         <CardHeader><CardTitle>Users</CardTitle></CardHeader>
         <CardBody>
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Name</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Email</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Role</th>
-                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600">Actions</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Name</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Email</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Role</th>
+                <th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 dark:text-gray-400">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -119,27 +119,27 @@ export default function UsersManagementPage() {
             <CardHeader><CardTitle>Edit User & Permissions</CardTitle></CardHeader>
             <CardBody>
               {/* Role Selector */}
-              <div className="mb-6 pb-6 border-b-2 border-gray-200">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <div className="mb-6 pb-6 border-b-2 border-gray-200 dark:border-gray-700">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   User Role
                 </label>
                 <select
                   value={selectedRole}
                   onChange={(e) => setSelectedRole(e.target.value as UserRole)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                 >
                   <option value="user">👤 User (Kasir)</option>
                   <option value="manager">👔 Manager</option>
                   <option value="admin">👑 Admin</option>
                 </select>
-                <p className="mt-2 text-xs text-gray-500">
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                   💡 Admin memiliki akses penuh, Manager dapat melihat laporan, User hanya bisa transaksi sesuai permission
                 </p>
               </div>
 
               {/* Permissions */}
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Custom Permissions</h3>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Custom Permissions</h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {[

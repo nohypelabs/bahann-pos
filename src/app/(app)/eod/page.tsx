@@ -67,8 +67,8 @@ export default function EODPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">End of Day</h1>
-        <p className="text-gray-600">Manage daily cash sessions and reports</p>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">End of Day</h1>
+        <p className="text-gray-600 dark:text-gray-400">Manage daily cash sessions and reports</p>
       </div>
 
       {/* Outlet Selection */}
@@ -96,7 +96,7 @@ export default function EODPage() {
           </CardHeader>
           <CardBody>
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 No active session for this outlet. Start a new day by entering the opening cash amount.
               </p>
               <Input
@@ -127,22 +127,22 @@ export default function EODPage() {
             <CardBody>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <p className="text-xs text-gray-600">Opened At</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Opened At</p>
                   <p className="text-sm font-semibold">{formatDateTime(currentSession.opened_at)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600">Opening Cash</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Opening Cash</p>
                   <p className="text-lg font-bold">{formatCurrency(currentSession.opening_cash)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600">Opened By</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Opened By</p>
                   <p className="text-sm font-semibold">
                     {currentSession.opened_by_user?.name || 'Unknown'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600">Status</p>
-                  <span className="inline-block px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Status</p>
+                  <span className="inline-block px-2 py-1 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300 text-xs font-semibold rounded">
                     OPEN
                   </span>
                 </div>
@@ -156,7 +156,7 @@ export default function EODPage() {
             </CardHeader>
             <CardBody>
               <div className="space-y-4">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Count the cash in the drawer and enter the amount below to close the day.
                 </p>
 
@@ -177,13 +177,13 @@ export default function EODPage() {
                 />
 
                 {closingCash > 0 && (
-                  <div className="p-4 bg-gray-50 rounded-xl space-y-2">
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Opening Cash:</span>
+                      <span className="text-gray-600 dark:text-gray-400">Opening Cash:</span>
                       <span className="font-semibold">{formatCurrency(currentSession.opening_cash)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Closing Cash:</span>
+                      <span className="text-gray-600 dark:text-gray-400">Closing Cash:</span>
                       <span className="font-semibold">{formatCurrency(closingCash)}</span>
                     </div>
                     <div className="flex justify-between text-base font-bold pt-2 border-t">

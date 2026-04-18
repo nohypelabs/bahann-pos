@@ -28,17 +28,17 @@ export default function AlertsPage() {
   }
 
   const getAlertColor = (type: string) => {
-    if (type === 'out_of_stock') return 'bg-red-100 text-red-800 border-red-200'
-    if (type === 'low_stock') return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-    return 'bg-blue-100 text-blue-800 border-blue-200'
+    if (type === 'out_of_stock') return 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800'
+    if (type === 'low_stock') return 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800'
+    return 'bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800'
   }
 
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Stock Alerts</h1>
-          <p className="text-gray-600">Monitor low stock and inventory alerts</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">Stock Alerts</h1>
+          <p className="text-gray-600 dark:text-gray-400">Monitor low stock and inventory alerts</p>
         </div>
         <Button variant="primary" onClick={handleGenerateAlerts} disabled={generateMutation.isPending}>
           {generateMutation.isPending ? 'Generating...' : 'Generate Alerts'}
@@ -48,15 +48,15 @@ export default function AlertsPage() {
       {summary && (
         <div className="grid grid-cols-3 gap-4">
           <Card variant="elevated" padding="lg">
-            <p className="text-sm text-gray-600">Out of Stock</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Out of Stock</p>
             <p className="text-3xl font-bold text-red-600">{summary.outOfStock}</p>
           </Card>
           <Card variant="elevated" padding="lg">
-            <p className="text-sm text-gray-600">Low Stock</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Low Stock</p>
             <p className="text-3xl font-bold text-yellow-600">{summary.lowStock}</p>
           </Card>
           <Card variant="elevated" padding="lg">
-            <p className="text-sm text-gray-600">Total Alerts</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Total Alerts</p>
             <p className="text-3xl font-bold text-blue-600">{summary.total}</p>
           </Card>
         </div>
