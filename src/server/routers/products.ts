@@ -198,6 +198,16 @@ export const productsRouter = router({
         .eq('id', input.id)
         .single()
 
+      // Check for transaction history (ON DELETE RESTRICT)
+      const { count: txCount } = await supabase
+        .from('transaction_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('product_id', input.id)
+
+      if (txCount && txCount > 0) {
+        throw new Error(`Cannot delete "${productData?.name}" — it has ${txCount} transaction record(s). Products with sales history cannot be deleted.`)
+      }
+
       const { error } = await supabase
         .from('products')
         .delete()
@@ -303,32 +313,54 @@ export const productsRouter = router({
         .select('*')
         .in('id', productIds)
 
-      // Delete all selected products
+      // Find products with transaction history (ON DELETE RESTRICT — cannot delete)
+      const { data: referencedItems } = await supabase
+        .from('transaction_items')
+        .select('product_id')
+        .in('product_id', productIds)
+
+      const referencedIds = new Set(referencedItems?.map(item => item.product_id) || [])
+      const deletableIds = productIds.filter(id => !referencedIds.has(id))
+      const skippedProducts = productsData?.filter(p => referencedIds.has(p.id)) || []
+
+      if (deletableIds.length === 0) {
+        return {
+          success: false,
+          count: 0,
+          skippedCount: skippedProducts.length,
+          skippedNames: skippedProducts.map(p => p.name),
+        }
+      }
+
       const { error } = await supabase
         .from('products')
         .delete()
-        .in('id', productIds)
+        .in('id', deletableIds)
 
       if (error) {
         throw new Error(`Failed to batch delete: ${error.message}`)
       }
 
-      // Audit log
+      const deletedProducts = productsData?.filter(p => deletableIds.includes(p.id)) || []
+
       await createAuditLog({
         userId: ctx.userId,
         userEmail: ctx.session?.email || 'unknown',
         action: 'DELETE',
         entityType: 'product',
         entityId: 'batch',
-        changes: {
-          deleted: productsData,
-        },
+        changes: { deleted: deletedProducts },
         metadata: {
-          count: productIds.length,
-          productNames: productsData?.map(p => p.name).join(', '),
+          count: deletableIds.length,
+          productNames: deletedProducts.map(p => p.name).join(', '),
         },
       })
 
-      return { success: true, count: productIds.length }
+      return {
+        success: true,
+        count: deletableIds.length,
+        skippedCount: skippedProducts.length,
+        skippedNames: skippedProducts.map(p => p.name),
+      }
     }),
 })

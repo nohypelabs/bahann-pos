@@ -654,8 +654,21 @@ function BatchDeleteModal({
       const result = await batchDelete.mutateAsync({
         productIds,
       })
-      showToast(`✅ ${result.count} products deleted successfully!`, 'success')
-      onSuccess()
+      if (result.count === 0) {
+        showToast(
+          `Cannot delete — all ${result.skippedCount} selected product(s) have transaction history and cannot be removed.`,
+          'error'
+        )
+      } else if (result.skippedCount > 0) {
+        showToast(
+          `✅ ${result.count} deleted. ⚠️ ${result.skippedCount} skipped (have transaction history): ${result.skippedNames?.join(', ')}`,
+          'success'
+        )
+        onSuccess()
+      } else {
+        showToast(`✅ ${result.count} product${result.count > 1 ? 's' : ''} deleted successfully!`, 'success')
+        onSuccess()
+      }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete products'
       showToast(errorMessage, 'error')
