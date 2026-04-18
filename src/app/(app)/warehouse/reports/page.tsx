@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { trpc } from '@/lib/trpc/client'
 import { ChartSkeleton, ExportLoadingSkeleton } from '@/components/ui/Skeletons'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { getLimits } from '@/lib/plans'
 
 // Lazy load heavy chart components - only loaded when data is available
 const RevenueLineChart = lazy(() => import('@/components/charts/RevenueLineChartLazy'))
@@ -22,7 +23,7 @@ export default function ReportsPage() {
   const [showExporter, setShowExporter] = useState(false)
 
   const { data: planData } = trpc.auth.getPlan.useQuery()
-  const canExport = planData?.plan !== 'free'
+  const canExport = getLimits(planData?.plan ?? 'free').canExport
 
   // Fetch data
   const { data: outletsResponse } = trpc.outlets.getAll.useQuery()

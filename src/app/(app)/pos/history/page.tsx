@@ -5,6 +5,7 @@ import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
 import { trpc } from '@/lib/trpc/client'
+import { getLimits } from '@/lib/plans'
 
 export default function SalesHistoryPage() {
   const [dateRange, setDateRange] = useState<7 | 14 | 30 | 0>(7)
@@ -12,7 +13,7 @@ export default function SalesHistoryPage() {
   const [searchQuery, setSearchQuery] = useState('')
 
   const { data: planData } = trpc.auth.getPlan.useQuery()
-  const canExport = planData?.plan !== 'free'
+  const canExport = getLimits(planData?.plan ?? 'free').canExport
 
   // Fetch outlets for filter
   const { data: outletsResponse } = trpc.outlets.getAll.useQuery()
