@@ -243,7 +243,7 @@ export const authRouter = router({
       }).optional()
     )
     .query(async ({ input }) => {
-      const { supabase } = await import('@/infra/supabase/client')
+      const { supabaseAdmin: supabase } = await import('@/infra/supabase/server')
       const page = input?.page || 1
       const limit = input?.limit || 20
       const search = input?.search
@@ -288,7 +288,7 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const { supabase } = await import('@/infra/supabase/client')
+      const { supabaseAdmin: supabase } = await import('@/infra/supabase/server')
 
       // Check if user exists
       const { data: user, error } = await supabase
@@ -367,7 +367,7 @@ export const authRouter = router({
       })
     )
     .query(async ({ input }) => {
-      const { supabase } = await import('@/infra/supabase/client')
+      const { supabaseAdmin: supabase } = await import('@/infra/supabase/server')
 
       const { data: tokenData, error } = await supabase
         .from('password_reset_tokens')
@@ -405,7 +405,7 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const { supabase } = await import('@/infra/supabase/client')
+      const { supabaseAdmin: supabase } = await import('@/infra/supabase/server')
 
       // Verify token first
       const { data: tokenData, error } = await supabase

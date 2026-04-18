@@ -1,4 +1,4 @@
-import { supabase } from '../supabase/client';
+import { supabaseAdmin as supabase } from '../supabase/server';
 import { type Tables, type TablesInsert } from '../database.types';
 import { DailySale } from '@/domain/entities/DailySale';
 import { DailySaleRepository } from '@/domain/repositories/DailySaleRepository';

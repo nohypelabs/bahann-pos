@@ -1,10 +1,10 @@
 import { UserRepository } from '@/domain/repositories/UserRepository'
 import { User } from '@/domain/entities/User'
-import { supabase } from '../supabase/client'
+import { supabaseAdmin } from '../supabase/server'
 
 export class SupabaseUserRepository implements UserRepository {
   async save(user: User): Promise<void> {
-    const { error } = await supabase.from('users').insert({
+    const { error } = await supabaseAdmin.from('users').insert({
       id: user.id,
       email: user.email,
       name: user.name,
@@ -21,7 +21,7 @@ export class SupabaseUserRepository implements UserRepository {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('users')
       .select('*')
       .eq('email', email)
@@ -44,7 +44,7 @@ export class SupabaseUserRepository implements UserRepository {
   }
 
   async findById(id: string): Promise<User | null> {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('users')
       .select('*')
       .eq('id', id)
@@ -67,7 +67,7 @@ export class SupabaseUserRepository implements UserRepository {
   }
 
   async update(user: User): Promise<void> {
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('users')
       .update({
         email: user.email,
@@ -84,7 +84,7 @@ export class SupabaseUserRepository implements UserRepository {
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase.from('users').delete().eq('id', id)
+    const { error } = await supabaseAdmin.from('users').delete().eq('id', id)
 
     if (error) {
       throw new Error(`Failed to delete user: ${error.message}`)
