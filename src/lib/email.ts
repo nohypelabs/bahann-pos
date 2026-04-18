@@ -557,6 +557,86 @@ export async function sendTrialExpiredEmail({ to, name }: SendTrialExpiredEmailP
   }
 }
 
+export interface SendVerificationEmailParams {
+  to: string
+  name: string
+  token: string
+}
+
+export async function sendVerificationEmail({ to, name, token }: SendVerificationEmailParams) {
+  const verifyUrl = `${APP_URL}/verify-email?token=${token}`
+
+  try {
+    const resend = getResend()
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: '✉️ Verifikasi email kamu — Laku POS',
+      html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background-color:#f5f5f5;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background-color:white;border-radius:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);overflow:hidden;">
+
+        <tr>
+          <td style="background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);padding:40px;text-align:center;">
+            <h1 style="margin:0;color:white;font-size:36px;font-weight:bold;letter-spacing:-1px;">Laku POS</h1>
+            <p style="margin:10px 0 0 0;color:rgba(255,255,255,0.9);font-size:16px;">Verifikasi Email</p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:40px;">
+            <h2 style="margin:0 0 16px 0;color:#1a202c;font-size:24px;">Halo, ${name}! 👋</h2>
+            <p style="margin:0 0 24px 0;color:#4a5568;font-size:16px;line-height:1.6;">
+              Satu langkah lagi! Verifikasi emailmu untuk mengaktifkan <strong>trial 14 hari Starter gratis</strong>.
+            </p>
+
+            <div style="background:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:20px;margin:0 0 28px 0;text-align:center;">
+              <p style="margin:0 0 8px 0;color:#15803d;font-size:14px;font-weight:600;">🎁 Yang kamu dapatkan setelah verifikasi:</p>
+              <p style="margin:0;color:#166534;font-size:14px;">14 hari gratis plan Starter (senilai Rp 299.000)</p>
+            </div>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
+              <tr><td align="center">
+                <a href="${verifyUrl}" style="display:inline-block;background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);color:white;text-decoration:none;padding:16px 48px;border-radius:12px;font-size:16px;font-weight:600;box-shadow:0 4px 6px rgba(22,163,74,0.4);">
+                  ✉️ Verifikasi Email Saya
+                </a>
+              </td></tr>
+            </table>
+
+            <div style="background:#f7fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 24px 0;word-break:break-all;">
+              <p style="margin:0 0 4px 0;color:#718096;font-size:12px;">Atau copy link ini ke browser:</p>
+              <a href="${verifyUrl}" style="color:#16a34a;font-size:13px;text-decoration:none;">${verifyUrl}</a>
+            </div>
+
+            <div style="background:#fef5e7;border-left:4px solid #f39c12;padding:16px;border-radius:8px;">
+              <p style="margin:0;color:#d68910;font-size:13px;">⚠️ Link berlaku <strong>24 jam</strong>. Jika tidak merasa mendaftar, abaikan email ini.</p>
+            </div>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="background-color:#f7fafc;padding:24px;text-align:center;border-top:2px solid #e2e8f0;">
+            <p style="margin:0;color:#a0aec0;font-size:12px;">© ${new Date().getFullYear()} Laku POS. All rights reserved.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`,
+    })
+    console.log('✅ Verification email sent to:', to)
+  } catch (err) {
+    console.error('❌ Failed to send verification email:', err)
+  }
+}
+
 /**
  * Generate secure random token for password reset
  */

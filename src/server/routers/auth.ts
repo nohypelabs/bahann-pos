@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { TRPCError } from '@trpc/server'
 import { router, publicProcedure, protectedProcedure, adminProcedure } from '../trpc'
 import { LoginUserUseCase } from '@/use-cases/auth/LoginUserUseCase'
 import { RegisterUserUseCase } from '@/use-cases/auth/RegisterUserUseCase'
@@ -7,7 +8,7 @@ import { SupabaseUserRepository } from '@/infra/repositories/SupabaseUserReposit
 import { setAuthCookie, deleteAuthCookie, setRefreshCookie, deleteRefreshCookie, getRefreshCookie } from '@/lib/cookies'
 import { createAuditLog } from '@/lib/audit'
 import { createRefreshToken, rotateRefreshToken, revokeRefreshToken, revokeAllUserTokens } from '@/lib/refreshToken'
-import { sendPasswordResetEmail, generateResetToken, sendNewUserNotification, sendWelcomeEmail } from '@/lib/email'
+import { sendPasswordResetEmail, generateResetToken, sendNewUserNotification, sendWelcomeEmail, sendVerificationEmail } from '@/lib/email'
 import bcrypt from 'bcryptjs'
 
 const userRepository = new SupabaseUserRepository()
@@ -58,28 +59,25 @@ export const authRouter = router({
         .select('id')
         .single()
 
-      // Set 14-day Starter trial for new users
-      const trialEndsAt = new Date()
-      trialEndsAt.setDate(trialEndsAt.getDate() + 14)
+      // Generate email verification token — trial activates after verified
+      const verifyToken = generateResetToken()
+      const tokenExpiry = new Date()
+      tokenExpiry.setHours(tokenExpiry.getHours() + 24)
 
       await supabaseAdmin
         .from('users')
         .update({
           outlet_id: outlet?.id ?? null,
-          plan: 'starter',
-          is_trial: true,
-          trial_ends_at: trialEndsAt.toISOString(),
+          plan: 'free',
+          email_verify_token: verifyToken,
         })
         .eq('id', result.userId)
 
-      // Record trial activation in billing history
-      await supabaseAdmin.from('billing_history').insert({
-        user_id: result.userId,
-        plan: 'starter',
-        previous_plan: 'free',
-        amount: 0,
-        note: 'Trial 14 hari gratis',
-        is_trial: true,
+      // Send verification email (non-fatal)
+      await sendVerificationEmail({
+        to: result.email,
+        name: result.name,
+        token: verifyToken,
       })
 
       // Welcome email to new user (non-fatal)
@@ -515,4 +513,82 @@ export const authRouter = router({
         message: 'Password berhasil direset. Silakan login dengan password baru.',
       }
     }),
+
+  verifyEmail: publicProcedure
+    .input(z.object({ token: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const { supabaseAdmin } = await import('@/infra/supabase/server')
+
+      const { data: user, error } = await supabaseAdmin
+        .from('users')
+        .select('id, email, name, email_verified_at, plan')
+        .eq('email_verify_token', input.token)
+        .single()
+
+      if (error || !user) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Link verifikasi tidak valid atau sudah kadaluarsa.' })
+      }
+
+      if (user.email_verified_at) {
+        return { alreadyVerified: true }
+      }
+
+      // Activate 14-day Starter trial
+      const trialEndsAt = new Date()
+      trialEndsAt.setDate(trialEndsAt.getDate() + 14)
+
+      await supabaseAdmin
+        .from('users')
+        .update({
+          email_verified_at: new Date().toISOString(),
+          email_verify_token: null,
+          plan: 'starter',
+          is_trial: true,
+          trial_ends_at: trialEndsAt.toISOString(),
+        })
+        .eq('id', user.id)
+
+      await supabaseAdmin.from('billing_history').insert({
+        user_id: user.id,
+        plan: 'starter',
+        previous_plan: 'free',
+        amount: 0,
+        note: 'Trial 14 hari gratis — email terverifikasi',
+        is_trial: true,
+      })
+
+      return { alreadyVerified: false }
+    }),
+
+  resendVerification: protectedProcedure.mutation(async ({ ctx }) => {
+    const { supabaseAdmin } = await import('@/infra/supabase/server')
+
+    const { data: user } = await supabaseAdmin
+      .from('users')
+      .select('email, name, email_verified_at')
+      .eq('id', ctx.userId)
+      .single()
+
+    if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User tidak ditemukan.' })
+    if (user.email_verified_at) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Email sudah terverifikasi.' })
+
+    const newToken = generateResetToken()
+    await supabaseAdmin
+      .from('users')
+      .update({ email_verify_token: newToken })
+      .eq('id', ctx.userId)
+
+    await sendVerificationEmail({ to: user.email, name: user.name ?? 'Pengguna', token: newToken })
+    return { success: true }
+  }),
+
+  getEmailVerified: protectedProcedure.query(async ({ ctx }) => {
+    const { supabaseAdmin } = await import('@/infra/supabase/server')
+    const { data } = await supabaseAdmin
+      .from('users')
+      .select('email_verified_at')
+      .eq('id', ctx.userId)
+      .single()
+    return { verified: !!data?.email_verified_at }
+  }),
 })
