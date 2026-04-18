@@ -1,7 +1,9 @@
 import { z } from 'zod'
+import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '../trpc'
 import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { getTenantOwnerId } from '@/server/lib/tenant'
+import { getLimits } from '@/lib/plans'
 
 export const dashboardRouter = router({
   /**
@@ -353,5 +355,102 @@ export const dashboardRouter = router({
       })
 
       return flatTransactions
+    }),
+
+  /**
+   * Export report data — plan-gated at server level
+   */
+  exportReport: protectedProcedure
+    .input(z.object({
+      outletId: z.string().uuid().optional(),
+      days: z.number().default(30),
+    }))
+    .query(async ({ input, ctx }) => {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('plan')
+        .eq('id', ctx.userId)
+        .single()
+
+      const limits = getLimits(userData?.plan ?? 'free')
+      if (!limits.canExport) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Fitur export tersedia mulai plan Starter. Upgrade untuk menggunakan fitur ini.',
+        })
+      }
+
+      const days = input.days
+      const endDate = new Date()
+
+      // Sales trend
+      let trendQuery = supabase
+        .from('transactions')
+        .select('created_at, total_amount, transaction_items(quantity)')
+        .eq('status', 'completed')
+        .lte('created_at', `${endDate.toISOString().split('T')[0]}T23:59:59`)
+        .order('created_at', { ascending: true })
+
+      if (days > 0) {
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - (days - 1))
+        trendQuery = trendQuery.gte('created_at', `${startDate.toISOString().split('T')[0]}T00:00:00`)
+      }
+      if (input.outletId) trendQuery = trendQuery.eq('outlet_id', input.outletId)
+
+      const { data: transactions } = await trendQuery
+      const trendMap: Record<string, { date: string; revenue: number; itemsSold: number }> = {}
+
+      if (days > 0) {
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - (days - 1))
+        for (let i = 0; i < days; i++) {
+          const d = new Date(startDate)
+          d.setDate(d.getDate() + i)
+          const ds = d.toISOString().split('T')[0]
+          trendMap[ds] = { date: ds, revenue: 0, itemsSold: 0 }
+        }
+      }
+
+      transactions?.forEach((tx: any) => {
+        const ds = new Date(tx.created_at).toISOString().split('T')[0]
+        if (!trendMap[ds]) trendMap[ds] = { date: ds, revenue: 0, itemsSold: 0 }
+        trendMap[ds].revenue += tx.total_amount || 0
+        trendMap[ds].itemsSold += tx.transaction_items?.reduce((s: number, i: any) => s + (i.quantity || 0), 0) || 0
+      })
+
+      const salesTrend = Object.values(trendMap)
+
+      // Top products
+      let prodQuery = supabase
+        .from('transactions')
+        .select('transaction_items(product_id, product_name, product_sku, quantity, line_total)')
+        .eq('status', 'completed')
+
+      if (days > 0) {
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - (days - 1))
+        prodQuery = prodQuery.gte('created_at', startDate.toISOString())
+      }
+      if (input.outletId) prodQuery = prodQuery.eq('outlet_id', input.outletId)
+
+      const { data: prodTxs } = await prodQuery
+      const productMap: Record<string, any> = {}
+      prodTxs?.forEach((tx: any) => {
+        tx.transaction_items?.forEach((item: any) => {
+          if (!item.product_id) return
+          if (!productMap[item.product_id]) {
+            productMap[item.product_id] = { productId: item.product_id, productName: item.product_name || 'Unknown', productSku: item.product_sku || 'N/A', totalQuantity: 0, totalRevenue: 0 }
+          }
+          productMap[item.product_id].totalQuantity += item.quantity || 0
+          productMap[item.product_id].totalRevenue += item.line_total || 0
+        })
+      })
+
+      const topProducts = Object.values(productMap)
+        .sort((a, b) => b.totalQuantity - a.totalQuantity)
+        .slice(0, 10)
+
+      return { salesTrend, topProducts }
     }),
 })

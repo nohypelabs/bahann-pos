@@ -353,11 +353,8 @@ export default function ReportsPage() {
         {canExport && showExporter && (
           <Suspense fallback={<ExportLoadingSkeleton />}>
             <ReportExporter
-              data={{
-                salesTrend: salesTrend || [],
-                topProducts: topProducts || [],
-                stats,
-              }}
+              outletId={selectedOutletId || undefined}
+              days={dateRange}
               onClose={() => setShowExporter(false)}
             />
           </Suspense>
