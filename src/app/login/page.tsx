@@ -67,8 +67,8 @@ function LoginContent() {
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">AGDS Corp POS</h1>
-          <p className="text-gray-600">Warehouse & Point of Sale System</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">AGDS Corp POS</h1>
+          <p className="text-gray-600 dark:text-gray-400">Warehouse & Point of Sale System</p>
         </div>
 
         {/* Login Card */}
@@ -104,7 +104,7 @@ function LoginContent() {
               />
 
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                   {t('login.password')}
                 </label>
                 <div className="relative">
@@ -119,7 +119,7 @@ function LoginContent() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                   >
                     {showPassword ? '🙈' : '👁️'}
                   </button>
@@ -147,13 +147,13 @@ function LoginContent() {
             </form>
 
             <div className="mt-6 text-center space-y-2">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {t('login.noAccount')}{' '}
-                <a href="/register" className="font-semibold text-gray-900 hover:underline">
+                <a href="/register" className="font-semibold text-gray-900 dark:text-gray-100 hover:underline">
                   {t('login.register')}
                 </a>
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-500">
                 <a href="/test/users" className="text-blue-600 hover:underline">
                   🔍 View Registered Users (Test)
                 </a>
@@ -164,7 +164,7 @@ function LoginContent() {
 
         {/* Footer Note */}
         <div className="mt-8 text-center">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-500">
             Session valid for 7 days
           </p>
         </div>
@@ -175,10 +175,10 @@ function LoginContent() {
 
 function LoadingFallback() {
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
+    <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center">
       <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-gray-900"></div>
-        <p className="mt-4 text-gray-600">Loading...</p>
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 dark:border-gray-600 border-t-gray-900 dark:border-t-gray-100"></div>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
       </div>
     </div>
   )

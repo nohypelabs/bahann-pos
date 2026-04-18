@@ -82,8 +82,8 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">AGDS Corp POS</h1>
-          <p className="text-gray-600">{t('register.subtitle')}</p>
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">AGDS Corp POS</h1>
+          <p className="text-gray-600 dark:text-gray-400">{t('register.subtitle')}</p>
         </div>
 
         {/* Register Card */}
@@ -99,10 +99,10 @@ export default function RegisterPage() {
                 <h3 className="text-2xl font-bold text-green-600 mb-2">
                   {t('register.success')}
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
                   {t('register.success')}
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {t('common.loading')}
                 </p>
               </div>
@@ -137,7 +137,7 @@ export default function RegisterPage() {
                 />
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     {t('register.password')} *
                   </label>
                   <div className="relative">
@@ -153,18 +153,18 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                     >
                       {showPassword ? '🙈' : '👁️'}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     Gunakan kombinasi huruf, angka, dan simbol
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
                     {t('register.confirmPassword')} *
                   </label>
                   <div className="relative">
@@ -180,7 +180,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                     >
                       {showConfirmPassword ? '🙈' : '👁️'}
                     </button>
@@ -215,9 +215,9 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="pt-2 text-center">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     {t('register.hasAccount')}{' '}
-                    <a href="/login" className="font-semibold text-gray-900 hover:underline">
+                    <a href="/login" className="font-semibold text-gray-900 dark:text-gray-100 hover:underline">
                       {t('register.login')}
                     </a>
                   </p>
@@ -237,9 +237,9 @@ export default function RegisterPage() {
         </Card>
 
         {/* Info Box */}
-        <div className="mt-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
-          <p className="text-sm text-blue-900 font-semibold mb-2">ℹ️ Informasi Pendaftaran:</p>
-          <ul className="text-xs text-blue-800 space-y-1">
+        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
+          <p className="text-sm text-blue-900 dark:text-blue-200 font-semibold mb-2">ℹ️ Informasi Pendaftaran:</p>
+          <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
             <li>• Password minimal 8 karakter</li>
             <li>• Email harus unik (belum terdaftar)</li>
             <li>• Outlet bersifat opsional</li>
