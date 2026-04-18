@@ -7,7 +7,7 @@ import { Input, Select } from '@/components/ui/Input'
 import { trpc } from '@/lib/trpc/client'
 
 export default function SalesHistoryPage() {
-  const [dateRange, setDateRange] = useState<7 | 14 | 30>(7)
+  const [dateRange, setDateRange] = useState<7 | 14 | 30 | 0>(7)
   const [selectedOutletId, setSelectedOutletId] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -99,11 +99,12 @@ export default function SalesHistoryPage() {
             <Select
               label="Time Period"
               value={dateRange.toString()}
-              onChange={(e) => setDateRange(Number(e.target.value) as 7 | 14 | 30)}
+              onChange={(e) => setDateRange(Number(e.target.value) as 7 | 14 | 30 | 0)}
               options={[
                 { value: '7', label: 'Last 7 Days' },
                 { value: '14', label: 'Last 14 Days' },
                 { value: '30', label: 'Last 30 Days' },
+                { value: '0', label: 'All Time' },
               ]}
               fullWidth
             />
@@ -127,7 +128,7 @@ export default function SalesHistoryPage() {
             <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
               {formatCurrency(stats?.totalRevenue || 0)}
             </p>
-            <p className="text-sm text-green-600">{dateRange} days</p>
+            <p className="text-sm text-green-600">{dateRange === 0 ? 'All Time' : `${dateRange} days`}</p>
           </div>
         </Card>
 

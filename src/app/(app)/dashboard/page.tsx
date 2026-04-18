@@ -13,7 +13,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const { t } = useLanguage()
   const [selectedOutletId, setSelectedOutletId] = useState<string>('')
-  const [dateRange, setDateRange] = useState<7 | 14 | 30>(7)
+  const [dateRange, setDateRange] = useState<7 | 14 | 30 | 0>(7)
 
   // Fetch outlets for filter
   const { data: outletsResponse } = trpc.outlets.getAll.useQuery()
@@ -93,11 +93,12 @@ export default function DashboardPage() {
             />
             <Select
               value={dateRange.toString()}
-              onChange={(e) => setDateRange(Number(e.target.value) as 7 | 14 | 30)}
+              onChange={(e) => setDateRange(Number(e.target.value) as 7 | 14 | 30 | 0)}
               options={[
                 { value: '7', label: t('dashboard.last7days') },
                 { value: '14', label: '14 ' + t('common.day') },
                 { value: '30', label: t('dashboard.last30days') },
+                { value: '0', label: 'All Time' },
               ]}
             />
           </div>
@@ -168,7 +169,7 @@ export default function DashboardPage() {
       {/* Sales Trend Chart */}
       <Card variant="elevated" padding="md">
         <CardHeader>
-          <CardTitle>Sales Trend (Last {dateRange} Days)</CardTitle>
+          <CardTitle>Sales Trend ({dateRange === 0 ? 'All Time' : `Last ${dateRange} Days`})</CardTitle>
         </CardHeader>
         <CardBody>
           {trendLoading ? (

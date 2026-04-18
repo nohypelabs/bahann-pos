@@ -82,19 +82,22 @@ export const dashboardRouter = router({
       }).optional()
     )
     .query(async ({ input }) => {
-      const days = input?.days || 7
+      const days = input?.days ?? 7
       const endDate = new Date()
-      const startDate = new Date()
-      startDate.setDate(startDate.getDate() - (days - 1))
 
       // Query from transactions table
       let query = supabase
         .from('transactions')
         .select('created_at, total_amount, transaction_items(quantity)')
         .eq('status', 'completed')
-        .gte('created_at', `${startDate.toISOString().split('T')[0]}T00:00:00`)
         .lte('created_at', `${endDate.toISOString().split('T')[0]}T23:59:59`)
         .order('created_at', { ascending: true })
+
+      if (days > 0) {
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - (days - 1))
+        query = query.gte('created_at', `${startDate.toISOString().split('T')[0]}T00:00:00`)
+      }
 
       if (input?.outletId) {
         query = query.eq('outlet_id', input.outletId)
@@ -105,23 +108,28 @@ export const dashboardRouter = router({
       // Group by date
       const trendMap: Record<string, { date: string; revenue: number; itemsSold: number }> = {}
 
-      // Initialize all dates
-      for (let i = 0; i < days; i++) {
-        const date = new Date(startDate)
-        date.setDate(date.getDate() + i)
-        const dateStr = date.toISOString().split('T')[0]
-        trendMap[dateStr] = { date: dateStr, revenue: 0, itemsSold: 0 }
+      // Pre-initialize all dates for fixed ranges so gaps show as 0
+      if (days > 0) {
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - (days - 1))
+        for (let i = 0; i < days; i++) {
+          const date = new Date(startDate)
+          date.setDate(date.getDate() + i)
+          const dateStr = date.toISOString().split('T')[0]
+          trendMap[dateStr] = { date: dateStr, revenue: 0, itemsSold: 0 }
+        }
       }
 
       // Fill with actual data from transactions
       transactions?.forEach((tx: any) => {
         const txDate = new Date(tx.created_at).toISOString().split('T')[0]
-        if (trendMap[txDate]) {
-          trendMap[txDate].revenue += tx.total_amount || 0
-          // Sum all items quantity
-          const itemsCount = tx.transaction_items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) || 0
-          trendMap[txDate].itemsSold += itemsCount
+        if (!trendMap[txDate]) {
+          trendMap[txDate] = { date: txDate, revenue: 0, itemsSold: 0 }
         }
+        trendMap[txDate].revenue += tx.total_amount || 0
+        // Sum all items quantity
+        const itemsCount = tx.transaction_items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) || 0
+        trendMap[txDate].itemsSold += itemsCount
       })
 
       return Object.values(trendMap)
@@ -139,12 +147,10 @@ export const dashboardRouter = router({
       }).optional()
     )
     .query(async ({ input }) => {
-      const days = input?.days || 7
+      const days = input?.days ?? 7
       const limit = input?.limit || 5
 
       const endDate = new Date()
-      const startDate = new Date()
-      startDate.setDate(startDate.getDate() - (days - 1))
 
       // Query from transactions table with transaction_items
       let query = supabase
@@ -159,8 +165,13 @@ export const dashboardRouter = router({
           )
         `)
         .eq('status', 'completed')
-        .gte('created_at', `${startDate.toISOString().split('T')[0]}T00:00:00`)
         .lte('created_at', `${endDate.toISOString().split('T')[0]}T23:59:59`)
+
+      if (days > 0) {
+        const startDate = new Date()
+        startDate.setDate(startDate.getDate() - (days - 1))
+        query = query.gte('created_at', `${startDate.toISOString().split('T')[0]}T00:00:00`)
+      }
 
       if (input?.outletId) {
         query = query.eq('outlet_id', input.outletId)

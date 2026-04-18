@@ -18,7 +18,7 @@ const ReportExporter = lazy(() => import('@/components/reports/ReportExporter'))
 
 export default function ReportsPage() {
   const [selectedOutletId, setSelectedOutletId] = useState('')
-  const [dateRange, setDateRange] = useState<7 | 14 | 30>(30)
+  const [dateRange, setDateRange] = useState<7 | 14 | 30 | 0>(30)
   const [showExporter, setShowExporter] = useState(false)
 
   // Fetch data
@@ -94,11 +94,12 @@ export default function ReportsPage() {
             <Select
               label="Time Period"
               value={dateRange.toString()}
-              onChange={(e) => setDateRange(Number(e.target.value) as 7 | 14 | 30)}
+              onChange={(e) => setDateRange(Number(e.target.value) as 7 | 14 | 30 | 0)}
               options={[
                 { value: '7', label: 'Last 7 Days' },
                 { value: '14', label: 'Last 14 Days' },
                 { value: '30', label: 'Last 30 Days' },
+                { value: '0', label: 'All Time' },
               ]}
               fullWidth
             />
@@ -114,7 +115,7 @@ export default function ReportsPage() {
             <p className="text-3xl font-bold text-green-600">
               {formatCurrency(stats?.totalRevenue || 0)}
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{dateRange} days</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{dateRange === 0 ? 'All Time' : `${dateRange} days`}</p>
           </div>
         </Card>
 

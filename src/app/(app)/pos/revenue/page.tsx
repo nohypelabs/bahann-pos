@@ -12,7 +12,7 @@ const DailyRevenueBarChart = lazy(() => import('@/components/charts/DailyRevenue
 
 export default function RevenueTrackingPage() {
   const [selectedOutletId, setSelectedOutletId] = useState('')
-  const [dateRange, setDateRange] = useState<7 | 14 | 30>(7)
+  const [dateRange, setDateRange] = useState<7 | 14 | 30 | 0>(7)
 
   // Fetch data
   const { data: outletsResponse } = trpc.outlets.getAll.useQuery()
@@ -102,11 +102,12 @@ export default function RevenueTrackingPage() {
             <Select
               label="Time Period"
               value={dateRange.toString()}
-              onChange={(e) => setDateRange(Number(e.target.value) as 7 | 14 | 30)}
+              onChange={(e) => setDateRange(Number(e.target.value) as 7 | 14 | 30 | 0)}
               options={[
                 { value: '7', label: 'Last 7 Days' },
                 { value: '14', label: 'Last 14 Days' },
                 { value: '30', label: 'Last 30 Days' },
+                { value: '0', label: 'All Time' },
               ]}
               fullWidth
             />
@@ -122,7 +123,7 @@ export default function RevenueTrackingPage() {
             <p className="text-3xl font-bold text-green-600">
               {formatCurrency(totalRevenue)}
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">{dateRange} days</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{dateRange === 0 ? 'All Time' : `${dateRange} days`}</p>
           </div>
         </Card>
 
