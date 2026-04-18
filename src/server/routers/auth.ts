@@ -47,6 +47,26 @@ export const authRouter = router({
         metadata: { name: result.name, whatsappNumber: input.whatsappNumber },
       })
 
+      // Auto-create first outlet for admin users
+      if (input.role === 'admin') {
+        const { supabaseAdmin } = await import('@/infra/supabase/server')
+        const { data: outlet } = await supabaseAdmin
+          .from('outlets')
+          .insert({
+            name: `${result.name} - Outlet Utama`,
+            owner_id: result.userId,
+          })
+          .select('id')
+          .single()
+
+        if (outlet) {
+          await supabaseAdmin
+            .from('users')
+            .update({ outlet_id: outlet.id })
+            .eq('id', result.userId)
+        }
+      }
+
       // Notify admin of new registration (non-fatal)
       const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL
       if (adminEmail) {

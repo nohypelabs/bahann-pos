@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { router, protectedProcedure } from '../trpc'
 import { supabaseAdmin as supabase } from '@/infra/supabase/server'
+import { getTenantOwnerId } from '@/server/lib/tenant'
 
 export const dashboardRouter = router({
   /**
@@ -14,20 +15,22 @@ export const dashboardRouter = router({
         endDate: z.string().optional(),
       }).optional()
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const today = new Date().toISOString().split('T')[0]
       const startDate = input?.startDate || today
       const endDate = input?.endDate || today
 
-      // Get total products
-      const { count: totalProducts } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
+      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
 
-      // Get total outlets
-      const { count: totalOutlets } = await supabase
-        .from('outlets')
-        .select('*', { count: 'exact', head: true })
+      // Get total products scoped to tenant
+      let productsQuery = supabase.from('products').select('*', { count: 'exact', head: true })
+      if (ownerId) productsQuery = productsQuery.eq('owner_id', ownerId)
+      const { count: totalProducts } = await productsQuery
+
+      // Get total outlets scoped to tenant
+      let outletsQuery = supabase.from('outlets').select('*', { count: 'exact', head: true })
+      if (ownerId) outletsQuery = outletsQuery.eq('owner_id', ownerId)
+      const { count: totalOutlets } = await outletsQuery
 
       // Get sales from transactions table (more reliable than daily_sales)
       let transactionsQuery = supabase

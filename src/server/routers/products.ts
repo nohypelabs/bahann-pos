@@ -2,10 +2,11 @@ import { z } from 'zod'
 import { router, protectedProcedure, adminProcedure } from '../trpc'
 import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
+import { getTenantOwnerId, assertProductBelongsToTenant } from '@/server/lib/tenant'
 
 export const productsRouter = router({
   /**
-   * Get all products with pagination
+   * Get all products scoped to the current user's tenant
    */
   getAll: protectedProcedure
     .input(
@@ -16,10 +17,12 @@ export const productsRouter = router({
         limit: z.number().min(1).max(100).default(50),
       }).optional()
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const page = input?.page || 1
       const limit = input?.limit || 50
       const offset = (page - 1) * limit
+
+      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
 
       // Build count query
       let countQuery = supabase
@@ -33,7 +36,12 @@ export const productsRouter = router({
         .order('name', { ascending: true })
         .range(offset, offset + limit - 1)
 
-      // Apply filters to both queries
+      // Scope to tenant when owner is known
+      if (ownerId) {
+        countQuery = countQuery.eq('owner_id', ownerId)
+        dataQuery = dataQuery.eq('owner_id', ownerId)
+      }
+
       if (input?.search) {
         const searchFilter = `name.ilike.%${input.search}%,sku.ilike.%${input.search}%`
         countQuery = countQuery.or(searchFilter)
@@ -45,19 +53,13 @@ export const productsRouter = router({
         dataQuery = dataQuery.eq('category', input.category)
       }
 
-      // Execute both queries
       const [{ count, error: countError }, { data, error: dataError }] = await Promise.all([
         countQuery,
         dataQuery,
       ])
 
-      if (countError) {
-        throw new Error(`Failed to count products: ${countError.message}`)
-      }
-
-      if (dataError) {
-        throw new Error(`Failed to fetch products: ${dataError.message}`)
-      }
+      if (countError) throw new Error(`Failed to count products: ${countError.message}`)
+      if (dataError) throw new Error(`Failed to fetch products: ${dataError.message}`)
 
       return {
         products: data || [],
@@ -82,15 +84,12 @@ export const productsRouter = router({
         .eq('id', input.id)
         .single()
 
-      if (error) {
-        throw new Error(`Failed to fetch product: ${error.message}`)
-      }
-
+      if (error) throw new Error(`Failed to fetch product: ${error.message}`)
       return data
     }),
 
   /**
-   * Create new product - ADMIN ONLY (with Audit Logging)
+   * Create new product - ADMIN ONLY
    */
   create: adminProcedure
     .input(
@@ -109,15 +108,13 @@ export const productsRouter = router({
           name: input.name,
           category: input.category || null,
           price: input.price || null,
+          owner_id: ctx.userId,
         })
         .select()
         .single()
 
-      if (error) {
-        throw new Error(`Failed to create product: ${error.message}`)
-      }
+      if (error) throw new Error(`Failed to create product: ${error.message}`)
 
-      // Audit log
       await createAuditLog({
         userId: ctx.userId,
         userEmail: ctx.session?.email || 'unknown',
@@ -132,7 +129,7 @@ export const productsRouter = router({
     }),
 
   /**
-   * Update product - ADMIN ONLY (with Audit Logging)
+   * Update product - ADMIN ONLY
    */
   update: adminProcedure
     .input(
@@ -145,7 +142,8 @@ export const productsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      // Get old data for audit trail
+      await assertProductBelongsToTenant(input.id, ctx.userId)
+
       const { data: oldData } = await supabase
         .from('products')
         .select('*')
@@ -164,11 +162,8 @@ export const productsRouter = router({
         .select()
         .single()
 
-      if (error) {
-        throw new Error(`Failed to update product: ${error.message}`)
-      }
+      if (error) throw new Error(`Failed to update product: ${error.message}`)
 
-      // Audit log with before/after comparison
       await createAuditLog({
         userId: ctx.userId,
         userEmail: ctx.session?.email || 'unknown',
@@ -186,19 +181,19 @@ export const productsRouter = router({
     }),
 
   /**
-   * Delete product - ADMIN ONLY (with Audit Logging)
+   * Delete product - ADMIN ONLY
    */
   delete: adminProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      // Get product data before deletion for audit trail
+      await assertProductBelongsToTenant(input.id, ctx.userId)
+
       const { data: productData } = await supabase
         .from('products')
         .select('*')
         .eq('id', input.id)
         .single()
 
-      // Check for transaction history (ON DELETE RESTRICT)
       const { count: txCount } = await supabase
         .from('transaction_items')
         .select('*', { count: 'exact', head: true })
@@ -213,11 +208,8 @@ export const productsRouter = router({
         .delete()
         .eq('id', input.id)
 
-      if (error) {
-        throw new Error(`Failed to delete product: ${error.message}`)
-      }
+      if (error) throw new Error(`Failed to delete product: ${error.message}`)
 
-      // Audit log
       await createAuditLog({
         userId: ctx.userId,
         userEmail: ctx.session?.email || 'unknown',
@@ -225,29 +217,31 @@ export const productsRouter = router({
         entityType: 'product',
         entityId: input.id,
         changes: { deleted: productData },
-        metadata: {
-          sku: productData?.sku,
-          name: productData?.name,
-        },
+        metadata: { sku: productData?.sku, name: productData?.name },
       })
 
       return { success: true }
     }),
 
   /**
-   * Get categories
+   * Get categories scoped to tenant
    */
-  getCategories: protectedProcedure.query(async () => {
-    const { data, error } = await supabase
+  getCategories: protectedProcedure.query(async ({ ctx }) => {
+    const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
+
+    let query = supabase
       .from('products')
       .select('category')
       .not('category', 'is', null)
 
-    if (error) {
-      throw new Error(`Failed to fetch categories: ${error.message}`)
+    if (ownerId) {
+      query = query.eq('owner_id', ownerId)
     }
 
-    // Get unique categories
+    const { data, error } = await query
+
+    if (error) throw new Error(`Failed to fetch categories: ${error.message}`)
+
     const categories = [...new Set(data.map((p) => p.category).filter(Boolean))]
     return categories as string[]
   }),
@@ -265,31 +259,32 @@ export const productsRouter = router({
     .mutation(async ({ input, ctx }) => {
       const { productIds, category } = input
 
-      // Update all selected products
+      // Verify all products belong to this tenant
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, owner_id')
+        .in('id', productIds)
+
+      const unauthorized = products?.filter(p => p.owner_id !== ctx.userId) || []
+      if (unauthorized.length > 0) {
+        throw new Error('Access denied: some products belong to a different tenant')
+      }
+
       const { error } = await supabase
         .from('products')
         .update({ category: category || null })
         .in('id', productIds)
 
-      if (error) {
-        throw new Error(`Failed to batch update: ${error.message}`)
-      }
+      if (error) throw new Error(`Failed to batch update: ${error.message}`)
 
-      // Audit log
       await createAuditLog({
         userId: ctx.userId,
         userEmail: ctx.session?.email || 'unknown',
         action: 'UPDATE',
         entityType: 'product',
         entityId: 'batch',
-        changes: {
-          productIds,
-          newCategory: category,
-        },
-        metadata: {
-          count: productIds.length,
-          category,
-        },
+        changes: { productIds, newCategory: category },
+        metadata: { count: productIds.length, category },
       })
 
       return { success: true, count: productIds.length }
@@ -299,21 +294,21 @@ export const productsRouter = router({
    * Batch delete products - ADMIN ONLY
    */
   batchDelete: adminProcedure
-    .input(
-      z.object({
-        productIds: z.array(z.string().uuid()).min(1),
-      })
-    )
+    .input(z.object({ productIds: z.array(z.string().uuid()).min(1) }))
     .mutation(async ({ input, ctx }) => {
       const { productIds } = input
 
-      // Get product data before deletion for audit trail
       const { data: productsData } = await supabase
         .from('products')
         .select('*')
         .in('id', productIds)
 
-      // Find products with transaction history (ON DELETE RESTRICT — cannot delete)
+      // Verify all products belong to this tenant
+      const unauthorized = productsData?.filter(p => p.owner_id !== ctx.userId) || []
+      if (unauthorized.length > 0) {
+        throw new Error('Access denied: some products belong to a different tenant')
+      }
+
       const { data: referencedItems } = await supabase
         .from('transaction_items')
         .select('product_id')
@@ -337,9 +332,7 @@ export const productsRouter = router({
         .delete()
         .in('id', deletableIds)
 
-      if (error) {
-        throw new Error(`Failed to batch delete: ${error.message}`)
-      }
+      if (error) throw new Error(`Failed to batch delete: ${error.message}`)
 
       const deletedProducts = productsData?.filter(p => deletableIds.includes(p.id)) || []
 

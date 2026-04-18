@@ -2,10 +2,11 @@ import { z } from 'zod'
 import { router, protectedProcedure, adminProcedure } from '../trpc'
 import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
+import { getTenantOwnerId, assertOutletBelongsToTenant } from '@/server/lib/tenant'
 
 export const outletsRouter = router({
   /**
-   * Get all outlets with pagination
+   * Get all outlets scoped to the current user's tenant
    */
   getAll: protectedProcedure
     .input(
@@ -15,10 +16,12 @@ export const outletsRouter = router({
         limit: z.number().min(1).max(100).default(50),
       }).optional()
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const page = input?.page || 1
       const limit = input?.limit || 50
       const offset = (page - 1) * limit
+
+      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
 
       // Build count query
       let countQuery = supabase
@@ -32,6 +35,12 @@ export const outletsRouter = router({
         .order('name', { ascending: true })
         .range(offset, offset + limit - 1)
 
+      // Scope to tenant when owner is known
+      if (ownerId) {
+        countQuery = countQuery.eq('owner_id', ownerId)
+        dataQuery = dataQuery.eq('owner_id', ownerId)
+      }
+
       // Apply search filter
       if (input?.search) {
         const searchFilter = `name.ilike.%${input.search}%,address.ilike.%${input.search}%`
@@ -39,19 +48,13 @@ export const outletsRouter = router({
         dataQuery = dataQuery.or(searchFilter)
       }
 
-      // Execute both queries
       const [{ count, error: countError }, { data, error: dataError }] = await Promise.all([
         countQuery,
         dataQuery,
       ])
 
-      if (countError) {
-        throw new Error(`Failed to count outlets: ${countError.message}`)
-      }
-
-      if (dataError) {
-        throw new Error(`Failed to fetch outlets: ${dataError.message}`)
-      }
+      if (countError) throw new Error(`Failed to count outlets: ${countError.message}`)
+      if (dataError) throw new Error(`Failed to fetch outlets: ${dataError.message}`)
 
       return {
         outlets: data || [],
@@ -76,36 +79,27 @@ export const outletsRouter = router({
         .eq('id', input.id)
         .single()
 
-      if (error) {
-        throw new Error(`Failed to fetch outlet: ${error.message}`)
-      }
-
+      if (error) throw new Error(`Failed to fetch outlet: ${error.message}`)
       return data
     }),
 
   /**
-   * Create new outlet - ADMIN ONLY (with Audit Logging)
+   * Create new outlet - ADMIN ONLY
    */
   create: adminProcedure
-    .input(
-      z.object({
-        name: z.string().min(1),
-      })
-    )
+    .input(z.object({ name: z.string().min(1) }))
     .mutation(async ({ input, ctx }) => {
       const { data, error } = await supabase
         .from('outlets')
         .insert({
           name: input.name,
+          owner_id: ctx.userId,
         })
         .select()
         .single()
 
-      if (error) {
-        throw new Error(`Failed to create outlet: ${error.message}`)
-      }
+      if (error) throw new Error(`Failed to create outlet: ${error.message}`)
 
-      // Audit log
       await createAuditLog({
         userId: ctx.userId,
         userEmail: ctx.session?.email || 'unknown',
@@ -120,17 +114,13 @@ export const outletsRouter = router({
     }),
 
   /**
-   * Update outlet - ADMIN ONLY (with Audit Logging)
+   * Update outlet - ADMIN ONLY
    */
   update: adminProcedure
-    .input(
-      z.object({
-        id: z.string().uuid(),
-        name: z.string().min(1),
-      })
-    )
+    .input(z.object({ id: z.string().uuid(), name: z.string().min(1) }))
     .mutation(async ({ input, ctx }) => {
-      // Get old data for audit trail
+      await assertOutletBelongsToTenant(input.id, ctx.userId)
+
       const { data: oldData } = await supabase
         .from('outlets')
         .select('*')
@@ -139,28 +129,20 @@ export const outletsRouter = router({
 
       const { data, error } = await supabase
         .from('outlets')
-        .update({
-          name: input.name,
-        })
+        .update({ name: input.name })
         .eq('id', input.id)
         .select()
         .single()
 
-      if (error) {
-        throw new Error(`Failed to update outlet: ${error.message}`)
-      }
+      if (error) throw new Error(`Failed to update outlet: ${error.message}`)
 
-      // Audit log
       await createAuditLog({
         userId: ctx.userId,
         userEmail: ctx.session?.email || 'unknown',
         action: 'UPDATE',
         entityType: 'outlet',
         entityId: input.id,
-        changes: {
-          before: oldData,
-          after: { name: input.name },
-        },
+        changes: { before: oldData, after: { name: input.name } },
         metadata: { name: input.name },
       })
 
@@ -168,12 +150,13 @@ export const outletsRouter = router({
     }),
 
   /**
-   * Delete outlet - ADMIN ONLY (with Audit Logging)
+   * Delete outlet - ADMIN ONLY
    */
   delete: adminProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      // Get outlet data before deletion for audit trail
+      await assertOutletBelongsToTenant(input.id, ctx.userId)
+
       const { data: outletData } = await supabase
         .from('outlets')
         .select('*')
@@ -185,11 +168,8 @@ export const outletsRouter = router({
         .delete()
         .eq('id', input.id)
 
-      if (error) {
-        throw new Error(`Failed to delete outlet: ${error.message}`)
-      }
+      if (error) throw new Error(`Failed to delete outlet: ${error.message}`)
 
-      // Audit log
       await createAuditLog({
         userId: ctx.userId,
         userEmail: ctx.session?.email || 'unknown',
