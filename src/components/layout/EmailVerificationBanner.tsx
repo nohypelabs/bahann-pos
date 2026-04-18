@@ -1,17 +1,18 @@
 'use client'
 
-import { useState } from 'react'
 import { trpc } from '@/lib/trpc/client'
+import { useToast } from '@/components/ui/Toast'
 
 export function EmailVerificationBanner() {
-  const [sent, setSent] = useState(false)
+  const { showToast } = useToast()
 
   const { data, isLoading } = trpc.auth.getEmailVerified.useQuery(undefined, {
     staleTime: 5 * 60 * 1000,
   })
 
   const resend = trpc.auth.resendVerification.useMutation({
-    onSuccess: () => setSent(true),
+    onSuccess: () => showToast('Email verifikasi terkirim! Cek inbox kamu.', 'success'),
+    onError: () => showToast('Gagal mengirim email. Coba lagi beberapa saat.', 'error'),
   })
 
   if (isLoading || data?.verified) return null
@@ -22,17 +23,13 @@ export function EmailVerificationBanner() {
         <p className="text-sm text-amber-800 dark:text-amber-200">
           ✉️ <strong>Verifikasi emailmu</strong> untuk mengaktifkan trial 14 hari Starter gratis.
         </p>
-        {sent ? (
-          <span className="text-xs font-semibold text-green-600 dark:text-green-400">✅ Email terkirim! Cek inbox kamu.</span>
-        ) : (
-          <button
-            onClick={() => resend.mutate()}
-            disabled={resend.isPending}
-            className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 bg-amber-100 dark:bg-amber-800/40 hover:bg-amber-200 dark:hover:bg-amber-700/50 text-amber-800 dark:text-amber-200 rounded-lg transition-colors disabled:opacity-50"
-          >
-            {resend.isPending ? 'Mengirim...' : 'Kirim Ulang Email'}
-          </button>
-        )}
+        <button
+          onClick={() => resend.mutate()}
+          disabled={resend.isPending}
+          className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 bg-amber-100 dark:bg-amber-800/40 hover:bg-amber-200 dark:hover:bg-amber-700/50 text-amber-800 dark:text-amber-200 rounded-lg transition-colors disabled:opacity-50"
+        >
+          {resend.isPending ? 'Mengirim...' : 'Kirim Ulang Email'}
+        </button>
       </div>
     </div>
   )
