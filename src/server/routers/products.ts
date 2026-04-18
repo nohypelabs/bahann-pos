@@ -153,6 +153,88 @@ export const productsRouter = router({
     }),
 
   /**
+   * Bulk create products from Excel/CSV import - ADMIN ONLY
+   */
+  bulkCreate: adminProcedure
+    .input(
+      z.object({
+        products: z.array(
+          z.object({
+            sku: z.string().min(1),
+            name: z.string().min(1),
+            category: z.string().optional(),
+            price: z.number().positive().optional(),
+          })
+        ).min(1).max(500),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('plan')
+        .eq('id', ctx.userId)
+        .single()
+
+      const limits = getLimits(userData?.plan ?? 'free')
+
+      if (!isUnlimited(limits.maxProducts)) {
+        const { count: existing } = await supabase
+          .from('products')
+          .select('*', { count: 'exact', head: true })
+          .eq('owner_id', ctx.userId)
+
+        const afterImport = (existing ?? 0) + input.products.length
+        if (afterImport > limits.maxProducts) {
+          const remaining = Math.max(0, limits.maxProducts - (existing ?? 0))
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: `Plan kamu hanya mendukung ${limits.maxProducts} produk. Kamu bisa tambah ${remaining} lagi. Kurangi jumlah baris atau upgrade plan.`,
+          })
+        }
+      }
+
+      const rows = input.products.map((p) => ({
+        sku: p.sku,
+        name: p.name,
+        category: p.category || null,
+        price: p.price || null,
+        owner_id: ctx.userId,
+      }))
+
+      // Insert in chunks of 100 to avoid payload limits
+      const CHUNK = 100
+      let inserted = 0
+      const skipped: string[] = []
+
+      for (let i = 0; i < rows.length; i += CHUNK) {
+        const chunk = rows.slice(i, i + CHUNK)
+        const { data, error } = await supabase
+          .from('products')
+          .upsert(chunk, { onConflict: 'sku,owner_id', ignoreDuplicates: false })
+          .select('id')
+
+        if (error) {
+          // If chunk fails entirely, mark all as skipped
+          chunk.forEach((r) => skipped.push(r.sku))
+        } else {
+          inserted += data?.length ?? 0
+        }
+      }
+
+      await createAuditLog({
+        userId: ctx.userId,
+        userEmail: ctx.session?.email || 'unknown',
+        action: 'CREATE',
+        entityType: 'product',
+        entityId: 'bulk',
+        changes: { bulk_import: { count: inserted, skipped: skipped.length } },
+        metadata: { inserted, skipped: skipped.length },
+      })
+
+      return { inserted, skipped }
+    }),
+
+  /**
    * Update product - ADMIN ONLY
    */
   update: adminProcedure

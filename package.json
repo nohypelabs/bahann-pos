@@ -45,6 +45,7 @@
     "supabase": "2.54.11",
     "superjson": "^2.2.5",
     "uuid": "^13.0.0",
+    "xlsx": "^0.18.5",
     "zod": "^4.1.12"
   },
   "devDependencies": {

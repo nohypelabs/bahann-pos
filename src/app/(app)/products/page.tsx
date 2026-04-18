@@ -7,6 +7,7 @@ import { Input, Select } from '@/components/ui/Input'
 import { trpc } from '@/lib/trpc/client'
 import type { Product, InputChangeEvent, SelectChangeEvent } from '@/types'
 import { useToast } from '@/components/ui/Toast'
+import { BulkImportModal } from '@/components/products/BulkImportModal'
 
 export default function ProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -16,6 +17,7 @@ export default function ProductsPage() {
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set())
   const [isBatchModalOpen, setIsBatchModalOpen] = useState(false)
   const [isBatchDeleteModalOpen, setIsBatchDeleteModalOpen] = useState(false)
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false)
   const { showToast } = useToast()
 
   const { data: productsResponse, isLoading, refetch } = trpc.products.getAll.useQuery({
@@ -199,6 +201,9 @@ export default function ProductsPage() {
             />
           </div>
 
+          <Button variant="secondary" size="md" onClick={() => setIsBulkImportOpen(true)}>
+            📥 Import Excel
+          </Button>
           <Button variant="primary" size="md" onClick={handleAddNew}>
             ➕ Add Product
           </Button>
@@ -344,6 +349,17 @@ export default function ProductsPage() {
           }}
           productIds={Array.from(selectedProducts)}
           categories={categories || []}
+        />
+      )}
+
+      {/* Bulk Import Modal */}
+      {isBulkImportOpen && (
+        <BulkImportModal
+          onClose={() => setIsBulkImportOpen(false)}
+          onSuccess={() => {
+            refetch()
+            setIsBulkImportOpen(false)
+          }}
         />
       )}
 
