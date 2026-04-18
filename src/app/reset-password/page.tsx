@@ -82,7 +82,7 @@ function ResetPasswordContent() {
   // No token
   if (!token) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">AGDS Corp POS</h1>
@@ -111,7 +111,7 @@ function ResetPasswordContent() {
   // Verifying token
   if (isVerifying) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-gray-900 mb-4"></div>
           <p className="text-gray-600">Memverifikasi token...</p>
@@ -123,7 +123,7 @@ function ResetPasswordContent() {
   // Invalid token
   if (tokenValid === false) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">AGDS Corp POS</h1>
@@ -148,7 +148,7 @@ function ResetPasswordContent() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">

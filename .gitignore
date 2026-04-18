@@ -43,3 +43,5 @@ next-env.d.ts
 # documentation
 *.pdf
 *.docx
+/.docdex/
+/.docdex-state/

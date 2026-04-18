@@ -184,43 +184,23 @@ export default function DashboardPage() {
       </Card>
 
       {/* Quick Actions */}
-      <Card variant="elevated" padding="md">
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardBody>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => router.push('/warehouse/stock')}
-            >
-              📦 Record Stock
-            </Button>
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => router.push('/pos/sales')}
-            >
-              🛒 New Sale
-            </Button>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => router.push('/products')}
-            >
-              📋 Manage Products
-            </Button>
-            <Button
-              variant="secondary"
-              size="lg"
-              onClick={() => router.push('/outlets')}
-            >
-              🏪 Manage Outlets
-            </Button>
-          </div>
-        </CardBody>
-      </Card>
+      <div>
+        <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Quick Actions</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Button variant="primary" size="lg" onClick={() => router.push('/warehouse/stock')}>
+            📦 Record Stock
+          </Button>
+          <Button variant="primary" size="lg" onClick={() => router.push('/pos/sales')}>
+            🛒 New Sale
+          </Button>
+          <Button variant="secondary" size="lg" onClick={() => router.push('/products')}>
+            📋 Manage Products
+          </Button>
+          <Button variant="secondary" size="lg" onClick={() => router.push('/outlets')}>
+            🏪 Manage Outlets
+          </Button>
+        </div>
+      </div>
 
       {/* Low Stock Alert */}
       {lowStock && lowStock.length > 0 && (

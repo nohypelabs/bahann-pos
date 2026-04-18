@@ -5,7 +5,7 @@
 
 import { z } from 'zod'
 import { router, protectedProcedure, adminProcedure } from '../trpc'
-import { supabase } from '@/infra/supabase/client'
+import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
 import { TRPCError } from '@trpc/server'
 
@@ -53,17 +53,72 @@ export const stockAlertsRouter = router({
    */
   generate: adminProcedure.mutation(async ({ ctx }) => {
     try {
-      // Call the database function to generate alerts
-      const { data, error } = await supabase.rpc('generate_stock_alerts')
+      // Get latest stock for each product-outlet combination
+      const { data: stockData, error: stockError } = await supabase
+        .from('daily_stock')
+        .select(`
+          product_id,
+          outlet_id,
+          stock_akhir,
+          stock_date,
+          products!inner(id, reorder_point)
+        `)
+        .order('stock_date', { ascending: false })
 
-      if (error) {
+      if (stockError) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to generate alerts: ${error.message}`,
+          message: `Failed to fetch stock data: ${stockError.message}`,
         })
       }
 
-      const alertsGenerated = data || 0
+      // Deduplicate to get the latest stock per product-outlet
+      const latestStockMap = new Map<string, { product_id: string; outlet_id: string; current_stock: number; reorder_point: number }>()
+      for (const row of (stockData || []) as any[]) {
+        const key = `${row.product_id}:${row.outlet_id}`
+        if (!latestStockMap.has(key)) {
+          latestStockMap.set(key, {
+            product_id: row.product_id,
+            outlet_id: row.outlet_id,
+            current_stock: row.stock_akhir ?? 0,
+            reorder_point: (row.products as any)?.reorder_point ?? 10,
+          })
+        }
+      }
+
+      // Get existing unacknowledged alerts to avoid duplicates
+      const { data: existingAlerts } = await supabase
+        .from('stock_alerts')
+        .select('product_id, outlet_id')
+        .eq('is_acknowledged', false)
+
+      const existingKeys = new Set(
+        (existingAlerts || []).map((a: any) => `${a.product_id}:${a.outlet_id}`)
+      )
+
+      // Build new alerts
+      const newAlerts: { product_id: string; outlet_id: string; alert_type: string; current_stock: number; reorder_point: number }[] = []
+      for (const stock of latestStockMap.values()) {
+        const key = `${stock.product_id}:${stock.outlet_id}`
+        if (existingKeys.has(key)) continue
+        if (stock.current_stock <= 0) {
+          newAlerts.push({ ...stock, alert_type: 'out_of_stock' })
+        } else if (stock.current_stock <= stock.reorder_point) {
+          newAlerts.push({ ...stock, alert_type: 'low_stock' })
+        }
+      }
+
+      if (newAlerts.length > 0) {
+        const { error: insertError } = await supabase.from('stock_alerts').insert(newAlerts)
+        if (insertError) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: `Failed to insert alerts: ${insertError.message}`,
+          })
+        }
+      }
+
+      const alertsGenerated = newAlerts.length
 
       await createAuditLog({
         userId: ctx.userId,

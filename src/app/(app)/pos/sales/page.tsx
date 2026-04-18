@@ -43,9 +43,11 @@ export default function SalesTransactionPage() {
   const [barcodeInput, setBarcodeInput] = useState('')
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [pendingTransactionId, setPendingTransactionId] = useState<string>('')
+  const [productSearch, setProductSearch] = useState('')
+  const [outletSearch, setOutletSearch] = useState('')
 
   // Refs for keyboard navigation
-  const productSelectRef = useRef<HTMLSelectElement>(null)
+  const productSelectRef = useRef<HTMLInputElement>(null)
   const quantityInputRef = useRef<HTMLInputElement>(null)
   const barcodeInputRef = useRef<HTMLInputElement>(null)
 
@@ -77,6 +79,18 @@ export default function SalesTransactionPage() {
   // Get stock info for selected product
   const selectedProductStock = inventoryList?.find(p => p.id === selectedProductId)
   const availableStock = selectedProductStock?.currentStock || 0
+
+  // Filter outlets by search query
+  const filteredOutlets = outlets?.filter(o => {
+    const q = outletSearch.toLowerCase()
+    return o.name.toLowerCase().includes(q) || (o.address || '').toLowerCase().includes(q)
+  }) || []
+
+  // Filter products by search query
+  const filteredProducts = products?.filter(p => {
+    const q = productSearch.toLowerCase()
+    return p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
+  }) || []
 
   // Add item to cart
   const handleAddToCart = () => {
@@ -192,11 +206,10 @@ export default function SalesTransactionPage() {
     }
   }
 
-  // Auto-add to cart when product is selected (optional, can be toggled)
   const handleProductChange = (productId: string) => {
     setSelectedProductId(productId)
-    // Auto-focus quantity input when product selected
     if (productId) {
+      setProductSearch('')
       setTimeout(() => {
         quantityInputRef.current?.focus()
         quantityInputRef.current?.select()
@@ -424,8 +437,8 @@ export default function SalesTransactionPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Point of Sale</h1>
-        <p className="text-gray-600">Proses transaksi penjualan dengan keranjang multi-item</p>
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">Point of Sale</h1>
+        <p className="text-gray-600 dark:text-gray-400">Proses transaksi penjualan dengan keranjang multi-item</p>
       </div>
 
       {/* Success Message */}
@@ -455,217 +468,320 @@ export default function SalesTransactionPage() {
               <CardTitle>Pilih Outlet</CardTitle>
             </CardHeader>
             <CardBody>
-              <Select
-                value={selectedOutletId}
-                onChange={(e) => setSelectedOutletId(e.target.value)}
-                options={[
-                  { value: '', label: 'Pilih outlet...' },
-                  ...(outlets?.map(outlet => ({
-                    value: outlet.id,
-                    label: outlet.address ? `${outlet.name} - ${outlet.address}` : outlet.name,
-                  })) || []),
-                ]}
-                fullWidth
-                required
-              />
-              {selectedOutlet && (
-                <div className="mt-3 p-3 bg-purple-50 border-2 border-purple-200 rounded-xl">
-                  <p className="text-xs text-purple-600 font-semibold">Outlet Terpilih:</p>
-                  <p className="text-sm font-semibold text-purple-900">{selectedOutlet.name}</p>
-                  <p className="text-xs text-purple-700">{selectedOutlet.address}</p>
+              <div className="space-y-3">
+                {/* Search */}
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">🔍</span>
+                  <input
+                    type="text"
+                    value={outletSearch}
+                    onChange={(e) => setOutletSearch(e.target.value)}
+                    placeholder="Cari outlet (nama atau alamat)..."
+                    className="w-full pl-9 pr-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 transition-all text-sm"
+                  />
+                  {outletSearch && (
+                    <button
+                      onClick={() => setOutletSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >✕</button>
+                  )}
                 </div>
-              )}
+
+                {/* Outlet table */}
+                <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                  {/* Table header */}
+                  <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 border-b-2 border-gray-200 dark:border-gray-600">
+                    <span className="col-span-5 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Outlet</span>
+                    <span className="col-span-5 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Alamat</span>
+                    <span className="col-span-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Pilih</span>
+                  </div>
+
+                  {/* Outlet rows */}
+                  <div className="max-h-40 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
+                    {outletsLoading ? (
+                      <div className="py-6 text-center text-sm text-gray-400 dark:text-gray-500">Memuat outlet...</div>
+                    ) : filteredOutlets.length === 0 ? (
+                      <div className="py-6 text-center text-sm text-gray-400 dark:text-gray-500">
+                        {outletSearch ? `Outlet "${outletSearch}" tidak ditemukan` : 'Tidak ada outlet'}
+                      </div>
+                    ) : (
+                      filteredOutlets.map(outlet => {
+                        const isSelected = selectedOutletId === outlet.id
+                        return (
+                          <button
+                            key={outlet.id}
+                            onClick={() => {
+                              setSelectedOutletId(isSelected ? '' : outlet.id)
+                              setOutletSearch('')
+                            }}
+                            className={`w-full grid grid-cols-12 gap-2 px-3 py-2.5 text-left transition-all
+                              ${isSelected
+                                ? 'bg-purple-50 dark:bg-purple-900/40'
+                                : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/60 cursor-pointer'
+                              }`}
+                          >
+                            <div className="col-span-5 min-w-0">
+                              <p className={`text-sm font-semibold truncate ${isSelected ? 'text-purple-700 dark:text-purple-300' : 'text-gray-900 dark:text-gray-100'}`}>
+                                {outlet.name}
+                              </p>
+                            </div>
+                            <div className="col-span-5 flex items-center min-w-0">
+                              <span className={`text-xs truncate ${isSelected ? 'text-purple-600 dark:text-purple-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                                {outlet.address || '—'}
+                              </span>
+                            </div>
+                            <div className="col-span-2 flex items-center justify-center">
+                              {isSelected ? (
+                                <span className="w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center text-white text-xs">✓</span>
+                              ) : (
+                                <span className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600" />
+                              )}
+                            </div>
+                          </button>
+                        )
+                      })
+                    )}
+                  </div>
+
+                  {/* Footer count */}
+                  {filteredOutlets.length > 0 && (
+                    <div className="px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
+                      <p className="text-xs text-gray-400 dark:text-gray-500">
+                        {filteredOutlets.length} outlet {outletSearch && `· hasil pencarian "${outletSearch}"`}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Selected outlet summary */}
+                {selectedOutlet && (
+                  <div className="p-3 bg-purple-50 dark:bg-purple-900/30 border-2 border-purple-200 dark:border-purple-800 rounded-xl flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold">Outlet Terpilih:</p>
+                      <p className="text-sm font-semibold text-purple-900 dark:text-purple-200">{selectedOutlet.name}</p>
+                      {selectedOutlet.address && <p className="text-xs text-purple-700 dark:text-purple-300">{selectedOutlet.address}</p>}
+                    </div>
+                    <button onClick={() => setSelectedOutletId('')} className="text-purple-400 hover:text-purple-600 dark:hover:text-purple-300 text-lg leading-none ml-3">✕</button>
+                  </div>
+                )}
+              </div>
             </CardBody>
           </Card>
 
           {/* Add Product to Cart */}
           <Card variant="elevated" padding="lg">
             <CardHeader>
-              <CardTitle>Tambah Item ke Keranjang</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Tambah Item ke Keranjang</CardTitle>
+                {/* Barcode buttons compact */}
+                <div className="flex gap-2">
+                  <div className="flex gap-1">
+                    <input
+                      ref={barcodeInputRef}
+                      type="text"
+                      value={barcodeInput}
+                      onChange={handleBarcodeInputChange}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') { e.preventDefault(); handleBarcodeInputSubmit() }
+                      }}
+                      placeholder="Scan SKU..."
+                      disabled={!selectedOutletId}
+                      className="w-32 px-3 py-1.5 text-sm border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-purple-500 focus:outline-none uppercase"
+                    />
+                    <Button variant="secondary" size="sm" onClick={handleBarcodeInputSubmit} disabled={!selectedOutletId || !barcodeInput.trim()}>✓</Button>
+                  </div>
+                  <Button variant="secondary" size="sm" onClick={() => setIsScannerOpen(true)} disabled={!selectedOutletId}>📷</Button>
+                </div>
+              </div>
             </CardHeader>
             <CardBody>
               <div className="space-y-4">
+
                 {!selectedOutletId && (
-                  <div className="p-3 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
-                    <p className="text-xs text-yellow-800 font-semibold">
+                  <div className="p-3 bg-yellow-50 dark:bg-yellow-900/30 border-2 border-yellow-200 dark:border-yellow-800 rounded-xl">
+                    <p className="text-xs text-yellow-800 dark:text-yellow-300 font-semibold">
                       ⚠️ Silakan pilih outlet terlebih dahulu untuk melihat stok produk
                     </p>
                   </div>
                 )}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Pilih Produk
-                  </label>
-                  <select
+
+                {/* Search */}
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">🔍</span>
+                  <input
                     ref={productSelectRef}
-                    value={selectedProductId}
-                    onChange={(e) => handleProductChange(e.target.value)}
+                    type="text"
+                    value={productSearch}
+                    onChange={(e) => setProductSearch(e.target.value)}
+                    placeholder="Cari produk (nama atau SKU)..."
                     disabled={!selectedOutletId}
-                    className="input-mobile w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
-                  >
-                    <option value="">
-                      {selectedOutletId ? 'Pilih produk...' : 'Pilih outlet terlebih dahulu...'}
-                    </option>
-                    {products?.map(product => {
-                      const stockInfo = inventoryList?.find(p => p.id === product.id)
-                      const stock = stockInfo?.currentStock || 0
-                      const stockStatus = stock === 0 ? '❌ Habis' : stock <= 10 ? '⚠️ Sedikit' : '✅'
-
-                      return (
-                        <option key={product.id} value={product.id}>
-                          {product.name} - {formatCurrency(product.price || 0)} - {stockStatus} {stock} pcs
-                        </option>
-                      )
-                    })}
-                  </select>
+                    className="w-full pl-9 pr-4 py-2.5 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  />
+                  {productSearch && (
+                    <button
+                      onClick={() => setProductSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >✕</button>
+                  )}
                 </div>
 
-                {/* Barcode Scanner Section - Enhanced visibility for mobile */}
-                <div className="space-y-3 p-4 bg-gradient-to-r from-purple-50 to-blue-50 border-4 border-purple-400 rounded-xl shadow-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">📷</span>
-                    <p className="text-base font-bold text-gray-900">Scan Barcode</p>
+                {/* Product Grid */}
+                <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                  {/* Table header */}
+                  <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 border-b-2 border-gray-200 dark:border-gray-600">
+                    <span className="col-span-5 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Produk</span>
+                    <span className="col-span-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Harga</span>
+                    <span className="col-span-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Stok</span>
+                    <span className="col-span-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Pilih</span>
                   </div>
 
-                  {/* Barcode Manual Input (USB Scanner) */}
-                  <div className="space-y-2">
-                    <label className="block text-xs font-semibold text-gray-700">
-                      📟 Input Barcode Manual / USB Scanner
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        ref={barcodeInputRef}
-                        type="text"
-                        value={barcodeInput}
-                        onChange={handleBarcodeInputChange}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault()
-                            handleBarcodeInputSubmit()
-                          }
-                        }}
-                        placeholder="Scan atau ketik SKU produk..."
-                        className="flex-1 px-4 py-2 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all uppercase"
-                        disabled={!selectedOutletId}
-                      />
-                      <Button
-                        variant="primary"
-                        onClick={handleBarcodeInputSubmit}
-                        disabled={!selectedOutletId || !barcodeInput.trim()}
-                        className="min-w-[80px]"
-                      >
-                        ✓ OK
-                      </Button>
+                  {/* Product rows */}
+                  <div className="max-h-56 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
+                    {!selectedOutletId ? (
+                      <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                        Pilih outlet untuk melihat produk
+                      </div>
+                    ) : filteredProducts.length === 0 ? (
+                      <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">
+                        {productSearch ? `Produk "${productSearch}" tidak ditemukan` : 'Tidak ada produk'}
+                      </div>
+                    ) : (
+                      filteredProducts.map(product => {
+                        const stockInfo = inventoryList?.find(p => p.id === product.id)
+                        const stock = stockInfo?.currentStock ?? 0
+                        const isSelected = selectedProductId === product.id
+                        const isOutOfStock = stock === 0
+
+                        return (
+                          <button
+                            key={product.id}
+                            onClick={() => !isOutOfStock && handleProductChange(isSelected ? '' : product.id)}
+                            disabled={isOutOfStock}
+                            className={`w-full grid grid-cols-12 gap-2 px-3 py-2.5 text-left transition-all
+                              ${isSelected
+                                ? 'bg-blue-50 dark:bg-blue-900/40'
+                                : isOutOfStock
+                                  ? 'opacity-40 cursor-not-allowed bg-white dark:bg-gray-800'
+                                  : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/60 cursor-pointer'
+                              }`}
+                          >
+                            {/* Name + SKU */}
+                            <div className="col-span-5 min-w-0">
+                              <p className={`text-sm font-semibold truncate ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>
+                                {product.name}
+                              </p>
+                              <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{product.sku}</p>
+                            </div>
+
+                            {/* Price */}
+                            <div className="col-span-3 flex items-center">
+                              <span className={`text-sm font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                                {formatCurrency(product.price || 0)}
+                              </span>
+                            </div>
+
+                            {/* Stock badge */}
+                            <div className="col-span-2 flex items-center justify-center">
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                                stock === 0
+                                  ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400'
+                                  : stock <= 10
+                                    ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400'
+                                    : 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400'
+                              }`}>
+                                {stock === 0 ? 'Habis' : stock}
+                              </span>
+                            </div>
+
+                            {/* Select indicator */}
+                            <div className="col-span-2 flex items-center justify-center">
+                              {isSelected ? (
+                                <span className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">✓</span>
+                              ) : (
+                                <span className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600" />
+                              )}
+                            </div>
+                          </button>
+                        )
+                      })
+                    )}
+                  </div>
+
+                  {/* Footer count */}
+                  {selectedOutletId && filteredProducts.length > 0 && (
+                    <div className="px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
+                      <p className="text-xs text-gray-400 dark:text-gray-500">
+                        {filteredProducts.length} produk {productSearch && `· hasil pencarian "${productSearch}"`}
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-500">
-                      💡 Tekan <kbd className="px-2 py-1 bg-gray-100 rounded">Enter</kbd> setelah scan
-                    </p>
-                  </div>
-
-                  {/* Camera Scanner Button */}
-                  <div className="pt-2 border-t-2 border-purple-300">
-                    <Button
-                      variant="secondary"
-                      onClick={() => setIsScannerOpen(true)}
-                      disabled={!selectedOutletId}
-                      fullWidth
-                      className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-3 shadow-md"
-                    >
-                      📷 Buka Kamera Scanner
-                    </Button>
-                  </div>
+                  )}
                 </div>
 
+                {/* Selected product summary + qty */}
                 {selectedProduct && (
-                  <div className="p-3 bg-blue-50 border-2 border-blue-200 rounded-xl">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="text-xs text-blue-600 font-semibold">Produk Terpilih:</p>
-                        <p className="text-sm font-semibold text-blue-900">{selectedProduct.name}</p>
-                        <p className="text-xs text-blue-700">
-                          SKU: {selectedProduct.sku} • {selectedProduct.category || 'N/A'}
-                        </p>
-                        {selectedOutletId && (
-                          <div className="mt-2 flex items-center gap-2">
-                            <span className={`text-xs font-bold ${
-                              availableStock === 0 ? 'text-red-600' :
-                              availableStock <= 10 ? 'text-yellow-600' :
-                              'text-green-600'
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-300 dark:border-blue-700 rounded-xl">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex-1 min-w-0 mr-3">
+                        <p className="text-sm font-bold text-blue-900 dark:text-blue-200 truncate">{selectedProduct.name}</p>
+                        <p className="text-xs text-blue-600 dark:text-blue-400">
+                          SKU: {selectedProduct.sku} · {formatCurrency(selectedProduct.price || 0)}
+                          {selectedOutletId && (
+                            <span className={`ml-2 font-bold ${
+                              availableStock === 0 ? 'text-red-600 dark:text-red-400' :
+                              availableStock <= 10 ? 'text-yellow-600 dark:text-yellow-400' :
+                              'text-green-600 dark:text-green-400'
                             }`}>
-                              {availableStock === 0 ? '❌ Stok habis' :
-                               availableStock <= 10 ? `⚠️ Stok sedikit: ${availableStock} unit` :
-                               `✅ Tersedia: ${availableStock} unit`}
+                              · Stok: {availableStock} unit
                             </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-blue-900">
-                          {formatCurrency(selectedProduct.price || 0)}
+                          )}
                         </p>
                       </div>
+                      <button onClick={() => setSelectedProductId('')} className="text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 text-lg leading-none">✕</button>
                     </div>
-                  </div>
-                )}
 
-                {/* Quick Quantity Buttons */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Jumlah Cepat
-                  </label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {[1, 2, 3, 5, 10].map(qty => (
-                      <Button
-                        key={qty}
-                        variant={quantity === qty ? 'primary' : 'outline'}
-                        size="sm"
-                        onClick={() => handleQuickQuantity(qty)}
-                        className="w-full"
-                      >
-                        {qty}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
+                    {/* Qty row */}
+                    <div className="flex items-center gap-2">
+                      {/* Quick qty */}
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 5, 10].map(qty => (
+                          <button
+                            key={qty}
+                            onClick={() => handleQuickQuantity(qty)}
+                            className={`w-8 h-8 rounded-lg text-sm font-bold transition-all border-2 ${
+                              quantity === qty
+                                ? 'bg-blue-500 text-white border-blue-500'
+                                : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-400'
+                            }`}
+                          >
+                            {qty}
+                          </button>
+                        ))}
+                      </div>
 
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700">
-                    Atau Masukkan Manual
-                  </label>
-                  <div className="flex gap-3">
-                    <div className="flex-1">
+                      {/* Manual qty input */}
                       <input
                         ref={quantityInputRef}
                         type="number"
                         min="1"
                         value={quantity}
                         onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault()
-                            handleAddToCart()
-                          }
-                        }}
+                        onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddToCart() } }}
                         onFocus={(e) => e.target.select()}
-                        className="input-mobile w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                        placeholder="Qty"
+                        className="w-16 px-2 py-1.5 text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none text-sm font-bold"
                       />
-                    </div>
-                    <div className="flex items-end">
+
                       <Button
                         variant="primary"
-                        size="lg"
+                        size="md"
                         onClick={handleAddToCart}
-                        disabled={!selectedProduct || productsLoading || (!!selectedOutletId && availableStock === 0)}
+                        disabled={productsLoading || (!!selectedOutletId && availableStock === 0)}
+                        className="flex-1"
                       >
-                        ➕ Tambah
+                        ➕ Tambah ke Keranjang
                       </Button>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    💡 Tekan <kbd className="px-2 py-1 bg-gray-100 rounded">Enter</kbd> untuk tambah ke keranjang
-                  </p>
-                </div>
+                )}
               </div>
             </CardBody>
           </Card>
@@ -675,14 +791,14 @@ export default function SalesTransactionPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>🛒 Keranjang Belanja</CardTitle>
-                <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-semibold rounded-full">
+                <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-sm font-semibold rounded-full">
                   {cart.length} item
                 </span>
               </div>
             </CardHeader>
             <CardBody>
               {cart.length === 0 ? (
-                <div className="py-12 text-center text-gray-500">
+                <div className="py-12 text-center text-gray-500 dark:text-gray-400">
                   <div className="text-6xl mb-4">🛒</div>
                   <p className="font-semibold">Keranjang kosong</p>
                   <p className="text-sm">Tambahkan produk untuk memulai transaksi</p>
@@ -692,12 +808,12 @@ export default function SalesTransactionPage() {
                   {cart.map((item) => (
                     <div
                       key={item.productId}
-                      className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded-xl border-2 border-gray-200"
+                      className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border-2 border-gray-200 dark:border-gray-600"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 truncate">{item.productName}</p>
-                        <p className="text-xs sm:text-sm text-gray-600 truncate">SKU: {item.productSku}</p>
-                        <p className="text-xs sm:text-sm text-gray-700 font-semibold">
+                        <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">{item.productName}</p>
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">SKU: {item.productSku}</p>
+                        <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 font-semibold">
                           {formatCurrency(item.unitPrice)} × {item.quantity}
                         </p>
                       </div>
@@ -722,7 +838,7 @@ export default function SalesTransactionPage() {
                           </Button>
                         </div>
                         <div className="min-w-[80px] sm:min-w-[120px] text-right">
-                          <p className="text-base sm:text-lg font-bold text-gray-900">
+                          <p className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100">
                             {formatCurrency(item.total)}
                           </p>
                         </div>
@@ -766,10 +882,10 @@ export default function SalesTransactionPage() {
                     onClick={() => setIsPromoExpanded(!isPromoExpanded)}
                     className="flex items-center justify-between w-full text-left"
                   >
-                    <label className="block text-sm font-semibold text-gray-700 cursor-pointer">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 cursor-pointer">
                       🎫 Kode Promo (Opsional)
                     </label>
-                    <span className="text-gray-400">
+                    <span className="text-gray-400 dark:text-gray-500">
                       {isPromoExpanded ? '▲' : '▼'}
                     </span>
                   </button>
@@ -818,10 +934,10 @@ export default function SalesTransactionPage() {
 
                 {/* Cart Summary */}
                 {cart.length > 0 && (
-                  <div className="p-4 bg-gray-50 rounded-xl border-2 border-gray-200 space-y-2">
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border-2 border-gray-200 dark:border-gray-600 space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Subtotal:</span>
-                      <span className="font-semibold text-gray-900">{formatCurrency(cartSubtotal)}</span>
+                      <span className="text-gray-600 dark:text-gray-400">Subtotal:</span>
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(cartSubtotal)}</span>
                     </div>
                     {discountAmount > 0 && (
                       <div className="flex justify-between text-sm">
@@ -829,9 +945,9 @@ export default function SalesTransactionPage() {
                         <span className="font-semibold text-green-600">-{formatCurrency(discountAmount)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-lg font-bold pt-2 border-t-2 border-gray-300">
-                      <span className="text-gray-900">Total:</span>
-                      <span className="text-blue-600">{formatCurrency(cartTotal)}</span>
+                    <div className="flex justify-between text-lg font-bold pt-2 border-t-2 border-gray-300 dark:border-gray-600">
+                      <span className="text-gray-900 dark:text-gray-100">Total:</span>
+                      <span className="text-blue-600 dark:text-blue-400">{formatCurrency(cartTotal)}</span>
                     </div>
                   </div>
                 )}
@@ -847,19 +963,19 @@ export default function SalesTransactionPage() {
                 </Button>
 
                 {/* Keyboard Shortcuts Helper */}
-                <div className="p-3 bg-blue-50 rounded-xl border-2 border-blue-200">
-                  <p className="text-xs text-blue-900 font-semibold mb-2">⌨️ Shortcut Keyboard:</p>
-                  <div className="space-y-1 text-xs text-blue-700">
+                <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl border-2 border-blue-200 dark:border-blue-800">
+                  <p className="text-xs text-blue-900 dark:text-blue-300 font-semibold mb-2">⌨️ Shortcut Keyboard:</p>
+                  <div className="space-y-1 text-xs text-blue-700 dark:text-blue-400">
                     <div className="flex items-center gap-2">
-                      <kbd className="px-2 py-1 bg-white rounded border border-blue-200">F2</kbd>
+                      <kbd className="px-2 py-1 bg-white dark:bg-gray-800 rounded border border-blue-200 dark:border-blue-700 dark:text-gray-300">F2</kbd>
                       <span>Fokus ke pilihan produk</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <kbd className="px-2 py-1 bg-white rounded border border-blue-200">Enter</kbd>
+                      <kbd className="px-2 py-1 bg-white dark:bg-gray-800 rounded border border-blue-200 dark:border-blue-700 dark:text-gray-300">Enter</kbd>
                       <span>Tambah ke keranjang</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <kbd className="px-2 py-1 bg-white rounded border border-blue-200">F8</kbd>
+                      <kbd className="px-2 py-1 bg-white dark:bg-gray-800 rounded border border-blue-200 dark:border-blue-700 dark:text-gray-300">F8</kbd>
                       <span>Selesaikan transaksi</span>
                     </div>
                   </div>
@@ -875,19 +991,19 @@ export default function SalesTransactionPage() {
             </CardHeader>
             <CardBody>
               <div className="space-y-3">
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-600">Item di Keranjang</p>
-                  <p className="text-xl font-bold text-gray-900">{cart.length}</p>
+                <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Item di Keranjang</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{cart.length}</p>
                 </div>
-                <div className="p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-600">Total Unit</p>
-                  <p className="text-xl font-bold text-gray-900">
+                <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Total Unit</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
                     {cart.reduce((sum, item) => sum + item.quantity, 0)}
                   </p>
                 </div>
-                <div className="p-3 bg-green-50 rounded-lg">
-                  <p className="text-xs text-green-700">Nilai Keranjang</p>
-                  <p className="text-xl font-bold text-green-900">{formatCurrency(cartTotal)}</p>
+                <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                  <p className="text-xs text-green-700 dark:text-green-400">Nilai Keranjang</p>
+                  <p className="text-xl font-bold text-green-900 dark:text-green-300">{formatCurrency(cartTotal)}</p>
                 </div>
               </div>
             </CardBody>
@@ -902,7 +1018,7 @@ export default function SalesTransactionPage() {
         </CardHeader>
         <CardBody>
           {!recentTransactions || recentTransactions.length === 0 ? (
-            <div className="py-8 text-center text-gray-500">
+            <div className="py-8 text-center text-gray-500 dark:text-gray-400">
               Tidak ada transaksi terbaru
             </div>
           ) : (
@@ -910,17 +1026,17 @@ export default function SalesTransactionPage() {
               {recentTransactions.map((transaction) => (
                 <div
                   key={transaction.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   <div>
-                    <p className="font-semibold text-gray-900">{transaction.productName}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">{transaction.productName}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       {transaction.outletName} • {formatDateTime(transaction.date)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-gray-900">{formatCurrency(transaction.revenue)}</p>
-                    <p className="text-xs text-gray-500">{transaction.quantity} units</p>
+                    <p className="font-bold text-gray-900 dark:text-gray-100">{formatCurrency(transaction.revenue)}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{transaction.quantity} units</p>
                   </div>
                 </div>
               ))}

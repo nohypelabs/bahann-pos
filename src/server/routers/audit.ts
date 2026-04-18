@@ -5,7 +5,7 @@
 
 import { z } from 'zod'
 import { router, adminProcedure } from '../trpc'
-import { supabase } from '@/infra/supabase/client'
+import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { TRPCError } from '@trpc/server'
 
 export const auditRouter = router({

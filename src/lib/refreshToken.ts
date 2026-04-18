@@ -6,7 +6,7 @@
  */
 
 import { createHash, randomBytes } from 'crypto'
-import { supabase } from '@/infra/supabase/client'
+import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { signJWT, type JWTPayload } from './jwt'
 import { logger } from './logger'
 

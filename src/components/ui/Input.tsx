@@ -11,7 +11,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className={`${fullWidth ? 'w-full' : ''}`}>
         {label && (
-          <label className="block text-mobile-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-mobile-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             {label}
           </label>
         )}
@@ -19,22 +19,23 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           className={`
             input-mobile w-full
-            bg-white text-gray-900
-            border-2 border-gray-200
+            bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+            border-2 border-gray-200 dark:border-gray-600
             rounded-xl
-            shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)]
-            focus:outline-none focus:border-gray-400
+            shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)] dark:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.4)]
+            focus:outline-none focus:border-gray-400 dark:focus:border-gray-400
             focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.12)]
             focus:translate-x-[-1px] focus:translate-y-[-1px]
             transition-all duration-200
             disabled:opacity-50 disabled:cursor-not-allowed
+            placeholder:text-gray-400 dark:placeholder:text-gray-500
             ${error ? 'border-red-400 focus:border-red-500' : ''}
             ${className}
           `}
           {...props}
         />
         {error && (
-          <p className="mt-1 text-mobile-sm text-red-600">{error}</p>
+          <p className="mt-1 text-mobile-sm text-red-600 dark:text-red-400">{error}</p>
         )}
       </div>
     )
@@ -43,9 +44,6 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
 Input.displayName = 'Input'
 
-/**
- * Textarea Component
- */
 interface TextareaProps extends InputHTMLAttributes<HTMLTextAreaElement> {
   label?: string
   error?: string
@@ -58,7 +56,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className={`${fullWidth ? 'w-full' : ''}`}>
         {label && (
-          <label className="block text-mobile-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-mobile-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             {label}
           </label>
         )}
@@ -67,15 +65,16 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           rows={rows}
           className={`
             input-mobile w-full
-            bg-white text-gray-900
-            border-2 border-gray-200
+            bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+            border-2 border-gray-200 dark:border-gray-600
             rounded-xl
-            shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)]
-            focus:outline-none focus:border-gray-400
+            shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)] dark:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.4)]
+            focus:outline-none focus:border-gray-400 dark:focus:border-gray-400
             focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.12)]
             focus:translate-x-[-1px] focus:translate-y-[-1px]
             transition-all duration-200
             disabled:opacity-50 disabled:cursor-not-allowed
+            placeholder:text-gray-400 dark:placeholder:text-gray-500
             resize-none
             ${error ? 'border-red-400 focus:border-red-500' : ''}
             ${className}
@@ -83,7 +82,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...props}
         />
         {error && (
-          <p className="mt-1 text-mobile-sm text-red-600">{error}</p>
+          <p className="mt-1 text-mobile-sm text-red-600 dark:text-red-400">{error}</p>
         )}
       </div>
     )
@@ -92,9 +91,6 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 
 Textarea.displayName = 'Textarea'
 
-/**
- * Select Component
- */
 interface SelectProps extends InputHTMLAttributes<HTMLSelectElement> {
   label?: string
   error?: string
@@ -107,7 +103,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className={`${fullWidth ? 'w-full' : ''}`}>
         {label && (
-          <label className="block text-mobile-sm font-semibold text-gray-700 mb-2">
+          <label className="block text-mobile-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             {label}
           </label>
         )}
@@ -115,11 +111,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ref={ref}
           className={`
             input-mobile w-full
-            bg-white text-gray-900
-            border-2 border-gray-200
+            bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+            border-2 border-gray-200 dark:border-gray-600
             rounded-xl
-            shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)]
-            focus:outline-none focus:border-gray-400
+            shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)] dark:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.4)]
+            focus:outline-none focus:border-gray-400 dark:focus:border-gray-400
             focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.12)]
             focus:translate-x-[-1px] focus:translate-y-[-1px]
             transition-all duration-200
@@ -136,7 +132,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
         {error && (
-          <p className="mt-1 text-mobile-sm text-red-600">{error}</p>
+          <p className="mt-1 text-mobile-sm text-red-600 dark:text-red-400">{error}</p>
         )}
       </div>
     )

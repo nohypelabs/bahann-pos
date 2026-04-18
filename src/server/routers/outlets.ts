@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { router, protectedProcedure, adminProcedure } from '../trpc'
-import { supabase } from '@/infra/supabase/client'
+import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
 
 export const outletsRouter = router({

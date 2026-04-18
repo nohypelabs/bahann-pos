@@ -5,7 +5,7 @@
  * Logs: WHO did WHAT, WHEN, and WHERE.
  */
 
-import { supabase } from '@/infra/supabase/client'
+import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { logger } from './logger'
 
 export type AuditAction =

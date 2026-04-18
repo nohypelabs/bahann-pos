@@ -5,7 +5,7 @@
  * Zero-budget solution using static QRIS and manual confirmation.
  */
 
-import { supabase } from '@/infra/supabase/client'
+import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { generateQRISImage, generateQRISString } from './qris-generator'
 import { v4 as uuidv4 } from 'uuid'
 

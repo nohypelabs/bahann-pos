@@ -10,7 +10,7 @@
  */
 
 import { NextResponse } from 'next/server'
-import { supabase } from '@/infra/supabase/client'
+import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { getRedisClient } from '@/lib/redis'
 
 export const runtime = 'nodejs'

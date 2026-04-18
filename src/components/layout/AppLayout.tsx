@@ -10,18 +10,15 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
-      {/* Sidebar */}
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden">
       <Sidebar />
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto bg-white">
+      <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950">
         <div className="min-h-full p-3 sm:p-4 md:p-6 lg:p-8 xl:p-12">
           {children}
         </div>
       </main>
 
-      {/* Offline Indicator - shows network status and pending syncs */}
       <OfflineIndicator />
     </div>
   )

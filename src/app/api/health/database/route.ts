@@ -6,7 +6,7 @@
  */
 
 import { NextResponse } from 'next/server'
-import { supabase } from '@/infra/supabase/client'
+import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'

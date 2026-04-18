@@ -5,7 +5,7 @@
 
 import { z } from 'zod'
 import { router, protectedProcedure } from '../trpc'
-import { supabase } from '@/infra/supabase/client'
+import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
 import { TRPCError } from '@trpc/server'
 
