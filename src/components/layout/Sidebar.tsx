@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode, useEffect, useState, useRef } from 'react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { useTheme } from '@/lib/theme/ThemeContext'
 import { logger } from '@/lib/logger'
@@ -131,6 +131,8 @@ export function Sidebar() {
   const [userEmail, setUserEmail] = useState('')
   const [userRole, setUserRole] = useState('user')
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const cancelRef = useRef<HTMLButtonElement>(null)
 
   const { data: planData } = trpc.auth.getPlan.useQuery(undefined, {
     retry: false,
@@ -158,12 +160,12 @@ export function Sidebar() {
     }
   }, [])
 
-  const handleLogout = () => {
-    if (confirm(t('sidebar.logout.confirm'))) {
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('user')
-      router.push('/login')
-    }
+  const handleLogout = () => setShowLogoutModal(true)
+
+  const confirmLogout = () => {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('user')
+    router.push('/login')
   }
 
   const toggleLanguage = () => {
@@ -191,6 +193,7 @@ export function Sidebar() {
   const userInitial = userName.charAt(0).toUpperCase()
 
   return (
+  <>
     <aside className={`
       ${isCollapsed ? 'w-20' : 'w-72'}
       h-screen bg-gray-50 dark:bg-gray-900 border-r-2 border-gray-200 dark:border-gray-800 flex flex-col
@@ -391,5 +394,50 @@ export function Sidebar() {
         )}
       </div>
     </aside>
+
+    {/* Logout confirmation modal */}
+    {showLogoutModal && (
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        onClick={(e) => e.target === e.currentTarget && setShowLogoutModal(false)}
+      >
+        {/* Backdrop */}
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+
+        {/* Modal */}
+        <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-gray-100 dark:border-gray-800 animate-in fade-in zoom-in-95 duration-200">
+          {/* Icon */}
+          <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-3xl">
+            🚪
+          </div>
+
+          {/* Text */}
+          <div className="text-center space-y-1">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Keluar dari akun?</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Sesi kamu akan diakhiri. Pastikan semua transaksi sudah tersimpan.
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 w-full">
+            <button
+              ref={cancelRef}
+              onClick={() => setShowLogoutModal(false)}
+              className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              Batal
+            </button>
+            <button
+              onClick={confirmLogout}
+              className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-sm font-semibold text-white transition-colors shadow-lg shadow-red-500/20"
+            >
+              Ya, Keluar
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
   )
 }
