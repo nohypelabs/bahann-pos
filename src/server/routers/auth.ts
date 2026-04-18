@@ -22,14 +22,13 @@ export const authRouter = router({
         email: z.string().email(),
         password: z.string().min(8),
         name: z.string().min(1),
-        outletId: z.string().uuid().optional(),
-        role: z.string().optional(),
         whatsappNumber: z.string().min(9, 'Nomor WhatsApp tidak valid').regex(/^[0-9+\-\s()]+$/, 'Format nomor tidak valid'),
       })
     )
     .mutation(async ({ input }) => {
       const useCase = new RegisterUserUseCase(userRepository)
-      const result = await useCase.execute(input)
+      // Public registration always creates an admin (warung owner)
+      const result = await useCase.execute({ ...input, role: 'admin' })
 
       // Create refresh token and new short-lived access token
       const { refreshToken, accessToken } = await createRefreshToken(result.userId)
@@ -47,24 +46,22 @@ export const authRouter = router({
         metadata: { name: result.name, whatsappNumber: input.whatsappNumber },
       })
 
-      // Auto-create first outlet for admin users
-      if (input.role === 'admin') {
-        const { supabaseAdmin } = await import('@/infra/supabase/server')
-        const { data: outlet } = await supabaseAdmin
-          .from('outlets')
-          .insert({
-            name: `${result.name} - Outlet Utama`,
-            owner_id: result.userId,
-          })
-          .select('id')
-          .single()
+      // Auto-create first outlet for new warung owner
+      const { supabaseAdmin } = await import('@/infra/supabase/server')
+      const { data: outlet } = await supabaseAdmin
+        .from('outlets')
+        .insert({
+          name: `${result.name} - Outlet Utama`,
+          owner_id: result.userId,
+        })
+        .select('id')
+        .single()
 
-        if (outlet) {
-          await supabaseAdmin
-            .from('users')
-            .update({ outlet_id: outlet.id })
-            .eq('id', result.userId)
-        }
+      if (outlet) {
+        await supabaseAdmin
+          .from('users')
+          .update({ outlet_id: outlet.id })
+          .eq('id', result.userId)
       }
 
       // Notify admin of new registration (non-fatal)

@@ -8,16 +8,34 @@ import { router, protectedProcedure, adminProcedure } from '../trpc'
 import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
 import { TRPCError } from '@trpc/server'
+import bcrypt from 'bcryptjs'
 
 export const usersRouter = router({
   /**
-   * Get all users (admin only)
+   * List users scoped to the current admin's tenant (their outlets)
    */
-  list: adminProcedure.query(async () => {
-    const { data, error } = await supabase
+  list: adminProcedure.query(async ({ ctx }) => {
+    // Get all outlet IDs owned by this admin
+    const { data: outlets } = await supabase
+      .from('outlets')
+      .select('id')
+      .eq('owner_id', ctx.userId)
+
+    const outletIds = outlets?.map(o => o.id) || []
+
+    // Fetch admin themselves + all users assigned to their outlets
+    let query = supabase
       .from('users')
       .select('id, email, name, role, outlet_id, permissions, created_at')
       .order('created_at', { ascending: false })
+
+    if (outletIds.length > 0) {
+      query = query.or(`id.eq.${ctx.userId},outlet_id.in.(${outletIds.join(',')})`)
+    } else {
+      query = query.eq('id', ctx.userId)
+    }
+
+    const { data, error } = await query
 
     if (error) {
       throw new TRPCError({
@@ -28,6 +46,84 @@ export const usersRouter = router({
 
     return data || []
   }),
+
+  /**
+   * Create a cashier account linked to one of the admin's outlets
+   */
+  createCashier: adminProcedure
+    .input(
+      z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        password: z.string().min(8),
+        whatsappNumber: z.string().min(9).regex(/^[0-9+\-\s()]+$/),
+        outletId: z.string().uuid(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      // Verify the outlet belongs to this admin
+      const { data: outlet } = await supabase
+        .from('outlets')
+        .select('id, name')
+        .eq('id', input.outletId)
+        .eq('owner_id', ctx.userId)
+        .single()
+
+      if (!outlet) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Outlet tidak ditemukan atau bukan milik Anda',
+        })
+      }
+
+      // Check email not taken
+      const { data: existing } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', input.email.toLowerCase())
+        .single()
+
+      if (existing) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'Email sudah digunakan',
+        })
+      }
+
+      const passwordHash = await bcrypt.hash(input.password, 10)
+
+      const { data: newUser, error } = await supabase
+        .from('users')
+        .insert({
+          email: input.email.toLowerCase(),
+          name: input.name,
+          password_hash: passwordHash,
+          whatsapp_number: input.whatsappNumber,
+          role: 'user',
+          outlet_id: input.outletId,
+        })
+        .select('id, email, name, role, outlet_id')
+        .single()
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: `Gagal membuat akun kasir: ${error.message}`,
+        })
+      }
+
+      await createAuditLog({
+        userId: ctx.userId,
+        userEmail: ctx.session?.email || 'unknown',
+        action: 'CREATE',
+        entityType: 'user',
+        entityId: newUser.id,
+        changes: { created: { name: input.name, email: input.email, outletId: input.outletId } },
+        metadata: { role: 'user', outletName: outlet.name },
+      })
+
+      return newUser
+    }),
 
   /**
    * Get user by ID

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
-import { Input, Select } from '@/components/ui/Input'
+import { Input } from '@/components/ui/Input'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
@@ -17,8 +17,6 @@ export default function RegisterPage() {
     confirmPassword: '',
     name: '',
     whatsappNumber: '',
-    outletId: '',
-    role: 'user',
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -27,13 +25,9 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const registerMutation = trpc.auth.register.useMutation()
-  const { data: outletsResponse } = trpc.outlets.getAll.useQuery()
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -41,7 +35,6 @@ export default function RegisterPage() {
     setError('')
     setSuccess(false)
 
-    // Validate password match
     if (formData.password !== formData.confirmPassword) {
       setError('Password tidak cocok')
       return
@@ -60,24 +53,17 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      const result = await registerMutation.mutateAsync({
+      await registerMutation.mutateAsync({
         email: formData.email,
         password: formData.password,
         name: formData.name,
         whatsappNumber: formData.whatsappNumber,
-        outletId: formData.outletId || undefined,
-        role: formData.role,
       })
 
       setSuccess(true)
-
-      // Show success message then redirect
-      setTimeout(() => {
-        router.push('/login?registered=true')
-      }, 2000)
+      setTimeout(() => router.push('/login?registered=true'), 2000)
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Registration failed. Please try again.'
-      setError(errorMessage)
+      setError(err instanceof Error ? err.message : 'Pendaftaran gagal. Coba lagi.')
     } finally {
       setIsLoading(false)
     }
@@ -86,13 +72,11 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo/Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">AGDS Corp POS</h1>
-          <p className="text-gray-600 dark:text-gray-400">{t('register.subtitle')}</p>
+          <p className="text-gray-600 dark:text-gray-400">Daftar sebagai pemilik warung</p>
         </div>
 
-        {/* Register Card */}
         <Card variant="elevated" padding="lg">
           <CardHeader>
             <CardTitle>{t('register.title')}</CardTitle>
@@ -102,15 +86,9 @@ export default function RegisterPage() {
             {success ? (
               <div className="text-center py-8">
                 <div className="mb-4 text-6xl">✅</div>
-                <h3 className="text-2xl font-bold text-green-600 mb-2">
-                  {t('register.success')}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  {t('register.success')}
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {t('common.loading')}
-                </p>
+                <h3 className="text-2xl font-bold text-green-600 mb-2">{t('register.success')}</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">{t('register.success')}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('common.loading')}</p>
               </div>
             ) : (
               <form onSubmit={handleRegister} className="space-y-4">
@@ -216,29 +194,8 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <Select
-                  name="outletId"
-                  label="Outlet (Opsional)"
-                  value={formData.outletId}
-                  onChange={handleChange}
-                  options={[
-                    { value: '', label: 'Pilih outlet (opsional)' },
-                    ...(outletsResponse?.outlets?.map(outlet => ({
-                      value: outlet.id,
-                      label: outlet.name,
-                    })) || []),
-                  ]}
-                  fullWidth
-                />
-
                 <div className="pt-2">
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="lg"
-                    fullWidth
-                    disabled={isLoading}
-                  >
+                  <Button type="submit" variant="primary" size="lg" fullWidth disabled={isLoading}>
                     {isLoading ? t('common.loading') : t('register.button')}
                   </Button>
                 </div>
@@ -251,20 +208,18 @@ export default function RegisterPage() {
                     </a>
                   </p>
                 </div>
-
               </form>
             )}
           </CardBody>
         </Card>
 
-        {/* Info Box */}
         <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
           <p className="text-sm text-blue-900 dark:text-blue-200 font-semibold mb-2">ℹ️ Informasi Pendaftaran:</p>
           <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
-            <li>• Nomor WhatsApp wajib diisi untuk aktivasi</li>
-            <li>• Password minimal 8 karakter</li>
-            <li>• Email harus unik (belum terdaftar)</li>
-            <li>• Setelah daftar, tim kami akan menghubungi Anda via WhatsApp</li>
+            <li>• Akun ini adalah akun pemilik warung (admin)</li>
+            <li>• Outlet pertama dibuat otomatis setelah daftar</li>
+            <li>• Kasir bisa ditambahkan dari menu Pengaturan</li>
+            <li>• Nomor WhatsApp wajib untuk aktivasi akun</li>
             <li>• Akun aktif dalam 1×24 jam setelah verifikasi</li>
           </ul>
         </div>
