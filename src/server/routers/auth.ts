@@ -72,6 +72,16 @@ export const authRouter = router({
         })
         .eq('id', result.userId)
 
+      // Record trial activation in billing history
+      await supabaseAdmin.from('billing_history').insert({
+        user_id: result.userId,
+        plan: 'starter',
+        previous_plan: 'free',
+        amount: 0,
+        note: 'Trial 14 hari gratis',
+        is_trial: true,
+      })
+
       // Welcome email to new user (non-fatal)
       await sendWelcomeEmail({
         to: result.email,

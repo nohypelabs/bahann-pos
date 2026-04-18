@@ -344,6 +344,8 @@ export const usersRouter = router({
     .input(z.object({
       userId: z.string().uuid(),
       plan: z.enum(['free', 'warung', 'starter', 'professional', 'business', 'enterprise']),
+      amount: z.number().int().min(0).optional(),
+      note: z.string().max(500).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || ''
@@ -359,10 +361,21 @@ export const usersRouter = router({
 
       const { error } = await supabase
         .from('users')
-        .update({ plan: input.plan })
+        .update({ plan: input.plan, is_trial: false })
         .eq('id', input.userId)
 
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+
+      // Record in billing history
+      await supabase.from('billing_history').insert({
+        user_id: input.userId,
+        plan: input.plan,
+        previous_plan: before?.plan ?? 'free',
+        amount: input.amount ?? 0,
+        note: input.note ?? null,
+        is_trial: false,
+        changed_by: ctx.userId,
+      })
 
       await createAuditLog({
         userId: ctx.userId,
@@ -371,7 +384,7 @@ export const usersRouter = router({
         entityType: 'user',
         entityId: input.userId,
         changes: { before: { plan: before?.plan }, after: { plan: input.plan } },
-        metadata: { targetEmail: before?.email, targetName: before?.name },
+        metadata: { targetEmail: before?.email, targetName: before?.name, amount: input.amount, note: input.note },
       })
 
       // Notify user of plan change (non-fatal)
@@ -386,6 +399,18 @@ export const usersRouter = router({
 
       return { success: true }
     }),
+
+  getBillingHistory: protectedProcedure.query(async ({ ctx }) => {
+    const { data, error } = await supabase
+      .from('billing_history')
+      .select('id, plan, previous_plan, amount, note, is_trial, created_at')
+      .eq('user_id', ctx.userId)
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+    return data ?? []
+  }),
 
   /**
    * Check if current user has specific permission

@@ -79,19 +79,28 @@ function SuperAdminView() {
 
   const [editing, setEditing] = useState<string | null>(null)
   const [selectedPlan, setSelectedPlan] = useState<Plan>('free')
+  const [amount, setAmount] = useState('')
+  const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
   const [savedId, setSavedId] = useState<string | null>(null)
 
   const handleEdit = (userId: string, currentPlan: string) => {
     setEditing(userId)
     setSelectedPlan((currentPlan || 'free') as Plan)
+    setAmount('')
+    setNote('')
     setSavedId(null)
   }
 
   const handleSave = async (userId: string) => {
     setSaving(true)
     try {
-      await updatePlanMutation.mutateAsync({ userId, plan: selectedPlan })
+      await updatePlanMutation.mutateAsync({
+        userId,
+        plan: selectedPlan,
+        amount: amount ? parseInt(amount.replace(/\D/g, ''), 10) : 0,
+        note: note.trim() || undefined,
+      })
       setSavedId(userId)
       setEditing(null)
     } finally {
@@ -141,29 +150,45 @@ function SuperAdminView() {
                       </td>
                       <td className="px-4 py-3">
                         {editing === user.id ? (
-                          <div className="flex items-center gap-2">
+                          <div className="space-y-2 min-w-[260px]">
                             <select
                               value={selectedPlan}
                               onChange={e => setSelectedPlan(e.target.value as Plan)}
-                              className="px-3 py-1.5 text-xs border-2 border-green-400 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none"
+                              className="w-full px-3 py-1.5 text-xs border-2 border-green-400 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none"
                             >
                               {PLANS.map(p => (
                                 <option key={p.value} value={p.value}>{p.label}</option>
                               ))}
                             </select>
-                            <button
-                              onClick={() => handleSave(user.id)}
-                              disabled={saving}
-                              className="px-3 py-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
-                            >
-                              {saving ? '...' : 'Simpan'}
-                            </button>
-                            <button
-                              onClick={() => setEditing(null)}
-                              className="px-3 py-1.5 text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                            >
-                              Batal
-                            </button>
+                            <input
+                              type="text"
+                              placeholder="Nominal transfer (Rp) — opsional"
+                              value={amount}
+                              onChange={e => setAmount(e.target.value)}
+                              className="w-full px-3 py-1.5 text-xs border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-green-400"
+                            />
+                            <input
+                              type="text"
+                              placeholder="Catatan (misal: Transfer BNI dikonfirmasi)"
+                              value={note}
+                              onChange={e => setNote(e.target.value)}
+                              className="w-full px-3 py-1.5 text-xs border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-green-400"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleSave(user.id)}
+                                disabled={saving}
+                                className="flex-1 px-3 py-1.5 text-xs font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors disabled:opacity-50"
+                              >
+                                {saving ? '...' : '✓ Simpan'}
+                              </button>
+                              <button
+                                onClick={() => setEditing(null)}
+                                className="px-3 py-1.5 text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                              >
+                                Batal
+                              </button>
+                            </div>
                           </div>
                         ) : (
                           <button
@@ -194,6 +219,69 @@ function SuperAdminView() {
         <strong>Cara pakai:</strong> Setelah customer konfirmasi transfer, cari emailnya → klik <em>Ubah Plan</em> → pilih plan → Simpan.
       </div>
     </div>
+  )
+}
+
+// ─── Billing History Section ───────────────────────────────────────────────
+function BillingHistory() {
+  const { data: history, isLoading } = trpc.users.getBillingHistory.useQuery()
+
+  if (isLoading) return null
+  if (!history || history.length === 0) return null
+
+  return (
+    <Card variant="default" padding="lg">
+      <CardHeader>
+        <CardTitle>Riwayat Langganan</CardTitle>
+      </CardHeader>
+      <CardBody>
+        <div className="space-y-3">
+          {history.map((item) => {
+            const planInfo = PLANS.find(p => p.value === item.plan) || PLANS[0]
+            return (
+              <div
+                key={item.id}
+                className="flex items-start gap-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700"
+              >
+                <div className="flex-shrink-0 mt-0.5">
+                  {item.is_trial ? (
+                    <span className="text-lg">🎁</span>
+                  ) : item.amount && item.amount > 0 ? (
+                    <span className="text-lg">💳</span>
+                  ) : (
+                    <span className="text-lg">📋</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <PlanBadge plan={item.plan} />
+                    {item.previous_plan && item.previous_plan !== item.plan && (
+                      <span className="text-xs text-gray-400">dari {PLANS.find(p => p.value === item.previous_plan)?.label || item.previous_plan}</span>
+                    )}
+                    {item.is_trial && (
+                      <span className="px-2 py-0.5 text-xs font-semibold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-full">Trial</span>
+                    )}
+                  </div>
+                  {item.note && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{item.note}</p>
+                  )}
+                </div>
+                <div className="text-right flex-shrink-0">
+                  {item.amount && item.amount > 0 ? (
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatRupiah(item.amount)}</p>
+                  ) : (
+                    <p className="text-sm font-semibold text-green-600 dark:text-green-400">Gratis</p>
+                  )}
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </CardBody>
+    </Card>
   )
 }
 
@@ -373,6 +461,9 @@ function UserUpgradeView() {
           </ol>
         </CardBody>
       </Card>
+
+      {/* Billing History */}
+      <BillingHistory />
     </div>
   )
 }
