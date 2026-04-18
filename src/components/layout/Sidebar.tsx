@@ -268,6 +268,7 @@ export function Sidebar() {
             <div className="px-2 space-y-1">
               <SidebarItem href="/settings/users" icon="👥" label="User Management" isCollapsed={isCollapsed} />
               <SidebarItem href="/settings/audit-logs" icon="📋" label="Audit Logs" isCollapsed={isCollapsed} />
+              <SidebarItem href="/settings/reset" icon="🗑️" label="Reset Data" isCollapsed={isCollapsed} />
             </div>
           </SidebarSection>
         )}
