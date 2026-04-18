@@ -33,27 +33,35 @@ async function getMonthlyTransactionCount(outletId: string): Promise<number> {
 async function getAccountPlan(userId: string): Promise<string> {
   const { data: user } = await supabase
     .from('users')
-    .select('plan, role')
+    .select('plan, role, outlet_id')
     .eq('id', userId)
     .single()
 
   if (!user) return 'free'
 
   // Admin uses their own plan
-  if (user.role === 'admin') return user.plan
+  if (user.role === 'admin') return user.plan ?? 'free'
 
-  // Non-admin (cashier/manager) inherits the highest plan among all admins
-  const { data: admins } = await supabase
-    .from('users')
-    .select('plan')
-    .eq('role', 'admin')
+  // Cashier inherits plan from their outlet's owner (tenant root)
+  if (user.outlet_id) {
+    const { data: outlet } = await supabase
+      .from('outlets')
+      .select('owner_id')
+      .eq('id', user.outlet_id)
+      .single()
 
-  const planOrder = ['free', 'warung', 'starter', 'professional', 'business', 'enterprise']
-  const highestPlan = admins
-    ?.map(a => a.plan)
-    .sort((a, b) => planOrder.indexOf(b) - planOrder.indexOf(a))[0]
+    if (outlet?.owner_id) {
+      const { data: owner } = await supabase
+        .from('users')
+        .select('plan')
+        .eq('id', outlet.owner_id)
+        .single()
 
-  return highestPlan ?? user.plan
+      return owner?.plan ?? 'free'
+    }
+  }
+
+  return 'free'
 }
 
 export const transactionsRouter = router({
