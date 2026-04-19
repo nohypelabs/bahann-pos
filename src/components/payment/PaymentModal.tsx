@@ -14,6 +14,7 @@ import { useState } from 'react'
 import { PaymentMethodSelector } from './PaymentMethodSelector'
 import { QRISDisplay } from './QRISDisplay'
 import { BankTransferDisplay } from './BankTransferDisplay'
+import { CashPaymentDisplay } from './CashPaymentDisplay'
 import { EWalletDisplay } from './EWalletDisplay'
 import { createPayment, confirmPayment } from '@/lib/payment/payment-service'
 import type { PaymentMethod, PaymentResult } from '@/lib/payment/payment-service'
@@ -30,7 +31,7 @@ interface PaymentModalProps {
   onError?: (error: string) => void
 }
 
-type PaymentStep = 'method' | 'processing' | 'qris' | 'bank_transfer' | 'ewallet' | 'completed'
+type PaymentStep = 'method' | 'processing' | 'cash' | 'qris' | 'bank_transfer' | 'ewallet' | 'completed'
 
 export function PaymentModal({
   transactionId,
@@ -55,23 +56,31 @@ export function PaymentModal({
     console.log('🔵 Payment method selected:', method)
     setSelectedMethod(method)
 
-    // For cash/debit/credit - instant payment
-    if (method === 'cash' || method === 'debit' || method === 'credit') {
+    // Cash — show change calculator first
+    if (method === 'cash') {
+      setStep('cash')
+      return
+    }
+
+    // Debit/credit - instant payment
+    if (method === 'debit' || method === 'credit') {
       await processInstantPayment(method)
     }
   }
 
-  const processInstantPayment = async (method: PaymentMethod) => {
+  const processInstantPayment = async (method: PaymentMethod, cashGiven?: number) => {
     setLoading(true)
     setError('')
 
     try {
+      const change = cashGiven ? cashGiven - amount : undefined
       const result = await createPayment({
         transactionId,
         amount,
         method,
         customerName,
-        customerPhone
+        customerPhone,
+        notes: cashGiven ? `Tunai: ${cashGiven} | Kembalian: ${change}` : undefined
       })
 
       setPaymentResult(result)
@@ -211,6 +220,7 @@ export function PaymentModal({
             <h2 className="text-2xl font-bold text-gray-900">
               {step === 'method' && 'Pembayaran'}
               {step === 'qris' && 'QRIS Payment'}
+              {step === 'cash' && 'Pembayaran Tunai'}
               {step === 'bank_transfer' && 'Bank Transfer'}
               {step === 'ewallet' && 'E-Wallet'}
               {step === 'completed' && 'Pembayaran Berhasil'}
@@ -286,6 +296,16 @@ export function PaymentModal({
               expiresAt={paymentResult.expiresAt}
               onCancel={handleCancel}
               onConfirm={handleConfirmPayment}
+            />
+          )}
+
+          {/* Step: Cash */}
+          {step === 'cash' && (
+            <CashPaymentDisplay
+              amount={amount}
+              loading={loading}
+              onCancel={handleCancel}
+              onConfirm={(cashGiven) => processInstantPayment('cash', cashGiven)}
             />
           )}
 
