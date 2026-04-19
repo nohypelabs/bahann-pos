@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
 import { trpc } from '@/lib/trpc/client'
 import { PrintPreviewModal } from '@/components/print/PrintPreviewModal'
-import { ReceiptData } from '@/components/print/PrintReceipt'
+import { PrintReceipt, ReceiptData } from '@/components/print/PrintReceipt'
 import { BarcodeScanner } from '@/components/barcode/BarcodeScanner'
 import { PaymentModal } from '@/components/payment'
 import { formatCurrency, formatDateTime, generateTransactionId } from '@/lib/utils'
@@ -51,6 +51,19 @@ export default function SalesTransactionPage() {
   const productSelectRef = useRef<HTMLInputElement>(null)
   const quantityInputRef = useRef<HTMLInputElement>(null)
   const barcodeInputRef = useRef<HTMLInputElement>(null)
+  const receiptRef = useRef<HTMLDivElement>(null)
+
+  const handleDirectPrint = () => {
+    if (!receiptData) return
+    const styleSheets = Array.from(document.querySelectorAll('style')).map(s => s.outerHTML).join('\n')
+    const receiptHTML = receiptRef.current?.outerHTML ?? ''
+    const printWindow = window.open('', '_blank', 'width=400,height=800')
+    if (!printWindow) { alert('Aktifkan popup di browser untuk fitur print.'); return }
+    printWindow.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Struk</title>${styleSheets}<style>@page{size:80mm auto;margin:0}body{margin:0;padding:0;background:white}</style></head><body>${receiptHTML}</body></html>`)
+    printWindow.document.close()
+    printWindow.focus()
+    setTimeout(() => { printWindow.print(); printWindow.close() }, 300)
+  }
 
   const { data: productsResponse, isLoading: productsLoading } = trpc.products.getAll.useQuery()
   const { data: outletsResponse, isLoading: outletsLoading } = trpc.outlets.getAll.useQuery()
@@ -537,6 +550,7 @@ export default function SalesTransactionPage() {
             {receiptData && (
               <div className="flex flex-col w-44 shrink-0 overflow-hidden gap-1.5">
                 <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide shrink-0">Struk Terakhir</p>
+                {/* Mini preview */}
                 <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-2 space-y-1 text-xs">
                   <p className="font-bold text-center text-gray-900 dark:text-gray-100">Laku POS</p>
                   <div className="border-t border-dashed border-gray-300 dark:border-gray-600" />
@@ -552,12 +566,25 @@ export default function SalesTransactionPage() {
                     <span className="text-blue-600">{formatCurrency(receiptData.total)}</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => setIsPrintModalOpen(true)}
-                  className="w-full py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg transition-colors shrink-0"
-                >
-                  🖨️ Print Struk
-                </button>
+                {/* Hidden full receipt for printing */}
+                <div className="hidden">
+                  <PrintReceipt ref={receiptRef} data={receiptData} />
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  <button
+                    onClick={handleDirectPrint}
+                    className="flex-1 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg transition-colors"
+                  >
+                    🖨️ Print
+                  </button>
+                  <button
+                    onClick={() => setIsPrintModalOpen(true)}
+                    className="px-2 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold rounded-lg transition-colors"
+                    title="Preview struk"
+                  >
+                    👁
+                  </button>
+                </div>
               </div>
             )}
           </div>
