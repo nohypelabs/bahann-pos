@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
@@ -25,6 +25,24 @@ export default function StockManagementPage() {
 
   const products = productsResponse?.products || []
   const outlets = outletsResponse?.outlets || []
+
+  // Fetch latest stock when both product + outlet are selected
+  const canFetchLatest = !!(formData.productId && formData.outletId)
+  const { data: latestStock, isLoading: latestStockLoading, refetch: refetchLatest } = trpc.stock.getLatest.useQuery(
+    { productId: formData.productId, outletId: formData.outletId },
+    { enabled: canFetchLatest }
+  )
+
+  // Auto-fill stockAwal from latest stock_akhir whenever product/outlet changes
+  useEffect(() => {
+    if (!canFetchLatest) return
+    const currentStock = latestStock?.stockAkhir ?? 0
+    setFormData(prev => ({
+      ...prev,
+      stockAwal: currentStock,
+      stockAkhir: currentStock + prev.stockIn - prev.stockOut,
+    }))
+  }, [latestStock, canFetchLatest])
 
   // Fetch dashboard stats for summary
   const { data: stats, refetch: refetchStats } = trpc.dashboard.getStats.useQuery({})
@@ -51,17 +69,17 @@ export default function StockManagementPage() {
       await recordStockMutation.mutateAsync(formData)
       setShowSuccess(true)
 
-      // Refetch stats to update summary
+      // Refetch stats and latest stock to update stockAwal automatically
       refetchStats()
+      refetchLatest()
 
-      // Reset form (keep product and outlet selected for convenience)
-      setFormData({
-        ...formData,
-        stockAwal: 0,
+      // Reset only movement fields; stockAwal will be updated via refetchLatest
+      setFormData(prev => ({
+        ...prev,
         stockIn: 0,
         stockOut: 0,
-        stockAkhir: 0,
-      })
+        stockAkhir: prev.stockAwal,
+      }))
 
       // Hide success message after 3 seconds
       setTimeout(() => setShowSuccess(false), 3000)
@@ -167,18 +185,17 @@ export default function StockManagementPage() {
               />
 
               <div className="grid grid-cols-2 gap-4">
-                <Input
-                  type="number"
-                  label="Stock Awal (Beginning)"
-                  value={formData.stockAwal}
-                  onChange={(e) => {
-                    const stockAwal = parseInt(e.target.value) || 0
-                    setFormData({ ...formData, stockAwal, stockAkhir: stockAwal + formData.stockIn - formData.stockOut })
-                  }}
-                  fullWidth
-                  required
-                  min="0"
-                />
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Stock Awal {canFetchLatest && latestStockLoading && <span className="text-xs text-gray-400">(loading...)</span>}
+                  </label>
+                  <div className="px-3 py-2 rounded-lg border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-bold text-center text-lg">
+                    {canFetchLatest && latestStockLoading ? '...' : formData.stockAwal}
+                  </div>
+                  <p className="text-xs text-gray-400">
+                    {canFetchLatest ? 'Dari stok terakhir tercatat' : 'Pilih produk & outlet'}
+                  </p>
+                </div>
 
                 <Input
                   type="number"
