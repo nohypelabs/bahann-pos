@@ -46,7 +46,7 @@ export const PrintReceipt = forwardRef<HTMLDivElement, PrintReceiptProps>(
           {/* Header */}
           <div className="receipt-header">
             <div className="receipt-logo">
-              <h1>BAHANN POS</h1>
+              <h1>Laku POS</h1>
             </div>
             <div className="receipt-outlet-info">
               <h2>{data.outlet.name}</h2>
