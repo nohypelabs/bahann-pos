@@ -11,7 +11,7 @@ import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { generateQRISImage, generateQRISString } from './qris-generator'
 import { v4 as uuidv4 } from 'uuid'
 
-export type PaymentMethod = 'cash' | 'qris' | 'bank_transfer' | 'debit' | 'credit'
+export type PaymentMethod = 'cash' | 'qris' | 'bank_transfer' | 'ewallet' | 'debit' | 'credit'
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired'
 
 /**
@@ -22,6 +22,7 @@ function mapMethodToCode(method: PaymentMethod): string {
     'cash': 'cash',
     'qris': 'qris_static',
     'bank_transfer': 'bank_transfer',
+    'ewallet': 'ewallet_manual',
     'debit': 'debit_card',
     'credit': 'credit_card'
   }
@@ -79,25 +80,12 @@ export async function createPayment(request: PaymentRequest): Promise<PaymentRes
 
     const accountDetails = qrisConfig.account_details as any || {}
 
-    // Generate QRIS code
-    const qrisString = generateQRISString({
-      merchantName: accountDetails.merchantName || 'Laku POS',
-      merchantCity: accountDetails.merchantCity || 'Jakarta',
-      merchantPAN: accountDetails.merchantPAN,
-      amount: request.amount,
-      transactionId: request.transactionId
-    })
-
-    const qrisImage = await generateQRISImage(
-      {
-        merchantName: accountDetails.merchantName || 'Laku POS',
-        merchantCity: accountDetails.merchantCity || 'Jakarta',
-        merchantPAN: accountDetails.merchantPAN,
-        amount: request.amount,
-        transactionId: request.transactionId
-      },
-      { width: 400 }
-    )
+    // Use static QRIS image uploaded by merchant
+    const qrisImage: string = accountDetails.imageBase64 || ''
+    if (!qrisImage) {
+      throw new Error('Gambar QRIS belum diupload. Silakan upload di Settings → Pembayaran → QRIS.')
+    }
+    const qrisString = qrisImage
 
     // Save payment to database
     const insertData = {
@@ -179,6 +167,34 @@ export async function createPayment(request: PaymentRequest): Promise<PaymentRes
       method: 'bank_transfer',
       amount: request.amount,
       bankAccountId: bankAccount.id,
+      expiresAt
+    }
+  }
+
+  // For E-Wallet (DANA, GoPay, etc.) — manual confirmation
+  if (request.method === 'ewallet') {
+    const { error } = await supabase.from('payments').insert({
+      id: paymentId,
+      amount: request.amount,
+      payment_method_id: null,
+      status: 'pending',
+      customer_name: request.customerName || null,
+      customer_phone: request.customerPhone || null,
+      confirmation_notes: `EWALLET | TRX: ${request.transactionId}${request.notes ? ' | ' + request.notes : ''}`,
+      expired_at: expiresAt.toISOString(),
+      created_at: new Date().toISOString()
+    })
+
+    if (error) {
+      console.error('❌ E-wallet payment insert error:', error)
+      throw new Error(`Failed to create payment: ${error.message}`)
+    }
+
+    return {
+      paymentId,
+      status: 'pending',
+      method: 'ewallet',
+      amount: request.amount,
       expiresAt
     }
   }

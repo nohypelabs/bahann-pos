@@ -280,6 +280,7 @@ export function Sidebar() {
         {userRole === 'admin' && (
           <SidebarSection sectionKey="settings" title="Settings" isCollapsed={isCollapsed} activePaths={['/settings']}>
             <div className="px-2 space-y-1">
+              <SidebarItem href="/settings/payments" icon="💰" label="Pembayaran" isCollapsed={isCollapsed} />
               <SidebarItem href="/settings/users" icon="👥" label="User Management" isCollapsed={isCollapsed} />
               <SidebarItem href="/settings/audit-logs" icon="📋" label="Audit Logs" isCollapsed={isCollapsed} />
               <SidebarItem href="/settings/reset" icon="🗑️" label="Reset Data" isCollapsed={isCollapsed} />

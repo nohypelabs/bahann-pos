@@ -14,6 +14,7 @@ import { useState } from 'react'
 import { PaymentMethodSelector } from './PaymentMethodSelector'
 import { QRISDisplay } from './QRISDisplay'
 import { BankTransferDisplay } from './BankTransferDisplay'
+import { EWalletDisplay } from './EWalletDisplay'
 import { createPayment, confirmPayment } from '@/lib/payment/payment-service'
 import type { PaymentMethod, PaymentResult } from '@/lib/payment/payment-service'
 
@@ -29,7 +30,7 @@ interface PaymentModalProps {
   onError?: (error: string) => void
 }
 
-type PaymentStep = 'method' | 'processing' | 'qris' | 'bank_transfer' | 'completed'
+type PaymentStep = 'method' | 'processing' | 'qris' | 'bank_transfer' | 'ewallet' | 'completed'
 
 export function PaymentModal({
   transactionId,
@@ -138,6 +139,30 @@ export function PaymentModal({
     }
   }
 
+  const processEWalletPayment = async () => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const result = await createPayment({
+        transactionId,
+        amount,
+        method: 'ewallet',
+        customerName,
+        customerPhone
+      })
+
+      setPaymentResult(result)
+      setStep('ewallet')
+    } catch (err: any) {
+      const errorMsg = err.message || 'Gagal memproses pembayaran e-wallet'
+      setError(errorMsg)
+      onError?.(errorMsg)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleConfirmPayment = async () => {
     if (!paymentResult) return
 
@@ -187,6 +212,7 @@ export function PaymentModal({
               {step === 'method' && 'Pembayaran'}
               {step === 'qris' && 'QRIS Payment'}
               {step === 'bank_transfer' && 'Bank Transfer'}
+              {step === 'ewallet' && 'E-Wallet'}
               {step === 'completed' && 'Pembayaran Berhasil'}
             </h2>
             <button
@@ -238,6 +264,16 @@ export function PaymentModal({
                   {loading ? 'Processing...' : 'Lanjut ke Transfer Bank'}
                 </button>
               )}
+
+              {selectedMethod === 'ewallet' && (
+                <button
+                  onClick={processEWalletPayment}
+                  disabled={loading}
+                  className="w-full py-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Processing...' : 'Lanjut ke E-Wallet'}
+                </button>
+              )}
             </div>
           )}
 
@@ -245,6 +281,17 @@ export function PaymentModal({
           {step === 'qris' && paymentResult && (
             <QRISDisplay
               qrisImage={paymentResult.qrisImage!}
+              amount={amount}
+              transactionId={transactionId}
+              expiresAt={paymentResult.expiresAt}
+              onCancel={handleCancel}
+              onConfirm={handleConfirmPayment}
+            />
+          )}
+
+          {/* Step: E-Wallet Display */}
+          {step === 'ewallet' && paymentResult && (
+            <EWalletDisplay
               amount={amount}
               transactionId={transactionId}
               expiresAt={paymentResult.expiresAt}

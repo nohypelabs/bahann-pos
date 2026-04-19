@@ -90,6 +90,9 @@ export function BankTransferDisplay({
   }
 
   const config = (bankAccount.account_details as any) || {}
+  const bankName = config.bankName || process.env.NEXT_PUBLIC_BANK_NAME || '-'
+  const accountNumber = config.accountNumber || process.env.NEXT_PUBLIC_BANK_ACCOUNT || '-'
+  const accountHolder = config.accountHolder || process.env.NEXT_PUBLIC_BANK_HOLDER || '-'
 
   return (
     <div className="space-y-6">
@@ -107,7 +110,7 @@ export function BankTransferDisplay({
           {/* Bank Name */}
           <div>
             <p className="text-sm opacity-80 mb-1">Nama Bank</p>
-            <p className="text-2xl font-bold">{config.bankName || 'Bank'}</p>
+            <p className="text-2xl font-bold">{bankName}</p>
           </div>
 
           {/* Account Number */}
@@ -115,10 +118,10 @@ export function BankTransferDisplay({
             <p className="text-sm opacity-80 mb-1">Nomor Rekening</p>
             <div className="flex items-center justify-between bg-white/10 rounded-lg p-3">
               <p className="text-xl font-mono font-bold tracking-wider">
-                {config.accountNumber || '-'}
+                {accountNumber}
               </p>
               <button
-                onClick={() => copyToClipboard(config.accountNumber, 'account')}
+                onClick={() => copyToClipboard(accountNumber, 'account')}
                 className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
               >
                 {copied === 'account' ? '✓ Copied' : '📋 Copy'}
@@ -129,7 +132,7 @@ export function BankTransferDisplay({
           {/* Account Holder */}
           <div>
             <p className="text-sm opacity-80 mb-1">Atas Nama</p>
-            <p className="text-lg font-semibold">{config.accountHolder || '-'}</p>
+            <p className="text-lg font-semibold">{accountHolder}</p>
           </div>
         </div>
       </div>
@@ -190,11 +193,11 @@ export function BankTransferDisplay({
           </li>
           <li className="flex gap-2">
             <span className="font-bold">3.</span>
-            <span>Masukkan nomor rekening: <strong>{config.accountNumber}</strong></span>
+            <span>Masukkan nomor rekening: <strong>{accountNumber}</strong></span>
           </li>
           <li className="flex gap-2">
             <span className="font-bold">4.</span>
-            <span>Pastikan nama penerima: <strong>{config.accountHolder}</strong></span>
+            <span>Pastikan nama penerima: <strong>{accountHolder}</strong></span>
           </li>
           <li className="flex gap-2">
             <span className="font-bold">5.</span>

@@ -67,6 +67,7 @@ export function PaymentMethodSelector({
         { id: '1', type: 'cash', name: 'Cash', icon: '💵', isActive: true },
         { id: '2', type: 'qris', name: 'QRIS', icon: '📱', isActive: true },
         { id: '3', type: 'bank_transfer', name: 'Bank Transfer', icon: '🏦', isActive: true },
+        { id: '6', type: 'ewallet', name: 'E-Wallet', icon: '📲', isActive: true },
         { id: '4', type: 'debit', name: 'Debit Card', icon: '💳', isActive: true },
         { id: '5', type: 'credit', name: 'Credit Card', icon: '💳', isActive: true }
       ])
@@ -83,7 +84,7 @@ export function PaymentMethodSelector({
       'bank_transfer': 'bank_transfer',
       'debit_card': 'debit',
       'credit_card': 'credit',
-      'ewallet_manual': 'bank_transfer' // E-wallet manual uses bank transfer flow
+      'ewallet_manual': 'ewallet'
     }
     return mapping[code] || 'cash'
   }
@@ -93,6 +94,7 @@ export function PaymentMethodSelector({
       cash: '💵',
       qris: '📱',
       bank_transfer: '🏦',
+      ewallet: '📲',
       debit: '💳',
       credit: '💳'
     }
