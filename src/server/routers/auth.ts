@@ -190,6 +190,23 @@ export const authRouter = router({
   }),
 
   /**
+   * Get current user's full profile (for receipt/nota)
+   */
+  getProfile: protectedProcedure.query(async ({ ctx }) => {
+    const { supabaseAdmin } = await import('@/infra/supabase/server')
+    const { data } = await supabaseAdmin
+      .from('users')
+      .select('name, email, whatsapp_number')
+      .eq('id', ctx.userId)
+      .single()
+    return {
+      name: data?.name || ctx.session?.name || '',
+      email: data?.email || ctx.session?.email || '',
+      whatsappNumber: data?.whatsapp_number || '',
+    }
+  }),
+
+  /**
    * Get current user's subscription plan
    */
   getPlan: protectedProcedure.query(async ({ ctx }) => {

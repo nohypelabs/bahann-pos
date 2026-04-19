@@ -55,6 +55,7 @@ export default function SalesTransactionPage() {
   // Fetch products and outlets for dropdowns
   const { data: productsResponse, isLoading: productsLoading } = trpc.products.getAll.useQuery()
   const { data: outletsResponse, isLoading: outletsLoading } = trpc.outlets.getAll.useQuery()
+  const { data: userProfile } = trpc.auth.getProfile.useQuery()
 
   const products = productsResponse?.products || []
   const outlets = outletsResponse?.outlets || []
@@ -396,9 +397,9 @@ export default function SalesTransactionPage() {
         cashier: getUserName(),
         outlet: {
           name: selectedOutlet?.name || 'Laku POS',
-          address: selectedOutlet?.address || 'Indonesia',
-          phone: '+62 878-7441-5491',
-          email: 'agdscid@gmail.com',
+          address: selectedOutlet?.address || '',
+          phone: userProfile?.whatsappNumber || '',
+          email: userProfile?.email || '',
         },
         items: cart.map(item => ({
           name: item.productName,

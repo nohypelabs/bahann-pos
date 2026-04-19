@@ -50,8 +50,8 @@ export const PrintReceipt = forwardRef<HTMLDivElement, PrintReceiptProps>(
             </div>
             <div className="receipt-outlet-info">
               <h2>{data.outlet.name}</h2>
-              <p>{data.outlet.address}</p>
-              <p>Tel: {data.outlet.phone}</p>
+              {data.outlet.address && <p>{data.outlet.address}</p>}
+              {data.outlet.phone && <p>Tel: {data.outlet.phone}</p>}
               {data.outlet.email && <p>Email: {data.outlet.email}</p>}
             </div>
           </div>
