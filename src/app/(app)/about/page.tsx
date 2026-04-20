@@ -71,6 +71,15 @@ export default function AboutPage() {
         t('about.features.userMgmt.item5'),
       ],
     },
+    {
+      category: `📱 ${t('about.features.pwa')}`,
+      items: [
+        t('about.features.pwa.item1'),
+        t('about.features.pwa.item2'),
+        t('about.features.pwa.item3'),
+        t('about.features.pwa.item4'),
+      ],
+    },
   ]
 
   const techStack = [
@@ -78,38 +87,62 @@ export default function AboutPage() {
       category: t('about.technology.frontend'),
       icon: '🎨',
       technologies: [
-        { name: 'Next.js 16', description: 'React framework with App Router & Turbopack' },
-        { name: 'React 19', description: 'UI library with latest features' },
-        { name: 'TypeScript 5', description: 'Type-safe JavaScript' },
-        { name: 'Tailwind CSS 4', description: 'Utility-first CSS framework' },
-        { name: 'Recharts', description: 'Composable charting library' },
+        { name: 'Next.js 16.0.7', description: 'React framework with App Router & Turbopack' },
+        { name: 'React 19.2', description: 'UI library with React Compiler enabled' },
+        { name: 'TypeScript 5.9', description: 'Type-safe JavaScript' },
+        { name: 'Tailwind CSS 4.1', description: 'Utility-first CSS framework (CSS-first config)' },
+        { name: 'Recharts 3.4', description: 'Composable charting library' },
+        { name: 'Nivo 0.99', description: 'Rich data visualisation (dashboard)' },
       ],
     },
     {
       category: t('about.technology.backend'),
       icon: '⚙️',
       technologies: [
-        { name: 'tRPC 11', description: 'End-to-end typesafe APIs' },
-        { name: 'Supabase', description: 'PostgreSQL database & auth' },
-        { name: 'Zod', description: 'TypeScript-first schema validation' },
-        { name: 'Superjson', description: 'JSON serialization with type support' },
+        { name: 'tRPC 11.7', description: 'End-to-end typesafe APIs' },
+        { name: 'Supabase 2.x', description: 'PostgreSQL database with RLS' },
+        { name: 'Zod 4.1', description: 'TypeScript-first schema validation' },
+        { name: 'Resend', description: 'Transactional email (welcome, verification)' },
+        { name: 'Puppeteer 24', description: 'PDF receipt & report generation' },
+        { name: 'xlsx 0.18', description: 'Excel/CSV bulk product import' },
       ],
     },
     {
       category: t('about.technology.auth'),
       icon: '🔐',
       technologies: [
-        { name: 'JWT', description: 'JSON Web Tokens for stateless auth' },
-        { name: 'bcryptjs', description: 'Password hashing' },
-        { name: 'Redis (ioredis)', description: 'Optional session storage' },
+        { name: 'JWT (jsonwebtoken)', description: 'Stateless auth with 7-day sessions' },
+        { name: 'bcryptjs 3', description: 'Password hashing' },
+        { name: 'ioredis / Upstash', description: 'Session store (local / production)' },
+        { name: 'Rate Limiter', description: 'Login 5/15 min · API 100/min' },
       ],
     },
     {
-      category: 'State Management',
+      category: 'State & Data Fetching',
       icon: '📡',
       technologies: [
-        { name: 'TanStack Query', description: 'Async state management' },
+        { name: 'TanStack Query 5.9', description: 'Async state management' },
         { name: 'tRPC React Query', description: 'Type-safe data fetching' },
+        { name: 'Superjson 2', description: 'JSON serialisation with type support' },
+      ],
+    },
+    {
+      category: 'Offline & PWA',
+      icon: '📱',
+      technologies: [
+        { name: 'Dexie 4.2', description: 'IndexedDB wrapper for offline storage' },
+        { name: 'SyncManager', description: 'Auto-sync every 30 s when online' },
+        { name: 'Service Worker', description: 'Asset caching & PWA install' },
+        { name: 'html5-qrcode', description: 'Camera & USB barcode scanning' },
+      ],
+    },
+    {
+      category: 'Monitoring & Testing',
+      icon: '🔭',
+      technologies: [
+        { name: 'Sentry 10.25', description: 'Error tracking & performance' },
+        { name: 'Jest 30', description: 'Unit & integration tests' },
+        { name: 'Playwright 1.56', description: 'End-to-end tests' },
       ],
     },
     {
@@ -119,20 +152,31 @@ export default function AboutPage() {
         { name: 'Domain-Driven Design', description: 'Clean architecture pattern' },
         { name: 'Repository Pattern', description: 'Data access abstraction' },
         { name: 'Use Cases', description: 'Business logic separation' },
-        { name: 'Dependency Injection', description: 'Loose coupling' },
+        { name: 'Dependency Injection', description: 'Loose coupling via container.ts' },
       ],
     },
   ]
 
   const stack = [
-    { label: 'Framework', value: 'Next.js 16 (App Router, Turbopack)', color: 'bg-gray-900 dark:bg-gray-600' },
-    { label: 'Language', value: 'TypeScript 5.9', color: 'bg-blue-600' },
+    { label: 'Framework', value: 'Next.js 16.0.7', color: 'bg-gray-900 dark:bg-gray-600' },
+    { label: 'Language', value: 'TypeScript 5.9.3', color: 'bg-blue-600' },
     { label: t('about.technology.database'), value: 'PostgreSQL (Supabase)', color: 'bg-green-600' },
-    { label: 'API', value: 'tRPC 11 + React Query', color: 'bg-blue-500' },
-    { label: 'Styling', value: 'Tailwind CSS 4', color: 'bg-cyan-600' },
-    { label: t('about.technology.auth'), value: 'JWT + Redis (optional)', color: 'bg-red-600' },
-    { label: 'Charts', value: 'Recharts 3', color: 'bg-purple-600' },
+    { label: 'API', value: 'tRPC 11 + React Query v5', color: 'bg-blue-500' },
+    { label: 'Styling', value: 'Tailwind CSS 4.1', color: 'bg-cyan-600' },
+    { label: t('about.technology.auth'), value: 'JWT + ioredis / Upstash', color: 'bg-red-600' },
+    { label: 'Charts', value: 'Recharts 3.4 + Nivo 0.99', color: 'bg-purple-600' },
+    { label: 'Offline', value: 'Dexie 4.2 + Service Worker', color: 'bg-orange-600' },
+    { label: 'Email', value: 'Resend', color: 'bg-pink-600' },
+    { label: 'Monitoring', value: 'Sentry 10.25', color: 'bg-indigo-600' },
+    { label: 'Export', value: 'Puppeteer + xlsx', color: 'bg-teal-600' },
     { label: t('about.technology.deployment'), value: 'Vercel', color: 'bg-gray-900 dark:bg-gray-600' },
+  ]
+
+  const credits = [
+    'Next.js', 'React', 'TypeScript', 'Tailwind CSS',
+    'tRPC', 'Supabase', 'TanStack Query', 'Recharts',
+    'Nivo', 'Dexie', 'Sentry', 'Puppeteer',
+    'Zod', 'Resend', 'ioredis', 'Vercel',
   ]
 
   return (
@@ -328,11 +372,7 @@ export default function AboutPage() {
               {t('about.credits.thanks')}
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {[
-                'Next.js', 'React', 'TypeScript', 'Tailwind CSS',
-                'tRPC', 'Supabase', 'TanStack Query', 'Recharts',
-                'Vercel', 'Zod', 'ioredis', 'bcryptjs',
-              ].map((tech) => (
+              {credits.map((tech) => (
                 <div key={tech} className="p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-center border border-gray-200 dark:border-gray-600">
                   <p className="font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm">{tech}</p>
                 </div>
