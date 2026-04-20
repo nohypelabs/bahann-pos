@@ -186,20 +186,19 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Revenue Chart (Nivo) ── */}
-      <Card variant="elevated" padding="md">
-        <CardHeader className="pb-3 mb-3 border-b border-gray-100 dark:border-gray-700/60">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <CardTitle>Tren Penjualan</CardTitle>
-              <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{dateLabel}</p>
-            </div>
-            {salesTrend && salesTrend.length > 0 && (
-              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-full">
-                {salesTrend.length} hari
-              </span>
-            )}
+      <div>
+        <div className="flex items-center justify-between gap-2 mb-2.5">
+          <div>
+            <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">Tren Penjualan</h2>
+            <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{dateLabel}</p>
           </div>
-        </CardHeader>
+          {salesTrend && salesTrend.length > 0 && (
+            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-full">
+              {salesTrend.length} hari
+            </span>
+          )}
+        </div>
+        <Card variant="elevated" padding="md">
         <CardBody>
           {trendLoading ? (
             <ChartSkeleton height={280} />
@@ -214,7 +213,8 @@ export default function DashboardPage() {
             </Suspense>
           )}
         </CardBody>
-      </Card>
+        </Card>
+      </div>
 
       {/* ── Quick Actions ── */}
       <div>
