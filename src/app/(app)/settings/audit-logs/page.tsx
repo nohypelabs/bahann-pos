@@ -78,9 +78,9 @@ export default function AuditLogsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-2 md:space-y-4 md:space-y-8">
       <div>
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">Audit Logs</h1>
+        <h1 className="text-base md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">Audit Logs</h1>
         <p className="text-gray-600 dark:text-gray-400">
           View and monitor all system activities for compliance and security
         </p>
@@ -88,38 +88,38 @@ export default function AuditLogsPage() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card variant="default" padding="lg">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
+          <Card variant="default" padding="sm">
             <div className="space-y-2">
               <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Total Logs</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-xs md:text-lg md:text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {stats.totalLogs.toLocaleString()}
               </p>
             </div>
           </Card>
 
-          <Card variant="default" padding="lg">
+          <Card variant="default" padding="sm">
             <div className="space-y-2">
               <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Unique Users</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-xs md:text-lg md:text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {stats.uniqueUsersCount}
               </p>
             </div>
           </Card>
 
-          <Card variant="default" padding="lg">
+          <Card variant="default" padding="sm">
             <div className="space-y-2">
               <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Entity Types</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-xs md:text-lg md:text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {Object.keys(stats.byEntityType).length}
               </p>
             </div>
           </Card>
 
-          <Card variant="default" padding="lg">
+          <Card variant="default" padding="sm">
             <div className="space-y-2">
               <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Action Types</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-xs md:text-lg md:text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {Object.keys(stats.byAction).length}
               </p>
             </div>
@@ -128,7 +128,7 @@ export default function AuditLogsPage() {
       )}
 
       {/* Filters */}
-      <Card variant="elevated" padding="lg">
+      <Card variant="elevated" padding="sm">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Filters</CardTitle>
@@ -138,7 +138,7 @@ export default function AuditLogsPage() {
           </div>
         </CardHeader>
         <CardBody>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4">
             <Select
               label="Action"
               value={selectedAction}
@@ -183,7 +183,7 @@ export default function AuditLogsPage() {
               fullWidth
             />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 mt-4">
             <Input
               type="date"
               label="Date From"
@@ -209,7 +209,7 @@ export default function AuditLogsPage() {
       </Card>
 
       {/* Audit Logs Table */}
-      <Card variant="default" padding="lg">
+      <Card variant="default" padding="sm">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Activity Log</CardTitle>
@@ -220,12 +220,12 @@ export default function AuditLogsPage() {
         </CardHeader>
         <CardBody>
           {isLoading ? (
-            <div className="py-12 text-center text-gray-500 dark:text-gray-400">
+            <div className="py-6 md:py-12 text-center text-gray-500 dark:text-gray-400">
               <p>Loading audit logs...</p>
             </div>
           ) : !logs || logs.length === 0 ? (
-            <div className="py-12 text-center text-gray-500 dark:text-gray-400">
-              <div className="text-6xl mb-4">📋</div>
+            <div className="py-6 md:py-12 text-center text-gray-500 dark:text-gray-400">
+              <div className="text-3xl md:text-6xl mb-4">📋</div>
               <p className="font-semibold">No audit logs found</p>
               <p className="text-sm">Try adjusting your filters</p>
             </div>
@@ -235,22 +235,22 @@ export default function AuditLogsPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b-2 border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-2 px-2 md:py-3 md:px-4 font-semibold text-gray-700 dark:text-gray-300">
                         Timestamp
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-2 px-2 md:py-3 md:px-4 font-semibold text-gray-700 dark:text-gray-300">
                         User
                       </th>
-                      <th className="text-center py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
+                      <th className="text-center py-2 px-2 md:py-3 md:px-4 font-semibold text-gray-700 dark:text-gray-300">
                         Action
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-2 px-2 md:py-3 md:px-4 font-semibold text-gray-700 dark:text-gray-300">
                         Entity
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
+                      <th className="text-left py-2 px-2 md:py-3 md:px-4 font-semibold text-gray-700 dark:text-gray-300">
                         Entity ID
                       </th>
-                      <th className="text-center py-3 px-4 font-semibold text-gray-700 dark:text-gray-300">
+                      <th className="text-center py-2 px-2 md:py-3 md:px-4 font-semibold text-gray-700 dark:text-gray-300">
                         Details
                       </th>
                     </tr>
@@ -308,7 +308,7 @@ export default function AuditLogsPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="mt-6 flex items-center justify-between">
+                <div className="mt-3 md:mt-6 flex items-center justify-between">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Showing {currentPage * pageSize + 1} to{' '}
                     {Math.min((currentPage + 1) * pageSize, total)} of {total} logs
@@ -348,20 +348,20 @@ export default function AuditLogsPage() {
           onClick={() => setSelectedLog(null)}
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-2xl max-w-3xl w-full max-h-[80vh] overflow-y-auto p-6"
+            className="bg-white dark:bg-gray-800 rounded-2xl max-w-3xl w-full max-h-[80vh] overflow-y-auto p-3 md:p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Audit Log Details</h2>
+            <div className="flex items-center justify-between mb-3 md:mb-6">
+              <h2 className="text-base md:text-2xl font-bold text-gray-900 dark:text-gray-100">Audit Log Details</h2>
               <button
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 text-2xl"
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 text-base md:text-2xl"
                 onClick={() => setSelectedLog(null)}
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-2 md:space-y-4">
               <div>
                 <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">Timestamp</p>
                 <p className="text-gray-900 dark:text-gray-100">{formatDateTime(selectedLog.created_at)}</p>
@@ -429,7 +429,7 @@ export default function AuditLogsPage() {
               )}
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-3 md:mt-6 flex justify-end">
               <Button variant="primary" onClick={() => setSelectedLog(null)}>
                 Close
               </Button>

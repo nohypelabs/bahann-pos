@@ -48,23 +48,23 @@ export function CashPaymentDisplay({ amount, onConfirm, onCancel, loading }: Cas
   }, [])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 md:space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">Pembayaran Tunai</h2>
+        <h2 className="text-base md:text-2xl font-bold text-gray-900 mb-1">Pembayaran Tunai</h2>
         <p className="text-gray-500 text-sm">Masukkan jumlah uang yang diterima</p>
       </div>
 
       {/* Total */}
       <div className="bg-gray-50 rounded-2xl p-5 text-center">
         <p className="text-sm font-medium text-gray-500 mb-1">Total Belanja</p>
-        <p className="text-4xl font-bold text-gray-900">{formatRupiah(amount)}</p>
+        <p className="text-base md:text-4xl font-bold text-gray-900">{formatRupiah(amount)}</p>
       </div>
 
       {/* Quick denominations */}
       <div>
         <p className="text-sm font-medium text-gray-600 mb-2">Uang Diterima</p>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {QUICK_AMOUNTS.map(val => (
             <button
               key={val}
@@ -96,7 +96,7 @@ export function CashPaymentDisplay({ amount, onConfirm, onCancel, loading }: Cas
             value={inputValue}
             onChange={e => handleInput(e.target.value)}
             placeholder="0"
-            className="w-full pl-12 pr-4 py-4 text-2xl font-bold text-right border-2 border-gray-200 rounded-xl focus:border-blue-400 focus:outline-none transition-colors"
+            className="w-full pl-12 pr-4 py-4 text-base md:text-2xl font-bold text-right border-2 border-gray-200 rounded-xl focus:border-blue-400 focus:outline-none transition-colors"
           />
         </div>
       </div>
@@ -115,17 +115,17 @@ export function CashPaymentDisplay({ amount, onConfirm, onCancel, loading }: Cas
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-green-700">Kembalian</p>
-              <p className="text-3xl font-bold text-green-600">{formatRupiah(change)}</p>
+              <p className="text-xs md:text-lg md:text-3xl font-bold text-green-600">{formatRupiah(change)}</p>
             </div>
             <div className="text-right">
               <p className="text-xs text-green-600">Diterima</p>
-              <p className="text-lg font-semibold text-green-700">{formatRupiah(cashGiven)}</p>
+              <p className="text-xs md:text-lg font-semibold text-green-700">{formatRupiah(cashGiven)}</p>
             </div>
           </div>
         ) : (
           <div className="text-center">
             <p className="text-sm font-medium text-red-600">Uang kurang</p>
-            <p className="text-2xl font-bold text-red-500">{formatRupiah(Math.abs(change))}</p>
+            <p className="text-base md:text-2xl font-bold text-red-500">{formatRupiah(Math.abs(change))}</p>
           </div>
         )}
       </div>

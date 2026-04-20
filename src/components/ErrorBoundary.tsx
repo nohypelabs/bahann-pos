@@ -87,9 +87,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
           <div className="max-w-2xl w-full">
-            <div className="bg-white rounded-2xl shadow-xl border-2 border-red-200 p-8">
+            <div className="bg-white rounded-2xl shadow-xl border-2 border-red-200 p-4 md:p-8">
               {/* Error Icon */}
-              <div className="flex justify-center mb-6">
+              <div className="flex justify-center mb-3 md:mb-6">
                 <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
                   <svg
                     className="w-12 h-12 text-red-600"
@@ -106,19 +106,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               </div>
 
               {/* Error Title */}
-              <h1 className="text-3xl font-bold text-gray-900 text-center mb-4">
+              <h1 className="text-xs md:text-lg md:text-3xl font-bold text-gray-900 text-center mb-4">
                 Oops! Something went wrong
               </h1>
 
               {/* Error Message */}
-              <p className="text-gray-600 text-center mb-6">
+              <p className="text-gray-600 text-center mb-3 md:mb-6">
                 We apologize for the inconvenience. An unexpected error has occurred.
                 Our team has been notified and is working on a fix.
               </p>
 
               {/* Error Details (Development only) */}
               {process.env.NODE_ENV === 'development' && this.state.error && (
-                <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+                <div className="mb-3 md:mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl">
                   <p className="text-sm font-semibold text-red-900 mb-2">Error Details:</p>
                   <p className="text-sm text-red-800 font-mono mb-3">
                     {this.state.error.toString()}
@@ -140,20 +140,20 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               <div className="flex gap-4 justify-center">
                 <button
                   onClick={this.handleReset}
-                  className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+                  className="px-3 md:px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
                 >
                   Try Again
                 </button>
                 <button
                   onClick={() => window.location.href = '/'}
-                  className="px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-xl hover:bg-gray-300 transition-colors"
+                  className="px-3 md:px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-xl hover:bg-gray-300 transition-colors"
                 >
                   Go to Home
                 </button>
               </div>
 
               {/* Help Text */}
-              <p className="text-sm text-gray-500 text-center mt-6">
+              <p className="text-sm text-gray-500 text-center mt-3 md:mt-6">
                 If this problem persists, please contact support at{' '}
                 <a
                   href="mailto:agdscid@gmail.com"

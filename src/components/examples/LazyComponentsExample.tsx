@@ -32,10 +32,10 @@ export default function LazyComponentsExample() {
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 md:p-8 space-y-4 md:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+        <h1 className="text-base md:text-4xl font-bold text-gray-900 mb-2">
           Lazy Loading Components Example
         </h1>
         <p className="text-gray-600">
@@ -45,7 +45,7 @@ export default function LazyComponentsExample() {
 
       {/* Example 1: Lazy Modal with Heavy Form */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-base md:text-2xl font-bold text-gray-900">
           Example 1: Lazy Modal with Form
         </h2>
         <p className="text-gray-600">
@@ -71,7 +71,7 @@ export default function LazyComponentsExample() {
 
       {/* Example 2: Lazy Date Picker */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-base md:text-2xl font-bold text-gray-900">
           Example 2: Lazy Date Picker
         </h2>
         <p className="text-gray-600">
@@ -96,7 +96,7 @@ export default function LazyComponentsExample() {
 
       {/* Example 3: Lazy Rich Text Editor */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-base md:text-2xl font-bold text-gray-900">
           Example 3: Lazy Rich Text Editor
         </h2>
         <p className="text-gray-600">
@@ -122,8 +122,8 @@ export default function LazyComponentsExample() {
       </div>
 
       {/* Performance Metrics */}
-      <div className="p-6 bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-200 rounded-xl">
-        <h3 className="text-xl font-bold text-gray-900 mb-4">
+      <div className="p-3 md:p-6 bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-200 rounded-xl">
+        <h3 className="text-sm md:text-xl font-bold text-gray-900 mb-4">
           🚀 Performance Benefits
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -131,7 +131,7 @@ export default function LazyComponentsExample() {
             <p className="text-sm font-semibold text-gray-700 mb-1">
               Initial Bundle Reduction
             </p>
-            <p className="text-3xl font-bold text-green-600">30-40%</p>
+            <p className="text-xs md:text-lg md:text-3xl font-bold text-green-600">30-40%</p>
             <p className="text-xs text-gray-600 mt-1">
               Heavy libraries loaded on-demand
             </p>
@@ -140,7 +140,7 @@ export default function LazyComponentsExample() {
             <p className="text-sm font-semibold text-gray-700 mb-1">
               Faster Initial Load
             </p>
-            <p className="text-3xl font-bold text-blue-600">&lt;1.8s</p>
+            <p className="text-xs md:text-lg md:text-3xl font-bold text-blue-600">&lt;1.8s</p>
             <p className="text-xs text-gray-600 mt-1">
               First Contentful Paint (FCP)
             </p>
@@ -149,7 +149,7 @@ export default function LazyComponentsExample() {
             <p className="text-sm font-semibold text-gray-700 mb-1">
               Time to Interactive
             </p>
-            <p className="text-3xl font-bold text-purple-600">&lt;3.5s</p>
+            <p className="text-xs md:text-lg md:text-3xl font-bold text-purple-600">&lt;3.5s</p>
             <p className="text-xs text-gray-600 mt-1">
               Users can interact faster
             </p>
@@ -158,7 +158,7 @@ export default function LazyComponentsExample() {
             <p className="text-sm font-semibold text-gray-700 mb-1">
               Code Splitting
             </p>
-            <p className="text-3xl font-bold text-orange-600">✓</p>
+            <p className="text-xs md:text-lg md:text-3xl font-bold text-orange-600">✓</p>
             <p className="text-xs text-gray-600 mt-1">
               Automatic chunk optimization
             </p>
@@ -167,8 +167,8 @@ export default function LazyComponentsExample() {
       </div>
 
       {/* Implementation Guide */}
-      <div className="p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
-        <h3 className="text-xl font-bold text-gray-900 mb-4">
+      <div className="p-3 md:p-6 bg-blue-50 border-2 border-blue-200 rounded-xl">
+        <h3 className="text-sm md:text-xl font-bold text-gray-900 mb-4">
           📚 Implementation Guide
         </h3>
         <div className="space-y-3 text-sm text-gray-800">

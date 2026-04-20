@@ -139,12 +139,12 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4">
+      <div className="bg-white rounded-2xl max-w-lg w-full p-3 md:p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">📷 Scan Barcode</h2>
+          <h2 className="text-base md:text-2xl font-bold text-gray-900">📷 Scan Barcode</h2>
           <button
             onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
+            className="text-gray-500 hover:text-gray-700 text-base md:text-2xl"
           >
             ✕
           </button>

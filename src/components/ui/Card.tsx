@@ -33,7 +33,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       none: '!p-0',
       sm: '!p-3',
       md: '',
-      lg: '!p-6 sm:!p-8',
+      lg: '!p-3 sm:!p-3 md:p-6 md:!p-4 md:p-8',
     }
 
     return (
@@ -53,7 +53,7 @@ Card.displayName = 'Card'
 export const CardHeader = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ children, className = '', ...props }, ref) => {
     return (
-      <div ref={ref} className={`mb-4 ${className}`} {...props}>
+      <div ref={ref} className={`mb-2 md:mb-4 ${className}`} {...props}>
         {children}
       </div>
     )
@@ -65,7 +65,7 @@ CardHeader.displayName = 'CardHeader'
 export const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadingElement>>(
   ({ children, className = '', ...props }, ref) => {
     return (
-      <h3 ref={ref} className={`text-mobile-xl font-bold text-gray-900 dark:text-gray-100 ${className}`} {...props}>
+      <h3 ref={ref} className={`text-mobile-base md:text-mobile-xl font-bold text-gray-900 dark:text-gray-100 ${className}`} {...props}>
         {children}
       </h3>
     )

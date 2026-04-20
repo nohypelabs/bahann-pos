@@ -274,7 +274,7 @@ export default function SalesTransactionPage() {
         items: cart.map(item => ({ name: item.productName, sku: item.productSku, quantity: item.quantity, unitPrice: item.unitPrice, total: item.total })),
         subtotal: cartSubtotal, tax: 0, discount: discountAmount, total: cartTotal,
         payment: { method: paymentMethod, amount: cartTotal, change: 0 },
-        notes: appliedPromo ? `Promo: ${appliedPromo.promoName} • Terima kasih!` : 'Terima kasih telah berbelanja di Laku POS',
+        notes: appliedPromo ? `Promo: ${appliedPromo.promoName} • Terima kasih telah berbelanja di ${selectedOutlet?.name || 'Laku POS'}!` : `Terima kasih telah berbelanja di ${selectedOutlet?.name || 'Laku POS'}`,
       }
       setReceiptData(receipt)
       setIsPrintModalOpen(true)
@@ -298,40 +298,46 @@ export default function SalesTransactionPage() {
     <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
 
       {/* ── Top Bar ── */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shrink-0">
-        <div>
-          <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Point of Sale</h1>
+      <div className="flex items-center justify-between px-3 md:px-4 py-2 md:py-2.5 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shrink-0 gap-2">
+        <div className="min-w-0">
+          <h1 className="text-sm md:text-base font-bold text-gray-900 dark:text-gray-100 leading-tight">Point of Sale</h1>
           {selectedOutlet && (
-            <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">{selectedOutlet.name}</p>
+            <p className="text-xs text-purple-600 dark:text-purple-400 font-medium truncate">{selectedOutlet.name}</p>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           {planUsage && planUsage.limit !== null && !planUsage.isAtLimit && planUsage.count >= 80 && (
-            <button onClick={() => setShowUpgradeModal(true)} className="text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 px-3 py-1.5 rounded-lg font-semibold border border-yellow-200">
-              ⚠️ {planUsage.count}/{planUsage.limit} transaksi
+            <button onClick={() => setShowUpgradeModal(true)} className="hidden sm:block text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 px-2 py-1 rounded-lg font-semibold border border-yellow-200">
+              ⚠️ {planUsage.count}/{planUsage.limit}
             </button>
           )}
-          {error && <span className="text-xs text-red-600 bg-red-50 dark:bg-red-900/30 px-3 py-1.5 rounded-lg border border-red-200 max-w-xs truncate">❌ {error}</span>}
-          {showSuccess && <span className="text-xs text-green-700 bg-green-50 dark:bg-green-900/30 px-3 py-1.5 rounded-lg border border-green-200">✅ Transaksi berhasil!</span>}
 
           {/* Cart Button */}
           <button
             onClick={() => setIsCartOpen(true)}
-            className="relative flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm"
+            className="relative flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm"
           >
-            🛒 Keranjang
+            🛒
+            <span className="hidden sm:inline">Keranjang</span>
             {cartItemCount > 0 && (
               <>
                 <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">{cartItemCount}</span>
-                <span className="text-blue-200 text-xs font-normal">{formatCurrency(cartTotal)}</span>
+                <span className="hidden md:inline text-blue-200 text-xs font-normal">{formatCurrency(cartTotal)}</span>
               </>
             )}
           </button>
         </div>
       </div>
 
+      {/* ── Mobile error/success banner ── */}
+      {(error || showSuccess) && (
+        <div className={`px-3 py-2 text-xs font-semibold shrink-0 ${error ? 'bg-red-50 dark:bg-red-900/30 text-red-700 border-b border-red-200' : 'bg-green-50 dark:bg-green-900/30 text-green-700 border-b border-green-200'}`}>
+          {error ? `❌ ${error}` : '✅ Transaksi berhasil!'}
+        </div>
+      )}
+
       {/* ── Main Content ── */}
-      <div className="flex flex-1 overflow-hidden gap-3 p-3">
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden gap-3 p-3">
 
         {/* Left: Outlet picker + Product picker */}
         <div className="flex flex-col gap-3 flex-1 overflow-hidden min-w-0">
@@ -362,22 +368,22 @@ export default function SalesTransactionPage() {
             <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/30 border-2 border-purple-200 dark:border-purple-800 rounded-xl shrink-0">
               <span className="text-purple-500">🏪</span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-purple-900 dark:text-purple-200 truncate">{selectedOutlet.name}</p>
+                <p className="text-xs md:text-sm font-semibold text-purple-900 dark:text-purple-200 truncate">{selectedOutlet.name}</p>
                 {selectedOutlet.address && <p className="text-xs text-purple-600 dark:text-purple-400 truncate">{selectedOutlet.address}</p>}
               </div>
-              <button onClick={() => setSelectedOutletId('')} className="text-purple-400 hover:text-purple-600 text-lg leading-none shrink-0">✕</button>
+              <button onClick={() => setSelectedOutletId('')} className="text-purple-400 hover:text-purple-600 text-xs md:text-lg leading-none shrink-0">✕</button>
             </div>
           )}
 
           {/* Product Picker — fills remaining height */}
           <div className="flex flex-col flex-1 overflow-hidden min-h-0 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl">
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 shrink-0">
-              <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Produk</p>
-              <div className="flex gap-1">
-                <input ref={barcodeInputRef} type="text" value={barcodeInput} onChange={handleBarcodeInputChange} onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleBarcodeInputSubmit() } }} placeholder="Scan SKU..." disabled={!selectedOutletId} className="w-28 px-2 py-1.5 text-xs border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-purple-500 focus:outline-none uppercase disabled:opacity-50" />
-                <Button variant="secondary" size="sm" onClick={handleBarcodeInputSubmit} disabled={!selectedOutletId || !barcodeInput.trim()}>✓</Button>
-                <Button variant="secondary" size="sm" onClick={() => setIsScannerOpen(true)} disabled={!selectedOutletId}>📷</Button>
+            <div className="flex items-center justify-between px-3 md:px-4 py-2 md:py-2.5 border-b border-gray-200 dark:border-gray-700 shrink-0 gap-2">
+              <p className="font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm shrink-0">Produk</p>
+              <div className="flex gap-1 items-center">
+                <input ref={barcodeInputRef} type="text" value={barcodeInput} onChange={handleBarcodeInputChange} onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleBarcodeInputSubmit() } }} placeholder="Scan SKU..." disabled={!selectedOutletId} className="hidden md:block w-28 px-2 py-1.5 text-xs border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-purple-500 focus:outline-none uppercase disabled:opacity-50" />
+                <Button variant="secondary" size="sm" onClick={handleBarcodeInputSubmit} disabled={!selectedOutletId || !barcodeInput.trim()} className="hidden md:flex">✓</Button>
+                <Button variant="secondary" size="sm" onClick={() => setIsScannerOpen(true)} disabled={!selectedOutletId}>📷 <span className="hidden sm:inline ml-1">Scan</span></Button>
               </div>
             </div>
 
@@ -397,36 +403,62 @@ export default function SalesTransactionPage() {
 
               {/* Product table */}
               <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden flex flex-col flex-1 min-h-0">
-                <div className="grid grid-cols-12 gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 border-b-2 border-gray-200 dark:border-gray-600 shrink-0">
+                {/* Desktop header */}
+                <div className="hidden md:grid grid-cols-12 gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 border-b-2 border-gray-200 dark:border-gray-600 shrink-0">
                   <span className="col-span-5 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Produk</span>
                   <span className="col-span-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Harga</span>
                   <span className="col-span-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Stok</span>
                   <span className="col-span-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Pilih</span>
                 </div>
+                {/* Mobile header */}
+                <div className="md:hidden grid grid-cols-12 px-3 py-2 bg-gray-100 dark:bg-gray-700 border-b-2 border-gray-200 dark:border-gray-600 shrink-0">
+                  <span className="col-span-7 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Produk</span>
+                  <span className="col-span-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Harga</span>
+                  <span className="col-span-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Stok</span>
+                </div>
                 <div className="overflow-y-auto flex-1 divide-y divide-gray-100 dark:divide-gray-700">
                   {!selectedOutletId ? (
-                    <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">Pilih outlet untuk melihat produk</div>
+                    <div className="py-4 md:py-8 text-center text-sm text-gray-400 dark:text-gray-500">Pilih outlet untuk melihat produk</div>
                   ) : filteredProducts.length === 0 ? (
-                    <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">{productSearch ? `"${productSearch}" tidak ditemukan` : 'Tidak ada produk'}</div>
+                    <div className="py-4 md:py-8 text-center text-sm text-gray-400 dark:text-gray-500">{productSearch ? `"${productSearch}" tidak ditemukan` : 'Tidak ada produk'}</div>
                   ) : filteredProducts.map(product => {
                     const stock = inventoryList?.find(p => p.id === product.id)?.currentStock ?? 0
                     const isSelected = selectedProductId === product.id
                     const isOutOfStock = stock === 0
                     return (
                       <button key={product.id} onClick={() => !isOutOfStock && handleProductChange(isSelected ? '' : product.id)} disabled={isOutOfStock}
-                        className={`w-full grid grid-cols-12 gap-2 px-3 py-2.5 text-left transition-all ${isSelected ? 'bg-blue-50 dark:bg-blue-900/40' : isOutOfStock ? 'opacity-40 cursor-not-allowed bg-white dark:bg-gray-800' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/60'}`}>
-                        <div className="col-span-5 min-w-0">
-                          <p className={`text-sm font-semibold truncate ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>{product.name}</p>
-                          <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{product.sku}</p>
+                        className={`w-full text-left transition-all ${isSelected ? 'bg-blue-50 dark:bg-blue-900/40' : isOutOfStock ? 'opacity-40 cursor-not-allowed bg-white dark:bg-gray-800' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/60 active:bg-gray-100'}`}>
+                        {/* Desktop row */}
+                        <div className="hidden md:grid grid-cols-12 gap-2 px-3 py-2.5">
+                          <div className="col-span-5 min-w-0">
+                            <p className={`text-sm font-semibold truncate ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>{product.name}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{product.sku}</p>
+                          </div>
+                          <div className="col-span-3 flex items-center">
+                            <span className={`text-sm font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>{formatCurrency(product.price || 0)}</span>
+                          </div>
+                          <div className="col-span-2 flex items-center justify-center">
+                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${stock === 0 ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400' : stock <= 10 ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400' : 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400'}`}>{stock === 0 ? 'Habis' : stock}</span>
+                          </div>
+                          <div className="col-span-2 flex items-center justify-center">
+                            {isSelected ? <span className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">✓</span> : <span className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600" />}
+                          </div>
                         </div>
-                        <div className="col-span-3 flex items-center">
-                          <span className={`text-sm font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>{formatCurrency(product.price || 0)}</span>
-                        </div>
-                        <div className="col-span-2 flex items-center justify-center">
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${stock === 0 ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400' : stock <= 10 ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400' : 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400'}`}>{stock === 0 ? 'Habis' : stock}</span>
-                        </div>
-                        <div className="col-span-2 flex items-center justify-center">
-                          {isSelected ? <span className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">✓</span> : <span className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600" />}
+                        {/* Mobile row — bigger touch target, 3 cols */}
+                        <div className="md:hidden grid grid-cols-12 px-3 py-3">
+                          <div className="col-span-7 min-w-0 flex flex-col justify-center">
+                            <p className={`text-sm font-semibold truncate leading-tight ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>{product.name}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{product.sku}</p>
+                          </div>
+                          <div className="col-span-3 flex items-center">
+                            <span className={`text-xs font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>{formatCurrency(product.price || 0)}</span>
+                          </div>
+                          <div className="col-span-2 flex items-center justify-end">
+                            {isSelected
+                              ? <span className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs shrink-0">✓</span>
+                              : <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap ${stock === 0 ? 'bg-red-100 text-red-700' : stock <= 10 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>{stock === 0 ? '✕' : stock}</span>
+                            }
+                          </div>
                         </div>
                       </button>
                     )
@@ -442,32 +474,37 @@ export default function SalesTransactionPage() {
               {/* Qty + Add */}
               {selectedProduct && (
                 <div className="p-3 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-300 dark:border-blue-700 rounded-xl shrink-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-bold text-blue-900 dark:text-blue-200 truncate flex-1 mr-2">{selectedProduct.name}</p>
+                  {/* Product info row */}
+                  <div className="flex items-center gap-2 mb-2.5 min-w-0">
+                    <p className="text-xs md:text-sm font-bold text-blue-900 dark:text-blue-200 truncate flex-1">{selectedProduct.name}</p>
                     <span className="text-xs font-bold text-blue-700 dark:text-blue-300 shrink-0">{formatCurrency(selectedProduct.price || 0)}</span>
                     {selectedOutletId && (
-                      <span className={`shrink-0 ml-2 text-xs font-bold px-2 py-0.5 rounded-full ${availableStock === 0 ? 'bg-red-100 text-red-700' : availableStock <= 10 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>Stok: {availableStock}</span>
+                      <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${availableStock === 0 ? 'bg-red-100 text-red-700' : availableStock <= 10 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                        {availableStock === 0 ? 'Habis' : `Stok: ${availableStock}`}
+                      </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-1">
+                  {/* Quick qty + input row */}
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <div className="flex gap-1 flex-wrap">
                       {[1, 2, 3, 5, 10].map(q => (
-                        <button key={q} onClick={() => handleQuickQuantity(q)} className={`px-2 py-1 text-xs font-bold rounded-lg border transition-colors ${quantity === q ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-300'}`}>{q}</button>
+                        <button key={q} onClick={() => handleQuickQuantity(q)} className={`w-8 h-8 text-xs font-bold rounded-lg border transition-colors ${quantity === q ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-300'}`}>{q}</button>
                       ))}
                     </div>
-                    <input ref={quantityInputRef} type="number" min="1" max={availableStock || 999} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddToCart() } }} onFocus={(e) => e.target.select()} className="w-14 px-2 py-1.5 text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none text-sm font-bold" />
-                    <Button variant="primary" size="md" onClick={handleAddToCart} disabled={productsLoading || (!!selectedOutletId && availableStock === 0)} className="flex-1">
-                      ➕ Tambah ke Keranjang
-                    </Button>
+                    <input ref={quantityInputRef} type="number" min="1" max={availableStock || 999} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddToCart() } }} onFocus={(e) => e.target.select()} className="w-14 px-2 py-1.5 text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none text-sm font-bold shrink-0" />
                   </div>
+                  {/* Add button — full width */}
+                  <Button variant="primary" size="md" fullWidth onClick={handleAddToCart} disabled={productsLoading || (!!selectedOutletId && availableStock === 0)}>
+                    ➕ Tambah ke Keranjang
+                  </Button>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Right: Payment + Recent Transactions + Receipt */}
-        <div className="flex flex-col gap-3 w-72 shrink-0 overflow-hidden">
+        {/* Right: Payment + Recent Transactions + Receipt — hidden on mobile (handled by sticky bar + cart drawer) */}
+        <div className="hidden md:flex flex-col gap-3 w-72 shrink-0 overflow-hidden">
 
           {/* Payment card */}
           <div className="shrink-0 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 space-y-3">
@@ -589,13 +626,54 @@ export default function SalesTransactionPage() {
         </div>
       </div>
 
+      {/* ── Mobile Sticky Bottom Bar ── */}
+      <div className="md:hidden shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2.5 flex items-center gap-3">
+        {receiptData && cart.length === 0 ? (
+          /* Post-payment: show print/preview actions */
+          <>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-500 dark:text-gray-400">Transaksi berhasil</p>
+              <p className="text-sm font-bold text-green-600 dark:text-green-400 leading-tight">{formatCurrency(receiptData.total)}</p>
+            </div>
+            <button
+              onClick={() => setIsPrintModalOpen(true)}
+              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold text-sm transition-colors shrink-0"
+            >
+              👁 Preview
+            </button>
+            <button
+              onClick={handleDirectPrint}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-colors shrink-0"
+            >
+              🖨️ Print
+            </button>
+          </>
+        ) : cart.length > 0 ? (
+          <>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-500 dark:text-gray-400">{cartItemCount} item{discountAmount > 0 && <span className="text-green-600 ml-1">· Diskon -{formatCurrency(discountAmount)}</span>}</p>
+              <p className="text-base font-bold text-blue-600 dark:text-blue-400 leading-tight">{formatCurrency(cartTotal)}</p>
+            </div>
+            <button
+              onClick={handleCompleteSale}
+              disabled={recordSaleMutation.isPending || !selectedOutletId}
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:dark:bg-gray-700 text-white rounded-xl font-bold text-sm transition-colors shrink-0"
+            >
+              {!selectedOutletId ? 'Pilih outlet' : recordSaleMutation.isPending ? 'Proses...' : '💳 Bayar'}
+            </button>
+          </>
+        ) : (
+          <p className="text-xs text-gray-400 dark:text-gray-500 text-center w-full py-0.5">Pilih produk untuk memulai transaksi</p>
+        )}
+      </div>
+
       {/* ── Cart Drawer ── */}
       {isCartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/40" onClick={() => setIsCartOpen(false)} />
           <div className="relative w-96 bg-white dark:bg-gray-900 shadow-2xl flex flex-col h-full">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">🛒 Keranjang</h2>
+            <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 shrink-0">
+              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">🛒 Keranjang</h2>
               <div className="flex items-center gap-2">
                 {cart.length > 0 && (
                   <button onClick={() => setCart([])} className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded-lg hover:bg-red-50">Kosongkan</button>
@@ -604,12 +682,12 @@ export default function SalesTransactionPage() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {cart.length === 0 ? (
                 <div className="py-16 text-center text-gray-400 dark:text-gray-500">
-                  <div className="text-5xl mb-3">🛒</div>
-                  <p className="font-semibold">Keranjang kosong</p>
-                  <p className="text-sm">Pilih produk untuk menambah item</p>
+                  <div className="text-base md:text-4xl mb-2">🛒</div>
+                  <p className="text-sm font-semibold">Keranjang kosong</p>
+                  <p className="text-xs">Pilih produk untuk menambah item</p>
                 </div>
               ) : cart.map((item) => (
                 <div key={item.productId} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
@@ -633,14 +711,14 @@ export default function SalesTransactionPage() {
             </div>
 
             {cart.length > 0 && (
-              <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-3 shrink-0">
+              <div className="p-3 border-t border-gray-200 dark:border-gray-700 space-y-2 shrink-0">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-500 dark:text-gray-400">{cartItemCount} item</span>
                   {discountAmount > 0 && <span className="text-sm text-green-600 font-semibold">Diskon -{formatCurrency(discountAmount)}</span>}
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-gray-900 dark:text-gray-100">Total</span>
-                  <span className="text-2xl font-bold text-blue-600">{formatCurrency(cartTotal)}</span>
+                  <span className="text-base font-bold text-gray-900 dark:text-gray-100">Total</span>
+                  <span className="text-sm md:text-xl font-bold text-blue-600">{formatCurrency(cartTotal)}</span>
                 </div>
                 <Button variant="primary" size="lg" fullWidth onClick={() => { setIsCartOpen(false); handleCompleteSale() }} disabled={recordSaleMutation.isPending || !selectedOutletId}>
                   {!selectedOutletId ? 'Pilih outlet dulu' : recordSaleMutation.isPending ? 'Memproses...' : `💳 Bayar ${formatCurrency(cartTotal)}`}
@@ -654,13 +732,13 @@ export default function SalesTransactionPage() {
       {/* ── Modals ── */}
       {showUpgradeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4"><span className="text-3xl">🚫</span></div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Batas Transaksi Tercapai</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-4 md:p-8 text-center">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4"><span className="text-xs md:text-lg md:text-3xl">🚫</span></div>
+            <h2 className="text-base md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Batas Transaksi Tercapai</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-2">Paket <span className="font-semibold text-blue-600">Gratis</span> hanya mendukung <span className="font-semibold">100 transaksi per bulan</span>.</p>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">Upgrade ke paket <span className="font-semibold text-orange-500">Warung (Rp 99rb/bulan)</span> untuk transaksi tidak terbatas.</p>
+            <p className="text-gray-600 dark:text-gray-400 mb-3 md:mb-6">Upgrade ke paket <span className="font-semibold text-orange-500">Warung (Rp 99rb/bulan)</span> untuk transaksi tidak terbatas.</p>
             <div className="flex flex-col gap-3">
-              <a href={`https://wa.me/6287874415491?text=${encodeURIComponent('Halo, saya ingin upgrade dari paket Gratis ke paket Warung Laku POS (Rp 99rb/bulan). Mohon bantuannya.')}`} target="_blank" rel="noopener noreferrer" className="block w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-lg transition-colors">💬 Upgrade via WhatsApp</a>
+              <a href={`https://wa.me/6287874415491?text=${encodeURIComponent('Halo, saya ingin upgrade dari paket Gratis ke paket Warung Laku POS (Rp 99rb/bulan). Mohon bantuannya.')}`} target="_blank" rel="noopener noreferrer" className="block w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-xs md:text-lg transition-colors">💬 Upgrade via WhatsApp</a>
               <button onClick={() => setShowUpgradeModal(false)} className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 transition-colors">Tutup</button>
             </div>
           </div>

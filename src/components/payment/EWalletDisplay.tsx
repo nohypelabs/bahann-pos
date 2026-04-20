@@ -56,10 +56,10 @@ export function EWalletDisplay({
   const wallet = WALLETS.find(w => w.name === selectedWallet)!
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 md:space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">E-Wallet</h2>
+        <h2 className="text-base md:text-2xl font-bold text-gray-900 mb-2">E-Wallet</h2>
         <p className="text-gray-600">Pilih aplikasi e-wallet dan transfer ke nomor berikut</p>
       </div>
 
@@ -81,12 +81,12 @@ export function EWalletDisplay({
       </div>
 
       {/* Phone Number Card */}
-      <div className={`bg-gradient-to-br ${wallet.color} rounded-2xl p-6 text-white shadow-lg`}>
+      <div className={`bg-gradient-to-br ${wallet.color} rounded-2xl p-3 md:p-6 text-white shadow-lg`}>
         <div className="space-y-4">
           <div>
             <p className="text-sm opacity-80 mb-1">Kirim ke nomor {selectedWallet}</p>
             <div className="flex items-center justify-between bg-white/10 rounded-lg p-3">
-              <p className="text-2xl font-mono font-bold tracking-wider">{ewalletPhone}</p>
+              <p className="text-base md:text-2xl font-mono font-bold tracking-wider">{ewalletPhone}</p>
               <button
                 onClick={() => copyToClipboard(ewalletPhone, 'phone')}
                 className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm"
@@ -102,7 +102,7 @@ export function EWalletDisplay({
       <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
         <p className="text-sm font-medium text-gray-600 mb-2">Jumlah Transfer</p>
         <div className="flex items-center justify-between">
-          <p className="text-3xl font-bold text-yellow-600">
+          <p className="text-xs md:text-lg md:text-3xl font-bold text-yellow-600">
             {new Intl.NumberFormat('id-ID', {
               style: 'currency',
               currency: 'IDR',

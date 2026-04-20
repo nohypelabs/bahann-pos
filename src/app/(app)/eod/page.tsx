@@ -1,17 +1,27 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Input, Select } from '@/components/ui/Input'
+import { Input } from '@/components/ui/Input'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SectionCard } from '@/components/ui/SectionCard'
+import { StatCard } from '@/components/ui/StatCard'
 import { trpc } from '@/lib/trpc/client'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 
+type AlertState = { type: 'success' | 'error' | 'info'; msg: string } | null
+
 export default function EODPage() {
   const [selectedOutlet, setSelectedOutlet] = useState('')
-  const [openingCash, setOpeningCash] = useState(0)
-  const [closingCash, setClosingCash] = useState(0)
-  const [notes, setNotes] = useState('')
+  const [openingCash, setOpeningCash]       = useState(0)
+  const [closingCash, setClosingCash]       = useState(0)
+  const [notes, setNotes]                   = useState('')
+  const [alert, setAlert]                   = useState<AlertState>(null)
+
+  const flash = (type: AlertState['type'], msg: string) => {
+    setAlert({ type, msg })
+    setTimeout(() => setAlert(null), 4000)
+  }
 
   const { data: outletsData } = trpc.outlets.getAll.useQuery()
   const { data: currentSession, refetch } = trpc.cashSessions.getCurrent.useQuery(
@@ -19,195 +29,159 @@ export default function EODPage() {
     { enabled: !!selectedOutlet }
   )
 
-  const openMutation = trpc.cashSessions.open.useMutation({ onSuccess: () => refetch() })
+  const openMutation  = trpc.cashSessions.open.useMutation({ onSuccess: () => { refetch(); setOpeningCash(0); flash('success', 'Sesi kasir berhasil dibuka!') } })
   const closeMutation = trpc.cashSessions.close.useMutation({ onSuccess: () => refetch() })
 
   const handleOpenDay = async () => {
-    if (!selectedOutlet) {
-      alert('Please select an outlet')
-      return
-    }
-
+    if (!selectedOutlet) { flash('error', 'Pilih outlet terlebih dahulu'); return }
     try {
-      await openMutation.mutateAsync({
-        outletId: selectedOutlet,
-        openingCash,
-      })
-      alert('Cash session opened successfully')
-      setOpeningCash(0)
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to open session')
+      await openMutation.mutateAsync({ outletId: selectedOutlet, openingCash })
+    } catch (err) {
+      flash('error', err instanceof Error ? err.message : 'Gagal membuka sesi')
     }
   }
 
   const handleCloseDay = async () => {
     if (!currentSession) return
-
     try {
-      const result = await closeMutation.mutateAsync({
-        sessionId: currentSession.id,
-        closingCash,
-        notes,
-      })
-
-      if (result.difference !== 0) {
-        const variance = result.difference > 0 ? 'overage' : 'shortage'
-        alert(`Day closed! Cash ${variance}: ${formatCurrency(Math.abs(result.difference))}`)
+      const result = await closeMutation.mutateAsync({ sessionId: currentSession.id, closingCash, notes })
+      const diff = result.difference
+      if (diff !== 0) {
+        const label = diff > 0 ? 'lebih' : 'kurang'
+        flash('info', `Hari ditutup! Kas ${label}: ${formatCurrency(Math.abs(diff))}`)
       } else {
-        alert('Day closed successfully! Cash matches perfectly.')
+        flash('success', 'Hari ditutup! Kas pas sempurna.')
       }
-
       setClosingCash(0)
       setNotes('')
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to close session')
+    } catch (err) {
+      flash('error', err instanceof Error ? err.message : 'Gagal menutup sesi')
     }
   }
 
+  const outlets = outletsData?.outlets ?? []
+  const diff = closingCash - (currentSession?.opening_cash ?? 0)
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">End of Day</h1>
-        <p className="text-gray-600 dark:text-gray-400">Manage daily cash sessions and reports</p>
-      </div>
+    <div className="space-y-4 md:space-y-6 max-w-2xl">
+      <PageHeader title="End of Day" subtitle="Kelola sesi kas harian per outlet" />
 
-      {/* Outlet Selection */}
-      <Card variant="elevated" padding="lg">
-        <CardHeader>
-          <CardTitle>Select Outlet</CardTitle>
-        </CardHeader>
-        <CardBody>
-          <Select
-            value={selectedOutlet}
-            onChange={(e) => setSelectedOutlet(e.target.value)}
-            options={[
-              { value: '', label: 'Choose an outlet...' },
-              ...(outletsData?.outlets?.map(o => ({ value: o.id, label: o.name })) || []),
-            ]}
-            fullWidth
-          />
-        </CardBody>
-      </Card>
-
-      {selectedOutlet && !currentSession && (
-        <Card variant="elevated" padding="lg">
-          <CardHeader>
-            <CardTitle>Start New Day</CardTitle>
-          </CardHeader>
-          <CardBody>
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                No active session for this outlet. Start a new day by entering the opening cash amount.
-              </p>
-              <Input
-                type="number"
-                label="Opening Cash Amount"
-                value={openingCash}
-                onChange={(e) => setOpeningCash(parseFloat(e.target.value) || 0)}
-                fullWidth
-              />
-              <Button
-                variant="primary"
-                onClick={handleOpenDay}
-                disabled={openMutation.isPending}
-              >
-                {openMutation.isPending ? 'Opening...' : 'Start Day'}
-              </Button>
-            </div>
-          </CardBody>
-        </Card>
+      {/* Alert */}
+      {alert && (
+        <div className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-sm font-medium ${
+          alert.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300'
+          : alert.type === 'error' ? 'bg-red-50 dark:bg-red-900/20 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300'
+          : 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300'
+        }`}>
+          <span>{alert.type === 'success' ? '✅' : alert.type === 'error' ? '❌' : 'ℹ️'}</span>
+          {alert.msg}
+        </div>
       )}
 
+      {/* Outlet selector */}
+      <SectionCard title="Pilih Outlet">
+        <div className="relative">
+          <select
+            value={selectedOutlet}
+            onChange={e => setSelectedOutlet(e.target.value)}
+            className="w-full appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
+          >
+            <option value="">🏪 Pilih outlet…</option>
+            {outlets.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+          </select>
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">▾</span>
+        </div>
+      </SectionCard>
+
+      {/* No active session — Open Day */}
+      {selectedOutlet && !currentSession && (
+        <SectionCard title="Buka Hari Baru">
+          <div className="space-y-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Belum ada sesi aktif untuk outlet ini. Masukkan jumlah kas awal untuk memulai hari.
+            </p>
+            <Input
+              type="number"
+              label="Jumlah Kas Awal (Rp)"
+              value={openingCash}
+              onChange={e => setOpeningCash(parseFloat(e.target.value) || 0)}
+              fullWidth
+            />
+            <Button variant="primary" size="lg" fullWidth onClick={handleOpenDay} disabled={openMutation.isPending}>
+              {openMutation.isPending ? 'Membuka…' : '🌅 Buka Hari'}
+            </Button>
+          </div>
+        </SectionCard>
+      )}
+
+      {/* Active session */}
       {selectedOutlet && currentSession && (
-        <>
-          <Card variant="elevated" padding="lg">
-            <CardHeader>
-              <CardTitle>Current Session</CardTitle>
-            </CardHeader>
-            <CardBody>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Opened At</p>
-                  <p className="text-sm font-semibold">{formatDateTime(currentSession.opened_at)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Opening Cash</p>
-                  <p className="text-lg font-bold">{formatCurrency(currentSession.opening_cash)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Opened By</p>
-                  <p className="text-sm font-semibold">
-                    {currentSession.opened_by_user?.name || 'Unknown'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Status</p>
-                  <span className="inline-block px-2 py-1 bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300 text-xs font-semibold rounded">
-                    OPEN
-                  </span>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
+        <div className="space-y-4">
+          <SectionCard title="Sesi Aktif">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+              <StatCard icon="🕐" label="Dibuka Pukul" value={formatDateTime(currentSession.opened_at)} color="gray" />
+              <StatCard icon="💵" label="Kas Awal" value={formatCurrency(currentSession.opening_cash)} color="green" />
+              <StatCard icon="👤" label="Dibuka Oleh" value={currentSession.opened_by_user?.name || '—'} color="gray" />
+              <StatCard icon="🟢" label="Status" value="BUKA" color="green" />
+            </div>
+          </SectionCard>
 
-          <Card variant="default" padding="lg">
-            <CardHeader>
-              <CardTitle>Close Day</CardTitle>
-            </CardHeader>
-            <CardBody>
-              <div className="space-y-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Count the cash in the drawer and enter the amount below to close the day.
-                </p>
+          <SectionCard title="Tutup Hari">
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Hitung uang di laci kas lalu masukkan jumlahnya untuk menutup hari.
+              </p>
 
-                <Input
-                  type="number"
-                  label="Closing Cash Count"
-                  value={closingCash}
-                  onChange={(e) => setClosingCash(parseFloat(e.target.value) || 0)}
-                  fullWidth
-                />
+              <Input
+                type="number"
+                label="Jumlah Kas Akhir (Rp)"
+                value={closingCash}
+                onChange={e => setClosingCash(parseFloat(e.target.value) || 0)}
+                fullWidth
+              />
 
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  Catatan (opsional)
+                </label>
                 <textarea
-                  className="w-full p-2 border rounded-lg"
                   rows={3}
-                  placeholder="Notes (optional)"
+                  placeholder="Catatan penutupan hari…"
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={e => setNotes(e.target.value)}
+                  className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors resize-none"
                 />
-
-                {closingCash > 0 && (
-                  <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Opening Cash:</span>
-                      <span className="font-semibold">{formatCurrency(currentSession.opening_cash)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Closing Cash:</span>
-                      <span className="font-semibold">{formatCurrency(closingCash)}</span>
-                    </div>
-                    <div className="flex justify-between text-base font-bold pt-2 border-t">
-                      <span>Expected Difference:</span>
-                      <span className={closingCash - currentSession.opening_cash >= 0 ? 'text-green-600' : 'text-red-600'}>
-                        {formatCurrency(closingCash - currentSession.opening_cash)}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  variant="primary"
-                  size="lg"
-                  fullWidth
-                  onClick={handleCloseDay}
-                  disabled={closeMutation.isPending || closingCash <= 0}
-                >
-                  {closeMutation.isPending ? 'Closing...' : 'Close Day'}
-                </Button>
               </div>
-            </CardBody>
-          </Card>
-        </>
+
+              {closingCash > 0 && (
+                <div className="p-3.5 bg-gray-50 dark:bg-gray-700/40 rounded-xl border border-gray-200 dark:border-gray-700 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">Kas Awal</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(currentSession.opening_cash)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500 dark:text-gray-400">Kas Akhir</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(closingCash)}</span>
+                  </div>
+                  <div className={`flex justify-between text-sm font-bold pt-2 border-t border-gray-200 dark:border-gray-600 ${diff >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <span>Selisih</span>
+                    <span>{diff >= 0 ? '+' : ''}{formatCurrency(diff)}</span>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                onClick={handleCloseDay}
+                disabled={closeMutation.isPending || closingCash <= 0}
+              >
+                {closeMutation.isPending ? 'Menutup…' : '🌙 Tutup Hari'}
+              </Button>
+            </div>
+          </SectionCard>
+        </div>
       )}
     </div>
   )

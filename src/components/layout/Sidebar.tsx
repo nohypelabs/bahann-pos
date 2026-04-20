@@ -26,33 +26,28 @@ function SidebarItem({ href, icon, label, badge, isCollapsed }: SidebarItemProps
       href={href}
       title={isCollapsed ? label : undefined}
       className={`
-        flex items-center gap-4 rounded-xl
-        transition-all duration-200 group relative
-        ${isCollapsed ? 'px-4 py-4 justify-center' : 'px-6 py-3'}
-        ${
-          isActive
-            ? 'bg-white dark:bg-gray-700 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.4)] border-2 border-gray-200 dark:border-gray-600 translate-x-2'
-            : 'hover:bg-white/50 dark:hover:bg-gray-700/50 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.05)] hover:translate-x-1'
+        flex items-center gap-3 rounded-xl text-sm font-medium
+        transition-colors duration-150 relative
+        ${isCollapsed ? 'justify-center p-3' : 'px-3 py-2.5'}
+        ${isActive
+          ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-l-[3px] border-blue-500 dark:border-blue-400 pl-[9px]'
+          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
         }
       `}
     >
-      <div className="text-2xl flex-shrink-0">{icon}</div>
+      <span className={`text-base flex-shrink-0 ${isActive ? '' : 'opacity-80'}`}>{icon}</span>
       {!isCollapsed && (
         <>
-          <div className="flex-1 min-w-0">
-            <span className={`text-base font-semibold truncate block ${isActive ? 'text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-400'}`}>
-              {label}
-            </span>
-          </div>
+          <span className="flex-1 min-w-0 truncate">{label}</span>
           {badge && (
-            <span className="px-3 py-1 text-xs font-bold bg-red-500 text-white rounded-full flex-shrink-0">
+            <span className="px-2 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full flex-shrink-0">
               {badge}
             </span>
           )}
         </>
       )}
       {isCollapsed && badge && (
-        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
           {badge}
         </span>
       )}
@@ -77,6 +72,7 @@ function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths 
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(`sidebar_section_${sectionKey}`)
       if (saved !== null) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsOpen(saved === 'true')
       } else if (isActiveSection) {
         setIsOpen(true)
@@ -94,32 +90,39 @@ function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths 
 
   if (isCollapsed) {
     return (
-      <div className="mb-2">
-        <div className="h-px bg-gray-200 dark:bg-gray-700 mx-2 mb-2" />
-        <div className="space-y-2">{children}</div>
+      <div className="mb-1">
+        <div className="h-px bg-gray-200 dark:bg-gray-700/60 mx-3 mb-1" />
+        <div className="space-y-0.5">{children}</div>
       </div>
     )
   }
 
   return (
-    <div className="mb-2">
-      <button
-        onClick={toggle}
-        className="w-full flex items-center justify-between px-6 py-2 group"
-      >
-        <h3 className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+    <div className="mb-1">
+      <button onClick={toggle} className="w-full flex items-center justify-between px-3 py-1.5 group">
+        <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors">
           {title}
-        </h3>
-        <span className={`text-gray-400 dark:text-gray-500 text-xs transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
-          ▼
         </span>
+        <span className={`text-gray-300 dark:text-gray-600 text-[9px] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>▼</span>
       </button>
-
       <div className={`overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="space-y-1 pb-2">{children}</div>
+        <div className="space-y-0.5 pb-1">{children}</div>
       </div>
     </div>
   )
+}
+
+const PLAN_BADGE: Record<string, string> = {
+  free:         'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
+  warung:       'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300',
+  starter:      'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300',
+  professional: 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300',
+  business:     'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300',
+  enterprise:   'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300',
+}
+const PLAN_LABEL: Record<string, string> = {
+  free: 'Gratis', warung: 'Warung', starter: 'Starter',
+  professional: 'Pro', business: 'Business', enterprise: 'Enterprise',
 }
 
 export function Sidebar() {
@@ -127,40 +130,33 @@ export function Sidebar() {
   const { language, setLanguage, t } = useLanguage()
   const { theme, toggleTheme } = useTheme()
   const { canInstall, isInstalled, install } = usePWA()
-  const [userName, setUserName] = useState('User')
+  const [userName,  setUserName]  = useState('User')
   const [userEmail, setUserEmail] = useState('')
-  const [userRole, setUserRole] = useState('user')
+  const [userRole,  setUserRole]  = useState('user')
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const cancelRef = useRef<HTMLButtonElement>(null)
 
-  const { data: planData } = trpc.auth.getPlan.useQuery(undefined, {
-    retry: false,
-    staleTime: 5 * 60 * 1000,
-  })
+  const { data: planData } = trpc.auth.getPlan.useQuery(undefined, { retry: false, staleTime: 5 * 60 * 1000 })
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const user = localStorage.getItem('user')
       if (user) {
         try {
-          const userData = JSON.parse(user)
-          setUserName(userData.name || 'User')
-          setUserEmail(userData.email || '')
-          setUserRole(userData.role || 'user')
+          const u = JSON.parse(user)
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setUserName(u.name || 'User')
+          setUserEmail(u.email || '')
+          setUserRole(u.role || 'user')
         } catch (error) {
           logger.error('Failed to parse user data', error)
         }
       }
-
       const savedCollapsed = localStorage.getItem('sidebar_collapsed')
-      if (savedCollapsed !== null) {
-        setIsCollapsed(savedCollapsed === 'true')
-      }
+      if (savedCollapsed !== null) setIsCollapsed(savedCollapsed === 'true')
     }
   }, [])
-
-  const handleLogout = () => setShowLogoutModal(true)
 
   const confirmLogout = () => {
     localStorage.removeItem('auth_token')
@@ -168,278 +164,215 @@ export function Sidebar() {
     router.push('/login')
   }
 
-  const toggleLanguage = () => {
-    setLanguage(language === 'id' ? 'en' : 'id')
-  }
-
   const toggleCollapse = () => {
-    const newCollapsed = !isCollapsed
-    setIsCollapsed(newCollapsed)
-    localStorage.setItem('sidebar_collapsed', String(newCollapsed))
+    const next = !isCollapsed
+    setIsCollapsed(next)
+    localStorage.setItem('sidebar_collapsed', String(next))
   }
 
   const getRoleBadge = (role: string) => {
     switch (role) {
-      case 'admin':
-        return { label: t('role.admin'), color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }
-      case 'manager':
-        return { label: t('role.manager'), color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' }
-      default:
-        return { label: t('role.user'), color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' }
+      case 'admin':   return { label: t('role.admin'),   color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' }
+      case 'manager': return { label: t('role.manager'), color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' }
+      default:        return { label: t('role.user'),    color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' }
     }
   }
 
-  const roleBadge = getRoleBadge(userRole)
+  const roleBadge   = getRoleBadge(userRole)
   const userInitial = userName.charAt(0).toUpperCase()
+  const plan        = planData?.plan || 'free'
 
   return (
-  <>
-    <aside className={`
-      ${isCollapsed ? 'w-20' : 'w-72'}
-      h-screen bg-gray-50 dark:bg-gray-900 border-r-2 border-gray-200 dark:border-gray-800 flex flex-col
-      transition-all duration-300 ease-in-out flex-shrink-0
-    `}>
-      {/* Logo/Header */}
-      <div className={`border-b-2 border-gray-200 dark:border-gray-800 flex items-center justify-between ${isCollapsed ? 'p-4' : 'p-6'} transition-all duration-300`}>
-        {!isCollapsed ? (
-          <>
-            <div className="flex items-center gap-3">
-              <img src="/logo.svg" alt="Laku POS" className="w-9 h-9 rounded-xl" />
-              <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Laku POS</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Point of Sale</p>
+    <>
+      <aside className={`
+        ${isCollapsed ? 'w-[68px]' : 'w-64'}
+        h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800
+        flex flex-col transition-all duration-300 ease-in-out flex-shrink-0
+      `}>
+
+        {/* ── Logo ── */}
+        <div className={`flex items-center border-b border-gray-200 dark:border-gray-800 h-14 flex-shrink-0 ${isCollapsed ? 'justify-center px-3' : 'justify-between px-4'}`}>
+          {!isCollapsed ? (
+            <>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <img src="/logo.svg" alt="Laku POS" className="w-8 h-8 rounded-lg flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">Laku POS</p>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500">Point of Sale</p>
+                </div>
               </div>
-            </div>
-            <button
-              onClick={toggleCollapse}
-              className="ml-2 p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
-              title="Collapse sidebar"
-            >
-              <span className="text-xl">◀</span>
+              <button onClick={toggleCollapse} title="Collapse sidebar"
+                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                  <path d="M10 3L5 8l5 5" />
+                </svg>
+              </button>
+            </>
+          ) : (
+            <button onClick={toggleCollapse} title="Expand sidebar"
+              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                <path d="M6 3l5 5-5 5" />
+              </svg>
             </button>
-          </>
-        ) : (
-          <button
-            onClick={toggleCollapse}
-            className="w-full p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Expand sidebar"
-          >
-            <span className="text-xl">▶</span>
-          </button>
-        )}
-      </div>
-
-      {/* Navigation */}
-      <nav className={`flex-1 overflow-y-auto ${isCollapsed ? 'p-3' : 'py-4'} transition-all duration-300`}>
-
-        {/* Dashboard */}
-        <div className={`${isCollapsed ? 'mb-2' : 'mb-1'}`}>
-          {!isCollapsed && (
-            <h3 className="px-6 py-2 text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-              {t('sidebar.dashboard')}
-            </h3>
           )}
-          <div className={`${isCollapsed ? '' : 'px-2'}`}>
+        </div>
+
+        {/* ── Nav ── */}
+        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
+
+          {/* Dashboard */}
+          <div className={`${isCollapsed ? 'mb-1' : 'mb-2'}`}>
             <SidebarItem href="/dashboard" icon="📊" label={t('sidebar.dashboard')} isCollapsed={isCollapsed} />
           </div>
-        </div>
 
-        <SidebarSection sectionKey="warehouse" title={t('sidebar.warehouse')} isCollapsed={isCollapsed} activePaths={['/warehouse']}>
-          <div className="px-2 space-y-1">
-            <SidebarItem href="/warehouse/stock" icon="📦" label={t('sidebar.warehouse.stock')} isCollapsed={isCollapsed} />
+          <SidebarSection sectionKey="warehouse" title={t('sidebar.warehouse')} isCollapsed={isCollapsed} activePaths={['/warehouse']}>
+            <SidebarItem href="/warehouse/stock"     icon="📦" label={t('sidebar.warehouse.stock')}     isCollapsed={isCollapsed} />
             <SidebarItem href="/warehouse/inventory" icon="📋" label={t('sidebar.warehouse.inventory')} isCollapsed={isCollapsed} />
-            <SidebarItem href="/warehouse/reports" icon="📈" label={t('sidebar.warehouse.reports')} isCollapsed={isCollapsed} />
-          </div>
-        </SidebarSection>
+            <SidebarItem href="/warehouse/reports"   icon="📈" label={t('sidebar.warehouse.reports')}   isCollapsed={isCollapsed} />
+          </SidebarSection>
 
-        <SidebarSection sectionKey="pos" title={t('sidebar.pos')} isCollapsed={isCollapsed} activePaths={['/pos']}>
-          <div className="px-2 space-y-1">
-            <SidebarItem href="/pos/sales" icon="🛒" label={t('sidebar.pos.sales')} isCollapsed={isCollapsed} />
+          <SidebarSection sectionKey="pos" title={t('sidebar.pos')} isCollapsed={isCollapsed} activePaths={['/pos']}>
+            <SidebarItem href="/pos/sales"   icon="🛒" label={t('sidebar.pos.sales')}   isCollapsed={isCollapsed} />
             <SidebarItem href="/pos/history" icon="📜" label={t('sidebar.pos.history')} isCollapsed={isCollapsed} />
             <SidebarItem href="/pos/revenue" icon="💰" label={t('sidebar.pos.revenue')} isCollapsed={isCollapsed} />
-          </div>
-        </SidebarSection>
-
-        <SidebarSection sectionKey="management" title="Management" isCollapsed={isCollapsed} activePaths={['/transactions', '/payments', '/promotions', '/eod', '/alerts']}>
-          <div className="px-2 space-y-1">
-            <SidebarItem href="/transactions" icon="🔄" label="Transactions" isCollapsed={isCollapsed} />
-            <SidebarItem href="/payments" icon="💳" label="Payments" isCollapsed={isCollapsed} />
-            <SidebarItem href="/promotions" icon="🎫" label="Promotions" isCollapsed={isCollapsed} />
-            <SidebarItem href="/eod" icon="💼" label="End of Day" isCollapsed={isCollapsed} />
-            <SidebarItem href="/alerts" icon="📢" label="Stock Alerts" isCollapsed={isCollapsed} />
-          </div>
-        </SidebarSection>
-
-        <SidebarSection sectionKey="masterdata" title="Master Data" isCollapsed={isCollapsed} activePaths={['/products', '/outlets']}>
-          <div className="px-2 space-y-1">
-            <SidebarItem href="/products" icon="🏷️" label="Products" isCollapsed={isCollapsed} />
-            <SidebarItem href="/outlets" icon="🏪" label="Outlets" isCollapsed={isCollapsed} />
-          </div>
-        </SidebarSection>
-
-        {userRole === 'admin' && (
-          <SidebarSection sectionKey="settings" title="Settings" isCollapsed={isCollapsed} activePaths={['/settings']}>
-            <div className="px-2 space-y-1">
-              <SidebarItem href="/settings/payments" icon="💰" label="Pembayaran" isCollapsed={isCollapsed} />
-              <SidebarItem href="/settings/users" icon="👥" label="User Management" isCollapsed={isCollapsed} />
-              <SidebarItem href="/settings/audit-logs" icon="📋" label="Audit Logs" isCollapsed={isCollapsed} />
-              <SidebarItem href="/settings/reset" icon="🗑️" label="Reset Data" isCollapsed={isCollapsed} />
-              <SidebarItem href="/settings/subscriptions" icon="💳" label="Langganan" isCollapsed={isCollapsed} />
-            </div>
           </SidebarSection>
-        )}
 
-        <SidebarSection sectionKey="account" title={t('sidebar.account')} isCollapsed={isCollapsed} activePaths={['/profile', '/help', '/about']}>
-          <div className="px-2 space-y-1">
+          <SidebarSection sectionKey="management" title="Manajemen" isCollapsed={isCollapsed} activePaths={['/transactions', '/payments', '/promotions', '/eod', '/alerts']}>
+            <SidebarItem href="/transactions" icon="🔄" label="Transaksi"    isCollapsed={isCollapsed} />
+            <SidebarItem href="/payments"     icon="💳" label="Pembayaran"   isCollapsed={isCollapsed} />
+            <SidebarItem href="/promotions"   icon="🎫" label="Promosi"      isCollapsed={isCollapsed} />
+            <SidebarItem href="/eod"          icon="💼" label="Tutup Hari"   isCollapsed={isCollapsed} />
+            <SidebarItem href="/alerts"       icon="📢" label="Alert Stok"   isCollapsed={isCollapsed} />
+          </SidebarSection>
+
+          <SidebarSection sectionKey="masterdata" title="Master Data" isCollapsed={isCollapsed} activePaths={['/products', '/outlets']}>
+            <SidebarItem href="/products" icon="🏷️" label="Produk"  isCollapsed={isCollapsed} />
+            <SidebarItem href="/outlets"  icon="🏪" label="Outlet"  isCollapsed={isCollapsed} />
+          </SidebarSection>
+
+          {userRole === 'admin' && (
+            <SidebarSection sectionKey="settings" title="Pengaturan" isCollapsed={isCollapsed} activePaths={['/settings']}>
+              <SidebarItem href="/settings/payments"      icon="💰" label="Pembayaran"      isCollapsed={isCollapsed} />
+              <SidebarItem href="/settings/users"         icon="👥" label="Pengguna"         isCollapsed={isCollapsed} />
+              <SidebarItem href="/settings/audit-logs"    icon="📋" label="Audit Log"        isCollapsed={isCollapsed} />
+              <SidebarItem href="/settings/reset"         icon="🗑️" label="Reset Data"       isCollapsed={isCollapsed} />
+              <SidebarItem href="/settings/subscriptions" icon="⭐" label="Langganan"        isCollapsed={isCollapsed} />
+            </SidebarSection>
+          )}
+
+          <SidebarSection sectionKey="account" title={t('sidebar.account')} isCollapsed={isCollapsed} activePaths={['/profile', '/help', '/about']}>
             <SidebarItem href="/profile" icon="👤" label={t('sidebar.profile')} isCollapsed={isCollapsed} />
-            <SidebarItem href="/help" icon="📖" label="Bantuan" isCollapsed={isCollapsed} />
-            <SidebarItem href="/about" icon="ℹ️" label={t('sidebar.about')} isCollapsed={isCollapsed} />
-          </div>
-        </SidebarSection>
-      </nav>
+            <SidebarItem href="/help"    icon="📖" label="Bantuan"               isCollapsed={isCollapsed} />
+            <SidebarItem href="/about"   icon="ℹ️"  label={t('sidebar.about')}  isCollapsed={isCollapsed} />
+          </SidebarSection>
+        </nav>
 
-      {/* Footer */}
-      <div className={`border-t-2 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 ${isCollapsed ? 'p-3' : 'p-4'} transition-all duration-300`}>
-        {!isCollapsed ? (
-          <>
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+        {/* ── Footer ── */}
+        <div className={`border-t border-gray-200 dark:border-gray-800 ${isCollapsed ? 'p-2' : 'p-3'} flex-shrink-0`}>
+          {!isCollapsed ? (
+            <div className="space-y-3">
+              {/* User info */}
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  {userInitial}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate leading-tight">{userName}</p>
+                  <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate">{userEmail}</p>
+                </div>
+              </div>
+
+              {/* Role + Plan badges */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${roleBadge.color}`}>
+                  {roleBadge.label}
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${PLAN_BADGE[plan] || PLAN_BADGE.free}`}>
+                  {PLAN_LABEL[plan] || 'Gratis'}
+                </span>
+              </div>
+
+              {/* Controls row */}
+              <div className="flex items-center gap-1.5">
+                <button onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 transition-colors flex-1 justify-center"
+                  title={language === 'id' ? 'Switch to English' : 'Ganti ke Indonesia'}>
+                  <span className="text-sm">{language === 'id' ? '🇮🇩' : '🇬🇧'}</span>
+                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">{language === 'id' ? 'ID' : 'EN'}</span>
+                </button>
+                <button onClick={toggleTheme}
+                  className="p-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 transition-colors"
+                  title={theme === 'light' ? 'Dark Mode' : 'Light Mode'}>
+                  <span className="text-sm">{theme === 'light' ? '🌙' : '☀️'}</span>
+                </button>
+                <button onClick={() => setShowLogoutModal(true)}
+                  className="p-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/30 border border-gray-200 dark:border-gray-700 hover:border-red-200 dark:hover:border-red-800 text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                  title={t('sidebar.logout')}>
+                  <span className="text-sm">🚪</span>
+                </button>
+              </div>
+
+              {/* Install PWA */}
+              {planData && planData.plan !== 'free' && canInstall && !isInstalled && (
+                <button onClick={install}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-semibold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 rounded-lg transition-colors border border-green-200 dark:border-green-800">
+                  <span>📲</span><span>Install Aplikasi</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm" title={userName}>
                 {userInitial}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{userName}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{userEmail}</p>
-              </div>
-            </div>
-
-            {/* Language + Theme row */}
-            <div className="mb-3 flex gap-2">
-              <button
-                onClick={toggleLanguage}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 transition-all duration-200 flex-1 justify-center"
-              >
-                <span className="text-lg">{language === 'id' ? '🇮🇩' : '🇬🇧'}</span>
-                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                  {language === 'id' ? 'ID' : 'EN'}
-                </span>
+              <button onClick={toggleTheme} title={theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+                className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm">
+                {theme === 'light' ? '🌙' : '☀️'}
               </button>
-              <button
-                onClick={toggleTheme}
-                className="flex items-center justify-center px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 transition-all duration-200"
-                title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-              >
-                <span className="text-lg">{theme === 'light' ? '🌙' : '☀️'}</span>
+              <button onClick={() => setLanguage(language === 'id' ? 'en' : 'id')} title={language === 'id' ? 'Switch to English' : 'Indonesia'}
+                className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm">
+                {language === 'id' ? '🇮🇩' : '🇬🇧'}
+              </button>
+              {planData && planData.plan !== 'free' && canInstall && !isInstalled && (
+                <button onClick={install} title="Install Aplikasi"
+                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-green-50 dark:bg-green-900/30 hover:bg-green-100 transition-colors text-sm">
+                  📲
+                </button>
+              )}
+              <button onClick={() => setShowLogoutModal(true)} title={t('sidebar.logout')}
+                className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors text-sm">
+                🚪
               </button>
             </div>
+          )}
+        </div>
+      </aside>
 
-            {planData && planData.plan !== 'free' && canInstall && !isInstalled && (
-              <button
-                onClick={install}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 rounded-lg transition-colors border border-green-200 dark:border-green-800"
-              >
-                <span>📲</span>
-                <span>Install Aplikasi</span>
+      {/* ── Logout Modal ── */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={e => e.target === e.currentTarget && setShowLogoutModal(false)}>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-gray-100 dark:border-gray-800">
+            <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-2xl">🚪</div>
+            <div className="text-center space-y-1">
+              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Keluar dari akun?</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Sesi kamu akan diakhiri. Pastikan semua transaksi sudah tersimpan.</p>
+            </div>
+            <div className="flex gap-3 w-full">
+              <button ref={cancelRef} onClick={() => setShowLogoutModal(false)}
+                className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                Batal
               </button>
-            )}
-
-            <div className="flex items-center justify-between">
-              <span className={`px-2 py-1 rounded-full text-xs font-semibold ${roleBadge.color}`}>
-                {roleBadge.label}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="px-3 py-1 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-              >
-                🚪 {t('sidebar.logout')}
+              <button onClick={confirmLogout}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-sm font-semibold text-white transition-colors shadow-sm">
+                Ya, Keluar
               </button>
             </div>
-          </>
-        ) : (
-          <div className="flex flex-col items-center gap-3">
-            <div
-              className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold cursor-pointer hover:scale-110 transition-transform"
-              title={userName}
-            >
-              {userInitial}
-            </div>
-            <button
-              onClick={toggleTheme}
-              className="w-12 h-12 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-            >
-              <span className="text-2xl">{theme === 'light' ? '🌙' : '☀️'}</span>
-            </button>
-            <button
-              onClick={toggleLanguage}
-              className="w-12 h-12 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              title={language === 'id' ? 'Switch to English' : 'Ganti ke Bahasa Indonesia'}
-            >
-              <span className="text-2xl">{language === 'id' ? '🇮🇩' : '🇬🇧'}</span>
-            </button>
-            {planData && planData.plan !== 'free' && canInstall && !isInstalled && (
-              <button
-                onClick={install}
-                className="w-12 h-12 flex items-center justify-center rounded-lg bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors"
-                title="Install Aplikasi"
-              >
-                <span className="text-2xl">📲</span>
-              </button>
-            )}
-            <button
-              onClick={handleLogout}
-              className="w-12 h-12 flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 transition-colors"
-              title={t('sidebar.logout')}
-            >
-              <span className="text-2xl">🚪</span>
-            </button>
-          </div>
-        )}
-      </div>
-    </aside>
-
-    {/* Logout confirmation modal */}
-    {showLogoutModal && (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        onClick={(e) => e.target === e.currentTarget && setShowLogoutModal(false)}
-      >
-        {/* Backdrop */}
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-
-        {/* Modal */}
-        <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-gray-100 dark:border-gray-800 animate-in fade-in zoom-in-95 duration-200">
-          {/* Icon */}
-          <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-3xl">
-            🚪
-          </div>
-
-          {/* Text */}
-          <div className="text-center space-y-1">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Keluar dari akun?</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Sesi kamu akan diakhiri. Pastikan semua transaksi sudah tersimpan.
-            </p>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-3 w-full">
-            <button
-              ref={cancelRef}
-              onClick={() => setShowLogoutModal(false)}
-              className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              Batal
-            </button>
-            <button
-              onClick={confirmLogout}
-              className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-sm font-semibold text-white transition-colors shadow-lg shadow-red-500/20"
-            >
-              Ya, Keluar
-            </button>
           </div>
         </div>
-      </div>
-    )}
-  </>
+      )}
+    </>
   )
 }

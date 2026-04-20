@@ -459,15 +459,15 @@ export default function HelpPage() {
   const currentSection = sections.find(s => s.id === activeSection)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6 md:mb-8 text-center">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-2 md:mb-3">
+        <div className="mb-3 md:mb-6 md:mb-8 text-center">
+          <h1 className="text-lg md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100 mb-1.5 md:mb-3">
             📖 Pusat Bantuan
           </h1>
-          <p className="text-base md:text-lg text-gray-600 dark:text-gray-400 mb-4 md:mb-6">
-            Dokumentasi lengkap sistem POS Laku POS
+          <p className="text-sm md:text-lg text-gray-500 dark:text-gray-400 mb-4 md:mb-6">
+            Dokumentasi lengkap sistem Laku POS
           </p>
 
           {/* Search Bar */}
@@ -478,12 +478,12 @@ export default function HelpPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="🔍 Cari topik, fitur, atau pertanyaan..."
-                className="w-full px-4 md:px-6 py-3 md:py-4 text-base md:text-lg border-2 border-gray-300 dark:border-gray-600 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-200 transition-all shadow-lg"
+                className="w-full px-4 md:px-6 py-3 md:py-4 text-base md:text-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 border-2 border-gray-300 dark:border-gray-600 rounded-2xl focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-900 transition-all shadow-lg"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 text-xl md:text-2xl"
+                  className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 text-sm md:text-xl md:text-2xl"
                 >
                   ✕
                 </button>
@@ -497,7 +497,7 @@ export default function HelpPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
           {/* Table of Contents - Tablet & Desktop (sticky sidebar) */}
           <div className="hidden md:block md:col-span-1">
             <div className="sticky top-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 md:p-6 border-2 border-gray-200 dark:border-gray-700">
@@ -517,7 +517,7 @@ export default function HelpPage() {
                       w-full text-left px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all text-xs md:text-sm
                       ${activeSection === section.id
                         ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold shadow-lg'
-                        : 'hover:bg-gray-100 text-gray-700 dark:text-gray-300'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }
                     `}
                   >
@@ -534,7 +534,7 @@ export default function HelpPage() {
             <select
               value={activeSection}
               onChange={(e) => setActiveSection(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white dark:bg-gray-800 text-base font-semibold shadow-lg"
+              className="w-full px-2 py-2 md:px-4 md:py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base font-semibold shadow-lg"
             >
               {filteredSections.map((section) => (
                 <option key={section.id} value={section.id}>
@@ -550,8 +550,8 @@ export default function HelpPage() {
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 md:p-6 lg:p-8 border-2 border-gray-200 dark:border-gray-700">
                 {/* Section Header */}
                 <div className="mb-4 md:mb-6 pb-4 md:pb-6 border-b-2 border-gray-200 dark:border-gray-700">
-                  <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2 md:gap-3">
-                    <span className="text-3xl md:text-4xl">{currentSection.icon}</span>
+                  <h2 className="text-base md:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2 md:gap-3">
+                    <span className="text-xs md:text-lg md:text-3xl md:text-4xl">{currentSection.icon}</span>
                     {currentSection.title}
                   </h2>
                   {currentSection.content.description && (
@@ -562,13 +562,13 @@ export default function HelpPage() {
                 </div>
 
                 {/* Content */}
-                <div className="space-y-6">
+                <div className="space-y-3 md:space-y-6">
                   {/* Simple Items List */}
                   {currentSection.content.items && (
                     <ul className="space-y-3">
                       {currentSection.content.items.map((item, idx) => (
                         <li key={idx} className="flex items-start gap-3 text-gray-700 dark:text-gray-300">
-                          <span className="text-blue-500 font-bold text-lg mt-1">•</span>
+                          <span className="text-blue-500 font-bold text-xs md:text-lg mt-1">•</span>
                           <span className="flex-1 text-base leading-relaxed">{item}</span>
                         </li>
                       ))}
@@ -577,8 +577,8 @@ export default function HelpPage() {
 
                   {/* Subsections */}
                   {currentSection.content.subsections?.map((subsection, idx) => (
-                    <div key={idx} className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 md:p-6 border-2 border-blue-200 dark:border-blue-800">
-                      <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 mb-3 md:mb-4">
+                    <div key={idx} className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/40 dark:to-purple-950/40 rounded-xl p-4 md:p-6 border-2 border-blue-200 dark:border-blue-800">
+                      <h3 className="text-xs md:text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 mb-3 md:mb-4">
                         {subsection.title}
                       </h3>
                       <ul className="space-y-2 md:space-y-3">
@@ -594,13 +594,13 @@ export default function HelpPage() {
 
                   {/* Steps */}
                   {currentSection.content.steps?.map((step, idx) => (
-                    <div key={idx} className="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-4 md:p-6 border-2 border-green-200 dark:border-green-800">
+                    <div key={idx} className="bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-950/40 dark:to-teal-950/40 rounded-xl p-4 md:p-6 border-2 border-green-200 dark:border-green-800">
                       <div className="flex items-start gap-3 md:gap-4">
                         <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full bg-gradient-to-br from-green-500 to-teal-500 text-white font-bold flex items-center justify-center text-base md:text-lg">
                           {idx + 1}
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 mb-1 md:mb-2">
+                          <h3 className="text-xs md:text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100 mb-1 md:mb-2">
                             {step.title}
                           </h3>
                           <p className="text-sm md:text-base text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -613,7 +613,7 @@ export default function HelpPage() {
 
                   {/* FAQs */}
                   {currentSection.content.faqs?.map((faq, idx) => (
-                    <div key={idx} className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-4 md:p-6 border-2 border-yellow-200 dark:border-yellow-800">
+                    <div key={idx} className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950/40 dark:to-orange-950/40 rounded-xl p-4 md:p-6 border-2 border-yellow-200 dark:border-yellow-800">
                       <h3 className="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100 mb-2 md:mb-3 flex items-start gap-2">
                         <span className="text-yellow-600">Q:</span>
                         <span className="flex-1">{faq.question}</span>
@@ -626,8 +626,8 @@ export default function HelpPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border-2 border-gray-200 dark:border-gray-700 text-center">
-                <p className="text-xl text-gray-600 dark:text-gray-400">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 md:p-8 border-2 border-gray-200 dark:border-gray-700 text-center">
+                <p className="text-sm md:text-xl text-gray-600 dark:text-gray-400">
                   {searchQuery
                     ? 'Tidak ada hasil yang ditemukan. Coba kata kunci lain.'
                     : 'Pilih topik dari daftar isi untuk melihat dokumentasi.'}
@@ -638,8 +638,8 @@ export default function HelpPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-8 md:mt-12 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 md:p-8 border-2 border-gray-200 dark:border-gray-700">
-          <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 md:mb-4">
+        <div className="mt-4 md:mt-8 md:mt-12 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-3 md:p-6 md:p-8 border-2 border-gray-200 dark:border-gray-700">
+          <h3 className="text-sm md:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 md:mb-4">
             Masih Ada Pertanyaan?
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-4 md:mb-6 text-base md:text-lg">

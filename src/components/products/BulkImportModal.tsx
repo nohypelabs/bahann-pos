@@ -126,14 +126,14 @@ export function BulkImportModal({ onClose, onSuccess }: BulkImportModalProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>📥 Import Produk dari Excel</CardTitle>
-            <button onClick={onClose} className="text-2xl text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">✕</button>
+            <button onClick={onClose} className="text-base md:text-2xl text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">✕</button>
           </div>
         </CardHeader>
 
         <CardBody className="overflow-y-auto flex-1">
           {/* Step: Upload */}
           {step === 'upload' && (
-            <div className="space-y-6">
+            <div className="space-y-3 md:space-y-6">
               {/* Template download */}
               <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
                 <div>
@@ -252,17 +252,17 @@ export function BulkImportModal({ onClose, onSuccess }: BulkImportModalProps) {
 
           {/* Step: Done */}
           {step === 'done' && result && (
-            <div className="text-center py-8 space-y-4">
+            <div className="text-center py-4 md:py-8 space-y-4">
               <div className="text-6xl">{result.inserted > 0 ? '🎉' : '⚠️'}</div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Import Selesai!</h3>
+              <h3 className="text-base md:text-2xl font-bold text-gray-900 dark:text-gray-100">Import Selesai!</h3>
               <div className="flex justify-center gap-4">
-                <div className="px-6 py-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
-                  <p className="text-3xl font-bold text-green-700 dark:text-green-300">{result.inserted}</p>
+                <div className="px-3 md:px-6 py-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl">
+                  <p className="text-xs md:text-lg md:text-3xl font-bold text-green-700 dark:text-green-300">{result.inserted}</p>
                   <p className="text-sm text-green-600 dark:text-green-400">Produk ditambahkan</p>
                 </div>
                 {result.skipped.length > 0 && (
-                  <div className="px-6 py-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
-                    <p className="text-3xl font-bold text-yellow-700 dark:text-yellow-300">{result.skipped.length}</p>
+                  <div className="px-3 md:px-6 py-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
+                    <p className="text-xs md:text-lg md:text-3xl font-bold text-yellow-700 dark:text-yellow-300">{result.skipped.length}</p>
                     <p className="text-sm text-yellow-600 dark:text-yellow-400">Dilewati (duplikat SKU)</p>
                   </div>
                 )}

@@ -1,105 +1,138 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Input, Select } from '@/components/ui/Input'
+import { Input } from '@/components/ui/Input'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SectionCard } from '@/components/ui/SectionCard'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { useToast } from '@/components/ui/Toast'
 import { trpc } from '@/lib/trpc/client'
-import { formatCurrency, formatDateTime } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils'
+
+const EMPTY_FORM = {
+  code: '', name: '', type: 'percentage' as 'fixed' | 'percentage',
+  discountAmount: 0, discountPercentage: 0, minPurchase: 0, maxDiscount: 0,
+}
 
 export default function PromotionsPage() {
-  const [showCreateForm, setShowCreateForm] = useState(false)
-  const [formData, setFormData] = useState({
-    code: '',
-    name: '',
-    type: 'percentage' as 'fixed' | 'percentage',
-    discountAmount: 0,
-    discountPercentage: 0,
-    minPurchase: 0,
-    maxDiscount: 0,
-  })
+  const [showForm, setShowForm] = useState(false)
+  const [formData, setFormData] = useState(EMPTY_FORM)
+  const { showToast } = useToast()
 
   const { data: promos, refetch } = trpc.promotions.list.useQuery({ activeOnly: false })
-  const createMutation = trpc.promotions.create.useMutation({ onSuccess: () => {
-    refetch()
-    setShowCreateForm(false)
-    setFormData({ code: '', name: '', type: 'percentage', discountAmount: 0, discountPercentage: 0, minPurchase: 0, maxDiscount: 0 })
-  }})
+  const createMutation = trpc.promotions.create.useMutation({
+    onSuccess: () => {
+      refetch()
+      setShowForm(false)
+      setFormData(EMPTY_FORM)
+      showToast('Promosi berhasil dibuat!', 'success')
+    },
+  })
 
   const handleCreate = async () => {
     try {
       await createMutation.mutateAsync(formData)
-      alert('Promotion created successfully')
-    } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to create promotion')
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Gagal membuat promosi', 'error')
     }
   }
 
-  return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">Promotions</h1>
-          <p className="text-gray-600 dark:text-gray-400">Manage discount codes and promotions</p>
-        </div>
-        <Button variant="primary" onClick={() => setShowCreateForm(!showCreateForm)}>
-          {showCreateForm ? 'Cancel' : '+ Create Promotion'}
-        </Button>
-      </div>
+  const field = (key: keyof typeof formData, val: string | number) =>
+    setFormData(prev => ({ ...prev, [key]: val }))
 
-      {showCreateForm && (
-        <Card variant="elevated" padding="lg">
-          <CardHeader><CardTitle>Create New Promotion</CardTitle></CardHeader>
-          <CardBody>
-            <div className="grid grid-cols-2 gap-4">
-              <Input label="Code" value={formData.code} onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })} fullWidth />
-              <Input label="Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} fullWidth />
-              <Select label="Type" value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value as any })} options={[
-                { value: 'fixed', label: 'Fixed Amount' },
-                { value: 'percentage', label: 'Percentage' },
-              ]} fullWidth />
-              {formData.type === 'fixed' ? (
-                <Input type="number" label="Discount Amount" value={formData.discountAmount} onChange={(e) => setFormData({ ...formData, discountAmount: parseFloat(e.target.value) })} fullWidth />
-              ) : (
-                <Input type="number" label="Discount %" value={formData.discountPercentage} onChange={(e) => setFormData({ ...formData, discountPercentage: parseFloat(e.target.value) })} fullWidth />
-              )}
-              <Input type="number" label="Min Purchase" value={formData.minPurchase} onChange={(e) => setFormData({ ...formData, minPurchase: parseFloat(e.target.value) })} fullWidth />
-              <Input type="number" label="Max Discount" value={formData.maxDiscount} onChange={(e) => setFormData({ ...formData, maxDiscount: parseFloat(e.target.value) })} fullWidth />
+  return (
+    <div className="space-y-4 md:space-y-6">
+      <PageHeader
+        title="Promosi"
+        subtitle="Kelola kode diskon dan promosi"
+        action={
+          <Button variant={showForm ? 'secondary' : 'primary'} onClick={() => setShowForm(v => !v)}>
+            {showForm ? 'Batal' : '+ Buat Promosi'}
+          </Button>
+        }
+      />
+
+      {showForm && (
+        <SectionCard title="Buat Promosi Baru">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Input label="Kode Promo *" value={formData.code}
+              onChange={e => field('code', e.target.value.toUpperCase())} fullWidth />
+            <Input label="Nama Promosi *" value={formData.name}
+              onChange={e => field('name', e.target.value)} fullWidth />
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Tipe Diskon</label>
+              <div className="relative">
+                <select
+                  value={formData.type}
+                  onChange={e => field('type', e.target.value)}
+                  className="w-full appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
+                >
+                  <option value="fixed">Potongan Tetap (Rp)</option>
+                  <option value="percentage">Persentase (%)</option>
+                </select>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">▾</span>
+              </div>
             </div>
-            <div className="mt-4">
-              <Button variant="primary" onClick={handleCreate} disabled={createMutation.isPending}>
-                {createMutation.isPending ? 'Creating...' : 'Create Promotion'}
-              </Button>
-            </div>
-          </CardBody>
-        </Card>
+
+            {formData.type === 'fixed' ? (
+              <Input type="number" label="Jumlah Diskon (Rp)" value={formData.discountAmount}
+                onChange={e => field('discountAmount', parseFloat(e.target.value) || 0)} fullWidth />
+            ) : (
+              <Input type="number" label="Diskon (%)" value={formData.discountPercentage}
+                onChange={e => field('discountPercentage', parseFloat(e.target.value) || 0)} fullWidth />
+            )}
+
+            <Input type="number" label="Min. Pembelian (Rp)" value={formData.minPurchase}
+              onChange={e => field('minPurchase', parseFloat(e.target.value) || 0)} fullWidth />
+            <Input type="number" label="Maks. Diskon (Rp)" value={formData.maxDiscount}
+              onChange={e => field('maxDiscount', parseFloat(e.target.value) || 0)} fullWidth />
+          </div>
+
+          <div className="mt-4">
+            <Button variant="primary" onClick={handleCreate} disabled={createMutation.isPending || !formData.code || !formData.name}>
+              {createMutation.isPending ? 'Menyimpan…' : '✅ Buat Promosi'}
+            </Button>
+          </div>
+        </SectionCard>
       )}
 
-      <Card variant="default" padding="lg">
-        <CardHeader><CardTitle>Active Promotions</CardTitle></CardHeader>
-        <CardBody>
-          <div className="space-y-3">
-            {promos?.map((promo) => (
-              <div key={promo.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border">
-                <div>
-                  <p className="font-bold text-lg">{promo.code}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{promo.name}</p>
+      <SectionCard title="Daftar Promosi">
+        {!promos || promos.length === 0 ? (
+          <EmptyState icon="🏷️" title="Belum ada promosi" description="Buat promosi pertama kamu untuk mulai memberikan diskon." />
+        ) : (
+          <div className="space-y-2">
+            {promos.map(promo => (
+              <div key={promo.id} className="flex items-center justify-between gap-3 p-3 md:p-4 bg-gray-50 dark:bg-gray-700/40 rounded-xl border border-gray-200 dark:border-gray-700">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="font-bold text-sm md:text-base text-gray-900 dark:text-white font-mono">{promo.code}</p>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      promo.is_active
+                        ? 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                    }`}>
+                      {promo.is_active ? 'AKTIF' : 'NONAKTIF'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{promo.name}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {promo.type === 'fixed' ? formatCurrency(promo.discount_amount || 0) : `${promo.discount_percentage}% off`}
-                    {promo.min_purchase ? ` • Min: ${formatCurrency(promo.min_purchase)}` : ''}
+                    {promo.type === 'fixed'
+                      ? formatCurrency(promo.discount_amount || 0)
+                      : `${promo.discount_percentage}% off`}
+                    {promo.min_purchase ? ` · Min: ${formatCurrency(promo.min_purchase)}` : ''}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold">Uses: {promo.uses_count}</p>
-                  <span className={`px-2 py-1 rounded text-xs ${promo.is_active ? 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'}`}>
-                    {promo.is_active ? 'ACTIVE' : 'INACTIVE'}
-                  </span>
+                <div className="text-right shrink-0">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Dipakai</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">{promo.uses_count}×</p>
                 </div>
               </div>
             ))}
           </div>
-        </CardBody>
-      </Card>
+        )}
+      </SectionCard>
     </div>
   )
 }

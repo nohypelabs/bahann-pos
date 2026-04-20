@@ -116,7 +116,7 @@ export function PaymentMethodSelector({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Pilih Metode Pembayaran</h3>
+      <h3 className="text-xs md:text-lg font-semibold text-gray-900">Pilih Metode Pembayaran</h3>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {methods.map((method) => (
@@ -138,7 +138,7 @@ export function PaymentMethodSelector({
             `}
           >
             <div className="flex flex-col items-center gap-2">
-              <span className="text-3xl">{method.icon}</span>
+              <span className="text-xs md:text-lg md:text-3xl">{method.icon}</span>
               <span className="text-sm font-semibold text-gray-900 text-center">
                 {method.name}
               </span>
@@ -164,7 +164,7 @@ export function PaymentMethodSelector({
       <div className="mt-4 p-4 bg-gray-50 rounded-xl">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-600">Total Pembayaran:</span>
-          <span className="text-2xl font-bold text-gray-900">
+          <span className="text-base md:text-2xl font-bold text-gray-900">
             {new Intl.NumberFormat('id-ID', {
               style: 'currency',
               currency: 'IDR',

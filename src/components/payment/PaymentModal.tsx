@@ -214,10 +214,10 @@ export function PaymentModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
+        <div className="p-3 md:p-6">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
+          <div className="flex items-center justify-between mb-3 md:mb-6">
+            <h2 className="text-base md:text-2xl font-bold text-gray-900">
               {step === 'method' && 'Pembayaran'}
               {step === 'qris' && 'QRIS Payment'}
               {step === 'cash' && 'Pembayaran Tunai'}
@@ -229,7 +229,7 @@ export function PaymentModal({
               onClick={handleClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <span className="text-2xl">✕</span>
+              <span className="text-base md:text-2xl">✕</span>
             </button>
           </div>
 
@@ -242,7 +242,7 @@ export function PaymentModal({
 
           {/* Step: Method Selection */}
           {step === 'method' && (
-            <div className="space-y-6">
+            <div className="space-y-3 md:space-y-6">
               <PaymentMethodSelector
                 value={selectedMethod}
                 onChange={handleMethodSelect}
@@ -334,11 +334,11 @@ export function PaymentModal({
 
           {/* Step: Completed */}
           {step === 'completed' && (
-            <div className="text-center py-8">
+            <div className="text-center py-4 md:py-8">
               <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-6xl">✓</span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+              <h3 className="text-base md:text-2xl font-bold text-gray-900 mb-2">
                 Pembayaran Berhasil!
               </h3>
               <p className="text-gray-600">

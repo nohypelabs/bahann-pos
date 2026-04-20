@@ -1,95 +1,54 @@
 'use client'
 
-import { Card, CardHeader, CardBody, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SectionCard } from '@/components/ui/SectionCard'
+import { StatCard } from '@/components/ui/StatCard'
+import { EmptyState } from '@/components/ui/EmptyState'
+
+const PAYMENT_METHODS = [
+  { icon: '💵', label: 'Tunai',         sub: 'Cash' },
+  { icon: '📱', label: 'QRIS',          sub: 'Scan QR' },
+  { icon: '🏦', label: 'Transfer Bank', sub: 'Manual' },
+  { icon: '💳', label: 'Debit Card',    sub: 'EDC' },
+  { icon: '💳', label: 'Credit Card',   sub: 'EDC' },
+]
 
 export default function PaymentsPage() {
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Payments Management</h1>
-        <p className="text-gray-600">Manage and confirm pending payments</p>
+    <div className="space-y-4 md:space-y-6">
+      <PageHeader title="Manajemen Pembayaran" subtitle="Kelola dan konfirmasi pembayaran yang masuk" />
+
+      <div className="grid grid-cols-3 gap-2 md:gap-4">
+        <StatCard icon="📱" label="QRIS Pending"         value="0" color="yellow" sub="Menunggu konfirmasi" />
+        <StatCard icon="🏦" label="Transfer Pending"     value="0" color="blue"   sub="Menunggu konfirmasi" />
+        <StatCard icon="✅" label="Dikonfirmasi Hari Ini" value="0" color="green"  sub="Total pembayaran" />
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card variant="default" padding="lg">
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-500">Pending QRIS</p>
-            <p className="text-3xl font-bold text-yellow-600">0</p>
-            <p className="text-sm text-gray-600">Waiting confirmation</p>
-          </div>
-        </Card>
-
-        <Card variant="default" padding="lg">
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-500">Pending Bank Transfer</p>
-            <p className="text-3xl font-bold text-blue-600">0</p>
-            <p className="text-sm text-gray-600">Waiting confirmation</p>
-          </div>
-        </Card>
-
-        <Card variant="default" padding="lg">
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-gray-500">Today's Payments</p>
-            <p className="text-3xl font-bold text-green-600">0</p>
-            <p className="text-sm text-gray-600">Confirmed today</p>
-          </div>
-        </Card>
-      </div>
-
-      {/* Pending Payments */}
-      <Card variant="elevated" padding="md">
-        <CardHeader>
-          <CardTitle>Pending Payments</CardTitle>
-        </CardHeader>
-        <CardBody>
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">💳</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Payment Management Coming Soon
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Payment system is ready. Integration with POS will be available soon.
-            </p>
+      <SectionCard title="Pembayaran Pending">
+        <EmptyState
+          icon="💳"
+          title="Integrasi segera hadir"
+          description="Sistem pembayaran sudah siap. Integrasi penuh dengan POS akan segera tersedia."
+          action={
             <Button variant="primary" onClick={() => window.location.href = '/pos/sales'}>
-              Go to POS Sales
+              Ke POS Sales
             </Button>
-          </div>
-        </CardBody>
-      </Card>
+          }
+        />
+      </SectionCard>
 
-      {/* Quick Info */}
-      <Card variant="default" padding="lg">
-        <CardHeader>
-          <CardTitle>Payment Methods Available</CardTitle>
-        </CardHeader>
-        <CardBody>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="text-center p-4 bg-gray-50 rounded-xl">
-              <div className="text-3xl mb-2">💵</div>
-              <p className="text-sm font-semibold">Cash</p>
+      <SectionCard title="Metode Pembayaran Tersedia">
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
+          {PAYMENT_METHODS.map(m => (
+            <div key={m.label} className="flex flex-col items-center gap-1.5 p-3 md:p-4 bg-gray-50 dark:bg-gray-700/40 rounded-xl">
+              <span className="text-2xl md:text-3xl">{m.icon}</span>
+              <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 text-center">{m.label}</p>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400">{m.sub}</p>
             </div>
-            <div className="text-center p-4 bg-gray-50 rounded-xl">
-              <div className="text-3xl mb-2">📱</div>
-              <p className="text-sm font-semibold">QRIS</p>
-            </div>
-            <div className="text-center p-4 bg-gray-50 rounded-xl">
-              <div className="text-3xl mb-2">🏦</div>
-              <p className="text-sm font-semibold">Bank Transfer</p>
-            </div>
-            <div className="text-center p-4 bg-gray-50 rounded-xl">
-              <div className="text-3xl mb-2">💳</div>
-              <p className="text-sm font-semibold">Debit Card</p>
-            </div>
-            <div className="text-center p-4 bg-gray-50 rounded-xl">
-              <div className="text-3xl mb-2">💳</div>
-              <p className="text-sm font-semibold">Credit Card</p>
-            </div>
-          </div>
-        </CardBody>
-      </Card>
+          ))}
+        </div>
+      </SectionCard>
     </div>
   )
 }

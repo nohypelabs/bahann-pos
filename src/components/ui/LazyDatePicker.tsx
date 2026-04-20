@@ -94,7 +94,7 @@ export default function LazyDatePicker({
   }
 
   const inputClasses = `
-    w-full px-4 py-3 rounded-xl border-2 transition-all
+    w-full px-2 py-2 md:px-4 md:py-3 rounded-xl border-2 transition-all
     ${error
       ? 'border-red-300 focus:border-red-500'
       : isFocused

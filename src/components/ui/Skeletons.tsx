@@ -19,7 +19,7 @@ export function ChartSkeleton({ height = 320 }: { height?: number }) {
 
 export function ModalLoadingSkeleton({ message = 'Loading...' }: { message?: string }) {
   return (
-    <div className="p-8 flex flex-col items-center gap-4">
+    <div className="p-4 md:p-8 flex flex-col items-center gap-4">
       <div className="w-16 h-16 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
       <p className="text-sm text-gray-600">{message}</p>
     </div>
@@ -38,7 +38,7 @@ export function TableLoadingSkeleton({ rows = 5 }: { rows?: number }) {
 
 export function CardSkeleton() {
   return (
-    <div className="p-6 bg-gray-50 rounded-xl animate-pulse space-y-3">
+    <div className="p-3 md:p-6 bg-gray-50 rounded-xl animate-pulse space-y-3">
       <div className="h-4 bg-gray-200 rounded w-1/2" />
       <div className="h-8 bg-gray-300 rounded w-3/4" />
       <div className="h-3 bg-gray-200 rounded w-1/3" />
@@ -48,7 +48,7 @@ export function CardSkeleton() {
 
 export function FormLoadingSkeleton() {
   return (
-    <div className="space-y-4 p-6">
+    <div className="space-y-4 p-3 md:p-6">
       {Array.from({ length: 4 }).map((_, i) => (
         <div key={i} className="space-y-2">
           <div className="h-4 bg-gray-200 rounded w-24 animate-pulse" />

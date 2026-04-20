@@ -87,13 +87,13 @@ export function OfflineIndicator() {
     <div className="fixed bottom-4 right-4 z-50 max-w-xs">
       <div className={`
         ${status.color} ${status.textColor}
-        px-4 py-3 rounded-lg shadow-lg
+        px-2 py-2 md:px-4 md:py-3 rounded-lg shadow-lg
         transition-all duration-300 ease-in-out
         ${status.pulse ? 'animate-pulse' : ''}
       `}>
         <div className="flex items-center gap-3">
           {/* Icon */}
-          <span className={`text-xl ${syncStatus === 'syncing' ? 'animate-spin' : ''}`}>
+          <span className={`text-sm md:text-xl ${syncStatus === 'syncing' ? 'animate-spin' : ''}`}>
             {status.icon}
           </span>
 

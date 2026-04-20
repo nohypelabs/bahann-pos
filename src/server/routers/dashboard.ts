@@ -13,14 +13,20 @@ export const dashboardRouter = router({
     .input(
       z.object({
         outletId: z.string().uuid().optional(),
-        startDate: z.string().optional(),
-        endDate: z.string().optional(),
+        days: z.number().optional(),
       }).optional()
     )
     .query(async ({ input, ctx }) => {
-      const today = new Date().toISOString().split('T')[0]
-      const startDate = input?.startDate || today
-      const endDate = input?.endDate || today
+      const now = new Date()
+      const endDate = now.toISOString().split('T')[0]
+      const days = input?.days
+      const startDate = days === undefined || days === 0
+        ? '2000-01-01'
+        : (() => {
+            const d = new Date(now)
+            d.setDate(d.getDate() - (days - 1))
+            return d.toISOString().split('T')[0]
+          })()
 
       const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
 
@@ -57,7 +63,7 @@ export const dashboardRouter = router({
       let stockQuery = supabase
         .from('daily_stock')
         .select('product_id, stock_akhir, stock_date')
-        .eq('stock_date', today)
+        .eq('stock_date', endDate)
         .lt('stock_akhir', 10)
 
       if (input?.outletId) {

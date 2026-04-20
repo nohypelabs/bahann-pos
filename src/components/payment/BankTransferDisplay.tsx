@@ -83,7 +83,7 @@ export function BankTransferDisplay({
 
   if (!bankAccount) {
     return (
-      <div className="text-center py-8">
+      <div className="text-center py-4 md:py-8">
         <p className="text-red-600">Data rekening bank tidak ditemukan</p>
       </div>
     )
@@ -95,29 +95,29 @@ export function BankTransferDisplay({
   const accountHolder = config.accountHolder || process.env.NEXT_PUBLIC_BANK_HOLDER || '-'
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 md:space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Transfer Bank</h2>
+        <h2 className="text-base md:text-2xl font-bold text-gray-900 mb-2">Transfer Bank</h2>
         <p className="text-gray-600">
           Transfer ke rekening di bawah ini
         </p>
       </div>
 
       {/* Bank Account Info */}
-      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg">
+      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-3 md:p-6 text-white shadow-lg">
         <div className="space-y-4">
           {/* Bank Name */}
           <div>
             <p className="text-sm opacity-80 mb-1">Nama Bank</p>
-            <p className="text-2xl font-bold">{bankName}</p>
+            <p className="text-base md:text-2xl font-bold">{bankName}</p>
           </div>
 
           {/* Account Number */}
           <div>
             <p className="text-sm opacity-80 mb-1">Nomor Rekening</p>
             <div className="flex items-center justify-between bg-white/10 rounded-lg p-3">
-              <p className="text-xl font-mono font-bold tracking-wider">
+              <p className="text-sm md:text-xl font-mono font-bold tracking-wider">
                 {accountNumber}
               </p>
               <button
@@ -132,7 +132,7 @@ export function BankTransferDisplay({
           {/* Account Holder */}
           <div>
             <p className="text-sm opacity-80 mb-1">Atas Nama</p>
-            <p className="text-lg font-semibold">{accountHolder}</p>
+            <p className="text-xs md:text-lg font-semibold">{accountHolder}</p>
           </div>
         </div>
       </div>
@@ -141,7 +141,7 @@ export function BankTransferDisplay({
       <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
         <p className="text-sm font-medium text-gray-600 mb-2">Jumlah Transfer</p>
         <div className="flex items-center justify-between">
-          <p className="text-3xl font-bold text-yellow-600">
+          <p className="text-xs md:text-lg md:text-3xl font-bold text-yellow-600">
             {new Intl.NumberFormat('id-ID', {
               style: 'currency',
               currency: 'IDR',

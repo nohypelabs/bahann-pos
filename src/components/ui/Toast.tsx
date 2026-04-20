@@ -134,7 +134,7 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
       `}
       role="alert"
     >
-      <span className="text-2xl flex-shrink-0">{style.icon}</span>
+      <span className="text-base md:text-2xl flex-shrink-0">{style.icon}</span>
       <p className="flex-1 font-semibold text-mobile-sm">{toast.message}</p>
       <button
         onClick={onClose}
@@ -146,7 +146,7 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
         `}
         aria-label="Close"
       >
-        <span className="text-2xl">×</span>
+        <span className="text-base md:text-2xl">×</span>
       </button>
     </div>
   )

@@ -58,10 +58,10 @@ export function QRISDisplay({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 md:space-y-6">
       {/* Header */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Scan QRIS untuk Bayar</h2>
+        <h2 className="text-base md:text-2xl font-bold text-gray-900 mb-2">Scan QRIS untuk Bayar</h2>
         <p className="text-gray-600">
           Gunakan aplikasi e-wallet atau mobile banking untuk scan QR code
         </p>
@@ -69,7 +69,7 @@ export function QRISDisplay({
 
       {/* QR Code */}
       <div className="flex justify-center">
-        <div className="relative p-6 bg-white rounded-2xl shadow-lg border-2 border-gray-200">
+        <div className="relative p-3 md:p-6 bg-white rounded-2xl shadow-lg border-2 border-gray-200">
           <div className="relative w-80 h-80 bg-white rounded-xl overflow-hidden">
             <Image
               src={qrisImage}
@@ -86,7 +86,7 @@ export function QRISDisplay({
             className="absolute top-2 right-2 p-2 bg-white rounded-lg shadow-md hover:bg-gray-50 transition-colors"
             title="Download QR Code"
           >
-            <span className="text-xl">⬇️</span>
+            <span className="text-sm md:text-xl">⬇️</span>
           </button>
         </div>
       </div>
@@ -95,7 +95,7 @@ export function QRISDisplay({
       <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-gray-600">Total Pembayaran</span>
-          <span className="text-2xl font-bold text-blue-600">
+          <span className="text-base md:text-2xl font-bold text-blue-600">
             {new Intl.NumberFormat('id-ID', {
               style: 'currency',
               currency: 'IDR',

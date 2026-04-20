@@ -1,338 +1,171 @@
 'use client'
 
 import { lazy, Suspense, useState } from 'react'
-import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Select } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { SectionCard } from '@/components/ui/SectionCard'
+import { StatCard } from '@/components/ui/StatCard'
+import { FilterBar } from '@/components/ui/FilterBar'
 import { trpc } from '@/lib/trpc/client'
 import { ChartSkeleton, ExportLoadingSkeleton } from '@/components/ui/Skeletons'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { getLimits } from '@/lib/plans'
 
-// Lazy load heavy chart components - only loaded when data is available
 const RevenueLineChart = lazy(() => import('@/components/charts/RevenueLineChartLazy'))
 const ItemsSoldBarChart = lazy(() => import('@/components/charts/ItemsSoldBarChartLazy'))
-const RevenuePieChart = lazy(() => import('@/components/charts/RevenuePieChartLazy'))
+const RevenuePieChart   = lazy(() => import('@/components/charts/RevenuePieChartLazy'))
+const ReportExporter    = lazy(() => import('@/components/reports/ReportExporter'))
 
-// Lazy load export functionality - only when user clicks export
-const ReportExporter = lazy(() => import('@/components/reports/ReportExporter'))
+const COLORS = ['#2563eb', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981']
 
 export default function ReportsPage() {
   const [selectedOutletId, setSelectedOutletId] = useState('')
-  const [dateRange, setDateRange] = useState<7 | 14 | 30 | 0>(30)
-  const [showExporter, setShowExporter] = useState(false)
+  const [dateRange, setDateRange]               = useState<1 | 7 | 14 | 30 | 0>(30)
+  const [showExporter, setShowExporter]         = useState(false)
 
-  const { data: planData } = trpc.auth.getPlan.useQuery()
-  const canExport = getLimits(planData?.plan ?? 'free').canExport
-
-  // Fetch data
+  const { data: planData }       = trpc.auth.getPlan.useQuery()
+  const canExport                = getLimits(planData?.plan ?? 'free').canExport
   const { data: outletsResponse } = trpc.outlets.getAll.useQuery()
-  const outlets = outletsResponse?.outlets || []
+  const outlets                  = outletsResponse?.outlets || []
 
-  const { data: stats } = trpc.dashboard.getStats.useQuery({
-    outletId: selectedOutletId || undefined,
-  })
-  const { data: salesTrend } = trpc.dashboard.getSalesTrend.useQuery({
-    outletId: selectedOutletId || undefined,
-    days: dateRange,
-  })
-  const { data: topProducts } = trpc.dashboard.getTopProducts.useQuery({
-    outletId: selectedOutletId || undefined,
-    days: dateRange,
-  })
+  const { data: stats }        = trpc.dashboard.getStats.useQuery({ outletId: selectedOutletId || undefined, days: dateRange })
+  const { data: salesTrend }   = trpc.dashboard.getSalesTrend.useQuery({ outletId: selectedOutletId || undefined, days: dateRange })
+  const { data: topProducts }  = trpc.dashboard.getTopProducts.useQuery({ outletId: selectedOutletId || undefined, days: dateRange })
 
-  // Using centralized utility functions for formatting
-  const COLORS = ['#2563eb', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981']
+  const avgDailyRevenue  = salesTrend?.length ? salesTrend.reduce((s, d) => s + d.revenue, 0) / salesTrend.length : 0
+  const avgItemsPerDay   = salesTrend?.length ? salesTrend.reduce((s, d) => s + d.itemsSold, 0) / salesTrend.length : 0
+  const highestRevenue   = salesTrend?.length ? Math.max(...salesTrend.map(d => d.revenue)) : 0
+  const lowestRevenue    = salesTrend?.length ? Math.min(...salesTrend.map(d => d.revenue)) : 0
 
-  // Calculate metrics
-  const averageDailyRevenue = salesTrend && salesTrend.length > 0
-    ? salesTrend.reduce((sum, day) => sum + day.revenue, 0) / salesTrend.length
-    : 0
-
-  const averageItemsPerDay = salesTrend && salesTrend.length > 0
-    ? salesTrend.reduce((sum, day) => sum + day.itemsSold, 0) / salesTrend.length
-    : 0
-
-  const highestRevenue = salesTrend && salesTrend.length > 0
-    ? Math.max(...salesTrend.map(day => day.revenue))
-    : 0
-
-  const lowestRevenue = salesTrend && salesTrend.length > 0
-    ? Math.min(...salesTrend.map(day => day.revenue))
-    : 0
-
-  // Prepare data for pie chart
-  const pieData = topProducts?.map((product, index) => ({
-    name: product.productName,
-    value: product.totalRevenue,
-    color: COLORS[index % COLORS.length],
-  }))
+  const pieData = topProducts?.map((p, i) => ({ name: p.productName, value: p.totalRevenue, color: COLORS[i % COLORS.length] }))
+  const outletOptions = outlets.map(o => ({ value: o.id, label: o.name }))
 
   return (
-    <div className="space-y-4 md:space-y-8">
-      <div>
-        <h1 className="text-base md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">Financial Reports</h1>
-        <p className="text-gray-600 dark:text-gray-400">Comprehensive revenue and sales analytics</p>
-      </div>
+    <div className="space-y-4 md:space-y-6">
+      <PageHeader title="Laporan Keuangan" subtitle="Analitik revenue dan penjualan yang komprehensif" />
 
-      {/* Filters — compact inline on mobile */}
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Select
-          label="Outlet"
-          value={selectedOutletId}
-          onChange={(e) => setSelectedOutletId(e.target.value)}
-          options={[
-            { value: '', label: 'All Outlets' },
-            ...(outlets?.map(outlet => ({ value: outlet.id, label: outlet.name })) || []),
-          ]}
-          fullWidth
-        />
-        <div className="flex gap-1 sm:hidden">
-          {([7, 14, 30, 0] as const).map(d => (
-            <button key={d} onClick={() => setDateRange(d)}
-              className={`flex-1 py-2 text-xs font-semibold rounded-lg border-2 transition-colors ${dateRange === d ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700'}`}>
-              {d === 0 ? 'All' : `${d}d`}
-            </button>
-          ))}
-        </div>
-        <div className="hidden sm:block flex-1">
-          <Select
-            label="Time Period"
-            value={dateRange.toString()}
-            onChange={(e) => setDateRange(Number(e.target.value) as 7 | 14 | 30 | 0)}
-            options={[
-              { value: '7', label: 'Last 7 Days' },
-              { value: '14', label: 'Last 14 Days' },
-              { value: '30', label: 'Last 30 Days' },
-              { value: '0', label: 'All Time' },
-            ]}
-            fullWidth
-          />
-        </div>
-      </div>
+      <FilterBar
+        outlets={outletOptions}
+        outletValue={selectedOutletId}
+        onOutletChange={setSelectedOutletId}
+        periodValue={dateRange}
+        onPeriodChange={v => setDateRange(v as 1 | 7 | 14 | 30 | 0)}
+      />
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3 md:gap-6">
-        <Card variant="default" padding="sm">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Total Revenue</p>
-            <p className="text-xs md:text-base font-bold text-green-600 truncate">{formatCurrency(stats?.totalRevenue || 0)}</p>
-            <p className="text-xs text-gray-400">{dateRange === 0 ? 'All' : `${dateRange}d`}</p>
-          </div>
-        </Card>
-
-        <Card variant="default" padding="sm">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Avg/Hari</p>
-            <p className="text-xs md:text-base font-bold text-blue-600 truncate">{formatCurrency(averageDailyRevenue)}</p>
-            <p className="text-xs text-gray-400">Per day</p>
-          </div>
-        </Card>
-
-        <Card variant="default" padding="sm">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Transaksi</p>
-            <p className="text-xs md:text-base font-bold text-purple-600">{stats?.transactionCount || 0}</p>
-            <p className="text-xs text-gray-400">Selesai</p>
-          </div>
-        </Card>
-
-        <Card variant="default" padding="sm">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">Avg Item/Hari</p>
-            <p className="text-xs md:text-base font-bold text-orange-600">{Math.round(averageItemsPerDay)}</p>
-            <p className="text-xs text-gray-400">Units</p>
-          </div>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+        <StatCard icon="💰" label="Total Revenue"   value={formatCurrency(stats?.totalRevenue || 0)}     color="green"  sub={dateRange === 0 ? 'All time' : `${dateRange} hari`} />
+        <StatCard icon="📈" label="Rata-rata/Hari"  value={formatCurrency(avgDailyRevenue)}              color="blue"   sub="Per hari" />
+        <StatCard icon="🧾" label="Transaksi"       value={stats?.transactionCount || 0}                 color="purple" sub="Selesai" />
+        <StatCard icon="📦" label="Avg Item/Hari"   value={Math.round(avgItemsPerDay)}                   color="yellow" sub="Unit" />
       </div>
 
-      {/* Revenue Trend Chart - Lazy loaded with Suspense */}
-      <Card variant="elevated" padding="sm">
-        <CardHeader>
-          <CardTitle>📈 Revenue Trend</CardTitle>
-        </CardHeader>
-        <CardBody>
-          {salesTrend && salesTrend.length > 0 ? (
-            <Suspense fallback={<ChartSkeleton height={200} />}>
-              <RevenueLineChart
-                data={salesTrend}
-                formatCurrency={formatCurrency}
-                formatDate={formatDate}
-                className="h-[200px] md:h-[320px]"
-                hideMobileYAxis
-              />
-            </Suspense>
-          ) : (
-            <div className="h-[200px] md:h-80 flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm">
-              No revenue data available
-            </div>
-          )}
-        </CardBody>
-      </Card>
+      {/* Revenue Trend */}
+      <SectionCard title="📈 Tren Revenue">
+        {salesTrend && salesTrend.length > 0 ? (
+          <Suspense fallback={<ChartSkeleton height={200} />}>
+            <RevenueLineChart data={salesTrend} formatCurrency={formatCurrency} formatDate={formatDate} className="h-[200px] md:h-[320px]" hideMobileYAxis />
+          </Suspense>
+        ) : (
+          <div className="h-[200px] md:h-80 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">Belum ada data revenue</div>
+        )}
+      </SectionCard>
 
-      {/* Items Sold Trend - Lazy loaded */}
-      <Card variant="elevated" padding="sm">
-        <CardHeader>
-          <CardTitle>📦 Items Sold</CardTitle>
-        </CardHeader>
-        <CardBody>
-          {salesTrend && salesTrend.length > 0 ? (
-            <Suspense fallback={<ChartSkeleton height={160} />}>
-              <ItemsSoldBarChart
-                data={salesTrend}
-                formatDate={formatDate}
-                className="h-[160px] md:h-[320px]"
-                hideMobileYAxis
-              />
-            </Suspense>
-          ) : (
-            <div className="h-[160px] md:h-80 flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm">
-              No sales data available
-            </div>
-          )}
-        </CardBody>
-      </Card>
+      {/* Items Sold */}
+      <SectionCard title="📦 Item Terjual">
+        {salesTrend && salesTrend.length > 0 ? (
+          <Suspense fallback={<ChartSkeleton height={160} />}>
+            <ItemsSoldBarChart data={salesTrend} formatDate={formatDate} className="h-[160px] md:h-[320px]" hideMobileYAxis />
+          </Suspense>
+        ) : (
+          <div className="h-[160px] md:h-80 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">Belum ada data penjualan</div>
+        )}
+      </SectionCard>
 
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6">
-        {/* Top Products by Revenue */}
-        <Card variant="default" padding="lg">
-          <CardHeader>
-            <CardTitle>🏆 Top Products by Revenue</CardTitle>
-          </CardHeader>
-          <CardBody>
-            {topProducts && topProducts.length > 0 ? (
-              <div className="space-y-3">
-                {topProducts.map((product, index) => {
-                  const percentage = stats?.totalRevenue
-                    ? (product.totalRevenue / stats.totalRevenue) * 100
-                    : 0
-
-                  return (
-                    <div key={product.productId} className="space-y-1.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className={`w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-white font-bold text-xs`}
-                            style={{ backgroundColor: COLORS[index % COLORS.length] }}>
-                            #{index + 1}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate">{product.productName}</p>
-                            <p className="text-xs text-gray-400 truncate">{product.totalQuantity}× · {product.productSku}</p>
-                          </div>
+      {/* Top Products + Pie Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
+        <SectionCard title="🏆 Produk Terlaris berdasarkan Revenue">
+          {topProducts && topProducts.length > 0 ? (
+            <div className="space-y-3">
+              {topProducts.map((p, i) => {
+                const pct = stats?.totalRevenue ? (p.totalRevenue / stats.totalRevenue) * 100 : 0
+                return (
+                  <div key={p.productId} className="space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                          style={{ backgroundColor: COLORS[i % COLORS.length] }}>
+                          {i + 1}
                         </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-xs font-bold text-green-600">{formatCurrency(product.totalRevenue)}</p>
-                          <p className="text-xs text-gray-400">{percentage.toFixed(1)}%</p>
+                        <div className="min-w-0">
+                          <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate">{p.productName}</p>
+                          <p className="text-xs text-gray-400 truncate">{p.totalQuantity}× · {p.productSku}</p>
                         </div>
                       </div>
-                      <div className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
-                        <div
-                          className="h-full transition-all duration-500"
-                          style={{
-                            width: `${percentage}%`,
-                            backgroundColor: COLORS[index % COLORS.length],
-                          }}
-                        />
+                      <div className="text-right shrink-0">
+                        <p className="text-xs font-bold text-green-600 dark:text-green-400">{formatCurrency(p.totalRevenue)}</p>
+                        <p className="text-xs text-gray-400">{pct.toFixed(1)}%</p>
                       </div>
                     </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="py-12 text-center text-gray-500 dark:text-gray-400">
-                No sales data available
-              </div>
-            )}
-          </CardBody>
-        </Card>
+                    <div className="w-full h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+                      <div className="h-full transition-all duration-500 rounded-full" style={{ width: `${pct}%`, backgroundColor: COLORS[i % COLORS.length] }} />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="py-10 text-center text-gray-400 dark:text-gray-500 text-sm">Belum ada data penjualan</div>
+          )}
+        </SectionCard>
 
-        {/* Revenue Distribution Pie Chart - Lazy loaded */}
-        <Card variant="default" padding="lg">
-          <CardHeader>
-            <CardTitle>📊 Revenue Distribution</CardTitle>
-          </CardHeader>
-          <CardBody>
-            {pieData && pieData.length > 0 ? (
-              <Suspense fallback={<ChartSkeleton height={320} />}>
-                <RevenuePieChart
-                  data={pieData}
-                  formatCurrency={formatCurrency}
-                />
-              </Suspense>
-            ) : (
-              <div className="h-[200px] md:h-80 flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm">
-                No revenue distribution data
-              </div>
-            )}
-          </CardBody>
-        </Card>
+        <SectionCard title="📊 Distribusi Revenue">
+          {pieData && pieData.length > 0 ? (
+            <Suspense fallback={<ChartSkeleton height={320} />}>
+              <RevenuePieChart data={pieData} formatCurrency={formatCurrency} />
+            </Suspense>
+          ) : (
+            <div className="h-[200px] md:h-80 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">Belum ada data distribusi</div>
+          )}
+        </SectionCard>
       </div>
 
       {/* Performance Metrics */}
-      <Card variant="default" padding="lg">
-        <CardHeader>
-          <CardTitle>📉 Performance Metrics</CardTitle>
-        </CardHeader>
-        <CardBody>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3 md:gap-6">
-            <div className="p-2.5 md:p-4 bg-green-50 dark:bg-green-900/30 rounded-xl border-2 border-green-200 dark:border-green-800">
-              <p className="text-xs text-green-700 dark:text-green-400 font-semibold mb-1">Tertinggi/Hari</p>
-              <p className="text-base md:text-2xl font-bold text-green-900 dark:text-green-200">
-                {formatCurrency(highestRevenue)}
-              </p>
-            </div>
-
-            <div className="p-2.5 md:p-4 bg-red-50 dark:bg-red-900/30 rounded-xl border-2 border-red-200 dark:border-red-800">
-              <p className="text-xs text-red-700 dark:text-red-400 font-semibold mb-1">Terendah/Hari</p>
-              <p className="text-base md:text-2xl font-bold text-red-900 dark:text-red-200">
-                {formatCurrency(lowestRevenue)}
-              </p>
-            </div>
-
-            <div className="p-2.5 md:p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl border-2 border-blue-200 dark:border-blue-800">
-              <p className="text-xs text-blue-700 dark:text-blue-400 font-semibold mb-1">Avg Transaksi</p>
-              <p className="text-base md:text-2xl font-bold text-blue-900 dark:text-blue-200">
-                {formatCurrency(
-                  stats?.transactionCount && stats.transactionCount > 0
-                    ? stats.totalRevenue / stats.transactionCount
-                    : 0
-                )}
-              </p>
-            </div>
-
-            <div className="p-2.5 md:p-4 bg-purple-50 dark:bg-purple-900/30 rounded-xl border-2 border-purple-200 dark:border-purple-800">
-              <p className="text-xs text-purple-700 dark:text-purple-400 font-semibold mb-1">Total Item Terjual</p>
-              <p className="text-base md:text-2xl font-bold text-purple-900 dark:text-purple-200">
-                {stats?.totalItemsSold.toLocaleString() || 0}
-              </p>
-            </div>
+      <SectionCard title="📉 Metrik Performa">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
+          <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-xl border border-green-200 dark:border-green-800">
+            <p className="text-xs text-green-700 dark:text-green-400 font-semibold mb-1">Tertinggi/Hari</p>
+            <p className="text-base md:text-xl font-bold text-green-900 dark:text-green-200">{formatCurrency(highestRevenue)}</p>
           </div>
-        </CardBody>
-      </Card>
-
-      {/* Export Section - Lazy loaded only when opened */}
-      <Card variant="default" padding="lg">
-        <div className="flex items-center justify-between mb-2 md:mb-4">
-          <h3 className="text-xs md:text-lg font-semibold">Export Report</h3>
-          {canExport ? (
-            <Button
-              variant="primary"
-              onClick={() => setShowExporter(!showExporter)}
-            >
-              📥 Export Data
-            </Button>
-          ) : (
-            <a href="/settings/subscriptions">
-              <Button variant="secondary">
-                🔒 Upgrade untuk Export
-              </Button>
-            </a>
-          )}
+          <div className="p-3 bg-red-50 dark:bg-red-900/30 rounded-xl border border-red-200 dark:border-red-800">
+            <p className="text-xs text-red-700 dark:text-red-400 font-semibold mb-1">Terendah/Hari</p>
+            <p className="text-base md:text-xl font-bold text-red-900 dark:text-red-200">{formatCurrency(lowestRevenue)}</p>
+          </div>
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl border border-blue-200 dark:border-blue-800">
+            <p className="text-xs text-blue-700 dark:text-blue-400 font-semibold mb-1">Avg Transaksi</p>
+            <p className="text-base md:text-xl font-bold text-blue-900 dark:text-blue-200">
+              {formatCurrency(stats?.transactionCount ? stats.totalRevenue / stats.transactionCount : 0)}
+            </p>
+          </div>
+          <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl border border-purple-200 dark:border-purple-800">
+            <p className="text-xs text-purple-700 dark:text-purple-400 font-semibold mb-1">Total Item Terjual</p>
+            <p className="text-base md:text-xl font-bold text-purple-900 dark:text-purple-200">
+              {(stats?.totalItemsSold || 0).toLocaleString()}
+            </p>
+          </div>
         </div>
+      </SectionCard>
 
+      {/* Export */}
+      <SectionCard
+        title="Export Laporan"
+        action={canExport
+          ? <Button variant="primary" onClick={() => setShowExporter(!showExporter)}>📥 Export Data</Button>
+          : <a href="/settings/subscriptions"><Button variant="secondary">🔒 Upgrade untuk Export</Button></a>
+        }
+      >
         {!canExport && (
-          <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
             <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
               Fitur export tersedia mulai plan <strong>Warung</strong> ke atas.
             </p>
@@ -341,29 +174,12 @@ export default function ReportsPage() {
             </a>
           </div>
         )}
-
         {canExport && showExporter && (
           <Suspense fallback={<ExportLoadingSkeleton />}>
-            <ReportExporter
-              outletId={selectedOutletId || undefined}
-              days={dateRange}
-              onClose={() => setShowExporter(false)}
-            />
+            <ReportExporter outletId={selectedOutletId || undefined} days={dateRange} onClose={() => setShowExporter(false)} />
           </Suspense>
         )}
-      </Card>
-
-      {/* Info Box — hidden on mobile */}
-      <div className="hidden md:block p-3 md:p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
-        <p className="text-sm text-blue-900 dark:text-blue-200 font-semibold mb-2">💡 About Financial Reports:</p>
-        <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
-          <li>• Track revenue trends and sales performance over time</li>
-          <li>• Analyze top-performing products and their contribution to total revenue</li>
-          <li>• Monitor daily performance metrics and identify peak sales periods</li>
-          <li>• Filter by outlet and time period for detailed location-specific insights</li>
-          <li>• Use data to make informed decisions about inventory and pricing</li>
-        </ul>
-      </div>
+      </SectionCard>
     </div>
   )
 }
