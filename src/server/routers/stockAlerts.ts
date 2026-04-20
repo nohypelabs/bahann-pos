@@ -9,6 +9,13 @@ import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
 import { TRPCError } from '@trpc/server'
 
+interface StockRow {
+  product_id: string
+  outlet_id: string
+  stock_akhir: number | null
+  products?: { reorder_point: number | null } | null
+}
+
 export const stockAlertsRouter = router({
   /**
    * Get active alerts for an outlet
@@ -86,14 +93,14 @@ export const stockAlertsRouter = router({
 
       // Deduplicate to get the latest stock per product-outlet
       const latestStockMap = new Map<string, { product_id: string; outlet_id: string; current_stock: number; reorder_point: number }>()
-      for (const row of (stockData || []) as any[]) {
+      for (const row of (stockData || []) as StockRow[]) {
         const key = `${row.product_id}:${row.outlet_id}`
         if (!latestStockMap.has(key)) {
           latestStockMap.set(key, {
             product_id: row.product_id,
             outlet_id: row.outlet_id,
             current_stock: row.stock_akhir ?? 0,
-            reorder_point: (row.products as any)?.reorder_point ?? 10,
+            reorder_point: row.products?.reorder_point ?? 10,
           })
         }
       }
@@ -105,7 +112,7 @@ export const stockAlertsRouter = router({
         .eq('is_acknowledged', false)
 
       const existingKeys = new Set(
-        (existingAlerts || []).map((a: any) => `${a.product_id}:${a.outlet_id}`)
+        (existingAlerts || []).map((a: { product_id: string; outlet_id: string }) => `${a.product_id}:${a.outlet_id}`)
       )
 
       // Build new alerts

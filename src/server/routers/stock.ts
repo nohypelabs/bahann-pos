@@ -6,6 +6,13 @@ import { SupabaseDailyStockRepository } from '@/infra/repositories/SupabaseDaily
 
 const stockRepository = new SupabaseDailyStockRepository()
 
+interface StockRecord {
+  outlet_id: string
+  stock_date: string
+  stock_akhir: number
+  outlets?: { name: string } | null
+}
+
 export const stockRouter = router({
   /**
    * Record daily stock movement
@@ -81,7 +88,7 @@ export const stockRouter = router({
           const { data: stockRecords } = await stockQuery
 
           // Group by outlet and get latest for each
-          const stockByOutlet = (stockRecords || []).reduce((acc: any[], record: any) => {
+          const stockByOutlet = (stockRecords || [] as StockRecord[]).reduce((acc: StockRecord[], record: StockRecord) => {
             const existing = acc.find(r => r.outlet_id === record.outlet_id)
             if (!existing || new Date(record.stock_date) > new Date(existing.stock_date)) {
               return [...acc.filter(r => r.outlet_id !== record.outlet_id), record]
@@ -99,7 +106,7 @@ export const stockRouter = router({
             category: product.category,
             price: product.price,
             currentStock: totalStock,
-            stockByOutlet: stockByOutlet.map((record: any) => ({
+            stockByOutlet: stockByOutlet.map((record: StockRecord) => ({
               outletId: record.outlet_id,
               outletName: record.outlets?.name || 'Unknown',
               stock: record.stock_akhir || 0,
