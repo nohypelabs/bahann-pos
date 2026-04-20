@@ -143,6 +143,31 @@ export const adminProcedure = t.procedure.use(({ ctx, next }) => {
 })
 
 /**
+ * Super admin procedure - requires authentication AND super_admin role.
+ * Super admin is the platform operator (not a tenant/warung owner).
+ * Set via: node scripts/set-super-admin.js
+ */
+export const superAdminProcedure = t.procedure.use(async ({ ctx, next }) => {
+  if (!ctx.userId || !ctx.session) {
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Login required' })
+  }
+
+  // Read role fresh from DB — not from JWT (JWT role may be stale after promotion)
+  const { supabaseAdmin } = await import('@/infra/supabase/server')
+  const { data } = await supabaseAdmin
+    .from('users')
+    .select('role')
+    .eq('id', ctx.userId)
+    .single()
+
+  if (data?.role !== 'super_admin') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Super admin only' })
+  }
+
+  return next({ ctx: { ...ctx, userId: ctx.userId, session: ctx.session } })
+})
+
+/**
  * Create a middleware that checks for specific permission
  * @param permission - The permission key to check (e.g., 'canVoidTransactions')
  */

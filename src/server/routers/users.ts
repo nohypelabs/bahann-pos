@@ -4,7 +4,7 @@
  */
 
 import { z } from 'zod'
-import { router, protectedProcedure, adminProcedure } from '../trpc'
+import { router, protectedProcedure, adminProcedure, superAdminProcedure } from '../trpc'
 import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
 import { TRPCError } from '@trpc/server'
@@ -321,12 +321,7 @@ export const usersRouter = router({
   /**
    * List ALL admin users across all tenants (super admin only)
    */
-  listAllAdmins: adminProcedure.query(async ({ ctx }) => {
-    const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || ''
-    if (!superAdminEmail || ctx.session?.email !== superAdminEmail) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: 'Super admin only' })
-    }
-
+  listAllAdmins: superAdminProcedure.query(async () => {
     const { data, error } = await supabase
       .from('users')
       .select('id, email, name, role, plan, created_at, outlet_id')
@@ -340,7 +335,7 @@ export const usersRouter = router({
   /**
    * Update a user's subscription plan (super admin only)
    */
-  updatePlan: adminProcedure
+  updatePlan: superAdminProcedure
     .input(z.object({
       userId: z.string().uuid(),
       plan: z.enum(['free', 'warung', 'starter', 'professional', 'business', 'enterprise']),
@@ -348,10 +343,6 @@ export const usersRouter = router({
       note: z.string().max(500).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const superAdminEmail = process.env.SUPER_ADMIN_EMAIL || ''
-      if (!superAdminEmail || ctx.session?.email !== superAdminEmail) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Super admin only' })
-      }
 
       const { data: before } = await supabase
         .from('users')

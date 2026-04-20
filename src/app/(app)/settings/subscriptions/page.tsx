@@ -377,17 +377,9 @@ function UserUpgradeView() {
 
 // ─── Root Page ─────────────────────────────────────────────────────────────────
 export default function SubscriptionsPage() {
-  const superAdminEmail = process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAIL || ''
-  const [userEmail, setUserEmail] = useState('')
+  const { data: profile, isLoading } = trpc.auth.getProfile.useQuery()
 
-  useEffect(() => {
-    try {
-      const u = JSON.parse(localStorage.getItem('user') || '{}')
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (u.email) setUserEmail(u.email)
-    } catch { /* ignore */ }
-  }, [])
-
-  if (superAdminEmail && userEmail === superAdminEmail) return <SuperAdminView />
+  if (isLoading) return <p className="text-center py-16 text-gray-400 text-sm">Memuat...</p>
+  if (profile?.role === 'super_admin') return <SuperAdminView />
   return <UserUpgradeView />
 }
