@@ -88,7 +88,7 @@ export const stockRouter = router({
           const { data: stockRecords } = await stockQuery
 
           // Group by outlet and get latest for each
-          const stockByOutlet = (stockRecords || [] as StockRecord[]).reduce((acc: StockRecord[], record: StockRecord) => {
+          const stockByOutlet = ((stockRecords || []) as unknown as StockRecord[]).reduce((acc: StockRecord[], record: StockRecord) => {
             const existing = acc.find(r => r.outlet_id === record.outlet_id)
             if (!existing || new Date(record.stock_date) > new Date(existing.stock_date)) {
               return [...acc.filter(r => r.outlet_id !== record.outlet_id), record]
@@ -106,7 +106,7 @@ export const stockRouter = router({
             category: product.category,
             price: product.price,
             currentStock: totalStock,
-            stockByOutlet: stockByOutlet.map((record: StockRecord) => ({
+            stockByOutlet: (stockByOutlet as StockRecord[]).map((record: StockRecord) => ({
               outletId: record.outlet_id,
               outletName: record.outlets?.name || 'Unknown',
               stock: record.stock_akhir || 0,

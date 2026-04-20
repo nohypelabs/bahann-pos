@@ -93,7 +93,7 @@ export const stockAlertsRouter = router({
 
       // Deduplicate to get the latest stock per product-outlet
       const latestStockMap = new Map<string, { product_id: string; outlet_id: string; current_stock: number; reorder_point: number }>()
-      for (const row of (stockData || []) as StockRow[]) {
+      for (const row of (stockData || []) as unknown as StockRow[]) {
         const key = `${row.product_id}:${row.outlet_id}`
         if (!latestStockMap.has(key)) {
           latestStockMap.set(key, {
