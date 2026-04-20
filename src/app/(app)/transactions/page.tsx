@@ -176,7 +176,7 @@ export default function TransactionsPage() {
                     </td>
                     <td className="px-3 md:px-4 py-3 text-xs capitalize text-gray-600 dark:text-gray-400">{tx.payment_method}</td>
                     <td className="px-3 md:px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_BADGE[tx.status]}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_BADGE[tx.status as TransactionStatus]}`}>
                         {tx.status.toUpperCase()}
                       </span>
                     </td>

@@ -18,7 +18,7 @@ export default function EODPage() {
   const [notes, setNotes]                   = useState('')
   const [alert, setAlert]                   = useState<AlertState>(null)
 
-  const flash = (type: AlertState['type'], msg: string) => {
+  const flash = (type: NonNullable<AlertState>['type'], msg: string) => {
     setAlert({ type, msg })
     setTimeout(() => setAlert(null), 4000)
   }
