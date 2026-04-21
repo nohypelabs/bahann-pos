@@ -39,8 +39,8 @@ async function getAccountPlan(userId: string): Promise<string> {
 
   if (!user) return 'free'
 
-  // Admin uses their own plan
-  if (user.role === 'admin') return user.plan ?? 'free'
+  // Admin / super_admin uses their own plan
+  if (user.role === 'admin' || user.role === 'super_admin') return user.plan ?? 'free'
 
   // Cashier inherits plan from their outlet's owner (tenant root)
   if (user.outlet_id) {
