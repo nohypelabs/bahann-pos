@@ -172,6 +172,7 @@ export function Sidebar() {
 
   const getRoleBadge = (role: string) => {
     switch (role) {
+      case 'super_admin': return { label: 'Super Admin', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' }
       case 'admin':   return { label: t('role.admin'),   color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' }
       case 'manager': return { label: t('role.manager'), color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' }
       default:        return { label: t('role.user'),    color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' }
