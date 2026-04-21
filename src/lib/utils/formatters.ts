@@ -80,11 +80,14 @@ export function formatDate(
  * @example
  * formatDateTime('2024-01-15T14:30:00') // "15 Jan, 14:30"
  */
+const IDR_TO_USD = 17_100
+
 export function formatChartYAxis(value: number, language: string = 'id'): string {
   if (language === 'en') {
-    if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`
-    if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`
-    return `$${value}`
+    const usd = value / IDR_TO_USD
+    if (usd >= 1_000) return `$${(usd / 1_000).toFixed(1)}K`
+    if (usd >= 1) return `$${usd.toFixed(0)}`
+    return `$${usd.toFixed(2)}`
   }
   if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}jt`
   if (value >= 1_000) return `${(value / 1_000).toFixed(0)}rb`
