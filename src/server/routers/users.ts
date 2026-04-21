@@ -74,7 +74,7 @@ export const usersRouter = router({
       if (!isUnlimited(limits.maxCashiers)) {
         const { count } = await supabase
           .from('users')
-          .select('*', { count: 'exact', head: true })
+          .select('*', { count: 'estimated', head: true })
           .eq('role', 'user')
           .in(
             'outlet_id',

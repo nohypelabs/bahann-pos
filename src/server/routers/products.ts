@@ -28,7 +28,7 @@ export const productsRouter = router({
       // Build count query
       let countQuery = supabase
         .from('products')
-        .select('*', { count: 'exact', head: true })
+        .select('*', { count: 'estimated', head: true })
 
       // Build data query
       let dataQuery = supabase
@@ -261,7 +261,7 @@ export const productsRouter = router({
 
       const { count: txCount } = await supabase
         .from('transaction_items')
-        .select('*', { count: 'exact', head: true })
+        .select('*', { count: 'estimated', head: true })
         .eq('product_id', input.id)
 
       if (txCount && txCount > 0) {

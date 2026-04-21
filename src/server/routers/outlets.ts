@@ -28,7 +28,7 @@ export const outletsRouter = router({
       // Build count query
       let countQuery = supabase
         .from('outlets')
-        .select('*', { count: 'exact', head: true })
+        .select('*', { count: 'estimated', head: true })
 
       // Build data query
       let dataQuery = supabase
@@ -102,7 +102,7 @@ export const outletsRouter = router({
       if (!isUnlimited(limits.maxOutlets)) {
         const { count } = await supabase
           .from('outlets')
-          .select('*', { count: 'exact', head: true })
+          .select('*', { count: 'estimated', head: true })
           .eq('owner_id', ctx.userId)
 
         if ((count ?? 0) >= limits.maxOutlets) {

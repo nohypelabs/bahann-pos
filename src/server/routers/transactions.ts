@@ -517,7 +517,7 @@ export const transactionsRouter = router({
           outlets (id, name),
           cashier:users!cashier_id (id, name)
         `,
-          { count: 'exact' }
+          { count: 'estimated' }
         )
         .order('created_at', { ascending: false })
 

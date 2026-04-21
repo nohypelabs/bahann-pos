@@ -28,7 +28,7 @@ export const auditRouter = router({
     .query(async ({ input }) => {
       let query = supabase
         .from('audit_logs')
-        .select('*', { count: 'exact' })
+        .select('*', { count: 'estimated' })
         .order('created_at', { ascending: false })
 
       // Apply filters

@@ -277,7 +277,7 @@ export const cashSessionsRouter = router({
           outlet:outlets (id, name),
           opened_by_user:users!opened_by (id, name)
         `,
-          { count: 'exact' }
+          { count: 'estimated' }
         )
         .order('opened_at', { ascending: false })
 

@@ -70,7 +70,7 @@ export const promotionsRouter = router({
       if (input.userId && promo.max_uses_per_customer) {
         const { count } = await supabase
           .from('promotion_usage')
-          .select('*', { count: 'exact', head: true })
+          .select('*', { count: 'estimated', head: true })
           .eq('promotion_id', promo.id)
           .eq('user_id', input.userId)
 

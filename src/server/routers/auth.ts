@@ -322,7 +322,7 @@ export const authRouter = router({
       // Build query
       let query = supabase
         .from('users')
-        .select('id, email, name, outlet_id, role, created_at', { count: 'exact' })
+        .select('id, email, name, outlet_id, role, created_at', { count: 'estimated' })
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
 
