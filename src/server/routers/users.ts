@@ -165,7 +165,7 @@ export const usersRouter = router({
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
       // Users can only view their own profile unless they're admin
-      if (input.id !== ctx.userId && ctx.session?.role !== 'admin') {
+      if (input.id !== ctx.userId && ctx.session?.role !== 'admin' && ctx.session?.role !== 'super_admin') {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'You can only view your own profile',
@@ -409,8 +409,8 @@ export const usersRouter = router({
   checkPermission: protectedProcedure
     .input(z.object({ permission: z.string() }))
     .query(async ({ input, ctx }) => {
-      // Admins have all permissions
-      if (ctx.session?.role === 'admin') {
+      // Admins and super_admin have all permissions
+      if (ctx.session?.role === 'admin' || ctx.session?.role === 'super_admin') {
         return { hasPermission: true }
       }
 

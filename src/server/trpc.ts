@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from '@trpc/server'
 import { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
 import superjson from 'superjson'
 import { verifyJWT, JWTPayload } from '@/lib/jwt'
-import { getRedisClient } from '@/lib/redis'
+import { getRedisClient } from '@/lib/redis-upstash'
 import { parseAuthCookieFromHeader } from '@/lib/cookies'
 import { logger } from '@/lib/logger'
 
@@ -125,8 +125,8 @@ export const adminProcedure = t.procedure.use(({ ctx, next }) => {
     })
   }
 
-  // Check if user has admin role
-  if (ctx.session.role !== 'admin') {
+  // Check if user has admin role (super_admin inherits all admin rights)
+  if (ctx.session.role !== 'admin' && ctx.session.role !== 'super_admin') {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'You do not have permission to access this resource. Admin role required.',
@@ -180,8 +180,8 @@ export const requirePermission = (permission: string) => {
       })
     }
 
-    // Admins have all permissions
-    if (ctx.session.role === 'admin') {
+    // Admins and super_admin have all permissions
+    if (ctx.session.role === 'admin' || ctx.session.role === 'super_admin') {
       return next()
     }
 
