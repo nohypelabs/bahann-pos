@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs'
 import { UserRepository } from '@/domain/repositories/UserRepository'
 import { AppError } from '@/shared/exceptions/AppError'
 import { signJWT } from '@/lib/jwt'
-import { createSession } from '@/lib/redis'
+import { createSession } from '@/lib/redis-upstash'
 
 export interface LoginUserInput {
   email: string

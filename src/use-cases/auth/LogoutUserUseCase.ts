@@ -1,4 +1,4 @@
-import { deleteSession } from '@/lib/redis'
+import { deleteSession } from '@/lib/redis-upstash'
 
 export interface LogoutUserInput {
   userId: string
