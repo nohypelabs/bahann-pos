@@ -252,7 +252,7 @@ export function Sidebar() {
             <SidebarItem href="/outlets"  icon="🏪" label="Outlet"  isCollapsed={isCollapsed} />
           </SidebarSection>
 
-          {userRole === 'admin' && (
+          {(userRole === 'admin' || userRole === 'super_admin') && (
             <SidebarSection sectionKey="settings" title="Pengaturan" isCollapsed={isCollapsed} activePaths={['/settings']}>
               <SidebarItem href="/settings/payments"      icon="💰" label="Pembayaran"      isCollapsed={isCollapsed} />
               <SidebarItem href="/settings/users"         icon="👥" label="Pengguna"         isCollapsed={isCollapsed} />
