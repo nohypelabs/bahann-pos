@@ -139,6 +139,9 @@ export function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [subMasterData, setSubMasterData] = useState(false)
+  const [subPengaturan, setSubPengaturan] = useState(false)
+  const [subBantuan, setSubBantuan] = useState(false)
   const cancelRef = useRef<HTMLButtonElement>(null)
 
   const { data: planData } = trpc.auth.getPlan.useQuery(undefined, { retry: false, staleTime: 5 * 60 * 1000 })
@@ -323,35 +326,61 @@ export function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
               <span>Pengaturan & Bantuan</span>
               <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />
             </button>
-            <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
-              <div className="px-2 pb-2 space-y-0.5">
-                {/* Master Data group */}
-                <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Master Data</p>
-                <SidebarItem href="/products" icon={<Tag />}   label="Produk"  isCollapsed={false} />
-                <SidebarItem href="/outlets"  icon={<Store />} label="Outlet"  isCollapsed={false} />
+            <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
+              <div className="px-2 pb-2">
+                {/* Master Data sub-group */}
+                <button onClick={() => setSubMasterData(!subMasterData)}
+                  className="w-full flex items-center justify-between px-3 py-2 group">
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors">Master Data</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-gray-300 dark:text-gray-600 transition-transform duration-200 ${subMasterData ? 'rotate-180' : ''}`} />
+                </button>
+                <div className={`overflow-hidden transition-all duration-200 ${subMasterData ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+                  <div className="space-y-0.5 pb-1">
+                    <SidebarItem href="/products" icon={<Tag />}   label="Produk"  isCollapsed={false} />
+                    <SidebarItem href="/outlets"  icon={<Store />} label="Outlet"  isCollapsed={false} />
+                  </div>
+                </div>
+
                 {isAdmin && (
                   <>
-                    {/* Admin settings group */}
-                    <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Pengaturan</p>
-                    <SidebarItem href="/settings/payments"      icon={<DollarSign />} label="Pembayaran"  isCollapsed={false} />
-                    <SidebarItem href="/settings/users"         icon={<Users />}      label="Pengguna"    isCollapsed={false} />
-                    <SidebarItem href="/settings/audit-logs"    icon={<Shield />}     label="Audit Log"   isCollapsed={false} />
-                    <SidebarItem href="/settings/reset"         icon={<Trash2 />}     label="Reset Data"  isCollapsed={false} />
-                    <SidebarItem href="/settings/subscriptions" icon={<Star />}       label="Langganan"   isCollapsed={false} />
+                    {/* Pengaturan sub-group */}
+                    <button onClick={() => setSubPengaturan(!subPengaturan)}
+                      className="w-full flex items-center justify-between px-3 py-2 group">
+                      <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors">Pengaturan</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-gray-300 dark:text-gray-600 transition-transform duration-200 ${subPengaturan ? 'rotate-180' : ''}`} />
+                    </button>
+                    <div className={`overflow-hidden transition-all duration-200 ${subPengaturan ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
+                      <div className="space-y-0.5 pb-1">
+                        <SidebarItem href="/settings/payments"      icon={<DollarSign />} label="Pembayaran"  isCollapsed={false} />
+                        <SidebarItem href="/settings/users"         icon={<Users />}      label="Pengguna"    isCollapsed={false} />
+                        <SidebarItem href="/settings/audit-logs"    icon={<Shield />}     label="Audit Log"   isCollapsed={false} />
+                        <SidebarItem href="/settings/reset"         icon={<Trash2 />}     label="Reset Data"  isCollapsed={false} />
+                        <SidebarItem href="/settings/subscriptions" icon={<Star />}       label="Langganan"   isCollapsed={false} />
+                      </div>
+                    </div>
                   </>
                 )}
-                {/* Support group */}
-                <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Bantuan</p>
-                <SidebarItem href="/profile" icon={<User />}       label={t('sidebar.profile')} isCollapsed={false} />
-                <SidebarItem href="/help"    icon={<HelpCircle />} label="Bantuan"               isCollapsed={false} />
-                <SidebarItem href="/about"   icon={<Info />}       label={t('sidebar.about')}   isCollapsed={false} />
-                {canInstall && !isInstalled && (
-                  <button onClick={install}
-                    className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors">
-                    <Download className="w-5 h-5 opacity-80" />
-                    <span>Install Aplikasi</span>
-                  </button>
-                )}
+
+                {/* Bantuan sub-group */}
+                <button onClick={() => setSubBantuan(!subBantuan)}
+                  className="w-full flex items-center justify-between px-3 py-2 group">
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors">Bantuan</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-gray-300 dark:text-gray-600 transition-transform duration-200 ${subBantuan ? 'rotate-180' : ''}`} />
+                </button>
+                <div className={`overflow-hidden transition-all duration-200 ${subBantuan ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'}`}>
+                  <div className="space-y-0.5 pb-1">
+                    <SidebarItem href="/profile" icon={<User />}       label={t('sidebar.profile')} isCollapsed={false} />
+                    <SidebarItem href="/help"    icon={<HelpCircle />} label="Bantuan"               isCollapsed={false} />
+                    <SidebarItem href="/about"   icon={<Info />}       label={t('sidebar.about')}   isCollapsed={false} />
+                    {canInstall && !isInstalled && (
+                      <button onClick={install}
+                        className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors">
+                        <Download className="w-5 h-5 opacity-80" />
+                        <span>Install Aplikasi</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
