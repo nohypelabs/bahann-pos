@@ -230,17 +230,33 @@ function extractSolTransfer(
 }
 
 export async function fetchSolPriceUsd(): Promise<number> {
+  // Jupiter Price API (Solana native, no rate limit)
+  try {
+    const res = await fetch(
+      'https://api.jup.ag/price/v2?ids=So11111111111111111111111111111111111111112',
+      { signal: AbortSignal.timeout(5000) },
+    )
+    const data = await res.json()
+    const price = parseFloat(data?.data?.['So11111111111111111111111111111111111111112']?.price)
+    if (price > 0) return price
+  } catch (err) {
+    logger.error('Jupiter price API failed, trying CoinGecko', err)
+  }
+
+  // Fallback: CoinGecko
   try {
     const res = await fetch(
       'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd',
-      { next: { revalidate: 300 } },
+      { signal: AbortSignal.timeout(5000) },
     )
     const data = await res.json()
-    return data?.solana?.usd || 0
+    const price = data?.solana?.usd
+    if (price > 0) return price
   } catch (err) {
-    logger.error('Failed to fetch SOL price', err)
-    return 0
+    logger.error('CoinGecko price API also failed', err)
   }
+
+  return 0
 }
 
 export function matchTransferToAmount(

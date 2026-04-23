@@ -416,10 +416,17 @@ function UserUpgradeView() {
                     Harga ({cryptoToken.toUpperCase()}):
                   </p>
                   <p className="text-lg font-bold text-purple-800 dark:text-purple-200">
-                    {cryptoToken === 'sol' && paymentConfig.crypto.solPriceUsd
-                      ? `≈ ${(cryptoPriceUsd / paymentConfig.crypto.solPriceUsd).toFixed(4)} SOL`
+                    {cryptoToken === 'sol'
+                      ? paymentConfig.crypto.solPriceUsd && paymentConfig.crypto.solPriceUsd > 0
+                        ? `≈ ${(cryptoPriceUsd / paymentConfig.crypto.solPriceUsd).toFixed(4)} SOL`
+                        : 'Mengambil harga SOL...'
                       : `${cryptoPriceUsd.toFixed(2)} ${cryptoToken.toUpperCase()}`}
                   </p>
+                  {cryptoToken === 'sol' && paymentConfig.crypto.solPriceUsd > 0 && (
+                    <p className="text-[11px] text-purple-400 mt-0.5">
+                      1 SOL ≈ ${paymentConfig.crypto.solPriceUsd.toFixed(2)} USD
+                    </p>
+                  )}
                   <p className="text-[11px] text-purple-500 dark:text-purple-400 mt-1">
                     Jumlah persis akan diberikan setelah submit. Kirim jumlah persis agar terdeteksi otomatis.
                   </p>
