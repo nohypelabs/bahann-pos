@@ -230,8 +230,8 @@ export function Sidebar() {
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
 
-        {/* ── Top bar: X(close) / Logo / Settings ── */}
-        <div className={`flex items-center border-b border-gray-200 dark:border-gray-800 h-14 flex-shrink-0 ${showCollapsed ? 'justify-center px-3' : 'justify-between px-4'}`}>
+        {/* ── Top bar: X(close) / Collapse ── */}
+        <div className={`flex items-center border-b border-gray-200 dark:border-gray-800 h-14 flex-shrink-0 ${showCollapsed ? 'justify-center px-3' : 'px-4'}`}>
           {!showCollapsed ? (
             <>
               {/* Mobile close */}
@@ -246,15 +246,6 @@ export function Sidebar() {
                   <path d="M10 3L5 8l5 5" />
                 </svg>
               </button>
-
-              {/* Center logo */}
-              <img src="/logo.svg" alt="Laku POS" className="w-8 h-8 rounded-lg" />
-
-              {/* Settings gear */}
-              <Link href="/settings/payments" title="Pengaturan"
-                className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                <Settings className="w-5 h-5" />
-              </Link>
             </>
           ) : (
             <button onClick={toggleCollapse} title="Expand sidebar"
