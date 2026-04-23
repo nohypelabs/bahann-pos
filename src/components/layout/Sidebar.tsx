@@ -158,10 +158,13 @@ export function Sidebar() {
     }
   }, [])
 
-  const confirmLogout = () => {
+  const logoutMutation = trpc.auth.logout.useMutation()
+
+  const confirmLogout = async () => {
+    try { await logoutMutation.mutateAsync() } catch { /* server cleanup best-effort */ }
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
-    router.push('/login')
+    window.location.href = '/login'
   }
 
   const toggleCollapse = () => {

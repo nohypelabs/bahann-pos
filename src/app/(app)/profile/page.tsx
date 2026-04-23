@@ -32,6 +32,7 @@ export default function ProfilePage() {
 
   const { data: profile, isLoading, refetch } = trpc.auth.getProfile.useQuery()
   const updateProfile = trpc.auth.updateProfile.useMutation()
+  const logoutMutation = trpc.auth.logout.useMutation()
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -154,11 +155,12 @@ export default function ProfilePage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
+                  onClick={async () => {
                     if (confirm('Yakin ingin logout?')) {
+                      try { await logoutMutation.mutateAsync() } catch { /* best-effort */ }
                       localStorage.removeItem('auth_token')
                       localStorage.removeItem('user')
-                      router.push('/login')
+                      window.location.href = '/login'
                     }
                   }}
                 >

@@ -52,8 +52,8 @@ function LoginContent() {
         role: result.user.role,
       }))
 
-      // Redirect to dashboard
-      router.push('/dashboard')
+      // Full reload ensures React Query cache from any previous user session is cleared
+      window.location.href = '/dashboard'
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : t('login.error')
       setError(errorMessage)
