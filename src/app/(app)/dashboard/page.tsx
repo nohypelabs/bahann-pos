@@ -72,7 +72,7 @@ export default function DashboardPage() {
   const outletOptions = outlets.map(o => ({ value: o.id, label: o.name }))
 
   return (
-    <div className="space-y-5 md:space-y-6">
+    <div className="space-y-5 md:space-y-6 pt-2 md:pt-0">
 
       {/* ── Header + Filters ── */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
