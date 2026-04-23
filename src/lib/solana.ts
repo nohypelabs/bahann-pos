@@ -50,6 +50,10 @@ function getAssociatedTokenAddress(wallet: PublicKey, mint: PublicKey): PublicKe
 }
 
 export function generateUniqueAmount(basePriceUsd: number): number {
+  if (basePriceUsd < 1) {
+    const offset = Math.floor(Math.random() * 9999) + 1
+    return parseFloat((basePriceUsd + offset / 1000000).toFixed(6))
+  }
   const offset = Math.floor(Math.random() * 9999) + 1
   return parseFloat((basePriceUsd + offset / 10000).toFixed(4))
 }

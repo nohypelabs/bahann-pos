@@ -309,8 +309,8 @@ function UserUpgradeView() {
                   <div className="p-2.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
                     <p className="text-xs text-purple-600 dark:text-purple-400">Jumlah persis ({pendingRequest.crypto_token.toUpperCase()}):</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-lg font-bold text-purple-800 dark:text-purple-200">{parseFloat(pendingRequest.crypto_amount).toFixed(4)}</span>
-                      <button onClick={() => copyToClipboard(parseFloat(pendingRequest.crypto_amount!).toFixed(4), 'pa')}
+                      <span className="text-lg font-bold text-purple-800 dark:text-purple-200">{parseFloat(pendingRequest.crypto_amount).toFixed(pendingRequest.crypto_token === 'sol' ? 6 : 4)}</span>
+                      <button onClick={() => copyToClipboard(parseFloat(pendingRequest.crypto_amount!).toFixed(pendingRequest.crypto_token === 'sol' ? 6 : 4), 'pa')}
                         className="p-1 rounded hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors">
                         {copied === 'pa' ? <CheckCircle className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5 text-purple-400" />}
                       </button>
@@ -472,7 +472,7 @@ function UserUpgradeView() {
                   <p className="text-lg font-bold text-purple-800 dark:text-purple-200">
                     {cryptoToken === 'sol'
                       ? paymentConfig.crypto.solPriceUsd && paymentConfig.crypto.solPriceUsd > 0
-                        ? `≈ ${(cryptoPriceUsd / paymentConfig.crypto.solPriceUsd).toFixed(4)} SOL`
+                        ? `≈ ${(cryptoPriceUsd / paymentConfig.crypto.solPriceUsd).toFixed(6)} SOL`
                         : 'Mengambil harga SOL...'
                       : `${cryptoPriceUsd.toFixed(2)} ${cryptoToken.toUpperCase()}`}
                   </p>
@@ -607,7 +607,7 @@ function UserUpgradeView() {
                     </div>
                     <p className="text-xs mt-1 opacity-80">
                       {req.crypto_token
-                        ? `${parseFloat(req.crypto_amount!).toFixed(4)} ${req.crypto_token.toUpperCase()} (Solana)`
+                        ? `${parseFloat(req.crypto_amount!).toFixed(req.crypto_token === 'sol' ? 6 : 4)} ${req.crypto_token.toUpperCase()} (Solana)`
                         : `${fmtRupiah(req.amount)} — ${req.payment_method === 'qris' ? 'QRIS' : 'Transfer Bank'}`}
                     </p>
                     {req.crypto_tx_hash && (
