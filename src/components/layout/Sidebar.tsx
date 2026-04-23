@@ -325,7 +325,7 @@ export function Sidebar() {
               </div>
 
               {/* Install PWA */}
-              {planData && planData.plan !== 'free' && canInstall && !isInstalled && (
+              {canInstall && !isInstalled && (
                 <button onClick={install}
                   className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-semibold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 rounded-lg transition-colors border border-green-200 dark:border-green-800">
                   <Download className="w-3.5 h-3.5" /><span>Install Aplikasi</span>
@@ -345,7 +345,7 @@ export function Sidebar() {
                 className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs font-bold text-gray-500 dark:text-gray-400">
                 {language === 'id' ? 'ID' : 'EN'}
               </button>
-              {planData && planData.plan !== 'free' && canInstall && !isInstalled && (
+              {canInstall && !isInstalled && (
                 <button onClick={install} title="Install Aplikasi"
                   className="w-9 h-9 flex items-center justify-center rounded-lg bg-green-50 dark:bg-green-900/30 hover:bg-green-100 transition-colors text-green-600">
                   <Download className="w-4 h-4" />
