@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
@@ -171,6 +172,16 @@ export default function SalesTransactionPage() {
   const handleBarcodeInputSubmit = () => {
     if (barcodeInput.trim()) { handleBarcodeScan(barcodeInput.trim()); setBarcodeInput('') }
   }
+
+  const searchParams = useSearchParams()
+  useEffect(() => {
+    const scanParam = searchParams.get('scan')
+    if (scanParam && products && products.length > 0) {
+      handleBarcodeScan(scanParam)
+      window.history.replaceState({}, '', '/pos/sales')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, products])
 
   const handleProductChange = (productId: string) => {
     setSelectedProductId(productId)

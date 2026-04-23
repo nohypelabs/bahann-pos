@@ -14,7 +14,7 @@ import {
   CreditCard, Ticket, Briefcase, Bell,
   Tag, Store, Users, Shield, Trash2, Star,
   User, HelpCircle, Info,
-  Moon, Sun, LogOut, Download,
+  Moon, Sun, LogOut, Download, Menu, X,
 } from 'lucide-react'
 
 interface SidebarItemProps {
@@ -135,6 +135,7 @@ const PLAN_LABEL: Record<string, string> = {
 
 export function Sidebar() {
   const router = useRouter()
+  const pathname = usePathname()
   const { language, setLanguage, t } = useLanguage()
   const { theme, toggleTheme } = useTheme()
   const { canInstall, isInstalled, install } = usePWA()
@@ -142,6 +143,7 @@ export function Sidebar() {
   const [userEmail, setUserEmail] = useState('')
   const [userRole,  setUserRole]  = useState('user')
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const cancelRef = useRef<HTMLButtonElement>(null)
 
@@ -165,6 +167,10 @@ export function Sidebar() {
       if (savedCollapsed !== null) setIsCollapsed(savedCollapsed === 'true')
     }
   }, [])
+
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
 
   const logoutMutation = trpc.auth.logout.useMutation()
 
@@ -190,21 +196,52 @@ export function Sidebar() {
     }
   }
 
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    setIsMobile(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
   const roleBadge   = getRoleBadge(userRole)
   const userInitial = userName.charAt(0).toUpperCase()
   const plan        = planData?.plan || 'free'
+  const showCollapsed = isCollapsed && !isMobile
 
   return (
     <>
+      {/* Mobile hamburger — only visible when sidebar is closed on mobile */}
+      {!mobileOpen && (
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="md:hidden fixed top-3 left-3 z-50 w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg text-gray-700 dark:text-gray-300 active:scale-95 transition-transform"
+          aria-label="Open menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+      )}
+
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
       <aside className={`
-        ${isCollapsed ? 'w-[68px]' : 'w-64'}
+        w-72 ${isCollapsed ? 'md:w-[68px]' : 'md:w-64'}
         h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800
         flex flex-col transition-all duration-300 ease-in-out flex-shrink-0
+        fixed md:relative z-50
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
 
         {/* ── Logo ── */}
-        <div className={`flex items-center border-b border-gray-200 dark:border-gray-800 h-14 flex-shrink-0 ${isCollapsed ? 'justify-center px-3' : 'justify-between px-4'}`}>
-          {!isCollapsed ? (
+        <div className={`flex items-center border-b border-gray-200 dark:border-gray-800 h-14 flex-shrink-0 ${showCollapsed ? 'justify-center px-3' : 'justify-between px-4'}`}>
+          {!showCollapsed ? (
             <>
               <div className="flex items-center gap-2.5 min-w-0">
                 <img src="/logo.svg" alt="Laku POS" className="w-8 h-8 rounded-lg flex-shrink-0" />
@@ -213,8 +250,12 @@ export function Sidebar() {
                   <p className="text-[10px] text-gray-400 dark:text-gray-500">Point of Sale</p>
                 </div>
               </div>
+              <button onClick={() => setMobileOpen(false)} title="Close menu"
+                className="md:hidden p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0">
+                <X className="w-4 h-4" />
+              </button>
               <button onClick={toggleCollapse} title="Collapse sidebar"
-                className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0">
+                className="hidden md:block p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                   <path d="M10 3L5 8l5 5" />
                 </svg>
@@ -234,55 +275,55 @@ export function Sidebar() {
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
 
           {/* Dashboard */}
-          <div className={`${isCollapsed ? 'mb-1' : 'mb-2'}`}>
-            <SidebarItem href="/dashboard" icon={<LayoutDashboard />} label={t('sidebar.dashboard')} isCollapsed={isCollapsed} />
+          <div className={`${showCollapsed ? 'mb-1' : 'mb-2'}`}>
+            <SidebarItem href="/dashboard" icon={<LayoutDashboard />} label={t('sidebar.dashboard')} isCollapsed={showCollapsed} />
           </div>
 
-          <SidebarSection sectionKey="warehouse" title={t('sidebar.warehouse')} isCollapsed={isCollapsed} activePaths={['/warehouse']}>
-            <SidebarItem href="/warehouse/stock"     icon={<Package />}       label={t('sidebar.warehouse.stock')}     isCollapsed={isCollapsed} />
-            <SidebarItem href="/warehouse/inventory" icon={<ClipboardList />} label={t('sidebar.warehouse.inventory')} isCollapsed={isCollapsed} />
-            <SidebarItem href="/warehouse/reports"   icon={<BarChart3 />}     label={t('sidebar.warehouse.reports')}   isCollapsed={isCollapsed} />
+          <SidebarSection sectionKey="warehouse" title={t('sidebar.warehouse')} isCollapsed={showCollapsed} activePaths={['/warehouse']}>
+            <SidebarItem href="/warehouse/stock"     icon={<Package />}       label={t('sidebar.warehouse.stock')}     isCollapsed={showCollapsed} />
+            <SidebarItem href="/warehouse/inventory" icon={<ClipboardList />} label={t('sidebar.warehouse.inventory')} isCollapsed={showCollapsed} />
+            <SidebarItem href="/warehouse/reports"   icon={<BarChart3 />}     label={t('sidebar.warehouse.reports')}   isCollapsed={showCollapsed} />
           </SidebarSection>
 
-          <SidebarSection sectionKey="pos" title={t('sidebar.pos')} isCollapsed={isCollapsed} activePaths={['/pos']}>
-            <SidebarItem href="/pos/sales"   icon={<ShoppingCart />} label={t('sidebar.pos.sales')}   isCollapsed={isCollapsed} />
-            <SidebarItem href="/pos/history" icon={<History />}      label={t('sidebar.pos.history')} isCollapsed={isCollapsed} />
-            <SidebarItem href="/pos/revenue" icon={<DollarSign />}   label={t('sidebar.pos.revenue')} isCollapsed={isCollapsed} />
+          <SidebarSection sectionKey="pos" title={t('sidebar.pos')} isCollapsed={showCollapsed} activePaths={['/pos']}>
+            <SidebarItem href="/pos/sales"   icon={<ShoppingCart />} label={t('sidebar.pos.sales')}   isCollapsed={showCollapsed} />
+            <SidebarItem href="/pos/history" icon={<History />}      label={t('sidebar.pos.history')} isCollapsed={showCollapsed} />
+            <SidebarItem href="/pos/revenue" icon={<DollarSign />}   label={t('sidebar.pos.revenue')} isCollapsed={showCollapsed} />
           </SidebarSection>
 
-          <SidebarSection sectionKey="management" title="Manajemen" isCollapsed={isCollapsed} activePaths={['/transactions', '/payments', '/promotions', '/eod', '/alerts']}>
-            <SidebarItem href="/transactions" icon={<ArrowLeftRight />} label="Transaksi"    isCollapsed={isCollapsed} />
-            <SidebarItem href="/payments"     icon={<CreditCard />}     label="Pembayaran"   isCollapsed={isCollapsed} />
-            <SidebarItem href="/promotions"   icon={<Ticket />}         label="Promosi"      isCollapsed={isCollapsed} />
-            <SidebarItem href="/eod"          icon={<Briefcase />}      label="Tutup Hari"   isCollapsed={isCollapsed} />
-            <SidebarItem href="/alerts"       icon={<Bell />}           label="Alert Stok"   isCollapsed={isCollapsed} />
+          <SidebarSection sectionKey="management" title="Manajemen" isCollapsed={showCollapsed} activePaths={['/transactions', '/payments', '/promotions', '/eod', '/alerts']}>
+            <SidebarItem href="/transactions" icon={<ArrowLeftRight />} label="Transaksi"    isCollapsed={showCollapsed} />
+            <SidebarItem href="/payments"     icon={<CreditCard />}     label="Pembayaran"   isCollapsed={showCollapsed} />
+            <SidebarItem href="/promotions"   icon={<Ticket />}         label="Promosi"      isCollapsed={showCollapsed} />
+            <SidebarItem href="/eod"          icon={<Briefcase />}      label="Tutup Hari"   isCollapsed={showCollapsed} />
+            <SidebarItem href="/alerts"       icon={<Bell />}           label="Alert Stok"   isCollapsed={showCollapsed} />
           </SidebarSection>
 
-          <SidebarSection sectionKey="masterdata" title="Master Data" isCollapsed={isCollapsed} activePaths={['/products', '/outlets']}>
-            <SidebarItem href="/products" icon={<Tag />}   label="Produk"  isCollapsed={isCollapsed} />
-            <SidebarItem href="/outlets"  icon={<Store />} label="Outlet"  isCollapsed={isCollapsed} />
+          <SidebarSection sectionKey="masterdata" title="Master Data" isCollapsed={showCollapsed} activePaths={['/products', '/outlets']}>
+            <SidebarItem href="/products" icon={<Tag />}   label="Produk"  isCollapsed={showCollapsed} />
+            <SidebarItem href="/outlets"  icon={<Store />} label="Outlet"  isCollapsed={showCollapsed} />
           </SidebarSection>
 
           {(userRole === 'admin' || userRole === 'super_admin') && (
-            <SidebarSection sectionKey="settings" title="Pengaturan" isCollapsed={isCollapsed} activePaths={['/settings']}>
-              <SidebarItem href="/settings/payments"      icon={<DollarSign />}   label="Pembayaran"      isCollapsed={isCollapsed} />
-              <SidebarItem href="/settings/users"         icon={<Users />}        label="Pengguna"         isCollapsed={isCollapsed} />
-              <SidebarItem href="/settings/audit-logs"    icon={<Shield />}       label="Audit Log"        isCollapsed={isCollapsed} />
-              <SidebarItem href="/settings/reset"         icon={<Trash2 />}       label="Reset Data"       isCollapsed={isCollapsed} />
-              <SidebarItem href="/settings/subscriptions" icon={<Star />}         label="Langganan"        isCollapsed={isCollapsed} />
+            <SidebarSection sectionKey="settings" title="Pengaturan" isCollapsed={showCollapsed} activePaths={['/settings']}>
+              <SidebarItem href="/settings/payments"      icon={<DollarSign />}   label="Pembayaran"      isCollapsed={showCollapsed} />
+              <SidebarItem href="/settings/users"         icon={<Users />}        label="Pengguna"         isCollapsed={showCollapsed} />
+              <SidebarItem href="/settings/audit-logs"    icon={<Shield />}       label="Audit Log"        isCollapsed={showCollapsed} />
+              <SidebarItem href="/settings/reset"         icon={<Trash2 />}       label="Reset Data"       isCollapsed={showCollapsed} />
+              <SidebarItem href="/settings/subscriptions" icon={<Star />}         label="Langganan"        isCollapsed={showCollapsed} />
             </SidebarSection>
           )}
 
-          <SidebarSection sectionKey="account" title={t('sidebar.account')} isCollapsed={isCollapsed} activePaths={['/profile', '/help', '/about']}>
-            <SidebarItem href="/profile" icon={<User />}       label={t('sidebar.profile')} isCollapsed={isCollapsed} />
-            <SidebarItem href="/help"    icon={<HelpCircle />} label="Bantuan"               isCollapsed={isCollapsed} />
-            <SidebarItem href="/about"   icon={<Info />}       label={t('sidebar.about')}   isCollapsed={isCollapsed} />
+          <SidebarSection sectionKey="account" title={t('sidebar.account')} isCollapsed={showCollapsed} activePaths={['/profile', '/help', '/about']}>
+            <SidebarItem href="/profile" icon={<User />}       label={t('sidebar.profile')} isCollapsed={showCollapsed} />
+            <SidebarItem href="/help"    icon={<HelpCircle />} label="Bantuan"               isCollapsed={showCollapsed} />
+            <SidebarItem href="/about"   icon={<Info />}       label={t('sidebar.about')}   isCollapsed={showCollapsed} />
           </SidebarSection>
         </nav>
 
         {/* ── Footer ── */}
-        <div className={`border-t border-gray-200 dark:border-gray-800 ${isCollapsed ? 'p-2' : 'p-3'} flex-shrink-0`}>
-          {!isCollapsed ? (
+        <div className={`border-t border-gray-200 dark:border-gray-800 ${showCollapsed ? 'p-2' : 'p-3'} flex-shrink-0`}>
+          {!showCollapsed ? (
             <div className="space-y-3">
               {/* User info */}
               <div className="flex items-center gap-2.5">
