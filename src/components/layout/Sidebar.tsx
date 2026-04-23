@@ -15,17 +15,12 @@ import {
   Tag, Store, Users, Shield, Trash2, Star,
   User, HelpCircle, Info,
   Moon, Sun, LogOut, Download, Menu, X,
+  Settings, ChevronDown,
 } from 'lucide-react'
 
-interface SidebarItemProps {
-  href: string
-  icon: ReactNode
-  label: string
-  badge?: string
-  isCollapsed: boolean
-}
-
-function SidebarItem({ href, icon, label, badge, isCollapsed }: SidebarItemProps) {
+function SidebarItem({ href, icon, label, badge, isCollapsed }: {
+  href: string; icon: ReactNode; label: string; badge?: string; isCollapsed: boolean
+}) {
   const pathname = usePathname()
   const isActive = pathname === href || pathname.startsWith(href + '/')
 
@@ -34,16 +29,16 @@ function SidebarItem({ href, icon, label, badge, isCollapsed }: SidebarItemProps
       href={href}
       title={isCollapsed ? label : undefined}
       className={`
-        flex items-center gap-3 rounded-xl text-sm font-medium
+        flex items-center gap-3.5 rounded-xl text-[15px] font-medium
         transition-colors duration-150 relative
         ${isCollapsed ? 'justify-center p-3' : 'px-3 py-2.5'}
         ${isActive
-          ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-l-[3px] border-blue-500 dark:border-blue-400 pl-[9px]'
+          ? 'text-gray-900 dark:text-white font-bold'
           : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
         }
       `}
     >
-      <span className={`flex-shrink-0 [&>svg]:w-[18px] [&>svg]:h-[18px] ${isActive ? '' : 'opacity-80'}`}>{icon}</span>
+      <span className={`flex-shrink-0 [&>svg]:w-[20px] [&>svg]:h-[20px] ${isActive ? 'text-gray-900 dark:text-white' : 'opacity-80'}`}>{icon}</span>
       {!isCollapsed && (
         <>
           <span className="flex-1 min-w-0 truncate">{label}</span>
@@ -63,15 +58,9 @@ function SidebarItem({ href, icon, label, badge, isCollapsed }: SidebarItemProps
   )
 }
 
-interface SidebarSectionProps {
-  sectionKey: string
-  title: string
-  children: ReactNode
-  isCollapsed: boolean
-  activePaths?: string[]
-}
-
-function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths = [] }: SidebarSectionProps) {
+function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths = [] }: {
+  sectionKey: string; title: string; children: ReactNode; isCollapsed: boolean; activePaths?: string[]
+}) {
   const pathname = usePathname()
   const isActiveSection = activePaths.some((p) => pathname === p || pathname.startsWith(p + '/'))
   const [isOpen, setIsOpen] = useState(isActiveSection)
@@ -145,6 +134,7 @@ export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const cancelRef = useRef<HTMLButtonElement>(null)
 
   const { data: planData } = trpc.auth.getPlan.useQuery(undefined, { retry: false, staleTime: 5 * 60 * 1000 })
@@ -209,14 +199,15 @@ export function Sidebar() {
   const userInitial = userName.charAt(0).toUpperCase()
   const plan        = planData?.plan || 'free'
   const showCollapsed = isCollapsed && !isMobile
+  const isAdmin = userRole === 'admin' || userRole === 'super_admin'
 
   return (
     <>
-      {/* Mobile hamburger — only visible when sidebar is closed on mobile */}
+      {/* Mobile hamburger */}
       {!mobileOpen && (
         <button
           onClick={() => setMobileOpen(true)}
-          className="md:hidden fixed top-3 left-3 z-50 w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg text-gray-700 dark:text-gray-300 active:scale-95 transition-transform"
+          className="md:hidden fixed top-3 left-3 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg text-gray-700 dark:text-gray-300 active:scale-95 transition-transform"
           aria-label="Open menu"
         >
           <Menu className="w-5 h-5" />
@@ -239,31 +230,35 @@ export function Sidebar() {
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
 
-        {/* ── Logo ── */}
+        {/* ── Top bar: X(close) / Logo / Settings ── */}
         <div className={`flex items-center border-b border-gray-200 dark:border-gray-800 h-14 flex-shrink-0 ${showCollapsed ? 'justify-center px-3' : 'justify-between px-4'}`}>
           {!showCollapsed ? (
             <>
-              <div className="flex items-center gap-2.5 min-w-0">
-                <img src="/logo.svg" alt="Laku POS" className="w-8 h-8 rounded-lg flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">Laku POS</p>
-                  <p className="text-[10px] text-gray-400 dark:text-gray-500">Point of Sale</p>
-                </div>
-              </div>
-              <button onClick={() => setMobileOpen(false)} title="Close menu"
-                className="md:hidden p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0">
-                <X className="w-4 h-4" />
+              {/* Mobile close */}
+              <button onClick={() => setMobileOpen(false)}
+                className="md:hidden p-1.5 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <X className="w-5 h-5" />
               </button>
+              {/* Desktop collapse */}
               <button onClick={toggleCollapse} title="Collapse sidebar"
-                className="hidden md:block p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0">
+                className="hidden md:flex p-1.5 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                   <path d="M10 3L5 8l5 5" />
                 </svg>
               </button>
+
+              {/* Center logo */}
+              <img src="/logo.svg" alt="Laku POS" className="w-8 h-8 rounded-lg" />
+
+              {/* Settings gear */}
+              <Link href="/settings/payments" title="Pengaturan"
+                className="p-1.5 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                <Settings className="w-5 h-5" />
+              </Link>
             </>
           ) : (
             <button onClick={toggleCollapse} title="Expand sidebar"
-              className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+              className="p-1.5 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                 <path d="M6 3l5 5-5 5" />
               </svg>
@@ -271,10 +266,45 @@ export function Sidebar() {
           )}
         </div>
 
+        {/* ── User profile (X-style) ── */}
+        {!showCollapsed && (
+          <div className="px-4 py-4 border-b border-gray-200 dark:border-gray-800">
+            <div className="flex items-center justify-between mb-3">
+              <Link href="/profile" className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 hover:opacity-90 transition-opacity">
+                {userInitial}
+              </Link>
+              <button onClick={() => setShowLogoutModal(true)} title={t('sidebar.logout')}
+                className="p-1.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+            <Link href="/profile" className="block group">
+              <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100 leading-tight group-hover:underline">{userName}</p>
+              <p className="text-[13px] text-gray-500 dark:text-gray-400">{userEmail}</p>
+            </Link>
+            <div className="flex items-center gap-1.5 mt-2.5">
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${roleBadge.color}`}>
+                {roleBadge.label}
+              </span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${PLAN_BADGE[plan] || PLAN_BADGE.free}`}>
+                {PLAN_LABEL[plan] || 'Gratis'}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Collapsed: just avatar */}
+        {showCollapsed && (
+          <div className="flex flex-col items-center py-3 border-b border-gray-200 dark:border-gray-800">
+            <Link href="/profile" className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm" title={userName}>
+              {userInitial}
+            </Link>
+          </div>
+        )}
+
         {/* ── Nav ── */}
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
 
-          {/* Dashboard */}
           <div className={`${showCollapsed ? 'mb-1' : 'mb-2'}`}>
             <SidebarItem href="/dashboard" icon={<LayoutDashboard />} label={t('sidebar.dashboard')} isCollapsed={showCollapsed} />
           </div>
@@ -303,107 +333,82 @@ export function Sidebar() {
             <SidebarItem href="/products" icon={<Tag />}   label="Produk"  isCollapsed={showCollapsed} />
             <SidebarItem href="/outlets"  icon={<Store />} label="Outlet"  isCollapsed={showCollapsed} />
           </SidebarSection>
-
-          {(userRole === 'admin' || userRole === 'super_admin') && (
-            <SidebarSection sectionKey="settings" title="Pengaturan" isCollapsed={showCollapsed} activePaths={['/settings']}>
-              <SidebarItem href="/settings/payments"      icon={<DollarSign />}   label="Pembayaran"      isCollapsed={showCollapsed} />
-              <SidebarItem href="/settings/users"         icon={<Users />}        label="Pengguna"         isCollapsed={showCollapsed} />
-              <SidebarItem href="/settings/audit-logs"    icon={<Shield />}       label="Audit Log"        isCollapsed={showCollapsed} />
-              <SidebarItem href="/settings/reset"         icon={<Trash2 />}       label="Reset Data"       isCollapsed={showCollapsed} />
-              <SidebarItem href="/settings/subscriptions" icon={<Star />}         label="Langganan"        isCollapsed={showCollapsed} />
-            </SidebarSection>
-          )}
-
-          <SidebarSection sectionKey="account" title={t('sidebar.account')} isCollapsed={showCollapsed} activePaths={['/profile', '/help', '/about']}>
-            <SidebarItem href="/profile" icon={<User />}       label={t('sidebar.profile')} isCollapsed={showCollapsed} />
-            <SidebarItem href="/help"    icon={<HelpCircle />} label="Bantuan"               isCollapsed={showCollapsed} />
-            <SidebarItem href="/about"   icon={<Info />}       label={t('sidebar.about')}   isCollapsed={showCollapsed} />
-          </SidebarSection>
         </nav>
 
-        {/* ── Footer ── */}
-        <div className={`border-t border-gray-200 dark:border-gray-800 ${showCollapsed ? 'p-2' : 'p-3'} flex-shrink-0`}>
-          {!showCollapsed ? (
-            <div className="space-y-3">
-              {/* User info */}
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                  {userInitial}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate leading-tight">{userName}</p>
-                  <p className="text-[10px] text-gray-400 dark:text-gray-500 truncate">{userEmail}</p>
-                </div>
+        {/* ── Settings & Support (X-style collapsible) ── */}
+        {!showCollapsed && (
+          <div className="border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
+            <button onClick={() => setSettingsOpen(!settingsOpen)}
+              className="w-full flex items-center justify-between px-4 py-3.5 text-[15px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <span>Pengaturan & Bantuan</span>
+              <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+              <div className="px-2 pb-2 space-y-0.5">
+                {isAdmin && (
+                  <>
+                    <SidebarItem href="/settings/payments"      icon={<DollarSign />} label="Pembayaran"  isCollapsed={false} />
+                    <SidebarItem href="/settings/users"         icon={<Users />}      label="Pengguna"    isCollapsed={false} />
+                    <SidebarItem href="/settings/audit-logs"    icon={<Shield />}     label="Audit Log"   isCollapsed={false} />
+                    <SidebarItem href="/settings/reset"         icon={<Trash2 />}     label="Reset Data"  isCollapsed={false} />
+                    <SidebarItem href="/settings/subscriptions" icon={<Star />}       label="Langganan"   isCollapsed={false} />
+                    <div className="h-px bg-gray-200 dark:bg-gray-700/60 mx-3 my-1" />
+                  </>
+                )}
+                <SidebarItem href="/profile" icon={<User />}       label={t('sidebar.profile')} isCollapsed={false} />
+                <SidebarItem href="/help"    icon={<HelpCircle />} label="Bantuan"               isCollapsed={false} />
+                <SidebarItem href="/about"   icon={<Info />}       label={t('sidebar.about')}   isCollapsed={false} />
+                {canInstall && !isInstalled && (
+                  <button onClick={install}
+                    className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors">
+                    <Download className="w-5 h-5 opacity-80" />
+                    <span>Install Aplikasi</span>
+                  </button>
+                )}
               </div>
-
-              {/* Role + Plan badges */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${roleBadge.color}`}>
-                  {roleBadge.label}
-                </span>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${PLAN_BADGE[plan] || PLAN_BADGE.free}`}>
-                  {PLAN_LABEL[plan] || 'Gratis'}
-                </span>
-              </div>
-
-              {/* Controls row */}
-              <div className="flex items-center gap-1.5">
-                <button onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 transition-colors flex-1 justify-center"
-                  title={language === 'id' ? 'Switch to English' : 'Ganti ke Indonesia'}>
-                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{language === 'id' ? 'ID' : 'EN'}</span>
-                </button>
-                <button onClick={toggleTheme}
-                  className="p-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 transition-colors text-gray-500 dark:text-gray-400"
-                  title={theme === 'light' ? 'Dark Mode' : 'Light Mode'}>
-                  {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
-                </button>
-                <button onClick={() => setShowLogoutModal(true)}
-                  className="p-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/30 border border-gray-200 dark:border-gray-700 hover:border-red-200 dark:hover:border-red-800 text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                  title={t('sidebar.logout')}>
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Install PWA */}
-              {canInstall && !isInstalled && (
-                <button onClick={install}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-semibold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/30 hover:bg-green-100 dark:hover:bg-green-900/50 rounded-lg transition-colors border border-green-200 dark:border-green-800">
-                  <Download className="w-3.5 h-3.5" /><span>Install Aplikasi</span>
-                </button>
-              )}
             </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm" title={userName}>
-                {userInitial}
-              </div>
-              <button onClick={toggleTheme} title={theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-                className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-400">
-                {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+          </div>
+        )}
+
+        {/* Collapsed: settings + support icons */}
+        {showCollapsed && (
+          <div className="border-t border-gray-200 dark:border-gray-800 p-2 flex-shrink-0 space-y-1">
+            <SidebarItem href="/profile"           icon={<User />}       label={t('sidebar.profile')} isCollapsed={true} />
+            <SidebarItem href="/help"              icon={<HelpCircle />} label="Bantuan"               isCollapsed={true} />
+            <SidebarItem href="/settings/payments" icon={<Settings />}   label="Pengaturan"            isCollapsed={true} />
+            {canInstall && !isInstalled && (
+              <button onClick={install} title="Install Aplikasi"
+                className="w-full flex justify-center p-3 rounded-xl text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors">
+                <Download className="w-[18px] h-[18px]" />
               </button>
-              <button onClick={() => setLanguage(language === 'id' ? 'en' : 'id')} title={language === 'id' ? 'Switch to English' : 'Indonesia'}
-                className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs font-bold text-gray-500 dark:text-gray-400">
-                {language === 'id' ? 'ID' : 'EN'}
-              </button>
-              {canInstall && !isInstalled && (
-                <button onClick={install} title="Install Aplikasi"
-                  className="w-9 h-9 flex items-center justify-center rounded-lg bg-green-50 dark:bg-green-900/30 hover:bg-green-100 transition-colors text-green-600">
-                  <Download className="w-4 h-4" />
-                </button>
-              )}
-              <button onClick={() => setShowLogoutModal(true)} title={t('sidebar.logout')}
-                className="w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/30 text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Bottom bar: dark mode + lang (X-style) ── */}
+        <div className={`border-t border-gray-200 dark:border-gray-800 flex-shrink-0 ${showCollapsed ? 'p-2 flex flex-col items-center gap-1.5' : 'px-4 py-3 flex items-center justify-between'}`}>
+          <button onClick={toggleTheme}
+            title={theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+            className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+            {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+          </button>
+          <button onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
+            title={language === 'id' ? 'Switch to English' : 'Ganti ke Indonesia'}
+            className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-xs font-bold">
+            {language === 'id' ? 'ID' : 'EN'}
+          </button>
+          {showCollapsed && (
+            <button onClick={() => setShowLogoutModal(true)} title={t('sidebar.logout')}
+              className="p-2 rounded-full text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+              <LogOut className="w-5 h-5" />
+            </button>
           )}
         </div>
       </aside>
 
       {/* ── Logout Modal ── */}
       {showLogoutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4"
           onClick={e => e.target === e.currentTarget && setShowLogoutModal(false)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-gray-100 dark:border-gray-800">
