@@ -14,7 +14,7 @@ import {
   CreditCard, Ticket, Briefcase, Bell,
   Tag, Store, Users, Shield, Trash2, Star,
   User, HelpCircle, Info,
-  Moon, Sun, LogOut, Download, Menu, X,
+  Moon, Sun, LogOut, Download, X,
   Settings, ChevronDown,
 } from 'lucide-react'
 
@@ -122,7 +122,12 @@ const PLAN_LABEL: Record<string, string> = {
   professional: 'Pro', business: 'Business', enterprise: 'Enterprise',
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  mobileOpen: boolean
+  setMobileOpen: (open: boolean) => void
+}
+
+export function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { language, setLanguage, t } = useLanguage()
@@ -132,7 +137,6 @@ export function Sidebar() {
   const [userEmail, setUserEmail] = useState('')
   const [userRole,  setUserRole]  = useState('user')
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const cancelRef = useRef<HTMLButtonElement>(null)
@@ -203,17 +207,6 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile hamburger */}
-      {!mobileOpen && (
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="md:hidden fixed top-3 left-3 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg text-gray-700 dark:text-gray-300 active:scale-95 transition-transform"
-          aria-label="Open menu"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-      )}
-
       {/* Mobile backdrop */}
       {mobileOpen && (
         <div
