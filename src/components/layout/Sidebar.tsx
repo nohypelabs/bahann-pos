@@ -298,6 +298,7 @@ export function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
               <SidebarItem href="/admin" icon={<Crown />} label="Admin Panel" isCollapsed={showCollapsed} />
               <SidebarItem href="/admin/tenants" icon={<Users />} label="Tenant" isCollapsed={showCollapsed} />
               <SidebarItem href="/admin/payments" icon={<CreditCard />} label="Pembayaran" isCollapsed={showCollapsed} />
+              <SidebarItem href="/admin/settings" icon={<Settings />} label="Pengaturan" isCollapsed={showCollapsed} />
             </SidebarSection>
           )}
 

@@ -121,7 +121,7 @@ function BillingHistory() {
 function UserUpgradeView() {
   const { data: planData, isLoading } = trpc.auth.getPlan.useQuery()
   const { data: myRequests, refetch: refetchRequests } = trpc.paymentRequests.myRequests.useQuery()
-  const { data: cryptoConfig } = trpc.paymentRequests.cryptoConfig.useQuery()
+  const { data: paymentConfig } = trpc.paymentRequests.paymentConfig.useQuery()
   const createMutation = trpc.paymentRequests.create.useMutation({ onSuccess: () => refetchRequests() })
   const uploadMutation = trpc.paymentRequests.uploadProof.useMutation({ onSuccess: () => refetchRequests() })
 
@@ -135,14 +135,15 @@ function UserUpgradeView() {
   const [copied, setCopied] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const bankName = process.env.NEXT_PUBLIC_BANK_NAME || 'BCA'
-  const bankAcct = process.env.NEXT_PUBLIC_BANK_ACCOUNT || ''
-  const bankHolder = process.env.NEXT_PUBLIC_BANK_HOLDER || 'Laku POS'
-  const waNumber = process.env.NEXT_PUBLIC_SUPPORT_WA || ''
+  const bankName = paymentConfig?.bank?.name || ''
+  const bankAcct = paymentConfig?.bank?.account || ''
+  const bankHolder = paymentConfig?.bank?.holder || ''
+  const waNumber = paymentConfig?.supportWa || ''
+  const qrisImageUrl = paymentConfig?.qrisImageUrl || ''
 
   const checkoutPlanData = PLANS.find(p => p.value === checkoutPlan)
   const isCrypto = paymentMethod === 'crypto_usdc' || paymentMethod === 'crypto_usdt'
-  const cryptoPriceUsd = checkoutPlan ? cryptoConfig?.prices?.[checkoutPlan] : null
+  const cryptoPriceUsd = checkoutPlan ? paymentConfig?.crypto?.prices?.[checkoutPlan] : null
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text)
@@ -221,15 +222,15 @@ function UserUpgradeView() {
                 Permintaan upgrade ke <PlanBadge plan={pendingRequest.plan} /> {pendingRequest.crypto_token ? 'menunggu pembayaran crypto' : 'sedang menunggu verifikasi'}
               </p>
 
-              {pendingRequest.crypto_token && pendingRequest.crypto_amount && cryptoConfig?.walletAddress ? (
+              {pendingRequest.crypto_token && pendingRequest.crypto_amount && paymentConfig?.crypto?.walletAddress ? (
                 <div className="mt-3 space-y-2">
                   <div>
                     <p className="text-xs text-purple-600 dark:text-purple-400 mb-1">Kirim ke wallet (Solana):</p>
                     <div className="flex items-center gap-2">
                       <code className="text-xs bg-white dark:bg-gray-900 px-2 py-1.5 rounded-lg border border-purple-200 dark:border-purple-700 text-gray-900 dark:text-gray-100 break-all font-mono flex-1">
-                        {cryptoConfig.walletAddress}
+                        {paymentConfig!.crypto.walletAddress}
                       </code>
-                      <button onClick={() => copyToClipboard(cryptoConfig.walletAddress, 'pw')}
+                      <button onClick={() => copyToClipboard(paymentConfig!.crypto.walletAddress, 'pw')}
                         className="p-1.5 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors flex-shrink-0">
                         {copied === 'pw' ? <CheckCircle className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5 text-purple-400" />}
                       </button>
@@ -297,7 +298,7 @@ function UserUpgradeView() {
                 {([
                   { key: 'bank_transfer' as const, label: 'Transfer Bank' },
                   { key: 'qris' as const, label: 'QRIS' },
-                  ...(cryptoConfig?.enabled && cryptoPriceUsd ? [
+                  ...(paymentConfig?.crypto?.enabled && cryptoPriceUsd ? [
                     { key: 'crypto_usdc' as const, label: 'USDC (SOL)' },
                     { key: 'crypto_usdt' as const, label: 'USDT (SOL)' },
                   ] : []),
@@ -332,16 +333,20 @@ function UserUpgradeView() {
             {paymentMethod === 'qris' && (
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-5 text-center">
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Scan QRIS untuk pembayaran</p>
-                <div className="w-48 h-48 mx-auto bg-white rounded-lg flex items-center justify-center border">
-                  <p className="text-xs text-gray-400">QRIS akan ditampilkan setelah submit</p>
-                </div>
+                {qrisImageUrl ? (
+                  <img src={qrisImageUrl} alt="QRIS" className="w-48 h-48 mx-auto bg-white rounded-lg object-contain border p-2" />
+                ) : (
+                  <div className="w-48 h-48 mx-auto bg-white rounded-lg flex items-center justify-center border">
+                    <p className="text-xs text-gray-400">QRIS belum dikonfigurasi</p>
+                  </div>
+                )}
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   Nominal: {fmtRupiah(checkoutPlanData.price as number)}
                 </p>
               </div>
             )}
 
-            {isCrypto && cryptoConfig?.walletAddress && cryptoPriceUsd && (
+            {isCrypto && paymentConfig?.crypto?.walletAddress && cryptoPriceUsd && (
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 mb-5 space-y-3">
                 <div className="flex items-center gap-2 mb-1">
                   <Wallet className="w-4 h-4 text-purple-500" />
@@ -354,9 +359,9 @@ function UserUpgradeView() {
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Kirim ke wallet address:</p>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 text-xs bg-white dark:bg-gray-900 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 break-all font-mono">
-                      {cryptoConfig.walletAddress}
+                      {paymentConfig!.crypto.walletAddress}
                     </code>
-                    <button onClick={() => copyToClipboard(cryptoConfig.walletAddress, 'wallet')}
+                    <button onClick={() => copyToClipboard(paymentConfig!.crypto.walletAddress, 'wallet')}
                       className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex-shrink-0">
                       {copied === 'wallet' ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4 text-gray-400" />}
                     </button>

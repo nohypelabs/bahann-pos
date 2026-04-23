@@ -292,4 +292,57 @@ export const superAdminRouter = router({
         return { date, newTenants: count, totalTenants: cumulative }
       })
     }),
+
+  getSettings: superAdminProcedure.query(async () => {
+    const { data, error } = await supabase
+      .from('platform_settings')
+      .select('key, value, updated_at')
+
+    if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+
+    const settings: Record<string, string> = {}
+    for (const row of data ?? []) {
+      settings[row.key] = row.value
+    }
+    return settings
+  }),
+
+  updateSettings: superAdminProcedure
+    .input(z.record(z.string(), z.string()))
+    .mutation(async ({ input, ctx }) => {
+      const allowedKeys = [
+        'solana_wallet_address', 'solana_rpc_url',
+        'bank_name', 'bank_account', 'bank_holder',
+        'support_wa', 'qris_image_url',
+      ]
+
+      const entries = Object.entries(input).filter(([k]) => allowedKeys.includes(k))
+      if (entries.length === 0) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'No valid settings to update' })
+      }
+
+      for (const [key, value] of entries) {
+        const { error } = await supabase
+          .from('platform_settings')
+          .upsert({
+            key,
+            value,
+            updated_at: new Date().toISOString(),
+            updated_by: ctx.userId,
+          })
+
+        if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      }
+
+      await createAuditLog({
+        userId: ctx.userId,
+        userEmail: ctx.session?.email || 'unknown',
+        action: 'UPDATE',
+        entityType: 'tenant',
+        changes: input,
+        metadata: { scope: 'platform_settings' },
+      })
+
+      return { success: true }
+    }),
 })

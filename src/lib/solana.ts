@@ -1,4 +1,5 @@
 import { Connection, PublicKey, ParsedTransactionWithMeta } from '@solana/web3.js'
+import { supabaseAdmin } from '@/infra/supabase/server'
 import { logger } from './logger'
 
 const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
@@ -18,13 +19,24 @@ export const CRYPTO_PRICES_USD: Record<string, number> = {
   professional: 69.99,
 }
 
-function getConnection(): Connection {
-  const rpcUrl = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com'
+async function getDbSetting(key: string): Promise<string> {
+  const { data } = await supabaseAdmin
+    .from('platform_settings')
+    .select('value')
+    .eq('key', key)
+    .single()
+  return data?.value || ''
+}
+
+async function getConnection(): Promise<Connection> {
+  const dbRpc = await getDbSetting('solana_rpc_url')
+  const rpcUrl = dbRpc || process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com'
   return new Connection(rpcUrl, 'confirmed')
 }
 
-function getWalletAddress(): PublicKey {
-  const address = process.env.SOLANA_WALLET_ADDRESS
+async function getWalletAddress(): Promise<PublicKey> {
+  const dbWallet = await getDbSetting('solana_wallet_address')
+  const address = dbWallet || process.env.SOLANA_WALLET_ADDRESS
   if (!address) throw new Error('SOLANA_WALLET_ADDRESS not configured')
   return new PublicKey(address)
 }
@@ -54,8 +66,8 @@ export async function getRecentTransfers(
   token: 'usdc' | 'usdt',
   sinceTimestamp?: number,
 ): Promise<DetectedTransfer[]> {
-  const connection = getConnection()
-  const wallet = getWalletAddress()
+  const connection = await getConnection()
+  const wallet = await getWalletAddress()
   const mint = MINT_MAP[token]
   const ata = getAssociatedTokenAddress(wallet, mint)
 

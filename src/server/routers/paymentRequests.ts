@@ -146,12 +146,31 @@ export const paymentRequestsRouter = router({
     return data ?? []
   }),
 
-  cryptoConfig: protectedProcedure.query(async () => {
-    const walletAddress = process.env.SOLANA_WALLET_ADDRESS || ''
+  paymentConfig: protectedProcedure.query(async () => {
+    const { data: settings } = await supabase
+      .from('platform_settings')
+      .select('key, value')
+
+    const get = (key: string, envFallback?: string) => {
+      const row = settings?.find(s => s.key === key)
+      return row?.value || envFallback || ''
+    }
+
+    const walletAddress = get('solana_wallet_address', process.env.SOLANA_WALLET_ADDRESS)
+
     return {
-      enabled: !!walletAddress,
-      walletAddress,
-      prices: CRYPTO_PRICES_USD,
+      crypto: {
+        enabled: !!walletAddress,
+        walletAddress,
+        prices: CRYPTO_PRICES_USD,
+      },
+      bank: {
+        name: get('bank_name', process.env.NEXT_PUBLIC_BANK_NAME),
+        account: get('bank_account', process.env.NEXT_PUBLIC_BANK_ACCOUNT),
+        holder: get('bank_holder', process.env.NEXT_PUBLIC_BANK_HOLDER),
+      },
+      qrisImageUrl: get('qris_image_url'),
+      supportWa: get('support_wa', process.env.NEXT_PUBLIC_SUPPORT_WA),
     }
   }),
 
