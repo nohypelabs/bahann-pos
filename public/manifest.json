@@ -1,7 +1,7 @@
 {
-  "name": "AGDS Corp POS - Warehouse & Point of Sale",
-  "short_name": "AGDS POS",
-  "description": "Modern warehouse and POS management system by AGDS Corp",
+  "name": "Laku POS - Warehouse & Point of Sale",
+  "short_name": "Laku POS",
+  "description": "Sistem kasir dan manajemen stok modern oleh Laku POS",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
