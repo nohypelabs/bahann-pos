@@ -125,9 +125,10 @@ const PLAN_LABEL: Record<string, string> = {
 interface SidebarProps {
   mobileOpen: boolean
   setMobileOpen: (open: boolean) => void
+  desktopOpen?: boolean
 }
 
-export function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
+export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: SidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { language, setLanguage, t } = useLanguage()
@@ -136,7 +137,7 @@ export function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   const [userName,  setUserName]  = useState('User')
   const [userEmail, setUserEmail] = useState('')
   const [userRole,  setUserRole]  = useState('user')
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const isCollapsed = !desktopOpen
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [subMasterData, setSubMasterData] = useState(false)
@@ -160,9 +161,7 @@ export function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
           logger.error('Failed to parse user data', error)
         }
       }
-      const savedCollapsed = localStorage.getItem('sidebar_collapsed')
-      if (savedCollapsed !== null) setIsCollapsed(savedCollapsed === 'true')
-    }
+}
   }, [])
 
   useEffect(() => {
@@ -176,12 +175,6 @@ export function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
     localStorage.removeItem('auth_token')
     localStorage.removeItem('user')
     window.location.href = '/login'
-  }
-
-  const toggleCollapse = () => {
-    const next = !isCollapsed
-    setIsCollapsed(next)
-    localStorage.setItem('sidebar_collapsed', String(next))
   }
 
   const getRoleBadge = (role: string) => {
@@ -227,29 +220,12 @@ export function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
 
-        {/* ── Top bar: X(close) / Collapse ── */}
+        {/* ── Top bar: close (mobile only) ── */}
         <div className={`flex items-center border-b border-gray-200 dark:border-gray-800 h-14 flex-shrink-0 ${showCollapsed ? 'justify-center px-3' : 'px-4'}`}>
-          {!showCollapsed ? (
-            <>
-              {/* Mobile close */}
-              <button onClick={() => setMobileOpen(false)}
-                className="md:hidden p-1.5 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-              {/* Desktop collapse */}
-              <button onClick={toggleCollapse} title="Collapse sidebar"
-                className="hidden md:flex p-1.5 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                  <path d="M10 3L5 8l5 5" />
-                </svg>
-              </button>
-            </>
-          ) : (
-            <button onClick={toggleCollapse} title="Expand sidebar"
-              className="p-1.5 rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                <path d="M6 3l5 5-5 5" />
-              </svg>
+          {!showCollapsed && (
+            <button onClick={() => setMobileOpen(false)}
+              className="md:hidden p-1.5 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+              <X className="w-5 h-5" />
             </button>
           )}
         </div>
