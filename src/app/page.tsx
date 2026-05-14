@@ -552,7 +552,7 @@ export default function LandingPage() {
               {T.hero.subtitle[lang]}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
-              <Link href="/register" className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2 whitespace-nowrap">
+              <Link href="/register" className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm font-bold px-8 py-2.5 rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2 whitespace-nowrap">
                 {T.hero.cta[lang]} <ArrowRight className="w-4 h-4" />
               </Link>
               <a href={buildWaLink(T.hero.demoWa[lang])} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto flex items-center justify-center gap-2 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold px-7 py-3.5 rounded-xl hover:border-green-600 hover:text-green-600 transition-all">
