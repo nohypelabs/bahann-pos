@@ -510,11 +510,11 @@ export default function LandingPage() {
   ]
 
   return (
-    <div className="min-h-screen text-gray-900 dark:text-gray-100 transition-colors duration-500" style={bgColor ? { backgroundColor: bgColor } : undefined}>
+    <div className="min-h-screen text-gray-900 dark:text-gray-100 transition-colors duration-500 overflow-x-hidden" style={bgColor ? { backgroundColor: bgColor } : undefined}>
 
       {/* ── NAVBAR ── */}
-      <header className="sticky top-0 z-50 backdrop-blur-md border-b border-gray-100/50 dark:border-gray-800/50" style={{ backgroundColor: bgColor ? bgColor.replace('rgb(', 'rgba(').replace(')', ', 0.85)') : undefined }}>
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
+      <header className="sticky top-0 z-50 backdrop-blur-md border-b border-gray-100/50 dark:border-gray-800/50 overflow-x-hidden" style={{ backgroundColor: bgColor ? bgColor.replace('rgb(', 'rgba(').replace(')', ', 0.85)') : undefined }}>
+        <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
           <div className="flex items-center gap-2">
             <img src="/logo.svg" alt="Laku POS" className="w-7 h-7" />
             <span className="text-lg font-bold text-green-600">Laku POS</span>
@@ -542,8 +542,8 @@ export default function LandingPage() {
       </header>
 
       {/* ── HERO ── */}
-      <section ref={el => { sectionRefs.current[0] = el }} className="pt-12 md:pt-16 pb-10 md:pb-14 px-4">
-        <div className="max-w-5xl mx-auto">
+      <section ref={el => { sectionRefs.current[0] = el }} className="pt-12 md:pt-16 pb-10 md:pb-14 px-4 overflow-x-hidden">
+        <div className="max-w-5xl mx-auto w-full">
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-4 tracking-tight">
               {T.hero.h1_1[lang]}<span className="text-green-600">{T.hero.h1_2[lang]}</span>{T.hero.h1_3[lang]}
@@ -614,7 +614,7 @@ export default function LandingPage() {
           </div>
 
           {/* 3 steps */}
-          <div className="mt-10 grid grid-cols-3 gap-3 max-w-2xl mx-auto" id="cara-kerja">
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto" id="cara-kerja">
             {T.steps.map((step, i) => (
               <div key={i} className="text-center">
                 <div className="w-9 h-9 bg-green-600 text-white text-sm font-bold rounded-full flex items-center justify-center mx-auto mb-2">
@@ -629,14 +629,14 @@ export default function LandingPage() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section ref={el => { sectionRefs.current[1] = el }} className="py-12 md:py-16 px-4" id="fitur">
-        <div className="max-w-4xl mx-auto">
+      <section ref={el => { sectionRefs.current[1] = el }} className="py-12 md:py-16 px-4 overflow-x-hidden" id="fitur">
+        <div className="max-w-4xl mx-auto w-full">
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-2">{T.features.heading[lang]}</h2>
             <p className="text-gray-600 dark:text-gray-400">{T.features.subheading[lang]}</p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
+          <div className="flex flex-wrap justify-center gap-2 mb-8 w-full max-w-full">
             {T.features.items.map((f, i) => (
               <button
                 key={i}
@@ -686,8 +686,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ── */}
-      <section ref={el => { sectionRefs.current[2] = el }} className="py-12 md:py-16 px-4" id="harga">
-        <div className="max-w-5xl mx-auto">
+      <section ref={el => { sectionRefs.current[2] = el }} className="py-12 md:py-16 px-4 overflow-x-hidden" id="harga">
+        <div className="max-w-5xl mx-auto w-full">
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-extrabold mb-2">{T.pricing.heading[lang]}</h2>
             <p className="text-gray-600 dark:text-gray-400">{T.pricing.subheading[lang]}</p>
@@ -703,7 +703,7 @@ export default function LandingPage() {
           </div>
 
           {pricingMode === 'subscription' && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full">
               {T.pricing.sub.map((plan, i) => (
                 <PricingCard key={i} name={plan.name} price={plan.price}
                   period={plan.period?.[lang]}
@@ -719,7 +719,7 @@ export default function LandingPage() {
           )}
 
           {pricingMode === 'onetime' && (
-            <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto w-full">
               {T.pricing.once.map((plan, i) => (
                 <PricingCard key={i} name={plan.name} price={plan.price}
                   badge={plan.badge[lang]} badgeColor={plan.badgeColor}
@@ -755,8 +755,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section ref={el => { sectionRefs.current[3] = el }} className="py-12 md:py-16 px-4" id="faq">
-        <div className="max-w-2xl mx-auto">
+      <section ref={el => { sectionRefs.current[3] = el }} className="py-12 md:py-16 px-4 overflow-x-hidden" id="faq">
+        <div className="max-w-2xl mx-auto w-full">
           <h2 className="text-2xl md:text-3xl font-extrabold text-center mb-6">{T.faq.heading[lang]}</h2>
           <div className="space-y-2">
             {T.faq.items.map((faq, i) => (
@@ -778,8 +778,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── FINAL CTA ── */}
-      <section className="py-12 md:py-16 px-4 bg-green-600 text-white text-center">
-        <div className="max-w-2xl mx-auto">
+      <section className="py-12 md:py-16 px-4 bg-green-600 text-white text-center overflow-x-hidden">
+        <div className="max-w-2xl mx-auto w-full">
           <h2 className="text-3xl md:text-4xl font-extrabold mb-3">{T.finalCta.heading[lang]}</h2>
           <p className="text-base mb-6 opacity-90">{T.finalCta.desc[lang]}</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -795,8 +795,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="bg-gray-950 text-white py-10 px-4">
-        <div className="max-w-5xl mx-auto">
+      <footer className="bg-gray-950 text-white py-10 px-4 overflow-x-hidden">
+        <div className="max-w-5xl mx-auto w-full">
           <div className="flex flex-col md:flex-row justify-between items-start gap-6 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -912,7 +912,7 @@ function PricingCard({ name, price, period, badge, badgeColor, desc, features, c
       : 'bg-gray-50 dark:bg-gray-700 text-green-600 dark:text-green-400 border border-green-600 dark:border-green-500 hover:bg-green-50 dark:hover:bg-gray-600'
   }`
   return (
-    <div className={`relative bg-white dark:bg-gray-800 rounded-xl p-4 md:p-5 border transition-all hover:-translate-y-0.5 hover:shadow-lg ${
+    <div className={`relative bg-white dark:bg-gray-800 rounded-xl p-4 md:p-5 border transition-all hover:-translate-y-0.5 hover:shadow-lg w-full ${
       popular ? 'border-green-500 shadow-md' : 'border-gray-100 dark:border-gray-700'
     }`}>
       {popular && (
