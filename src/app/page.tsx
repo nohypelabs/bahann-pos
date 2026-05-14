@@ -614,9 +614,9 @@ export default function LandingPage() {
           </div>
 
           {/* 3 steps */}
-          <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto" id="cara-kerja">
+          <div className="mt-10 flex flex-wrap justify-center gap-4 max-w-4xl mx-auto" id="cara-kerja">
             {T.steps.map((step, i) => (
-              <div key={i} className="text-center">
+              <div key={i} className="text-center flex-1 min-w-[100px]">
                 <div className="w-9 h-9 bg-green-600 text-white text-sm font-bold rounded-full flex items-center justify-center mx-auto mb-2">
                   {i + 1}
                 </div>
@@ -672,9 +672,9 @@ export default function LandingPage() {
                   ))}
                 </ul>
               </div>
-              <div className="md:w-56 flex flex-row md:flex-col gap-1.5 md:border-l md:border-gray-100 md:dark:border-gray-700 md:pl-4">
+              <div className="md:w-48 flex flex-wrap md:flex-col gap-1.5 md:border-l md:border-gray-100 md:dark:border-gray-700 md:pl-4">
                 {T.trustBadges.map((b, i) => (
-                  <div key={i} className="flex items-center gap-1.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-2 py-1.5 flex-1 md:flex-none">
+                  <div key={i} className="flex items-center gap-1.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-2 py-1.5 md:flex-none">
                     <span className="text-green-600">{TRUST_ICONS[i]}</span>
                     <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{b[lang]}</span>
                   </div>
