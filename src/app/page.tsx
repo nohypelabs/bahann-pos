@@ -552,7 +552,7 @@ export default function LandingPage() {
               {T.hero.subtitle[lang]}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
-              <Link href="/register" className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white text-base font-bold px-7 py-3.5 rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2">
+              <Link href="/register" className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white text-base font-bold px-7 py-2.5 rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2">
                 {T.hero.cta[lang]} <ArrowRight className="w-4 h-4" />
               </Link>
               <a href={buildWaLink(T.hero.demoWa[lang])} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto flex items-center justify-center gap-2 border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold px-7 py-3.5 rounded-xl hover:border-green-600 hover:text-green-600 transition-all">
@@ -672,9 +672,9 @@ export default function LandingPage() {
                   ))}
                 </ul>
               </div>
-              <div className="md:w-56 flex flex-row md:flex-col gap-2 md:border-l md:border-gray-100 md:dark:border-gray-700 md:pl-6">
+              <div className="md:w-56 flex flex-row md:flex-col gap-1.5 md:border-l md:border-gray-100 md:dark:border-gray-700 md:pl-4">
                 {T.trustBadges.map((b, i) => (
-                  <div key={i} className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2 flex-1 md:flex-none">
+                  <div key={i} className="flex items-center gap-1.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-2 py-1.5 flex-1 md:flex-none">
                     <span className="text-green-600">{TRUST_ICONS[i]}</span>
                     <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{b[lang]}</span>
                   </div>
