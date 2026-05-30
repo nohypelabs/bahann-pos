@@ -3,8 +3,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #111827;
 
   /* Chart color palette */
   --chart-1: #10b981;
@@ -16,6 +16,10 @@
   --chart-axis: #9ca3af;
   --chart-tooltip-bg: rgba(255, 255, 255, 0.98);
   --chart-tooltip-border: rgba(229, 231, 235, 1);
+}
+
+html {
+  color-scheme: light;
 }
 
 @theme inline {
@@ -58,17 +62,6 @@
   --input-height: 2.75rem;        /* 44px - iOS touch standard */
   --button-height: 2.75rem;       /* 44px - iOS touch standard */
   --touch-target-min: 2.75rem;    /* 44px minimum */
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --chart-grid: rgba(255, 255, 255, 0.06);
-    --chart-axis: #6b7280;
-    --chart-tooltip-bg: rgba(17, 24, 39, 0.98);
-    --chart-tooltip-border: rgba(55, 65, 81, 1);
-  }
 }
 
 body {

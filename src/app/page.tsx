@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback, type ReactNode } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useTheme } from '@/lib/theme/ThemeContext'
 import {
   ShoppingCart, Package, BarChart3, WifiOff, Users, Shield,
-  Sun, Moon, MessageCircle, Check, Zap, DollarSign, Headphones,
+  MessageCircle, Check, Zap, DollarSign, Headphones,
   Store, UtensilsCrossed, Coffee, Shirt, Pill, ShoppingBag,
-  ArrowRight, Globe,
+  ArrowRight,
 } from 'lucide-react'
 
 type Lang = 'id' | 'en'
@@ -438,7 +438,7 @@ export default function LandingPage() {
   const [bgColor, setBgColor] = useState('')
   const chatEndRef = useRef<HTMLDivElement>(null)
   const sectionRefs = useRef<(HTMLElement | null)[]>([])
-  const { theme, toggleTheme } = useTheme()
+  const { theme } = useTheme()
 
   const toggleLang = () => {
     const next = lang === 'id' ? 'en' : 'id'
@@ -527,9 +527,6 @@ export default function LandingPage() {
           <div className="flex items-center gap-2.5">
             <button onClick={toggleLang} className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs font-bold text-gray-700 dark:text-gray-300" aria-label="Toggle language">
               {lang === 'id' ? 'EN' : 'ID'}
-            </button>
-            <button onClick={toggleTheme} className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" aria-label="Toggle dark mode">
-              {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
             <Link href="/login" className="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-green-600 transition-colors">
               {T.nav.login[lang]}

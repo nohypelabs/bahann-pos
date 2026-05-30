@@ -6,8 +6,13 @@
  */
 
 import { offlineDb, type OfflineTransaction } from './database'
+import { vanillaTrpc } from '@/lib/trpc/client'
 
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error'
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unknown error'
+}
 
 export class SyncManager {
   private syncInProgress = false
@@ -141,7 +146,7 @@ export class SyncManager {
    * Sync offline transactions
    */
   private async syncTransactions(): Promise<number> {
-    const pendingTransactions = await offlineDb.transactions
+    const pendingTransactions: OfflineTransaction[] = await offlineDb.transactions
       .where('synced')
       .equals(0) // 0 = false in IndexedDB
       .filter(tx => tx.syncAttempts < 5) // Max 5 attempts
@@ -151,35 +156,25 @@ export class SyncManager {
 
     for (const transaction of pendingTransactions) {
       try {
-        // Call tRPC endpoint to save transaction
-        const response = await fetch('/api/trpc/sales.recordOffline', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(transaction)
-        })
+        // Use the typed tRPC client so replay follows the same request path as online writes.
+        await vanillaTrpc.sales.recordOffline.mutate(transaction)
 
-        if (response.ok) {
-          // Mark as synced
-          await offlineDb.transactions.update(transaction.id!, {
-            synced: true,
-            syncError: undefined,
-            syncAttempts: transaction.syncAttempts + 1
-          })
-          syncedCount++
-          console.log(`✅ Synced transaction: ${transaction.transactionId}`)
-        } else {
-          const error = await response.text()
-          throw new Error(`HTTP ${response.status}: ${error}`)
-        }
-      } catch (error: any) {
+        // Mark as synced
+        await offlineDb.transactions.update(transaction.id!, {
+          synced: true,
+          syncError: undefined,
+          syncAttempts: transaction.syncAttempts + 1,
+        })
+        syncedCount++
+        console.log(`✅ Synced transaction: ${transaction.transactionId}`)
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error)
         // Increment attempts and log error
         await offlineDb.transactions.update(transaction.id!, {
-          syncError: error.message,
-          syncAttempts: transaction.syncAttempts + 1
+          syncError: errorMessage,
+          syncAttempts: transaction.syncAttempts + 1,
         })
-        console.error(`❌ Failed to sync transaction ${transaction.transactionId}:`, error.message)
+        console.error(`❌ Failed to sync transaction ${transaction.transactionId}:`, errorMessage)
       }
     }
 
@@ -219,13 +214,14 @@ export class SyncManager {
         } else {
           throw new Error(`HTTP ${response.status}`)
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = getErrorMessage(error)
         await offlineDb.syncQueue.update(item.id!, {
           attempts: item.attempts + 1,
           lastAttempt: Date.now(),
-          error: error.message
+          error: errorMessage,
         })
-        console.error(`❌ Failed to sync queue item ${item.id}:`, error.message)
+        console.error(`❌ Failed to sync queue item ${item.id}:`, errorMessage)
       }
     }
 
@@ -278,7 +274,7 @@ export class SyncManager {
       //     console.log(`✅ Pulled ${products.length} products`)
       //   }
       // }
-    } catch (error) {
+    } catch {
       // Silently ignore - endpoint not implemented yet
       // console.error('❌ Failed to pull products:', error)
     }

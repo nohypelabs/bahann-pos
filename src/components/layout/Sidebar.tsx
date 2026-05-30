@@ -1,10 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { ReactNode, useEffect, useState, useRef } from 'react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
-import { useTheme } from '@/lib/theme/ThemeContext'
 import { logger } from '@/lib/logger'
 import { usePWA } from '@/lib/pwa/PWAContext'
 import { trpc } from '@/lib/trpc/client'
@@ -14,7 +13,7 @@ import {
   CreditCard, Ticket, Briefcase, Bell,
   Tag, Store, Users, Shield, Trash2, Star,
   User, HelpCircle, Info,
-  Moon, Sun, LogOut, Download, X,
+  LogOut, Download, X,
   Settings, ChevronDown, Crown,
 } from 'lucide-react'
 
@@ -129,10 +128,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: SidebarProps) {
-  const router = useRouter()
   const pathname = usePathname()
   const { language, setLanguage, t } = useLanguage()
-  const { theme, toggleTheme } = useTheme()
   const { canInstall, isInstalled, install } = usePWA()
   const [userName,  setUserName]  = useState('User')
   const [userEmail, setUserEmail] = useState('')
@@ -166,7 +163,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
 
   useEffect(() => {
     setMobileOpen(false)
-  }, [pathname])
+  }, [pathname, setMobileOpen])
 
   const logoutMutation = trpc.auth.logout.useMutation()
 
@@ -186,10 +183,15 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
     }
   }
 
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false
+    }
+
+    return window.matchMedia('(max-width: 767px)').matches
+  })
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)')
-    setIsMobile(mq.matches)
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
@@ -390,12 +392,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         )}
 
         {/* ── Bottom bar: dark mode + lang (X-style) ── */}
-        <div className={`border-t border-gray-200 dark:border-gray-800 flex-shrink-0 ${showCollapsed ? 'p-2 flex flex-col items-center gap-1.5' : 'px-4 py-3 flex items-center justify-between'}`}>
-          <button onClick={toggleTheme}
-            title={theme === 'light' ? 'Dark Mode' : 'Light Mode'}
-            className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-          </button>
+        <div className={`border-t border-gray-200 dark:border-gray-800 flex-shrink-0 ${showCollapsed ? 'p-2 flex flex-col items-center gap-1.5' : 'px-4 py-3 flex items-center justify-end gap-2'}`}>
           <button onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
             title={language === 'id' ? 'Switch to English' : 'Ganti ke Indonesia'}
             className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-xs font-bold">

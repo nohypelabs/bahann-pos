@@ -29,7 +29,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#1f2937",
+  themeColor: "#f8fafc",
 };
 
 export default function RootLayout({
@@ -38,13 +38,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Anti-flash: apply theme class before React hydrates */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()` }} />
-      </head>
+    <html lang="id" suppressHydrationWarning>
       <body
-        className={`${GeistSans.variable} ${GeistMono.variable} antialiased bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-200`}
+        className={`${GeistSans.variable} ${GeistMono.variable} antialiased bg-[#f8fafc] text-gray-900 transition-colors duration-200`}
       >
         <PWAProvider>
           <ThemeProvider>
