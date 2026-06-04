@@ -1,0 +1,191 @@
+================================================================================
+AUDIT & REKOMENDASI: FIXING & EXPANDING TO MODULAR POS (LakuPOS)
+Status Kualitas Blueprint & Gap Analysis
+================================================================================
+
+1. KEKUATAN DESAIN (PASSED REVIEW)
+--------------------------------------------------------------------------------
+✅ Value Objects & Enums (BusinessType, ItemType, StockBehavior, PricingModel)
+   Konsep solid, memberikan type safety dan prevent magic strings di database.
+   
+✅ DDD Layer Separation (Domain vs Prisma Model)
+   Pembedaan layer jelas dan sesuai prinsip clean architecture.
+   
+✅ Anticipating JSON Serialization (enabledModules parsing)
+   Solusi pragmatis untuk common pitfall ORM + DDD combo.
+   
+✅ Multi-Business Modular Framework
+   Tidak hard-coded ke retail — future-proof untuk expansion type usaha.
+
+
+2. CRITICAL ISSUES & GAPS YANG PERLU DIPERBAIKI
+--------------------------------------------------------------------------------
+A. SERIALIZATION BOILERPLATE TERLALU MANUAL (Priority: HIGH)
+   Masalah: Setiap tRPC procedure harus inget parse/stringify enabledModules.
+   Risiko: Boilerplate → inconsistent → bugs di production.
+   
+   Solusi wajib:
+   - Buat PrismaMapper service yang handle semua conversion otomatis
+   - Atau gunakan Prisma @db.Json + Zod schema transform di tRPC layer
+   - JANGAN serahkan ke individual procedure — akan lupa & inconsistent
+
+
+B. createDefaults() COUPLING TERLALU KETAT (Priority: HIGH)
+   Masalah: BusinessProfile.createDefaults() hard-code defaults per business type.
+   Gap: Kalau user ingin FNB tapi dengan tracked stock (franchise sistem), 
+        ini blocked sepenuhnya. Tidak fleksibel.
+   
+   Solusi wajib:
+   - Buat IBusinessTypeStrategy interface dengan implementasi per type
+   - Izinkan user OVERRIDE defaults saat setup, bukan hanya read-only
+   - Simpan strategy config di database, bukan hard-coded di Entity
+
+
+C. StockService.deduct() LOGIC UNCLEAR (Priority: CRITICAL)
+   Masalah: Blueprint bilang "bypass atau melempar exception" — tidak spesifik mana.
+   Risiko: Implementator akan guess, inconsistent behavior di production.
+   
+   Solusi wajib:
+   - Return DeductResult object: { success: boolean, newStockLevel: number|null }
+   - JANGAN throw exception untuk untracked item (result.success = true saja)
+   - Happy-path clarity > exception flow untuk read & audit log
+   
+   Contoh:
+   deduct(item, qty): DeductResult {
+     if (item.stockBehavior === 'UNTRACKED') 
+       return { success: true, newStockLevel: null }
+     if (item.currentStock < qty) 
+       return { success: false, newStockLevel: item.currentStock }
+     return { success: true, newStockLevel: item.currentStock - qty }
+   }
+
+
+D. TIERED PRICING SPECIFICATION INCOMPLETE (Priority: MEDIUM)
+   Masalah: Tidak jelas edge case tier matching.
+   Gap:
+   - Qty = 150, tier = [100, 200], ambil mana? (Spec bilang "tertinggi <= qty")
+   - Kalau qty tidak match apapun, fallback ke basePrice? (Assumed, belum jelas)
+   - Apakah basePrice diabaikan sepenuhnya saat tiered pricing aktif?
+   
+   Solusi wajib:
+   - Tier 0 (minQuantity: 1) WAJIB ada sebagai default/fallback
+   - Jangan gunakan basePrice terpisah — tier 0 = base
+   - Test semua kombinasi qty vs tier ranges sebelum go-live
+
+
+E. INVALID STATE COMBINATIONS TIDAK DIVALIDASI (Priority: HIGH)
+   Gap: Zod schema memeriksa enum saja, bukan kombinasi bisnis logic.
+   Contoh invalid combo:
+   - itemType: SERVICE + pricingModel: TIERED (service mana yg di-tier?)
+   - stockBehavior: TRACKED + itemType: MENU (tracked apa di menu standar?)
+   - stockBehavior: CONSUMED + itemType: PRODUCT (consumed hanya untuk recipe)
+   
+   Solusi wajib:
+   - Tambah .refine() di Zod schema untuk validasi kombinasi
+   - Throw TRPC error dengan pesan jelas: "SERVICE items cannot use TIERED pricing"
+   - Unit test semua valid + invalid combinations
+
+
+F. MIGRATION STRATEGY INCOMPLETE (Priority: MEDIUM)
+   Gap:
+   - Gimana dengan transaksi lama? Auto fallback ke PRODUCT + TRACKED?
+   - Rollback plan kalau migration fail di production?
+   - Test data untuk backwards-compat testing tidak disebutkan.
+   
+   Solusi wajib:
+   1. Add columns dengan NOT NULL defaults: PRODUCT, TRACKED, FIXED
+   2. Create LegacyPosAdapter service untuk wrap old behavior jika perlu
+   3. Integration test: "Old retail workflows masih berjalan"
+   4. Deploy di balik feature flag kalau mungkin
+   5. Document rollback procedure jelas
+
+
+G. MISSING: READ-SIDE OPTIMIZATION LAYER (Priority: LOW)
+   Gap: Blueprint fokus write-side (creation, deduction), query side missing.
+   Contoh masalah:
+   - List 10k items dengan filter (businessType: FNB, stockBehavior: UNTRACKED)
+   - Query ini akan jadi bottleneck tanpa index & query service
+   
+   Solusi rekomendasi:
+   - Buat ItemQueryService dengan pre-optimized queries
+   - Index database pada (businessId, itemType, stockBehavior)
+   - Jangan filter di application code untuk dataset besar
+
+
+H. MISSING: PACKAGE TYPE HANDLING (Priority: MEDIUM)
+   Gap: Enum ItemType ada PACKAGE, tapi tidak ada spesifikasi:
+   - Apakah PACKAGE bisa mix PRODUCT + MENU + SERVICE? (Assumed yes)
+   - Gimana tracking stock untuk PACKAGE dengan PRODUCT + MENU?
+   - Promo/bundle pricing logic? (Tidak ada di blueprint)
+   
+   Solusi rekomendasi:
+   - Tambah PackageCompositionService untuk handle bundling logic
+   - Spesifikasi: PACKAGE selalu UNTRACKED atau sum dari components?
+   - Add unit test untuk setiap scenario package
+
+
+I. MISSING: AUDIT LOG & EVENT SOURCING (Priority: LOW)
+   Gap: Tidak ada mention tentang tracking perubahan stok untuk audit.
+   Risiko: Tidak bisa trace "siapa reduce stock kapan".
+   
+   Rekomendasi:
+   - Publish StockDeductedEvent saat deduct() success
+   - Simpan ke audit log dengan timestamp, user, reason
+   - Buat query dashboard "Stock History" untuk traceability
+
+
+3. IMPLEMENTATION ROADMAP
+--------------------------------------------------------------------------------
+Phase 1 (Week 1): Critical Path
+  - Spesifikasi ulang StockService.deduct() dengan DeductResult
+  - Buat PrismaMapper untuk eliminate JSON boilerplate
+  - Setup Zod .refine() validasi kombinasi invalid
+
+Phase 2 (Week 2): Risk Mitigation
+  - Refactor createDefaults() jadi IBusinessTypeStrategy
+  - Complete Tiered Pricing specification & test suite
+  - Setup LegacyPosAdapter & integration test backwards-compat
+
+Phase 3 (Week 3): Enhancement
+  - ItemQueryService untuk read-side optimization
+  - PackageCompositionService untuk bundling logic
+  - Audit log & event sourcing skeleton (optional Phase 2)
+
+4. TESTING CHECKLIST (WAJIB SEBELUM PROD)
+--------------------------------------------------------------------------------
+□ StockService.deduct() tests:
+  - TRACKED item sufficient stock ✓
+  - TRACKED item insufficient stock ✓
+  - UNTRACKED item (bypass test) ✓
+  - CONSUMED item dengan recipe validasi ✓
+
+□ Tiered Pricing edge cases:
+  - Qty match tier 0 ✓
+  - Qty match tier N (middle) ✓
+  - Qty > max tier ✓
+  - Qty tidak match apapun → fallback ✓
+
+□ State Validation:
+  - All invalid combinations throw TRPC error ✓
+  - All valid combinations accepted ✓
+
+□ Backwards Compatibility:
+  - Old retail items tetap berjalan ✓
+  - Old transactions masih queryable ✓
+  - Migration rollback scenario tested ✓
+
+5. REKOMENDASI DOKUMENTASI TAMBAHAN
+--------------------------------------------------------------------------------
+- Add decision log: "Why TIERED pricing model over MANUAL discounts"
+- Create state machine diagram: ItemType → StockBehavior valid transitions
+- Document: FNB Recipe + Stock Deduction workflow (CONSUMED behavior)
+- Error code reference: Semua DomainException codes & HTTP mapping
+- Migration playbook: Step-by-step dengan rollback at each point
+
+================================================================================
+VERDICT: Konsep & arsitektur SOLID, tapi ada 9 gap yang PERLU diperbaiki
+sebelum implementation. Prioritas: StockService clarity, Serialization mapper, 
+State validation. Estimated effort: 2-3 minggu untuk phase 1+2.
+
+Siap untuk kickoff implementation? Mulai dari critical issues dulu.
+================================================================================

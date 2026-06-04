@@ -35,6 +35,7 @@ export type AuditEntity =
   | 'stock_alert'
   | 'tenant'
   | 'payment_request'
+  | 'business_profile'
 
 export interface AuditLogData {
   userId: string

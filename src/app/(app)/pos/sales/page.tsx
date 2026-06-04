@@ -109,7 +109,9 @@ export default function SalesTransactionPage() {
   const handleAddToCart = () => {
     if (!selectedProduct) { setError('Silakan pilih produk'); return }
     if (quantity <= 0) { setError('Jumlah harus lebih dari 0'); return }
-    if (selectedOutletId && availableStock < quantity) {
+    // Skip stock check for UNTRACKED items (services, standard menu)
+    const isUntracked = selectedProduct.stock_behavior === 'UNTRACKED' || selectedProduct.stock_behavior === 'CONSUMED'
+    if (!isUntracked && selectedOutletId && availableStock < quantity) {
       setError(`Stok tidak cukup! Hanya ${availableStock} unit tersedia`)
       return
     }
@@ -434,21 +436,32 @@ export default function SalesTransactionPage() {
                   ) : filteredProducts.map(product => {
                     const stock = inventoryList?.find(p => p.id === product.id)?.currentStock ?? 0
                     const isSelected = selectedProductId === product.id
-                    const isOutOfStock = stock === 0
+                    const isUntrackedItem = product.stock_behavior === 'UNTRACKED' || product.stock_behavior === 'CONSUMED'
+                    const isOutOfStock = !isUntrackedItem && stock === 0
+                    const itemTypeBadge = product.item_type === 'SERVICE' ? 'Jasa' : product.item_type === 'MENU' ? 'Menu' : product.item_type === 'PACKAGE' ? 'Paket' : null
                     return (
                       <button key={product.id} onClick={() => !isOutOfStock && handleProductChange(isSelected ? '' : product.id)} disabled={isOutOfStock}
                         className={`w-full text-left transition-all ${isSelected ? 'bg-blue-50 dark:bg-blue-900/40' : isOutOfStock ? 'opacity-40 cursor-not-allowed bg-white dark:bg-gray-800' : 'bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/60 active:bg-gray-100'}`}>
                         {/* Desktop row */}
                         <div className="hidden md:grid grid-cols-12 gap-2 px-3 py-2.5">
                           <div className="col-span-5 min-w-0">
-                            <p className={`text-sm font-semibold truncate ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>{product.name}</p>
+                            <div className="flex items-center gap-1.5">
+                              <p className={`text-sm font-semibold truncate ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>{product.name}</p>
+                              {itemTypeBadge && (
+                                <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">{itemTypeBadge}</span>
+                              )}
+                            </div>
                             <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{product.sku}</p>
                           </div>
                           <div className="col-span-3 flex items-center">
                             <span className={`text-sm font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>{formatCurrency(product.price || 0)}</span>
                           </div>
                           <div className="col-span-2 flex items-center justify-center">
-                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${stock === 0 ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400' : stock <= 10 ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400' : 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400'}`}>{stock === 0 ? 'Habis' : stock}</span>
+                            {isUntrackedItem ? (
+                              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">∞</span>
+                            ) : (
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${stock === 0 ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-400' : stock <= 10 ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-400' : 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400'}`}>{stock === 0 ? 'Habis' : stock}</span>
+                            )}
                           </div>
                           <div className="col-span-2 flex items-center justify-center">
                             {isSelected ? <span className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">✓</span> : <span className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600" />}
@@ -457,7 +470,12 @@ export default function SalesTransactionPage() {
                         {/* Mobile row — bigger touch target, 3 cols */}
                         <div className="md:hidden grid grid-cols-12 px-3 py-3">
                           <div className="col-span-7 min-w-0 flex flex-col justify-center">
-                            <p className={`text-sm font-semibold truncate leading-tight ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>{product.name}</p>
+                            <div className="flex items-center gap-1.5">
+                              <p className={`text-sm font-semibold truncate leading-tight ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>{product.name}</p>
+                              {itemTypeBadge && (
+                                <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">{itemTypeBadge}</span>
+                              )}
+                            </div>
                             <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{product.sku}</p>
                           </div>
                           <div className="col-span-3 flex items-center">
@@ -466,7 +484,9 @@ export default function SalesTransactionPage() {
                           <div className="col-span-2 flex items-center justify-end">
                             {isSelected
                               ? <span className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs shrink-0">✓</span>
-                              : <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap ${stock === 0 ? 'bg-red-100 text-red-700' : stock <= 10 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>{stock === 0 ? '✕' : stock}</span>
+                              : isUntrackedItem
+                                ? <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">∞</span>
+                                : <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap ${stock === 0 ? 'bg-red-100 text-red-700' : stock <= 10 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>{stock === 0 ? '✕' : stock}</span>
                             }
                           </div>
                         </div>
@@ -489,9 +509,15 @@ export default function SalesTransactionPage() {
                     <p className="text-xs md:text-sm font-bold text-blue-900 dark:text-blue-200 truncate flex-1">{selectedProduct.name}</p>
                     <span className="text-xs font-bold text-blue-700 dark:text-blue-300 shrink-0">{formatCurrency(selectedProduct.price || 0)}</span>
                     {selectedOutletId && (
-                      <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${availableStock === 0 ? 'bg-red-100 text-red-700' : availableStock <= 10 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
-                        {availableStock === 0 ? 'Habis' : `Stok: ${availableStock}`}
-                      </span>
+                      selectedProduct.stock_behavior === 'UNTRACKED' || selectedProduct.stock_behavior === 'CONSUMED' ? (
+                        <span className="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                          Tanpa Stok
+                        </span>
+                      ) : (
+                        <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${availableStock === 0 ? 'bg-red-100 text-red-700' : availableStock <= 10 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
+                          {availableStock === 0 ? 'Habis' : `Stok: ${availableStock}`}
+                        </span>
+                      )
                     )}
                   </div>
                   {/* Quick qty + input row */}
@@ -504,7 +530,7 @@ export default function SalesTransactionPage() {
                     <input ref={quantityInputRef} type="number" min="1" max={availableStock || 999} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddToCart() } }} onFocus={(e) => e.target.select()} className="w-14 px-2 py-1.5 text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none text-sm font-bold shrink-0" />
                   </div>
                   {/* Add button — full width */}
-                  <Button variant="primary" size="md" fullWidth onClick={handleAddToCart} disabled={productsLoading || (!!selectedOutletId && availableStock === 0)}>
+                  <Button variant="primary" size="md" fullWidth onClick={handleAddToCart} disabled={productsLoading || (!!selectedOutletId && availableStock === 0 && selectedProduct.stock_behavior === 'TRACKED')}>
                     ➕ Tambah ke Keranjang
                   </Button>
                 </div>

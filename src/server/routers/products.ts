@@ -4,6 +4,11 @@ import { router, protectedProcedure, adminProcedure } from '../trpc'
 import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
 import { getTenantOwnerId, assertProductBelongsToTenant } from '@/server/lib/tenant'
+import { ItemFactory } from '@/domain/services/ItemFactory'
+import { DomainException } from '@/domain/errors/DomainException'
+import { ITEM_TYPES } from '@/domain/catalog/value-objects/item-type'
+import { STOCK_BEHAVIORS } from '@/domain/catalog/value-objects/stock-behavior'
+import { PRICING_MODELS } from '@/domain/catalog/value-objects/pricing-model'
 
 export const productsRouter = router({
   /**
@@ -14,6 +19,8 @@ export const productsRouter = router({
       z.object({
         search: z.string().optional(),
         category: z.string().optional(),
+        itemType: z.enum(ITEM_TYPES as [string, ...string[]]).optional(),
+        stockBehavior: z.enum(STOCK_BEHAVIORS as [string, ...string[]]).optional(),
         page: z.number().min(1).default(1),
         limit: z.number().min(1).max(100).default(50),
       }).optional()
@@ -52,6 +59,16 @@ export const productsRouter = router({
       if (input?.category) {
         countQuery = countQuery.eq('category', input.category)
         dataQuery = dataQuery.eq('category', input.category)
+      }
+
+      if (input?.itemType) {
+        countQuery = countQuery.eq('item_type', input.itemType)
+        dataQuery = dataQuery.eq('item_type', input.itemType)
+      }
+
+      if (input?.stockBehavior) {
+        countQuery = countQuery.eq('stock_behavior', input.stockBehavior)
+        dataQuery = dataQuery.eq('stock_behavior', input.stockBehavior)
       }
 
       const [{ count, error: countError }, { data, error: dataError }] = await Promise.all([
@@ -100,9 +117,34 @@ export const productsRouter = router({
         name: z.string().min(1),
         category: z.string().optional(),
         price: z.number().positive().optional(),
+        itemType: z.enum(ITEM_TYPES as [string, ...string[]]).default('PRODUCT'),
+        stockBehavior: z.enum(STOCK_BEHAVIORS as [string, ...string[]]).default('TRACKED'),
+        pricingModel: z.enum(PRICING_MODELS as [string, ...string[]]).default('FIXED'),
+        pricingTiers: z.array(z.object({
+          minQuantity: z.number().positive(),
+          pricePerUnit: z.number().positive(),
+        })).optional(),
+        durationMinutes: z.number().positive().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
+      // Validate item type + stock behavior + pricing model combo via ItemFactory
+      try {
+        ItemFactory.validateCombo(
+          input.itemType as any,
+          input.stockBehavior as any,
+          input.pricingModel as any,
+        );
+      } catch (err) {
+        if (err instanceof DomainException) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: err.message,
+          });
+        }
+        throw err;
+      }
+
       const { data, error } = await supabase
         .from('products')
         .insert({
@@ -112,6 +154,11 @@ export const productsRouter = router({
           category: input.category || null,
           price: input.price || null,
           owner_id: ctx.userId,
+          item_type: input.itemType,
+          stock_behavior: input.stockBehavior,
+          pricing_model: input.pricingModel,
+          pricing_tiers: input.pricingTiers ? JSON.stringify(input.pricingTiers) : null,
+          duration_minutes: input.durationMinutes || null,
         })
         .select()
         .single()
@@ -203,10 +250,41 @@ export const productsRouter = router({
         name: z.string().min(1),
         category: z.string().optional(),
         price: z.number().positive().optional(),
+        itemType: z.enum(ITEM_TYPES as [string, ...string[]]).optional(),
+        stockBehavior: z.enum(STOCK_BEHAVIORS as [string, ...string[]]).optional(),
+        pricingModel: z.enum(PRICING_MODELS as [string, ...string[]]).optional(),
+        pricingTiers: z.array(z.object({
+          minQuantity: z.number().positive(),
+          pricePerUnit: z.number().positive(),
+        })).optional(),
+        durationMinutes: z.number().positive().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
       await assertProductBelongsToTenant(input.id, ctx.userId)
+
+      // Validate combo if any type-related field is being updated
+      if (input.itemType || input.stockBehavior || input.pricingModel) {
+        // Fetch current product to fill in defaults for validation
+        const { data: currentProduct } = await supabase
+          .from('products')
+          .select('item_type, stock_behavior, pricing_model')
+          .eq('id', input.id)
+          .single()
+
+        try {
+          ItemFactory.validateCombo(
+            (input.itemType || currentProduct?.item_type || 'PRODUCT') as any,
+            (input.stockBehavior || currentProduct?.stock_behavior || 'TRACKED') as any,
+            (input.pricingModel || currentProduct?.pricing_model || 'FIXED') as any,
+          );
+        } catch (err) {
+          if (err instanceof DomainException) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: err.message });
+          }
+          throw err;
+        }
+      }
 
       const { data: oldData } = await supabase
         .from('products')
@@ -214,15 +292,27 @@ export const productsRouter = router({
         .eq('id', input.id)
         .single()
 
+      const updatePayload: Record<string, unknown> = {
+        sku: input.sku,
+        barcode: input.barcode || null,
+        name: input.name,
+        category: input.category || null,
+        price: input.price || null,
+      }
+
+      if (input.itemType) updatePayload.item_type = input.itemType;
+      if (input.stockBehavior) updatePayload.stock_behavior = input.stockBehavior;
+      if (input.pricingModel) updatePayload.pricing_model = input.pricingModel;
+      if (input.pricingTiers !== undefined) {
+        updatePayload.pricing_tiers = input.pricingTiers ? JSON.stringify(input.pricingTiers) : null;
+      }
+      if (input.durationMinutes !== undefined) {
+        updatePayload.duration_minutes = input.durationMinutes || null;
+      }
+
       const { data, error } = await supabase
         .from('products')
-        .update({
-          sku: input.sku,
-          barcode: input.barcode || null,
-          name: input.name,
-          category: input.category || null,
-          price: input.price || null,
-        })
+        .update(updatePayload)
         .eq('id', input.id)
         .select()
         .single()

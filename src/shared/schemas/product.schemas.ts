@@ -10,6 +10,9 @@
  */
 
 import { z } from 'zod'
+import { ITEM_TYPES } from '@/domain/catalog/value-objects/item-type'
+import { STOCK_BEHAVIORS } from '@/domain/catalog/value-objects/stock-behavior'
+import { PRICING_MODELS } from '@/domain/catalog/value-objects/pricing-model'
 
 // ============================================================================
 // Base Product Schemas
@@ -41,12 +44,52 @@ export const ProductPriceSchema = z
   .max(1000000000, 'Price exceeds maximum allowed value')
 
 // ============================================================================
+// Modular POS Schemas
+// ============================================================================
+
+export const ItemTypeSchema = z.enum(ITEM_TYPES as [string, ...string[]])
+export const StockBehaviorSchema = z.enum(STOCK_BEHAVIORS as [string, ...string[]])
+export const PricingModelSchema = z.enum(PRICING_MODELS as [string, ...string[]])
+
+export const PricingTierSchema = z.object({
+  minQuantity: z.number().positive('minQuantity must be positive'),
+  pricePerUnit: z.number().positive('pricePerUnit must be positive'),
+})
+
+/**
+ * Validate that item type + stock behavior + pricing model combination is valid.
+ * Returns true if valid, throws ZodError with descriptive message if invalid.
+ */
+export const ItemTypeComboSchema = z.object({
+  itemType: ItemTypeSchema,
+  stockBehavior: StockBehaviorSchema,
+  pricingModel: PricingModelSchema,
+}).refine(
+  (data) => {
+    // SERVICE items cannot have tracked stock
+    if (data.itemType === 'SERVICE' && data.stockBehavior === 'TRACKED') return false
+    // PRODUCT items cannot use CONSUMED stock behavior
+    if (data.itemType === 'PRODUCT' && data.stockBehavior === 'CONSUMED') return false
+    // SERVICE items cannot use TIERED pricing
+    if (data.itemType === 'SERVICE' && data.pricingModel === 'TIERED') return false
+    // MENU items cannot use TIME_BASED pricing
+    if (data.itemType === 'MENU' && data.pricingModel === 'TIME_BASED') return false
+    // PACKAGE items cannot use CONSUMED stock
+    if (data.itemType === 'PACKAGE' && data.stockBehavior === 'CONSUMED') return false
+    return true
+  },
+  { message: 'Invalid item type, stock behavior, and pricing model combination' },
+)
+
+// ============================================================================
 // Product Query Schemas
 // ============================================================================
 
 export const ProductListQuerySchema = z.object({
   search: z.string().optional(),
   category: z.string().optional(),
+  itemType: ItemTypeSchema.optional(),
+  stockBehavior: StockBehaviorSchema.optional(),
   page: z.number().min(1, 'Page must be at least 1').default(1),
   limit: z.number().min(1).max(100, 'Limit cannot exceed 100').default(50),
 }).optional()
@@ -62,6 +105,11 @@ export const CreateProductSchema = z.object({
   name: ProductNameSchema,
   category: ProductCategorySchema,
   price: ProductPriceSchema.optional(),
+  itemType: ItemTypeSchema.default('PRODUCT'),
+  stockBehavior: StockBehaviorSchema.default('TRACKED'),
+  pricingModel: PricingModelSchema.default('FIXED'),
+  pricingTiers: z.array(PricingTierSchema).optional(),
+  durationMinutes: z.number().positive().optional(),
 })
 
 export const UpdateProductSchema = z.object({
@@ -70,6 +118,11 @@ export const UpdateProductSchema = z.object({
   name: ProductNameSchema,
   category: ProductCategorySchema,
   price: ProductPriceSchema.optional(),
+  itemType: ItemTypeSchema.optional(),
+  stockBehavior: StockBehaviorSchema.optional(),
+  pricingModel: PricingModelSchema.optional(),
+  pricingTiers: z.array(PricingTierSchema).optional(),
+  durationMinutes: z.number().positive().optional(),
 })
 
 export const DeleteProductSchema = ProductIdSchema
@@ -83,6 +136,8 @@ export const ProductFilterSchema = z.object({
   maxPrice: z.number().positive().optional(),
   categories: z.array(z.string()).optional(),
   inStock: z.boolean().optional(),
+  itemType: ItemTypeSchema.optional(),
+  stockBehavior: StockBehaviorSchema.optional(),
 })
 
 // ============================================================================
@@ -114,3 +169,4 @@ export type ProductFilter = z.infer<typeof ProductFilterSchema>
 export type BulkCreateProducts = z.infer<typeof BulkCreateProductsSchema>
 export type BulkUpdateProducts = z.infer<typeof BulkUpdateProductsSchema>
 export type BulkDeleteProducts = z.infer<typeof BulkDeleteProductsSchema>
+export type PricingTier = z.infer<typeof PricingTierSchema>

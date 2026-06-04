@@ -174,6 +174,13 @@ export type Database = {
           name: string
           price: number | null
           sku: string
+          barcode: string | null
+          owner_id: string | null
+          item_type: Database["public"]["Enums"]["item_type"]
+          stock_behavior: Database["public"]["Enums"]["stock_behavior"]
+          pricing_model: Database["public"]["Enums"]["pricing_model"]
+          pricing_tiers: Json | null
+          duration_minutes: number | null
         }
         Insert: {
           category?: string | null
@@ -182,6 +189,13 @@ export type Database = {
           name: string
           price?: number | null
           sku: string
+          barcode?: string | null
+          owner_id?: string | null
+          item_type?: Database["public"]["Enums"]["item_type"]
+          stock_behavior?: Database["public"]["Enums"]["stock_behavior"]
+          pricing_model?: Database["public"]["Enums"]["pricing_model"]
+          pricing_tiers?: Json | null
+          duration_minutes?: number | null
         }
         Update: {
           category?: string | null
@@ -190,8 +204,55 @@ export type Database = {
           name?: string
           price?: number | null
           sku?: string
+          barcode?: string | null
+          owner_id?: string | null
+          item_type?: Database["public"]["Enums"]["item_type"]
+          stock_behavior?: Database["public"]["Enums"]["stock_behavior"]
+          pricing_model?: Database["public"]["Enums"]["pricing_model"]
+          pricing_tiers?: Json | null
+          duration_minutes?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_profiles: {
+        Row: {
+          id: string
+          user_id: string
+          business_type: Database["public"]["Enums"]["business_type"]
+          enabled_modules: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          business_type?: Database["public"]["Enums"]["business_type"]
+          enabled_modules?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          business_type?: Database["public"]["Enums"]["business_type"]
+          enabled_modules?: Json
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -214,7 +275,10 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      business_type: "FNB" | "RETAIL" | "SERVICE" | "HYBRID"
+      item_type: "PRODUCT" | "MENU" | "SERVICE" | "PACKAGE"
+      stock_behavior: "TRACKED" | "UNTRACKED" | "CONSUMED"
+      pricing_model: "FIXED" | "TIERED" | "TIME_BASED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -341,6 +405,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      business_type: ["FNB", "RETAIL", "SERVICE", "HYBRID"] as const,
+      item_type: ["PRODUCT", "MENU", "SERVICE", "PACKAGE"] as const,
+      stock_behavior: ["TRACKED", "UNTRACKED", "CONSUMED"] as const,
+      pricing_model: ["FIXED", "TIERED", "TIME_BASED"] as const,
+    },
   },
 } as const

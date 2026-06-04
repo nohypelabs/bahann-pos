@@ -93,7 +93,9 @@ export default function StockManagementPage() {
   const { data: productsResponse, isLoading: productsLoading } = trpc.products.getAll.useQuery()
   const { data: outletsResponse, isLoading: outletsLoading } = trpc.outlets.getAll.useQuery()
 
-  const products = productsResponse?.products || []
+  const allProducts = productsResponse?.products || []
+  // Only show TRACKED products in stock management (services/menu don't need stock tracking)
+  const products = allProducts.filter(p => p.stock_behavior === 'TRACKED' || !p.stock_behavior)
   const outlets = outletsResponse?.outlets || []
 
   const canFetchLatest = !!(formData.productId && formData.outletId)
@@ -170,6 +172,17 @@ export default function StockManagementPage() {
         <div className="flex items-center gap-3 p-3.5 bg-red-50 dark:bg-red-900/30 border-2 border-red-200 dark:border-red-800 rounded-xl">
           <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
           <p className="text-sm font-semibold text-red-700 dark:text-red-300">{error}</p>
+        </div>
+      )}
+
+      {/* Info banner for filtered items */}
+      {allProducts.length > products.length && (
+        <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl">
+          <Package className="w-4 h-4 text-gray-400 shrink-0" />
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Item bertipe Jasa dan Menu (tanpa stok) tidak ditampilkan di halaman ini.
+            <span className="font-semibold"> {allProducts.length - products.length} item disembunyikan.</span>
+          </p>
         </div>
       )}
 

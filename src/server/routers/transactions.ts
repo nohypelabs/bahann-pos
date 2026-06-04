@@ -9,6 +9,9 @@ import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
 import { getTenantOwnerId } from '@/server/lib/tenant'
 import { TRPCError } from '@trpc/server'
+import { StockService } from '@/domain/services/StockService'
+import { PricingService } from '@/domain/services/PricingService'
+import type { Product } from '@/domain/entities/Product'
 
 const PLAN_LIMITS: Record<string, number> = {
   free: 100,
@@ -224,10 +227,28 @@ export const transactionsRouter = router({
         }
 
         // Update stock - deduct sold items from inventory
+        // Skip stock deduction for UNTRACKED items (services, standard menu)
         const today = new Date().toISOString().split('T')[0]
 
+        // Fetch product stock_behavior for all items in one query
+        const productIds = input.items.map(item => item.productId)
+        const { data: productsData } = await supabase
+          .from('products')
+          .select('id, stock_behavior, name')
+          .in('id', productIds)
+
+        const productMap = new Map(productsData?.map(p => [p.id, p]) ?? [])
+
         for (const item of input.items) {
-          // Get latest stock for this product at this outlet
+          const productInfo = productMap.get(item.productId)
+          const stockBehavior = productInfo?.stock_behavior || 'TRACKED'
+
+          // Skip stock deduction for UNTRACKED items (services, standard menu)
+          if (stockBehavior === 'UNTRACKED' || stockBehavior === 'CONSUMED') {
+            continue
+          }
+
+          // TRACKED: get latest stock for this product at this outlet
           const { data: latestStock } = await supabase
             .from('daily_stock')
             .select('*')

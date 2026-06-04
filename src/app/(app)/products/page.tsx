@@ -31,13 +31,65 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   )
 }
 
+// ─── Pricing Tier Row ─────────────────────────────────────────────────────────
+interface PricingTierData {
+  minQuantity: number
+  pricePerUnit: number
+}
+
+function PricingTierBuilder({ tiers, onChange }: { tiers: PricingTierData[]; onChange: (tiers: PricingTierData[]) => void }) {
+  const addTier = () => onChange([...tiers, { minQuantity: tiers.length > 0 ? Math.max(...tiers.map(t => t.minQuantity)) + 10 : 1, pricePerUnit: 0 }])
+  const removeTier = (idx: number) => onChange(tiers.filter((_, i) => i !== idx))
+  const updateTier = (idx: number, field: keyof PricingTierData, value: number) => {
+    const updated = [...tiers]
+    updated[idx] = { ...updated[idx], [field]: value }
+    onChange(updated)
+  }
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Tier Harga</label>
+      {tiers.map((tier, idx) => (
+        <div key={idx} className="flex gap-2 items-center">
+          <div className="flex-1">
+            <label className="text-[10px] text-gray-400 mb-0.5 block">Min. Qty</label>
+            <input type="number" min="1" value={tier.minQuantity} onChange={e => updateTier(idx, 'minQuantity', parseInt(e.target.value) || 1)}
+              className="w-full px-2 py-1.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none" />
+          </div>
+          <div className="flex-1">
+            <label className="text-[10px] text-gray-400 mb-0.5 block">Harga/Unit (Rp)</label>
+            <input type="number" min="0" step="1" value={tier.pricePerUnit} onChange={e => updateTier(idx, 'pricePerUnit', parseInt(e.target.value) || 0)}
+              className="w-full px-2 py-1.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none" />
+          </div>
+          <button type="button" onClick={() => removeTier(idx)} className="mt-4 text-red-400 hover:text-red-600 text-sm font-bold">✕</button>
+        </div>
+      ))}
+      <button type="button" onClick={addTier}
+        className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">
+        + Tambah Tier
+      </button>
+    </div>
+  )
+}
+
 // ─── Product Form Modal ───────────────────────────────────────────────────────
 function ProductFormModal({ product, onClose, onSuccess }: { product: Product | null; onClose: () => void; onSuccess: () => void }) {
   const [formData, setFormData] = useState({
     sku: product?.sku || '', barcode: product?.barcode || '',
     name: product?.name || '', category: product?.category || '',
     price: product?.price || '' as string | number,
+    itemType: (product as any)?.item_type || 'PRODUCT',
+    stockBehavior: (product as any)?.stock_behavior || 'TRACKED',
+    pricingModel: (product as any)?.pricing_model || 'FIXED',
+    durationMinutes: (product as any)?.duration_minutes || '' as string | number,
   })
+  const [pricingTiers, setPricingTiers] = useState<PricingTierData[]>(
+    (() => {
+      const raw = (product as any)?.pricing_tiers
+      if (!raw) return []
+      return typeof raw === 'string' ? JSON.parse(raw) : raw
+    })()
+  )
   const { showToast } = useToast()
   const createProduct = trpc.products.create.useMutation()
   const updateProduct = trpc.products.update.useMutation()
@@ -46,16 +98,29 @@ function ProductFormModal({ product, onClose, onSuccess }: { product: Product | 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
-      const data = {
-        sku: formData.sku, barcode: formData.barcode || undefined, name: formData.name,
+      const data: Record<string, unknown> = {
+        sku: formData.sku,
+        barcode: formData.barcode || undefined,
+        name: formData.name,
         category: formData.category || undefined,
         price: formData.price ? parseFloat(formData.price.toString()) : undefined,
+        itemType: formData.itemType,
+        stockBehavior: formData.stockBehavior,
+        pricingModel: formData.pricingModel,
       }
+
+      if (formData.pricingModel === 'TIERED') {
+        data.pricingTiers = pricingTiers.length > 0 ? pricingTiers : undefined
+      }
+      if (formData.pricingModel === 'TIME_BASED' && formData.durationMinutes) {
+        data.durationMinutes = parseInt(formData.durationMinutes.toString())
+      }
+
       if (product) {
-        await updateProduct.mutateAsync({ id: product.id, ...data })
+        await updateProduct.mutateAsync({ id: product.id, ...data } as any)
         showToast('Produk berhasil diperbarui!', 'success')
       } else {
-        await createProduct.mutateAsync(data)
+        await createProduct.mutateAsync(data as any)
         showToast('Produk berhasil dibuat!', 'success')
       }
       onSuccess()
@@ -64,17 +129,81 @@ function ProductFormModal({ product, onClose, onSuccess }: { product: Product | 
     }
   }
 
-  const f = (key: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) =>
+  const f = (key: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setFormData(prev => ({ ...prev, [key]: e.target.value }))
+
+  // Auto-set stock behavior when item type changes
+  const handleItemTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const type = e.target.value
+    setFormData(prev => ({
+      ...prev,
+      itemType: type,
+      // Auto-suggest stock behavior based on item type
+      stockBehavior: type === 'SERVICE' ? 'UNTRACKED' : type === 'MENU' ? 'UNTRACKED' : prev.stockBehavior,
+      // Auto-suggest pricing model
+      pricingModel: type === 'SERVICE' ? 'FIXED' : type === 'MENU' ? 'FIXED' : prev.pricingModel,
+    }))
+  }
 
   return (
     <Modal title={product ? 'Edit Produk' : 'Tambah Produk Baru'} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-3">
+        {/* Item Type */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Tipe Item</label>
+          <select value={formData.itemType} onChange={handleItemTypeChange}
+            className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors">
+            <option value="PRODUCT">📦 Produk Fisik</option>
+            <option value="MENU">🍜 Menu / Makanan</option>
+            <option value="SERVICE">✂️ Jasa / Layanan</option>
+            <option value="PACKAGE">📦 Paket / Bundle</option>
+          </select>
+        </div>
+
         <Input label="SKU *" type="text" value={formData.sku} onChange={f('sku')} placeholder="PROD-001" fullWidth required />
         <Input label="Barcode" type="text" value={formData.barcode as string} onChange={f('barcode')} placeholder="8991234567890" fullWidth />
         <Input label="Nama Produk *" type="text" value={formData.name} onChange={f('name')} placeholder="Coca Cola 330ml" fullWidth required />
         <Input label="Kategori" type="text" value={formData.category} onChange={f('category')} placeholder="Minuman" fullWidth />
         <Input label="Harga (Rp)" type="number" step="1" min="0" value={formData.price as number} onChange={f('price')} placeholder="5000" fullWidth />
+
+        {/* Stock Behavior */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Perilaku Stok</label>
+          <select value={formData.stockBehavior} onChange={f('stockBehavior')}
+            className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors">
+            <option value="TRACKED">📊 Stok Terlacak</option>
+            <option value="UNTRACKED">♾️ Tanpa Stok</option>
+            <option value="CONSUMED">🍳 Stok Bahan Baku (Resep)</option>
+          </select>
+          <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+            {formData.stockBehavior === 'TRACKED' && 'Stok dipotong otomatis setiap transaksi'}
+            {formData.stockBehavior === 'UNTRACKED' && 'Stok tidak dilacak — cocok untuk jasa dan menu standar'}
+            {formData.stockBehavior === 'CONSUMED' && 'Stok bahan baku dikurangi via resep'}
+          </p>
+        </div>
+
+        {/* Pricing Model */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Model Harga</label>
+          <select value={formData.pricingModel} onChange={f('pricingModel')}
+            className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors">
+            <option value="FIXED">💰 Harga Tetap</option>
+            <option value="TIERED">📊 Harga Grosir (Tiered)</option>
+            <option value="TIME_BASED">⏱️ Harga Per Durasi</option>
+          </select>
+        </div>
+
+        {/* Tiered Pricing Builder */}
+        {formData.pricingModel === 'TIERED' && (
+          <PricingTierBuilder tiers={pricingTiers} onChange={setPricingTiers} />
+        )}
+
+        {/* Time-Based Duration */}
+        {formData.pricingModel === 'TIME_BASED' && (
+          <Input label="Durasi (menit) *" type="number" step="1" min="1" value={formData.durationMinutes as number}
+            onChange={f('durationMinutes')} placeholder="60" fullWidth />
+        )}
+
         <div className="flex gap-2 pt-2">
           <Button type="button" variant="secondary" onClick={onClose} fullWidth disabled={isPending}>Batal</Button>
           <Button type="submit" variant="primary" fullWidth disabled={isPending}>
@@ -336,7 +465,19 @@ export default function ProductsPage() {
                       <span className="font-mono text-xs text-gray-700 dark:text-gray-300">{product.sku}</span>
                     </td>
                     <td className="px-3 md:px-4 py-3">
-                      <span className="text-sm font-semibold text-gray-900 dark:text-white">{product.name}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-semibold text-gray-900 dark:text-white">{product.name}</span>
+                        {(product as any).item_type && (product as any).item_type !== 'PRODUCT' && (
+                          <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">
+                            {(product as any).item_type === 'SERVICE' ? 'Jasa' : (product as any).item_type === 'MENU' ? 'Menu' : (product as any).item_type === 'PACKAGE' ? 'Paket' : ''}
+                          </span>
+                        )}
+                        {(product as any).stock_behavior && (product as any).stock_behavior !== 'TRACKED' && (
+                          <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                            {(product as any).stock_behavior === 'UNTRACKED' ? '∞' : '🍳'}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 md:px-4 py-3">
                       {product.category ? (
