@@ -34,7 +34,10 @@ domain → use-cases → infra → server (tRPC) → app (pages/components)
 
 | Layer | Path | Purpose |
 |---|---|---|
-| **Domain** | `src/domain/` | Pure entities (`User`, `Product`, `DailySale`, `DailyStock`) and repository interfaces — no framework deps |
+| **Domain** | `src/domain/` | Pure entities (`User`, `Product`, `DailySale`, `DailyStock`, `BusinessProfile`) and repository interfaces — no framework deps |
+| **Domain Catalog** | `src/domain/catalog/value-objects/` | Enums: `BusinessType`, `ItemType`, `StockBehavior`, `PricingModel` |
+| **Domain Services** | `src/domain/services/` | `StockService`, `PricingService`, `ItemFactory`, `BusinessTypeStrategy` — pure business logic |
+| **Domain Errors** | `src/domain/errors/` | `DomainException` with machine-readable error codes |
 | **Use Cases** | `src/use-cases/` | Application logic (`RecordDailySaleUseCase`, `LoginUserUseCase`, etc.) — depend only on domain interfaces |
 | **Infra** | `src/infra/` | Supabase repository implementations; DI container at `container.ts` |
 | **Server** | `src/server/` | tRPC routers that call use-cases/infra; `trpc.ts` defines context + procedure types |
@@ -50,7 +53,7 @@ Router mounted at `src/app/api/trpc/[trpc]/`. All sub-routers combined in `src/s
 
 ```
 auth, stock, sales, products, outlets, dashboard, transactions,
-cashSessions, promotions, stockAlerts, users, audit
+cashSessions, promotions, stockAlerts, users, audit, businessProfile
 ```
 
 Three procedure types in `src/server/trpc.ts`:
@@ -84,6 +87,28 @@ const { t } = useLanguage()
 
 String tables: `src/locales/en.json` and `src/locales/id.json`. Never hardcode Indonesian strings in JSX.
 
+### Modular POS Architecture (Multi-Business Type)
+
+Laku POS supports multiple business types (Retail, FnB, Service, Hybrid) with flexible item types and pricing. See `docs/MODULAR_POS_ARCHITECTURE.md` for full documentation.
+
+**Key concepts:**
+- `BusinessType`: FNB | RETAIL | SERVICE | HYBRID — configured per tenant via `business_profiles` table
+- `ItemType`: PRODUCT | MENU | SERVICE | PACKAGE — configured per product
+- `StockBehavior`: TRACKED | UNTRACKED | CONSUMED — controls stock deduction
+- `PricingModel`: FIXED | TIERED | TIME_BASED — controls price calculation
+
+**Critical rules:**
+- UNTRACKED items skip stock deduction in `transactions.create`
+- Invalid combos (SERVICE+TRACKED, PRODUCT+CONSUMED, etc.) throw `DomainException` via `ItemFactory.validateCombo()`
+- New users must complete `/setup` to select business type before accessing the app
+- Stock page only shows TRACKED products
+
+**Key files:**
+- Value objects: `src/domain/catalog/value-objects/`
+- Domain services: `src/domain/services/` (StockService, PricingService, ItemFactory)
+- Setup page: `src/app/(app)/setup/page.tsx`
+- Migration: `supabase/migrations/030_modular_product_types.sql`
+
 ### Key Patterns
 
 - **Zod v4** for all validation — schemas in `src/shared/schemas/`.
@@ -99,9 +124,11 @@ String tables: `src/locales/en.json` and `src/locales/id.json`. Never hardcode I
 ### Authenticated App Routes (`src/app/(app)/`)
 
 ```
-dashboard, pos, products, transactions, payments, stock (warehouse),
+setup, dashboard, pos, products, transactions, payments, stock (warehouse),
 outlets, promotions, alerts, eod, settings, profile, reports, help
 ```
+
+Note: `/setup` is the first page new users see — business type selection (redirects to `/dashboard` if profile exists).
 
 ### Environment Variables
 
@@ -122,3 +149,7 @@ Full list including optional Sentry/GA vars: `deployment/ENV_VARIABLES.md`.
 ### Database Migrations
 
 Supabase migrations live in `supabase/migrations/`. Run via Supabase CLI. When adding new DB columns, use English names (existing mixed-language columns are kept stable to avoid breaking changes).
+
+**Latest migration:** `030_modular_product_types.sql` — adds modular POS support (business_profiles table, 5 new product columns, 4 PostgreSQL enum types).
+
+To run migrations: `supabase db push` or `supabase migration up`
