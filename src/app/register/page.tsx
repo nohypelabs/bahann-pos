@@ -8,9 +8,58 @@ import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
+const BUSINESS_TYPES = [
+  {
+    type: 'RETAIL' as const,
+    icon: '🏪',
+    titleId: 'Toko & Retail',
+    titleEn: 'Retail & Store',
+    descId: 'Minimarket, toko kelontong, warung sembako',
+    descEn: 'Minimarket, grocery store, general store',
+    modules: ['inventory'],
+    moduleLabelId: 'Manajemen Stok',
+    moduleLabelEn: 'Inventory Management',
+  },
+  {
+    type: 'FNB' as const,
+    icon: '🍜',
+    titleId: 'Kuliner & FnB',
+    titleEn: 'Food & Beverage',
+    descId: 'Warung makan, cafe, resto, nasi goreng, pecel lele',
+    descEn: 'Restaurant, cafe, food stall, street food',
+    modules: ['recipe'],
+    moduleLabelId: 'Manajemen Resep',
+    moduleLabelEn: 'Recipe Management',
+  },
+  {
+    type: 'SERVICE' as const,
+    icon: '✂️',
+    titleId: 'Jasa & Layanan',
+    titleEn: 'Service & Professional',
+    descId: 'Barbershop, car wash, laundry, servis AC',
+    descEn: 'Barbershop, car wash, laundry, repair service',
+    modules: ['appointment'],
+    moduleLabelId: 'Janji Temu',
+    moduleLabelEn: 'Appointment',
+  },
+  {
+    type: 'HYBRID' as const,
+    icon: '🔄',
+    titleId: 'Campuran (Hybrid)',
+    titleEn: 'Hybrid (Mixed)',
+    descId: 'Toko + jasa, retail + kuliner, atau kombinasi lainnya',
+    descEn: 'Store + service, retail + food, or any combination',
+    modules: ['inventory', 'recipe'],
+    moduleLabelId: 'Stok + Resep',
+    moduleLabelEn: 'Inventory + Recipe',
+  },
+]
+
 export default function RegisterPage() {
   const router = useRouter()
-  const { t } = useLanguage()
+  const { language } = useLanguage()
+  const isId = language === 'id'
+  const [step, setStep] = useState<1 | 2>(1)
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -19,6 +68,7 @@ export default function RegisterPage() {
     storeName: '',
     whatsappNumber: '',
   })
+  const [selectedType, setSelectedType] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -31,23 +81,33 @@ export default function RegisterPage() {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleNextStep = (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    setSuccess(false)
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Password tidak cocok')
+      setError(isId ? 'Password tidak cocok' : 'Passwords do not match')
       return
     }
 
     if (formData.password.length < 8) {
-      setError('Password minimal 8 karakter')
+      setError(isId ? 'Password minimal 8 karakter' : 'Password must be at least 8 characters')
       return
     }
 
     if (!formData.whatsappNumber || formData.whatsappNumber.length < 9) {
-      setError('Nomor WhatsApp wajib diisi (minimal 9 digit)')
+      setError(isId ? 'Nomor WhatsApp wajib diisi (minimal 9 digit)' : 'WhatsApp number is required (min 9 digits)')
+      return
+    }
+
+    setStep(2)
+  }
+
+  const handleRegister = async () => {
+    setError('')
+
+    if (!selectedType) {
+      setError(isId ? 'Pilih jenis usaha terlebih dahulu' : 'Please select a business type')
       return
     }
 
@@ -60,12 +120,13 @@ export default function RegisterPage() {
         name: formData.name,
         storeName: formData.storeName,
         whatsappNumber: formData.whatsappNumber,
+        businessType: selectedType,
       })
 
       setSuccess(true)
       setTimeout(() => router.push('/login?registered=true'), 2000)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Pendaftaran gagal. Coba lagi.')
+      setError(err instanceof Error ? err.message : (isId ? 'Pendaftaran gagal. Coba lagi.' : 'Registration failed. Please try again.'))
     } finally {
       setIsLoading(false)
     }
@@ -77,24 +138,39 @@ export default function RegisterPage() {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-3"><img src="/logo.svg" alt="Laku POS" className="w-16 h-16 rounded-2xl shadow-md" /></div>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">Laku POS</h1>
-          <p className="text-gray-600 dark:text-gray-400">Daftar sebagai pemilik warung</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {isId ? 'Daftar sebagai pemilik warung' : 'Register as a store owner'}
+          </p>
+          {/* Step indicator */}
+          <div className="flex justify-center gap-2 mt-4">
+            <span className={`w-8 h-1 rounded-full ${step === 1 ? 'bg-blue-500' : 'bg-blue-500'}`} />
+            <span className={`w-8 h-1 rounded-full ${step === 2 ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-700'}`} />
+          </div>
         </div>
 
         <Card variant="elevated" padding="lg">
           <CardHeader>
-            <CardTitle>{t('register.title')}</CardTitle>
+            <CardTitle>
+              {step === 1
+                ? (isId ? 'Informasi Akun' : 'Account Information')
+                : (isId ? 'Jenis Usaha' : 'Business Type')}
+            </CardTitle>
           </CardHeader>
 
           <CardBody>
             {success ? (
               <div className="text-center py-8">
                 <div className="mb-4 text-6xl">✅</div>
-                <h3 className="text-2xl font-bold text-green-600 mb-2">{t('register.success')}</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">{t('register.success')}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{t('common.loading')}</p>
+                <h3 className="text-2xl font-bold text-green-600 mb-2">
+                  {isId ? 'Pendaftaran Berhasil!' : 'Registration Successful!'}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {isId ? 'Mengalihkan ke halaman login...' : 'Redirecting to login...'}
+                </p>
               </div>
-            ) : (
-              <form onSubmit={handleRegister} className="space-y-4">
+            ) : step === 1 ? (
+              /* Step 1: Account Info */
+              <form onSubmit={handleNextStep} className="space-y-4">
                 {error && (
                   <div className="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
                     <p className="text-sm font-semibold text-red-600">❌ {error}</p>
@@ -104,8 +180,8 @@ export default function RegisterPage() {
                 <Input
                   type="text"
                   name="name"
-                  label={t('register.name')}
-                  placeholder={t('register.name')}
+                  label={isId ? 'Nama Lengkap' : 'Full Name'}
+                  placeholder={isId ? 'Nama Lengkap' : 'Full Name'}
                   value={formData.name}
                   onChange={handleChange}
                   fullWidth
@@ -115,8 +191,8 @@ export default function RegisterPage() {
                 <Input
                   type="text"
                   name="storeName"
-                  label="Nama Toko / Warung"
-                  placeholder="cth: Warung Bu Sari, Toko Makmur"
+                  label={isId ? 'Nama Toko / Warung' : 'Store / Shop Name'}
+                  placeholder={isId ? 'cth: Warung Bu Sari' : 'e.g. My Store'}
                   value={formData.storeName}
                   onChange={handleChange}
                   fullWidth
@@ -125,7 +201,7 @@ export default function RegisterPage() {
 
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Nomor WhatsApp *
+                    {isId ? 'Nomor WhatsApp' : 'WhatsApp Number'} *
                   </label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium text-sm select-none">
@@ -141,16 +217,13 @@ export default function RegisterPage() {
                       required
                     />
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Digunakan untuk aktivasi akun dan notifikasi
-                  </p>
                 </div>
 
                 <Input
                   type="email"
                   name="email"
-                  label={t('register.email')}
-                  placeholder={t('register.email')}
+                  label={isId ? 'Email' : 'Email'}
+                  placeholder={isId ? 'Email' : 'Email'}
                   value={formData.email}
                   onChange={handleChange}
                   fullWidth
@@ -159,13 +232,13 @@ export default function RegisterPage() {
 
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    {t('register.password')} *
+                    {isId ? 'Password' : 'Password'} *
                   </label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
                       name="password"
-                      placeholder="Minimal 8 karakter"
+                      placeholder={isId ? 'Minimal 8 karakter' : 'At least 8 characters'}
                       value={formData.password}
                       onChange={handleChange}
                       className="w-full px-4 py-3 pr-12 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
@@ -179,20 +252,17 @@ export default function RegisterPage() {
                       {showPassword ? '🙈' : '👁️'}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Gunakan kombinasi huruf, angka, dan simbol
-                  </p>
                 </div>
 
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    {t('register.confirmPassword')} *
+                    {isId ? 'Konfirmasi Password' : 'Confirm Password'} *
                   </label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
                       name="confirmPassword"
-                      placeholder="Konfirmasi password"
+                      placeholder={isId ? 'Konfirmasi password' : 'Confirm password'}
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       className="w-full px-4 py-3 pr-12 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
@@ -209,34 +279,102 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="pt-2">
-                  <Button type="submit" variant="primary" size="lg" fullWidth disabled={isLoading}>
-                    {isLoading ? t('common.loading') : t('register.button')}
+                  <Button type="submit" variant="primary" size="lg" fullWidth>
+                    {isId ? 'Selanjutnya →' : 'Next →'}
                   </Button>
                 </div>
 
                 <div className="pt-2 text-center">
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {t('register.hasAccount')}{' '}
+                    {isId ? 'Sudah punya akun?' : 'Already have an account?'}{' '}
                     <a href="/login" className="font-semibold text-gray-900 dark:text-gray-100 hover:underline">
-                      {t('register.login')}
+                      {isId ? 'Masuk' : 'Login'}
                     </a>
                   </p>
                 </div>
               </form>
+            ) : (
+              /* Step 2: Business Type Selection */
+              <div className="space-y-4">
+                {error && (
+                  <div className="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+                    <p className="text-sm font-semibold text-red-600">❌ {error}</p>
+                  </div>
+                )}
+
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {isId
+                    ? 'Pilih jenis usaha Anda untuk mengkonfigurasi sistem secara otomatis'
+                    : 'Select your business type to automatically configure the system'}
+                </p>
+
+                <div className="grid grid-cols-1 gap-3">
+                  {BUSINESS_TYPES.map((bt) => {
+                    const isSelected = selectedType === bt.type
+                    return (
+                      <button
+                        key={bt.type}
+                        onClick={() => setSelectedType(bt.type)}
+                        className={`relative text-left p-4 rounded-xl border-2 transition-all ${
+                          isSelected
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-md'
+                            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">✓</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{bt.icon}</span>
+                          <div>
+                            <h3 className={`text-sm font-bold ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>
+                              {isId ? bt.titleId : bt.titleEn}
+                            </h3>
+                            <p className={`text-xs ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                              {isId ? bt.descId : bt.descEn}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <Button variant="outline" size="lg" onClick={() => setStep(1)} className="flex-1">
+                    ← {isId ? 'Kembali' : 'Back'}
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    onClick={handleRegister}
+                    disabled={!selectedType || isLoading}
+                    className="flex-1"
+                  >
+                    {isLoading
+                      ? (isId ? 'Mendaftar...' : 'Registering...')
+                      : (isId ? '🚀 Daftar' : '🚀 Register')}
+                  </Button>
+                </div>
+              </div>
             )}
           </CardBody>
         </Card>
 
-        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
-          <p className="text-sm text-blue-900 dark:text-blue-200 font-semibold mb-2">ℹ️ Informasi Pendaftaran:</p>
-          <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
-            <li>• Akun ini adalah akun pemilik warung (admin)</li>
-            <li>• Outlet pertama dibuat otomatis setelah daftar</li>
-            <li>• Kasir bisa ditambahkan dari menu Pengaturan</li>
-            <li>• Nomor WhatsApp wajib untuk aktivasi akun</li>
-            <li>• Akun aktif dalam 1×24 jam setelah verifikasi</li>
-          </ul>
-        </div>
+        {!success && step === 1 && (
+          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
+            <p className="text-sm text-blue-900 dark:text-blue-200 font-semibold mb-2">
+              ℹ️ {isId ? 'Informasi Pendaftaran' : 'Registration Info'}:
+            </p>
+            <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
+              <li>• {isId ? 'Akun ini adalah akun pemilik warung (admin)' : 'This is a store owner (admin) account'}</li>
+              <li>• {isId ? 'Outlet pertama dibuat otomatis setelah daftar' : 'First outlet created automatically after registration'}</li>
+              <li>• {isId ? 'Kasir bisa ditambahkan dari menu Pengaturan' : 'Cashiers can be added from Settings'}</li>
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   )

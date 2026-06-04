@@ -56,6 +56,7 @@ const BUSINESS_TYPES = [
 export default function SetupPage() {
   const router = useRouter()
   const { t, language } = useLanguage()
+  const utils = trpc.useUtils()
   const [selectedType, setSelectedType] = useState<string | null>(null)
   const [error, setError] = useState('')
 
@@ -64,7 +65,7 @@ export default function SetupPage() {
 
   // If profile already exists, redirect to dashboard
   if (existingProfile && !profileLoading) {
-    router.push('/dashboard')
+    router.replace('/dashboard')
     return null
   }
 
@@ -77,7 +78,9 @@ export default function SetupPage() {
     setError('')
     try {
       await setupMutation.mutateAsync({ businessType: selectedType })
-      router.push('/dashboard')
+      // Refetch profile so layout doesn't redirect back to /setup with stale cache
+      await utils.businessProfile.getMyProfile.refetch()
+      router.replace('/dashboard')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Setup failed')
     }

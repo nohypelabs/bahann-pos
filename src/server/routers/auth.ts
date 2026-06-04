@@ -5,6 +5,9 @@ import { LoginUserUseCase } from '@/use-cases/auth/LoginUserUseCase'
 import { RegisterUserUseCase } from '@/use-cases/auth/RegisterUserUseCase'
 import { LogoutUserUseCase } from '@/use-cases/auth/LogoutUserUseCase'
 import { SupabaseUserRepository } from '@/infra/repositories/SupabaseUserRepository'
+import { SupabaseBusinessProfileRepository } from '@/infra/repositories/SupabaseBusinessProfileRepository'
+import { BusinessProfile } from '@/domain/entities/BusinessProfile'
+import { BUSINESS_TYPES } from '@/domain/catalog/value-objects/business-type'
 import { setAuthCookie, deleteAuthCookie, setRefreshCookie, deleteRefreshCookie, getRefreshCookie } from '@/lib/cookies'
 import { createAuditLog } from '@/lib/audit'
 import { createRefreshToken, rotateRefreshToken, revokeRefreshToken, revokeAllUserTokens } from '@/lib/refreshToken'
@@ -12,6 +15,7 @@ import { sendPasswordResetEmail, generateResetToken, sendNewUserNotification, se
 import bcrypt from 'bcryptjs'
 
 const userRepository = new SupabaseUserRepository()
+const profileRepo = new SupabaseBusinessProfileRepository()
 
 export const authRouter = router({
   /**
@@ -25,6 +29,7 @@ export const authRouter = router({
         name: z.string().min(1),
         storeName: z.string().min(1, 'Nama toko wajib diisi'),
         whatsappNumber: z.string().min(9, 'Nomor WhatsApp tidak valid').regex(/^[0-9+\-\s()]+$/, 'Format nomor tidak valid'),
+        businessType: z.enum(BUSINESS_TYPES as [string, ...string[]]),
       })
     )
     .mutation(async ({ input }) => {
@@ -72,6 +77,13 @@ export const authRouter = router({
           email_verify_token: verifyToken,
         })
         .eq('id', result.userId)
+
+      // Create business profile based on selected type
+      const profile = BusinessProfile.createDefaults(
+        result.userId,
+        input.businessType as import('@/domain/catalog/value-objects/business-type').BusinessType,
+      )
+      await profileRepo.save(profile)
 
       // Send verification email (non-fatal)
       await sendVerificationEmail({
