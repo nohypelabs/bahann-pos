@@ -3,11 +3,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useTheme } from '@/lib/theme/ThemeContext'
+import { useScrollReveal, useStaggerReveal, useFadeInScale, useSlideIn } from '@/hooks/useScrollReveal'
 import {
   ShoppingCart, Package, BarChart3, WifiOff, Users, Shield,
   MessageCircle, Check, Zap, DollarSign, Headphones,
   Store, UtensilsCrossed, Coffee, Shirt, Pill, ShoppingBag,
-  ArrowRight,
+  ArrowRight, Scissors, Car, Wrench, Fish, WashingMachine,
+  ChefHat, BriefcaseBusiness, Layers2,
 } from 'lucide-react'
 
 type Lang = 'id' | 'en'
@@ -22,11 +24,11 @@ const T = {
   },
   hero: {
     h1_1: { id: 'Kasir Digital ', en: 'Digital POS ' },
-    h1_2: { id: 'untuk Warung', en: 'for Small Business' },
-    h1_3: { id: ' Indonesia', en: '' },
+    h1_2: { id: 'untuk Semua Usaha', en: 'for Every Business' },
+    h1_3: { id: '', en: '' },
     subtitle: {
-      id: 'Kelola penjualan, stok, dan laporan dari HP. Tanpa ribet, tanpa mahal.',
-      en: 'Manage sales, inventory & reports from your phone. Simple, affordable.',
+      id: 'Dari warung, kuliner, jasa, sampai minimarket — kelola semuanya dari HP. Tanpa ribet, tanpa mahal.',
+      en: 'From stores, food stalls, services, to minimarts — manage everything from your phone. Simple, affordable.',
     },
     cta: { id: 'Mulai Gratis Sekarang', en: 'Start Free Now' },
     demo: { id: 'Minta Demo', en: 'Request Demo' },
@@ -46,7 +48,43 @@ const T = {
     { id: 'Fashion', en: 'Fashion' },
     { id: 'Apotek', en: 'Pharmacy' },
     { id: 'Minimarket', en: 'Minimart' },
+    { id: 'Barbershop', en: 'Barbershop' },
+    { id: 'Laundry', en: 'Laundry' },
+    { id: 'Car Wash', en: 'Car Wash' },
+    { id: 'Nasi Goreng', en: 'Fried Rice' },
+    { id: 'Seafood', en: 'Seafood' },
+    { id: 'Servis AC', en: 'AC Repair' },
   ],
+  businessTypes: {
+    heading: { id: 'Untuk Semua Jenis Usaha', en: 'For Every Business Type' },
+    subheading: { id: 'Pilih tipe bisnis Anda — sistem otomatis menyesuaikan', en: 'Pick your business type — system auto-adapts' },
+    types: [
+      {
+        icon: 'store',
+        title: { id: 'Toko & Retail', en: 'Retail & Store' },
+        desc: { id: 'Minimarket, toko kelontong, warung sembako', en: 'Minimarket, grocery store, general store' },
+        modules: { id: 'Stok Terlacak', en: 'Tracked Stock' },
+      },
+      {
+        icon: 'chef',
+        title: { id: 'Kuliner & FnB', en: 'Food & Beverage' },
+        desc: { id: 'Warung makan, cafe, resto, nasi goreng', en: 'Restaurant, cafe, food stall, street food' },
+        modules: { id: 'Tanpa Stok / Resep', en: 'No Stock / Recipe' },
+      },
+      {
+        icon: 'briefcase',
+        title: { id: 'Jasa & Layanan', en: 'Service & Professional' },
+        desc: { id: 'Barbershop, car wash, laundry, servis AC', en: 'Barbershop, car wash, laundry, repair' },
+        modules: { id: 'Tanpa Stok', en: 'No Stock' },
+      },
+      {
+        icon: 'layers',
+        title: { id: 'Campuran (Hybrid)', en: 'Hybrid (Mixed)' },
+        desc: { id: 'Toko + jasa, retail + kuliner', en: 'Store + service, retail + food' },
+        modules: { id: 'Stok + Resep', en: 'Stock + Recipe' },
+      },
+    ],
+  },
   mockup: {
     revenue: { id: 'Omset', en: 'Revenue' },
     transactions: { id: 'Transaksi', en: 'Txns' },
@@ -56,11 +94,11 @@ const T = {
   },
   steps: [
     { t: { id: 'Daftar Gratis', en: 'Sign Up Free' }, d: { id: 'Buat akun 1 menit', en: 'Create account in 1 min' } },
-    { t: { id: 'Setup Toko', en: 'Setup Store' }, d: { id: 'Tambah produk & kasir', en: 'Add products & staff' } },
-    { t: { id: 'Mulai Jualan', en: 'Start Selling' }, d: { id: 'Langsung pakai di HP', en: 'Use on your phone' } },
+    { t: { id: 'Pilih Jenis Usaha', en: 'Choose Business Type' }, d: { id: 'Retail, kuliner, jasa, atau hybrid', en: 'Retail, food, service, or hybrid' } },
+    { t: { id: 'Mulai Jualan', en: 'Start Selling' }, d: { id: 'Tambah produk & langsung pakai', en: 'Add products & start selling' } },
   ],
   features: {
-    heading: { id: 'Semua yang Warung Butuhkan', en: 'Everything Your Business Needs' },
+    heading: { id: 'Semua yang Usaha Anda Butuhkan', en: 'Everything Your Business Needs' },
     subheading: { id: 'Satu aplikasi, tidak perlu software lain.', en: 'One app, no other software needed.' },
     items: [
       {
@@ -77,16 +115,16 @@ const T = {
         ],
       },
       {
-        title: { id: 'Stok Real-time', en: 'Real-time Stock' },
+        title: { id: 'Stok Fleksibel', en: 'Flexible Stock' },
         desc: {
-          id: 'Pantau stok dari mana saja. Alert otomatis saat barang hampir habis.',
-          en: 'Monitor stock from anywhere. Auto-alerts when items run low.',
+          id: 'Stok terlacak untuk produk fisik, tanpa stok untuk jasa & menu, atau stok bahan baku via resep.',
+          en: 'Tracked stock for physical items, no stock for services & menu, or recipe-based ingredient tracking.',
         },
         points: [
+          { id: 'Stok terlacak otomatis', en: 'Auto-tracked stock' },
+          { id: 'Tanpa stok untuk jasa/menu', en: 'No stock for services/menu' },
+          { id: 'Stok bahan baku (resep)', en: 'Recipe-based stock' },
           { id: 'Notifikasi stok menipis', en: 'Low stock alerts' },
-          { id: 'Riwayat pergerakan stok', en: 'Stock movement history' },
-          { id: 'Multi-outlet', en: 'Multi-outlet' },
-          { id: 'Stok opname mudah', en: 'Easy stock-taking' },
         ],
       },
       {
@@ -286,8 +324,15 @@ const T = {
       {
         q: { id: 'Apakah benar-benar gratis?', en: 'Is it really free?' },
         a: {
-          id: 'Ya! Paket Gratis tidak perlu kartu kredit dan bisa dipakai selamanya. Limit 100 transaksi/bulan — cukup untuk warung yang baru mulai.',
-          en: 'Yes! The Free plan requires no credit card and is yours forever. 100 transactions/month — enough for a store just getting started.',
+          id: 'Ya! Paket Gratis tidak perlu kartu kredit dan bisa dipakai selamanya. Limit 100 transaksi/bulan — cukup untuk usaha yang baru mulai.',
+          en: 'Yes! The Free plan requires no credit card and is yours forever. 100 transactions/month — enough for a business just getting started.',
+        },
+      },
+      {
+        q: { id: 'Bisa dipakai untuk usaha selain toko?', en: 'Can it be used for non-retail businesses?' },
+        a: {
+          id: 'Bisa! Laku POS mendukung 4 jenis usaha: toko/retail, kuliner/FnB, jasa (barbershop, laundry, car wash), dan campuran (hybrid). Sistem otomatis menyesuaikan perilaku stok dan harga.',
+          en: 'Yes! Laku POS supports 4 business types: retail, food & beverage, services (barbershop, laundry, car wash), and hybrid. The system automatically adapts stock behavior and pricing.',
         },
       },
       {
@@ -307,14 +352,14 @@ const T = {
       {
         q: { id: 'Apakah data saya aman?', en: 'Is my data safe?' },
         a: {
-          id: 'Data setiap warung terisolasi penuh. Hanya Anda yang bisa akses. Kami pakai enkripsi dan Row Level Security.',
-          en: 'Each store\'s data is fully isolated. Only you can access it. We use encryption and Row Level Security.',
+          id: 'Data setiap usaha terisolasi penuh. Hanya Anda yang bisa akses. Kami pakai enkripsi dan Row Level Security.',
+          en: 'Each business\'s data is fully isolated. Only you can access it. We use encryption and Row Level Security.',
         },
       },
     ],
   },
   finalCta: {
-    heading: { id: 'Siap Bikin Warung Makin Laku?', en: 'Ready to Grow Your Business?' },
+    heading: { id: 'Siap Bikin Usaha Makin Laku?', en: 'Ready to Grow Your Business?' },
     desc: {
       id: 'Daftar gratis sekarang. Tanpa kartu kredit, tanpa install.',
       en: 'Sign up free now. No credit card, no install.',
@@ -328,8 +373,8 @@ const T = {
   },
   footer: {
     tagline: {
-      id: 'Kasir digital modern untuk warung dan toko kecil Indonesia.',
-      en: 'Modern digital POS for small businesses.',
+      id: 'Kasir digital modern untuk semua jenis usaha Indonesia.',
+      en: 'Modern digital POS for every business type.',
     },
     product: { id: 'Produk', en: 'Product' },
     help: { id: 'Bantuan', en: 'Help' },
@@ -375,6 +420,12 @@ const INDUSTRY_ICONS = [
   <Shirt key={3} className="w-3.5 h-3.5" />,
   <Pill key={4} className="w-3.5 h-3.5" />,
   <ShoppingBag key={5} className="w-3.5 h-3.5" />,
+  <Scissors key={6} className="w-3.5 h-3.5" />,
+  <WashingMachine key={7} className="w-3.5 h-3.5" />,
+  <Car key={8} className="w-3.5 h-3.5" />,
+  <UtensilsCrossed key={9} className="w-3.5 h-3.5" />,
+  <Fish key={10} className="w-3.5 h-3.5" />,
+  <Wrench key={11} className="w-3.5 h-3.5" />,
 ]
 
 const FEATURE_ICONS = [
@@ -439,6 +490,17 @@ export default function LandingPage() {
   const chatEndRef = useRef<HTMLDivElement>(null)
   const sectionRefs = useRef<(HTMLElement | null)[]>([])
   const { theme } = useTheme()
+
+  // Scroll reveal animations
+  const heroText = useScrollReveal<HTMLDivElement>({ delay: 0, duration: 800 })
+  const heroCta = useScrollReveal<HTMLDivElement>({ delay: 200, duration: 800 })
+  const heroMockup = useFadeInScale<HTMLDivElement>({ delay: 300, duration: 900 })
+  const stepsReveal = useStaggerReveal<HTMLDivElement>({ count: 3, stagger: 120, duration: 700 })
+  const bizTypesReveal = useStaggerReveal<HTMLDivElement>({ count: 4, stagger: 100, duration: 600 })
+  const featuresReveal = useStaggerReveal<HTMLDivElement>({ count: 6, stagger: 80, duration: 600 })
+  const pricingReveal = useStaggerReveal<HTMLDivElement>({ count: 4, stagger: 100, duration: 600 })
+  const faqReveal = useStaggerReveal<HTMLDivElement>({ count: 5, stagger: 80, duration: 500 })
+  const finalCtaReveal = useFadeInScale<HTMLDivElement>({ delay: 0, duration: 800 })
 
   const toggleLang = () => {
     const next = lang === 'id' ? 'en' : 'id'
@@ -541,14 +603,14 @@ export default function LandingPage() {
       {/* ── HERO ── */}
       <section ref={el => { sectionRefs.current[0] = el }} className="pt-12 md:pt-16 pb-10 md:pb-14 px-4 overflow-x-hidden">
         <div className="max-w-5xl mx-auto w-full">
-          <div className="text-center max-w-3xl mx-auto">
+          <div ref={heroText.ref} style={heroText.style} className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-4 tracking-tight">
               {T.hero.h1_1[lang]}<span className="text-green-600">{T.hero.h1_2[lang]}</span>{T.hero.h1_3[lang]}
             </h1>
             <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
               {T.hero.subtitle[lang]}
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
+            <div ref={heroCta.ref} style={heroCta.style} className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
               <Link href="/register" className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white text-xs sm:text-sm font-bold px-8 py-2.5 rounded-xl transition-all hover:shadow-lg hover:-translate-y-0.5 flex items-center justify-center gap-2 whitespace-nowrap">
                 {T.hero.cta[lang]} <ArrowRight className="w-4 h-4" />
               </Link>
@@ -571,7 +633,7 @@ export default function LandingPage() {
           </div>
 
           {/* App preview mockup */}
-          <div className="mt-10 max-w-2xl mx-auto">
+          <div ref={heroMockup.ref} style={heroMockup.style} className="mt-10 max-w-2xl mx-auto">
             <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
               <div className="flex items-center gap-2 px-4 py-2.5 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
                 <div className="flex gap-1.5">
@@ -611,9 +673,9 @@ export default function LandingPage() {
           </div>
 
           {/* 3 steps */}
-          <div className="mt-10 flex flex-wrap justify-center gap-4 max-w-4xl mx-auto" id="cara-kerja">
+          <div ref={stepsReveal.ref} className="mt-10 flex flex-wrap justify-center gap-4 max-w-4xl mx-auto" id="cara-kerja">
             {T.steps.map((step, i) => (
-              <div key={i} className="text-center flex-1 min-w-[100px]">
+              <div key={i} style={stepsReveal.getItemStyle(i)} className="text-center flex-1 min-w-[100px]">
                 <div className="w-9 h-9 bg-green-600 text-white text-sm font-bold rounded-full flex items-center justify-center mx-auto mb-2">
                   {i + 1}
                 </div>
@@ -621,6 +683,44 @@ export default function LandingPage() {
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{step.d[lang]}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── BUSINESS TYPES ── */}
+      <section className="py-12 md:py-16 px-4 bg-gray-50 dark:bg-gray-900/50">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl md:4xl font-extrabold text-gray-900 dark:text-gray-100 mb-2">
+              {T.businessTypes.heading[lang]}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              {T.businessTypes.subheading[lang]}
+            </p>
+          </div>
+          <div ref={bizTypesReveal.ref} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {T.businessTypes.types.map((bt, i) => {
+              const IconComponent = bt.icon === 'store' ? Store
+                : bt.icon === 'chef' ? ChefHat
+                : bt.icon === 'briefcase' ? BriefcaseBusiness
+                : Layers2
+              return (
+              <div key={i} style={bizTypesReveal.getItemStyle(i)} className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-lg transition-all">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mb-3">
+                  <IconComponent className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
+                  {bt.title[lang]}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                  {bt.desc[lang]}
+                </p>
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                  <Check className="w-3 h-3" /> {bt.modules[lang]}
+                </span>
+              </div>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -633,11 +733,12 @@ export default function LandingPage() {
             <p className="text-gray-600 dark:text-gray-400">{T.features.subheading[lang]}</p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-2 mb-8 w-full max-w-full">
+          <div ref={featuresReveal.ref} className="flex flex-wrap justify-center gap-2 mb-8 w-full max-w-full">
             {T.features.items.map((f, i) => (
               <button
                 key={i}
                 onClick={() => setActiveFeature(i)}
+                style={featuresReveal.getItemStyle(i)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
                   activeFeature === i
                     ? 'bg-green-600 text-white shadow-md'
@@ -700,32 +801,36 @@ export default function LandingPage() {
           </div>
 
           {pricingMode === 'subscription' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full">
+            <div ref={pricingReveal.ref} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full">
               {T.pricing.sub.map((plan, i) => (
-                <PricingCard key={i} name={plan.name} price={plan.price}
-                  period={plan.period?.[lang]}
-                  badge={plan.badge?.[lang]} badgeColor={plan.badgeColor}
-                  desc={plan.desc[lang]}
-                  features={plan.features.map(f => f[lang])}
-                  cta={plan.cta[lang]} href={plan.href}
-                  waMsg={plan.waMsg?.[lang]}
-                  popular={plan.popular}
-                  popularLabel={lang === 'en' ? 'POPULAR' : 'POPULER'} />
+                <div key={i} style={pricingReveal.getItemStyle(i)}>
+                  <PricingCard name={plan.name} price={plan.price}
+                    period={plan.period?.[lang]}
+                    badge={plan.badge?.[lang]} badgeColor={plan.badgeColor}
+                    desc={plan.desc[lang]}
+                    features={plan.features.map(f => f[lang])}
+                    cta={plan.cta[lang]} href={plan.href}
+                    waMsg={plan.waMsg?.[lang]}
+                    popular={plan.popular}
+                    popularLabel={lang === 'en' ? 'POPULAR' : 'POPULER'} />
+                </div>
               ))}
             </div>
           )}
 
           {pricingMode === 'onetime' && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto w-full">
+            <div ref={pricingReveal.ref} className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto w-full">
               {T.pricing.once.map((plan, i) => (
-                <PricingCard key={i} name={plan.name} price={plan.price}
-                  badge={plan.badge[lang]} badgeColor={plan.badgeColor}
-                  desc={plan.desc[lang]}
-                  features={plan.features.map(f => f[lang])}
-                  cta={plan.cta[lang]}
-                  waMsg={plan.waMsg[lang]}
-                  popular={plan.popular}
-                  popularLabel={lang === 'en' ? 'POPULAR' : 'POPULER'} />
+                <div key={i} style={pricingReveal.getItemStyle(i)}>
+                  <PricingCard name={plan.name} price={plan.price}
+                    badge={plan.badge[lang]} badgeColor={plan.badgeColor}
+                    desc={plan.desc[lang]}
+                    features={plan.features.map(f => f[lang])}
+                    cta={plan.cta[lang]}
+                    waMsg={plan.waMsg[lang]}
+                    popular={plan.popular}
+                    popularLabel={lang === 'en' ? 'POPULAR' : 'POPULER'} />
+                </div>
               ))}
             </div>
           )}
@@ -755,9 +860,10 @@ export default function LandingPage() {
       <section ref={el => { sectionRefs.current[3] = el }} className="py-12 md:py-16 px-4 overflow-x-hidden" id="faq">
         <div className="max-w-2xl mx-auto w-full">
           <h2 className="text-2xl md:text-3xl font-extrabold text-center mb-6">{T.faq.heading[lang]}</h2>
-          <div className="space-y-2">
+          <div ref={faqReveal.ref} className="space-y-2">
             {T.faq.items.map((faq, i) => (
               <div key={i} onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                style={faqReveal.getItemStyle(i)}
                 className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 cursor-pointer hover:border-green-300 dark:hover:border-green-700 transition-all overflow-hidden">
                 <div className="flex justify-between items-center px-4 py-3.5">
                   <h3 className="font-semibold text-sm text-gray-900 dark:text-gray-100 pr-4">{faq.q[lang]}</h3>
@@ -776,7 +882,7 @@ export default function LandingPage() {
 
       {/* ── FINAL CTA ── */}
       <section className="py-12 md:py-16 px-4 bg-green-600 text-white text-center overflow-x-hidden">
-        <div className="max-w-2xl mx-auto w-full">
+        <div ref={finalCtaReveal.ref} style={finalCtaReveal.style} className="max-w-2xl mx-auto w-full">
           <h2 className="text-3xl md:text-4xl font-extrabold mb-3">{T.finalCta.heading[lang]}</h2>
           <p className="text-base mb-6 opacity-90">{T.finalCta.desc[lang]}</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
