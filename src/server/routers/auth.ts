@@ -85,29 +85,27 @@ export const authRouter = router({
       )
       await profileRepo.save(profile)
 
-      // Send verification email (non-fatal)
-      await sendVerificationEmail({
+      // Fire-and-forget emails — don't block registration response
+      sendVerificationEmail({
         to: result.email,
         name: result.name,
         token: verifyToken,
-      })
+      }).catch(() => {})
 
-      // Welcome email to new user (non-fatal)
-      await sendWelcomeEmail({
+      sendWelcomeEmail({
         to: result.email,
         name: result.name,
         storeName: input.storeName,
-      })
+      }).catch(() => {})
 
-      // Notify admin of new registration (non-fatal)
       const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL
       if (adminEmail) {
-        await sendNewUserNotification({
+        sendNewUserNotification({
           adminEmail,
           newUserName: result.name,
           newUserEmail: result.email,
           newUserWhatsapp: input.whatsappNumber,
-        })
+        }).catch(() => {})
       }
 
       return {
