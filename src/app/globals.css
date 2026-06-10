@@ -6,6 +6,26 @@
   --background: #f8fafc;
   --foreground: #111827;
 
+  /* Brand & Accent */
+  --accent-primary: #2563EB;
+  --accent-primary-hover: #1D4ED8;
+  --accent-primary-light: #DBEAFE;
+  --accent-secondary: #EA7317;
+  --accent-secondary-hover: #D97706;
+
+  /* Semantic */
+  --success: #0A6B2E;
+  --success-light: #D1FAE5;
+  --warning: #EAB308;
+  --warning-light: #FEF9C3;
+  --error: #8B1A1A;
+  --error-light: #FEE2E2;
+
+  /* Score badges */
+  --score-high: #0A6B2E;
+  --score-mid: #EAB308;
+  --score-low: #8B1A1A;
+
   /* Chart color palette */
   --chart-1: #10b981;
   --chart-2: #3b82f6;
@@ -25,6 +45,27 @@ html {
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* Brand colors available as Tailwind utilities */
+  --color-accent: #2563EB;
+  --color-accent-hover: #1D4ED8;
+  --color-accent-light: #DBEAFE;
+  --color-warm: #EA7317;
+  --color-warm-hover: #D97706;
+
+  /* Semantic colors */
+  --color-success: #0A6B2E;
+  --color-success-light: #D1FAE5;
+  --color-warning: #EAB308;
+  --color-warning-light: #FEF9C3;
+  --color-danger: #8B1A1A;
+  --color-danger-light: #FEE2E2;
+
+  /* Score colors */
+  --color-score-high: #0A6B2E;
+  --color-score-mid: #EAB308;
+  --color-score-low: #8B1A1A;
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 

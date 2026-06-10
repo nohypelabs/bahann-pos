@@ -106,7 +106,7 @@ export async function createRefreshToken(
       throw new Error(`Failed to create refresh token: ${insertError.message}`)
     }
 
-    // Generate short-lived access token
+    // Generate short-lived access token (30 min, not 7 days)
     const jwtPayload: JWTPayload = {
       userId: user.id,
       email: user.email,
@@ -115,7 +115,7 @@ export async function createRefreshToken(
       role: user.role || undefined,
     }
 
-    const accessToken = signJWT(jwtPayload)
+    const accessToken = signJWT(jwtPayload, ACCESS_TOKEN_EXPIRY)
 
     logger.info('Refresh token created', { userId })
 

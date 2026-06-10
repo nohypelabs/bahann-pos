@@ -74,14 +74,23 @@ export const outletsRouter = router({
    */
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ input }) => {
-      const { data, error } = await supabase
-        .from('outlets')
-        .select('*')
-        .eq('id', input.id)
-        .single()
+    .query(async ({ ctx, input }) => {
+      // Tenant isolation: fetch only outlets belonging to the current tenant
+      const ownerId = await getTenantOwnerId(ctx.session.userId, ctx.session.role, ctx.session.outletId)
 
-      if (error) throw new Error(`Failed to fetch outlet: ${error.message}`)
+      let query = supabase
+        .from('outlets')
+        .select('id, name, address, phone, owner_id, is_active, created_at, updated_at')
+        .eq('id', input.id)
+
+      // Apply tenant filter if we can determine ownership
+      if (ownerId) {
+        query = query.eq('owner_id', ownerId)
+      }
+
+      const { data, error } = await query.single()
+
+      if (error) throw new TRPCError({ code: 'NOT_FOUND', message: 'Outlet tidak ditemukan' })
       return data
     }),
 

@@ -95,14 +95,23 @@ export const productsRouter = router({
    */
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ input }) => {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', input.id)
-        .single()
+    .query(async ({ ctx, input }) => {
+      // Tenant isolation: fetch only products belonging to the current tenant
+      const ownerId = await getTenantOwnerId(ctx.session.userId, ctx.session.role, ctx.session.outletId)
 
-      if (error) throw new Error(`Failed to fetch product: ${error.message}`)
+      let query = supabase
+        .from('products')
+        .select('id, name, sku, price, stock, category, item_type, stock_behavior, pricing_model, pricing_tiers, description, image_url, is_active, created_at, updated_at')
+        .eq('id', input.id)
+
+      // Apply tenant filter if we can determine ownership
+      if (ownerId) {
+        query = query.eq('owner_id', ownerId)
+      }
+
+      const { data, error } = await query.single()
+
+      if (error) throw new TRPCError({ code: 'NOT_FOUND', message: 'Produk tidak ditemukan' })
       return data
     }),
 

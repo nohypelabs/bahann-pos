@@ -28,6 +28,7 @@ export const DomainErrorCode = {
   INVALID_STOCK_BEHAVIOR: 'INVALID_STOCK_BEHAVIOR',
   MISSING_PRICING_TIERS: 'MISSING_PRICING_TIERS',
   MISSING_DURATION: 'MISSING_DURATION',
+  INVALID_PRICE: 'INVALID_PRICE',
 
   // Business profile
   BUSINESS_PROFILE_NOT_FOUND: 'BUSINESS_PROFILE_NOT_FOUND',
@@ -53,6 +54,7 @@ export const DOMAIN_ERROR_MESSAGES_ID: Record<DomainErrorCode, string> = {
   INVALID_STOCK_BEHAVIOR: 'Perilaku stok tidak valid',
   MISSING_PRICING_TIERS: 'Harga tier wajib diisi untuk model harga grosir',
   MISSING_DURATION: 'Durasi wajib diisi untuk model harga per waktu',
+  INVALID_PRICE: 'Harga produk belum diatur',
   BUSINESS_PROFILE_NOT_FOUND: 'Profil bisnis tidak ditemukan',
   BUSINESS_PROFILE_ALREADY_EXISTS: 'Profil bisnis sudah ada',
   ITEM_NOT_FOUND: 'Item tidak ditemukan',
@@ -68,6 +70,7 @@ export const DOMAIN_ERROR_MESSAGES_EN: Record<DomainErrorCode, string> = {
   INVALID_STOCK_BEHAVIOR: 'Invalid stock behavior',
   MISSING_PRICING_TIERS: 'Pricing tiers are required for tiered pricing model',
   MISSING_DURATION: 'Duration is required for time-based pricing model',
+  INVALID_PRICE: 'Product price is not set',
   BUSINESS_PROFILE_NOT_FOUND: 'Business profile not found',
   BUSINESS_PROFILE_ALREADY_EXISTS: 'Business profile already exists',
   ITEM_NOT_FOUND: 'Item not found',

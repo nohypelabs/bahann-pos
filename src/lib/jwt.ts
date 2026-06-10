@@ -10,7 +10,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 const JWT_SECRET = process.env.JWT_SECRET
-const JWT_EXPIRES_IN = '7d' // 7 days session
+const JWT_EXPIRES_IN = '7d' // Fallback for legacy callers
 
 export interface JWTPayload {
   userId: string
@@ -21,11 +21,13 @@ export interface JWTPayload {
 }
 
 /**
- * Generate JWT token with 7-day expiry
+ * Generate JWT token with configurable expiry.
+ * Defaults to 7d for backward compatibility, but callers should pass
+ * a short-lived expiry (e.g. '30m') for access tokens.
  */
-export function signJWT(payload: JWTPayload): string {
+export function signJWT(payload: JWTPayload, expiresIn?: string): string {
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
+    expiresIn: (expiresIn || JWT_EXPIRES_IN) as any,
   })
 }
 

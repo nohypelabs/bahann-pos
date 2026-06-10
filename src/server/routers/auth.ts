@@ -13,6 +13,7 @@ import { createAuditLog } from '@/lib/audit'
 import { createRefreshToken, rotateRefreshToken, revokeRefreshToken, revokeAllUserTokens } from '@/lib/refreshToken'
 import { sendPasswordResetEmail, generateResetToken, sendNewUserNotification, sendWelcomeEmail, sendVerificationEmail } from '@/lib/email'
 import bcrypt from 'bcryptjs'
+import { checkRateLimit, RateLimitPresets } from '@/lib/security/rateLimiter'
 
 const userRepository = new SupabaseUserRepository()
 const profileRepo = new SupabaseBusinessProfileRepository()
@@ -125,6 +126,16 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      // Rate limit: 5 login attempts per 15 minutes per email
+      const rateLimitKey = `login:${input.email}`
+      const rateLimit = checkRateLimit(rateLimitKey, RateLimitPresets.LOGIN)
+      if (!rateLimit.allowed) {
+        throw new TRPCError({
+          code: 'TOO_MANY_REQUESTS',
+          message: 'Terlalu banyak percobaan login. Coba lagi dalam 15 menit.',
+        })
+      }
+
       const useCase = new LoginUserUseCase(userRepository)
       const result = await useCase.execute(input)
 

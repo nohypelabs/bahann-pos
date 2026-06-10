@@ -52,7 +52,13 @@ export const PricingService = {
    * FIXED pricing: unitPrice × quantity
    */
   calculateFixed(product: Product, quantity: number): PriceResult {
-    const unitPrice = product.price ?? 0;
+    if (product.price === undefined || product.price === null) {
+      throw new DomainException(
+        DomainErrorCode.INVALID_PRICE,
+        `Produk "${product.name}" tidak memiliki harga. Silakan atur harga terlebih dahulu.`,
+      );
+    }
+    const unitPrice = product.price;
     return {
       unitPrice,
       total: unitPrice * quantity,
@@ -78,7 +84,13 @@ export const PricingService = {
 
     if (!matched) {
       // Quantity below all tiers — use base price
-      const unitPrice = product.price ?? 0;
+      if (product.price === undefined || product.price === null) {
+        throw new DomainException(
+          DomainErrorCode.INVALID_PRICE,
+          `Produk "${product.name}" tidak memiliki harga dasar untuk tiered pricing.`,
+        );
+      }
+      const unitPrice = product.price;
       return {
         unitPrice,
         total: unitPrice * quantity,
@@ -106,7 +118,13 @@ export const PricingService = {
       );
     }
 
-    const unitPrice = product.price ?? 0;
+    if (product.price === undefined || product.price === null) {
+      throw new DomainException(
+        DomainErrorCode.INVALID_PRICE,
+        `Produk "${product.name}" tidak memiliki harga per-menit untuk time-based pricing.`,
+      );
+    }
+    const unitPrice = product.price;
     return {
       unitPrice,
       total: unitPrice * durationMinutes,
