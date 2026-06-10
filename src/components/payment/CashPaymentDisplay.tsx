@@ -65,6 +65,19 @@ export function CashPaymentDisplay({ amount, onConfirm, onCancel, loading }: Cas
       <div>
         <p className="text-sm font-medium text-gray-600 mb-2">Uang Diterima</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <button
+            onClick={() => selectQuick(amount)}
+            disabled={amount <= 0}
+            className={`py-3 rounded-xl text-sm font-semibold border-2 transition-all ${
+              cashGiven === amount
+                ? 'border-blue-500 bg-blue-500 text-white shadow-md scale-105'
+                : amount <= 0
+                ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'
+                : 'border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50'
+            }`}
+          >
+            Uang Pas
+          </button>
           {QUICK_AMOUNTS.map(val => (
             <button
               key={val}

@@ -10,6 +10,7 @@ import { PrintReceipt, ReceiptData } from '@/components/print/PrintReceipt'
 import { BarcodeScanner } from '@/components/barcode/BarcodeScanner'
 import { PaymentModal } from '@/components/payment'
 import { formatCurrency, formatDateTime, generateTransactionId } from '@/lib/utils'
+import { List, LayoutGrid } from 'lucide-react'
 
 interface CartItem {
   productId: string
@@ -22,9 +23,22 @@ interface CartItem {
 
 export default function SalesTransactionPage() {
   const [selectedProductId, setSelectedProductId] = useState('')
-  const [selectedOutletId, setSelectedOutletId] = useState('')
+  const [selectedOutletId, setSelectedOutletId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('lakupos-outlet') || ''
+    }
+    return ''
+  })
   const [quantity, setQuantity] = useState(1)
-  const [cart, setCart] = useState<CartItem[]>([])
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('lakupos-cart')
+      if (saved) {
+        try { return JSON.parse(saved) } catch { /* ignore */ }
+      }
+    }
+    return []
+  })
   const [saleDate] = useState(new Date().toISOString().split('T')[0])
 
   const [promoCode, setPromoCode] = useState('')
@@ -47,11 +61,40 @@ export default function SalesTransactionPage() {
   const [productSearch, setProductSearch] = useState('')
   const [outletSearch, setOutletSearch] = useState('')
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('lakupos-view-mode') as 'list' | 'grid') || 'list'
+    }
+    return 'list'
+  })
 
   const productSelectRef = useRef<HTMLInputElement>(null)
   const quantityInputRef = useRef<HTMLInputElement>(null)
   const barcodeInputRef = useRef<HTMLInputElement>(null)
   const receiptRef = useRef<HTMLDivElement>(null)
+  const cartDebounceRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Persist cart to localStorage (debounced 500ms)
+  useEffect(() => {
+    if (cartDebounceRef.current) clearTimeout(cartDebounceRef.current)
+    cartDebounceRef.current = setTimeout(() => {
+      if (cart.length > 0) {
+        localStorage.setItem('lakupos-cart', JSON.stringify(cart))
+      } else {
+        localStorage.removeItem('lakupos-cart')
+      }
+    }, 500)
+    return () => { if (cartDebounceRef.current) clearTimeout(cartDebounceRef.current) }
+  }, [cart])
+
+  // Persist outlet selection to localStorage
+  useEffect(() => {
+    if (selectedOutletId) {
+      localStorage.setItem('lakupos-outlet', selectedOutletId)
+    } else {
+      localStorage.removeItem('lakupos-outlet')
+    }
+  }, [selectedOutletId])
 
   const handleDirectPrint = () => {
     if (!receiptData) return
@@ -71,6 +114,13 @@ export default function SalesTransactionPage() {
 
   const products = productsResponse?.products || []
   const outlets = outletsResponse?.outlets || []
+  // Auto-select outlet if user has only one
+  useEffect(() => {
+    if (outlets.length === 1 && !selectedOutletId) {
+      setSelectedOutletId(outlets[0].id)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [outlets])
 
   const { data: inventoryList } = trpc.stock.getInventoryList.useQuery(
     { outletId: selectedOutletId || undefined },
@@ -406,23 +456,37 @@ export default function SalesTransactionPage() {
                 </div>
               )}
 
-              {/* Search */}
-              <div className="relative shrink-0">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-                <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Cari produk (nama atau SKU)..." disabled={!selectedOutletId} className="w-full pl-9 pr-8 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none disabled:opacity-50" />
-                {productSearch && <button onClick={() => setProductSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">✕</button>}
+              {/* Search + View Toggle */}
+              <div className="flex gap-2 shrink-0">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+                  <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Cari produk (nama atau SKU)..." disabled={!selectedOutletId} className="w-full pl-9 pr-8 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none disabled:opacity-50" />
+                  {productSearch && <button onClick={() => setProductSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">✕</button>}
+                </div>
+                <div className="flex border-2 border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden shrink-0">
+                  <button onClick={() => { setViewMode('list'); localStorage.setItem('lakupos-view-mode', 'list') }}
+                    className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
+                    <List size={18} />
+                  </button>
+                  <button onClick={() => { setViewMode('grid'); localStorage.setItem('lakupos-view-mode', 'grid') }}
+                    className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
+                    <LayoutGrid size={18} />
+                  </button>
+                </div>
               </div>
 
-              {/* Product table */}
+              {/* Product table/grid */}
               <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden flex flex-col flex-1 min-h-0">
-                {/* Desktop header */}
-                <div className="hidden md:grid grid-cols-12 gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 border-b-2 border-gray-200 dark:border-gray-600 shrink-0">
-                  <span className="col-span-5 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Produk</span>
-                  <span className="col-span-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Harga</span>
-                  <span className="col-span-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Stok</span>
-                  <span className="col-span-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Pilih</span>
-                </div>
-                {/* Mobile header */}
+                {viewMode === 'list' ? (
+                  <>
+                    {/* Desktop header */}
+                    <div className="hidden md:grid grid-cols-12 gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 border-b-2 border-gray-200 dark:border-gray-600 shrink-0">
+                      <span className="col-span-5 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Produk</span>
+                      <span className="col-span-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Harga</span>
+                      <span className="col-span-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Stok</span>
+                      <span className="col-span-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Pilih</span>
+                    </div>
+                    {/* Mobile header */}
                 <div className="md:hidden grid grid-cols-12 px-3 py-2 bg-gray-100 dark:bg-gray-700 border-b-2 border-gray-200 dark:border-gray-600 shrink-0">
                   <span className="col-span-7 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Produk</span>
                   <span className="col-span-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Harga</span>
@@ -499,6 +563,49 @@ export default function SalesTransactionPage() {
                     <p className="text-xs text-gray-400 dark:text-gray-500">{filteredProducts.length} produk{productSearch && ` · "${productSearch}"`}</p>
                   </div>
                 )}
+                  </>
+                ) : (
+                  /* Grid view */
+                  <div className="overflow-y-auto flex-1 p-3">
+                    {!selectedOutletId ? (
+                      <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">Pilih outlet untuk melihat produk</div>
+                    ) : filteredProducts.length === 0 ? (
+                      <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">{productSearch ? `"${productSearch}" tidak ditemukan` : 'Tidak ada produk'}</div>
+                    ) : (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {filteredProducts.map(product => {
+                          const stock = inventoryList?.find(p => p.id === product.id)?.currentStock ?? 0
+                          const isSelected = selectedProductId === product.id
+                          const isUntrackedItem = product.stock_behavior === 'UNTRACKED' || product.stock_behavior === 'CONSUMED'
+                          const isOutOfStock = !isUntrackedItem && stock === 0
+                          return (
+                            <button key={product.id} onClick={() => !isOutOfStock && handleProductChange(isSelected ? '' : product.id)} disabled={isOutOfStock}
+                              className={`text-left p-3 rounded-xl border-2 transition-all ${
+                                isSelected ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/40 shadow-[3px_3px_0px_0px_rgba(37,99,235,0.3)]'
+                                : isOutOfStock ? 'border-gray-200 dark:border-gray-700 opacity-40 cursor-not-allowed bg-white dark:bg-gray-800'
+                                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.08)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px]'
+                              }`}>
+                              <p className={`text-sm font-semibold truncate ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>{product.name}</p>
+                              <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{product.sku}</p>
+                              <div className="flex items-center justify-between mt-2">
+                                <span className={`text-sm font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>{formatCurrency(product.price || 0)}</span>
+                                {isUntrackedItem ? (
+                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500">∞</span>
+                                ) : (
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${stock === 0 ? 'bg-red-100 dark:bg-red-900/50 text-red-600' : stock <= 10 ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700' : 'bg-green-100 dark:bg-green-900/50 text-green-700'}`}>{stock === 0 ? 'Habis' : stock}</span>
+                                )}
+                              </div>
+                              {isSelected && <div className="mt-2 text-center"><span className="inline-block w-5 h-5 rounded-full bg-blue-500 text-white text-xs leading-5">✓</span></div>}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                    {selectedOutletId && filteredProducts.length > 0 && (
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 text-center">{filteredProducts.length} produk</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Qty + Add */}
@@ -524,7 +631,7 @@ export default function SalesTransactionPage() {
                   <div className="flex items-center gap-1.5 mb-2">
                     <div className="flex gap-1 flex-wrap">
                       {[1, 2, 3, 5, 10].map(q => (
-                        <button key={q} onClick={() => handleQuickQuantity(q)} className={`w-8 h-8 text-xs font-bold rounded-lg border transition-colors ${quantity === q ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-300'}`}>{q}</button>
+                        <button key={q} onClick={() => handleQuickQuantity(q)} className={`min-w-11 min-h-11 text-xs font-bold rounded-lg border transition-colors ${quantity === q ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-300'}`}>{q}</button>
                       ))}
                     </div>
                     <input ref={quantityInputRef} type="number" min="1" max={availableStock || 999} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddToCart() } }} onFocus={(e) => e.target.select()} className="w-14 px-2 py-1.5 text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none text-sm font-bold shrink-0" />
@@ -736,9 +843,9 @@ export default function SalesTransactionPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <button onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)} className="w-7 h-7 rounded-lg border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 font-bold text-sm">-</button>
+                      <button onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)} className="min-w-10 min-h-10 rounded-lg border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 font-bold text-sm">-</button>
                       <span className="w-8 text-center font-bold text-sm text-gray-900 dark:text-gray-100">{item.quantity}</span>
-                      <button onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)} className="w-7 h-7 rounded-lg border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 font-bold text-sm">+</button>
+                      <button onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)} className="min-w-10 min-h-10 rounded-lg border-2 border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 font-bold text-sm">+</button>
                     </div>
                     <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{formatCurrency(item.total)}</p>
                   </div>

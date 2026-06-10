@@ -152,7 +152,7 @@ export default function StockManagementPage() {
     <div className="space-y-4 md:space-y-6">
 
       {/* ── Header ── */}
-      <div className="hidden md:block">
+      <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
           Manajemen Stok
         </h1>

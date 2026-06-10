@@ -250,10 +250,6 @@ export function PaymentModal({
                 disabled={loading}
               />
 
-              {/* Debug info */}
-              <div className="text-xs text-gray-500 p-2 bg-gray-50 rounded">
-                Step: {step} | Selected: {selectedMethod} | Loading: {loading.toString()}
-              </div>
 
               {selectedMethod === 'qris' && (
                 <button

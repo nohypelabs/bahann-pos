@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { Input } from '@/components/ui/Input'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { StatCard } from '@/components/ui/StatCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { trpc } from '@/lib/trpc/client'
 import { formatCurrency } from '@/lib/utils'
-import { Package, Store, AlertTriangle, CheckCircle, ClipboardList, AlertOctagon } from 'lucide-react'
+import { Package, Store, AlertTriangle, CheckCircle, ClipboardList, AlertOctagon, Search } from 'lucide-react'
 
 function StyledSelect({ label, value, onChange, options }: {
   label: string; value: string; onChange: (v: string) => void
@@ -42,6 +43,7 @@ const SEVERITY_LABEL: Record<string, string> = {
 export default function InventoryMonitorPage() {
   const [selectedOutletId, setSelectedOutletId] = useState('')
   const [stockThreshold,   setStockThreshold]   = useState<10 | 20 | 50>(10)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const { data: outletsResponse }   = trpc.outlets.getAll.useQuery()
   const outlets                     = outletsResponse?.outlets || []
@@ -50,8 +52,21 @@ export default function InventoryMonitorPage() {
   const { data: lowStock }          = trpc.dashboard.getLowStock.useQuery({ outletId: selectedOutletId || undefined, threshold: stockThreshold })
 
   const products         = inventoryList || []
+  const searchLower = searchQuery.toLowerCase()
+  const filteredProducts = searchQuery.trim()
+    ? products.filter(p =>
+        p.name.toLowerCase().includes(searchLower) ||
+        (p.sku && p.sku.toLowerCase().includes(searchLower))
+      )
+    : products
+  const filteredLowStock = searchQuery.trim()
+    ? (lowStock || []).filter(item =>
+        item.productName.toLowerCase().includes(searchLower) ||
+        (item.productSku && item.productSku.toLowerCase().includes(searchLower))
+      )
+    : lowStock
   const selectedOutlet   = outlets.find(o => o.id === selectedOutletId)
-  const healthyCount     = (products?.length || 0) - (lowStock?.length || 0)
+  const healthyCount     = (products?.length || 0) - (filteredLowStock?.length || 0)
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -96,33 +111,45 @@ export default function InventoryMonitorPage() {
         <StatCard icon={<CheckCircle />} label="Stok Normal"       value={healthyCount}           color="green"  sub="Produk cukup" />
       </div>
 
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <Input
+          placeholder="Cari produk berdasarkan nama atau SKU..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="pl-9"
+          fullWidth
+        />
+      </div>
+
       {/* Low Stock Alert */}
-      {lowStock && lowStock.length > 0 && (
+      {filteredLowStock && filteredLowStock.length > 0 && (
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-gray-100 dark:border-gray-700">
             <p className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5"><AlertTriangle className="w-4 h-4 text-yellow-500" /> Butuh Perhatian Segera</p>
             <span className="px-2.5 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-[11px] font-bold rounded-full">
-              {lowStock.length} item
+              {filteredLowStock.length} item
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
-                  {['Produk', 'SKU', 'Kategori', 'Outlet', 'Stok Saat Ini', 'Status'].map(h => (
-                    <th key={h} className="px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
+                  {['Produk', 'SKU', 'Kategori', 'Outlet', 'Stok Saat Ini', 'Status'].map((h, i) => (
+                    <th key={h} className={`px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ${i === 1 || i === 2 ? 'hidden md:table-cell' : ''}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {lowStock.map(item => {
+                {filteredLowStock.map(item => {
                   const sev = item.currentStock <= 5 ? 'critical' : item.currentStock <= 10 ? 'warning' : 'low'
                   return (
                     <tr key={`${item.productId}-${item.outletId}`}
                       className={`hover:opacity-80 transition-opacity ${sev === 'critical' ? 'bg-red-50 dark:bg-red-900/20' : sev === 'warning' ? 'bg-yellow-50 dark:bg-yellow-900/20' : 'bg-orange-50 dark:bg-orange-900/20'}`}>
                       <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{item.productName}</td>
-                      <td className="px-3 md:px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400">{item.productSku}</td>
-                      <td className="px-3 md:px-4 py-3 text-xs text-gray-600 dark:text-gray-400">{item.productCategory || '—'}</td>
+                      <td className="hidden md:table-cell px-3 md:px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400">{item.productSku}</td>
+                      <td className="hidden md:table-cell px-3 md:px-4 py-3 text-xs text-gray-600 dark:text-gray-400">{item.productCategory || '—'}</td>
                       <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">{item.outletName}</td>
                       <td className="px-3 md:px-4 py-3 text-right">
                         <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{item.currentStock}</p>
@@ -153,19 +180,19 @@ export default function InventoryMonitorPage() {
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
-                  {['Nama Produk', 'SKU', 'Kategori', 'Stok', 'Harga'].map(h => (
-                    <th key={h} className="px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
+                  {['Nama Produk', 'SKU', 'Kategori', 'Stok', 'Harga'].map((h, i) => (
+                    <th key={h} className={`px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ${i === 1 ? 'hidden md:table-cell' : ''}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {products.map(product => {
+                {filteredProducts.map(product => {
                   const status = product.currentStock === 0 ? 'out' : product.currentStock <= 10 ? 'low' : 'ok'
                   const stockColor = status === 'out' ? 'text-red-600' : status === 'low' ? 'text-yellow-600' : 'text-green-600'
                   return (
                     <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                       <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{product.name}</td>
-                      <td className="px-3 md:px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400">{product.sku}</td>
+                      <td className="hidden md:table-cell px-3 md:px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400">{product.sku}</td>
                       <td className="px-3 md:px-4 py-3">
                         <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-[10px] font-semibold">
                           {product.category || 'Umum'}
