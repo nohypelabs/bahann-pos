@@ -18,6 +18,7 @@ import { CashPaymentDisplay } from './CashPaymentDisplay'
 import { EWalletDisplay } from './EWalletDisplay'
 import { createPayment, confirmPayment } from '@/lib/payment/payment-service'
 import type { PaymentMethod, PaymentResult } from '@/lib/payment/payment-service'
+import { logger } from '@/lib/logger'
 
 interface PaymentModalProps {
   transactionId: string
@@ -53,7 +54,7 @@ export function PaymentModal({
   if (!isOpen) return null
 
   const handleMethodSelect = async (method: PaymentMethod) => {
-    console.log('🔵 Payment method selected:', method)
+    logger.info('Payment method selected: ' + method)
     setSelectedMethod(method)
 
     // Cash — show change calculator first

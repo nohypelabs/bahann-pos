@@ -10,6 +10,7 @@
 import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { generateQRISImage, generateQRISString } from './qris-generator'
 import { v4 as uuidv4 } from 'uuid'
+import { logger } from '@/lib/logger'
 
 export type PaymentMethod = 'cash' | 'qris' | 'bank_transfer' | 'ewallet' | 'debit' | 'credit'
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired'
@@ -103,7 +104,7 @@ export async function createPayment(request: PaymentRequest): Promise<PaymentRes
       created_at: new Date().toISOString()
     }
 
-    console.log('📝 Inserting payment data:', insertData)
+    logger.info('Inserting payment data')
 
     const { data: paymentData, error } = await supabase
       .from('payments')
@@ -111,12 +112,12 @@ export async function createPayment(request: PaymentRequest): Promise<PaymentRes
       .select()
 
     if (error) {
-      console.error('❌ Payment insert error:', error)
-      console.error('❌ Error details:', JSON.stringify(error, null, 2))
+      logger.error('Payment insert error:', error)
+      logger.error('Payment insert error details:', undefined, { details: JSON.stringify(error, null, 2) })
       throw new Error(`Failed to create payment: ${error.message}`)
     }
 
-    console.log('✅ Payment created:', paymentData)
+    logger.success('Payment created')
 
     return {
       paymentId,
@@ -157,7 +158,7 @@ export async function createPayment(request: PaymentRequest): Promise<PaymentRes
     }).select()
 
     if (error) {
-      console.error('❌ Bank transfer payment insert error:', error)
+      logger.error('Bank transfer payment insert error:', error)
       throw new Error(`Failed to create payment: ${error.message}`)
     }
 
@@ -186,7 +187,7 @@ export async function createPayment(request: PaymentRequest): Promise<PaymentRes
     })
 
     if (error) {
-      console.error('❌ E-wallet payment insert error:', error)
+      logger.error('E-wallet payment insert error:', error)
       throw new Error(`Failed to create payment: ${error.message}`)
     }
 
@@ -222,8 +223,8 @@ export async function createPayment(request: PaymentRequest): Promise<PaymentRes
   }).select()
 
   if (error) {
-    console.error('❌ Instant payment insert error:', error)
-    console.error('❌ Error details:', JSON.stringify(error, null, 2))
+    logger.error('Instant payment insert error:', error)
+    logger.error('Instant payment insert error details:', undefined, { details: JSON.stringify(error, null, 2) })
     throw new Error(`Failed to create payment: ${error.message}`)
   }
 
@@ -289,12 +290,12 @@ export async function confirmPayment(confirmation: PaymentConfirmation): Promise
     })
 
     if (confirmError) {
-      console.error('Failed to create confirmation record:', confirmError)
+      logger.error('Failed to create confirmation record:', confirmError)
     }
 
     return true
   } catch (error: any) {
-    console.error('Payment confirmation error:', error)
+    logger.error('Payment confirmation error:', error)
     throw error
   }
 }
@@ -382,7 +383,7 @@ export async function markExpiredPayments() {
     .lt('expired_at', new Date().toISOString())
 
   if (error) {
-    console.error('Failed to mark expired payments:', error)
+    logger.error('Failed to mark expired payments:', error)
     return false
   }
 

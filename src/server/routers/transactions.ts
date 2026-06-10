@@ -12,6 +12,7 @@ import { TRPCError } from '@trpc/server'
 import { StockService } from '@/domain/services/StockService'
 import { PricingService } from '@/domain/services/PricingService'
 import type { Product } from '@/domain/entities/Product'
+import { logger } from '@/lib/logger'
 
 const PLAN_LIMITS: Record<string, number> = {
   free: 100,
@@ -220,7 +221,7 @@ export const transactionsRouter = router({
           })
 
           if (salesError) {
-            console.error('Failed to insert daily_sales:', salesError)
+            logger.error('Failed to insert daily_sales:', salesError)
             // Don't fail the whole transaction, but log the error
             // Transaction is already committed, daily_sales is just for reporting
           }
@@ -273,7 +274,7 @@ export const transactionsRouter = router({
               .eq('id', latestStock.id)
 
             if (stockUpdateError) {
-              console.error('Failed to update stock:', stockUpdateError)
+              logger.error('Failed to update stock:', stockUpdateError)
               // Don't fail transaction, but log for monitoring
             }
           } else {
@@ -309,7 +310,7 @@ export const transactionsRouter = router({
               })
 
             if (stockInsertError) {
-              console.error('Failed to create stock record:', stockInsertError)
+              logger.error('Failed to create stock record:', stockInsertError)
               // Don't fail transaction, but log for monitoring
             }
           }

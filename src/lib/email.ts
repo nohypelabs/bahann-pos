@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { PLAN_LIMITS, isUnlimited } from '@/lib/plans'
+import { logger } from '@/lib/logger'
 
 // Initialize Resend lazily to avoid build-time errors
 let resendInstance: Resend | null = null
@@ -134,14 +135,14 @@ export async function sendPasswordResetEmail({
     })
 
     if (error) {
-      console.error('❌ Failed to send password reset email:', error)
+      logger.error('Failed to send password reset email:', error)
       throw new Error('Failed to send email')
     }
 
-    console.log('✅ Password reset email sent:', { to, id: data?.id })
+    logger.success('Password reset email sent: to=' + to + ', id=' + data?.id)
     return { success: true, id: data?.id }
   } catch (error) {
-    console.error('❌ Error sending password reset email:', error)
+    logger.error('Error sending password reset email:', error)
     throw error
   }
 }
@@ -194,7 +195,7 @@ export async function sendNewUserNotification({
       `,
     })
   } catch (err) {
-    console.error('Failed to send new user notification:', err)
+    logger.error('Failed to send new user notification:', err)
     // Non-fatal — registration still succeeds
   }
 }
@@ -315,9 +316,9 @@ export async function sendWelcomeEmail({ to, name, storeName }: SendWelcomeEmail
 </body>
 </html>`,
     })
-    console.log('✅ Welcome email sent to:', to)
+    logger.success('Welcome email sent to: ' + to)
   } catch (err) {
-    console.error('❌ Failed to send welcome email:', err)
+    logger.error('Failed to send welcome email:', err)
     // Non-fatal — registration still succeeds
   }
 }
@@ -463,9 +464,9 @@ export async function sendPlanUpgradeEmail({ to, name, oldPlan, newPlan }: SendP
 </body>
 </html>`,
     })
-    console.log('✅ Plan upgrade email sent to:', to)
+    logger.success('Plan upgrade email sent to: ' + to)
   } catch (err) {
-    console.error('❌ Failed to send plan upgrade email:', err)
+    logger.error('Failed to send plan upgrade email:', err)
     // Non-fatal
   }
 }
@@ -556,9 +557,9 @@ export async function sendTrialExpiredEmail({ to, name }: SendTrialExpiredEmailP
 </body>
 </html>`,
     })
-    console.log('✅ Trial expired email sent to:', to)
+    logger.success('Trial expired email sent to: ' + to)
   } catch (err) {
-    console.error('❌ Failed to send trial expired email:', err)
+    logger.error('Failed to send trial expired email:', err)
   }
 }
 
@@ -636,9 +637,9 @@ export async function sendVerificationEmail({ to, name, token }: SendVerificatio
 </body>
 </html>`,
     })
-    console.log('✅ Verification email sent to:', to)
+    logger.success('Verification email sent to: ' + to)
   } catch (err) {
-    console.error('❌ Failed to send verification email:', err)
+    logger.error('Failed to send verification email:', err)
   }
 }
 

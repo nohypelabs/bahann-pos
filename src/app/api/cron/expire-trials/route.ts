@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/infra/supabase/server'
 import { sendTrialExpiredEmail } from '@/lib/email'
+import { logger } from '@/lib/logger'
 
 // Vercel Cron calls this with Authorization: Bearer <CRON_SECRET>
 export async function GET(request: Request) {
@@ -21,12 +22,12 @@ export async function GET(request: Request) {
     .lt('trial_ends_at', now)
 
   if (error) {
-    console.error('❌ expire-trials cron: fetch error', error)
+    logger.error('expire-trials cron: fetch error', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
   if (!expired || expired.length === 0) {
-    console.log('✅ expire-trials cron: no expired trials')
+    logger.success('expire-trials cron: no expired trials')
     return NextResponse.json({ expired: 0 })
   }
 
@@ -39,7 +40,7 @@ export async function GET(request: Request) {
     .in('id', ids)
 
   if (updateError) {
-    console.error('❌ expire-trials cron: update error', updateError)
+    logger.error('expire-trials cron: update error', updateError)
     return NextResponse.json({ error: updateError.message }, { status: 500 })
   }
 
@@ -50,6 +51,6 @@ export async function GET(request: Request) {
     )
   )
 
-  console.log(`✅ expire-trials cron: downgraded ${expired.length} user(s)`)
+  logger.success(`expire-trials cron: downgraded ${expired.length} user(s)`)
   return NextResponse.json({ expired: expired.length, users: expired.map((u) => u.email) })
 }

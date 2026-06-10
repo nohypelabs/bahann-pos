@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react'
 import { offlineDb } from '@/lib/offline/database'
 import { syncManager, type SyncStatus } from '@/lib/offline/sync-manager'
+import { logger } from '@/lib/logger'
 
 export interface OfflineStatus {
   isOnline: boolean
@@ -30,18 +31,18 @@ export function useOffline(): OfflineStatus {
   useEffect(() => {
     // Network status listeners
     const handleOnline = () => {
-      console.log('📡 Online')
+      logger.info('Online')
       setIsOnline(true)
     }
 
     const handleOffline = () => {
-      console.log('📡 Offline')
+      logger.info('Offline')
       setIsOnline(false)
     }
 
     // Sync completed listener
     const handleSyncCompleted = ((event: CustomEvent) => {
-      console.log('✅ Sync completed:', event.detail)
+      logger.success('Sync completed')
       updateCounts()
     }) as EventListener
 
@@ -63,7 +64,7 @@ export function useOffline(): OfflineStatus {
         setQueuedItems(stats.queuedItems)
         setTotalCachedProducts(stats.totalProducts)
       } catch (error) {
-        console.error('Failed to get sync stats:', error)
+        logger.error('Failed to get sync stats:', error)
       }
     }
 

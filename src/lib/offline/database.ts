@@ -6,6 +6,7 @@
  */
 
 import Dexie, { Table } from 'dexie'
+import { logger } from '@/lib/logger'
 
 // Offline Transaction - pending sales when offline
 export interface OfflineTransaction {
@@ -118,7 +119,7 @@ class OfflineDatabase extends Dexie {
       .above(5) // Remove items that failed 5+ times
       .delete()
 
-    console.log('✅ Offline database cleanup completed')
+    logger.success('Offline database cleanup completed')
   }
 
   /**
@@ -142,7 +143,7 @@ class OfflineDatabase extends Dexie {
   async requestPersistentStorage() {
     if ('storage' in navigator && 'persist' in navigator.storage) {
       const isPersisted = await navigator.storage.persist()
-      console.log(`Persistent storage: ${isPersisted ? 'granted' : 'denied'}`)
+      logger.info(`Persistent storage: ${isPersisted ? 'granted' : 'denied'}`)
       return isPersisted
     }
     return false
@@ -172,13 +173,13 @@ export const offlineDb = new OfflineDatabase()
 // Initialize on load
 if (typeof window !== 'undefined') {
   // Request persistent storage
-  offlineDb.requestPersistentStorage().catch(console.error)
+  offlineDb.requestPersistentStorage().catch((err) => logger.error('Failed to request persistent storage:', err))
 
   // Run cleanup on init
-  offlineDb.cleanup().catch(console.error)
+  offlineDb.cleanup().catch((err) => logger.error('Failed to cleanup offline database:', err))
 
   // Periodic cleanup (every 24 hours)
   setInterval(() => {
-    offlineDb.cleanup().catch(console.error)
+    offlineDb.cleanup().catch((err) => logger.error('Failed periodic cleanup:', err))
   }, 24 * 60 * 60 * 1000)
 }

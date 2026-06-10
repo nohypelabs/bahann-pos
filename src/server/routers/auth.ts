@@ -14,6 +14,7 @@ import { createRefreshToken, rotateRefreshToken, revokeRefreshToken, revokeAllUs
 import { sendPasswordResetEmail, generateResetToken, sendNewUserNotification, sendWelcomeEmail, sendVerificationEmail } from '@/lib/email'
 import bcrypt from 'bcryptjs'
 import { checkRateLimit, RateLimitPresets } from '@/lib/security/rateLimiter'
+import { logger } from '@/lib/logger'
 
 const userRepository = new SupabaseUserRepository()
 const profileRepo = new SupabaseBusinessProfileRepository()
@@ -422,7 +423,7 @@ export const authRouter = router({
       // Security: Always return success even if user doesn't exist
       // to prevent email enumeration attacks
       if (error || !user) {
-        console.log('⚠️ Password reset requested for non-existent email:', input.email)
+        logger.warn('Password reset requested for non-existent email: ' + input.email)
         return {
           success: true,
           message: 'If the email exists, a reset link has been sent',
@@ -444,7 +445,7 @@ export const authRouter = router({
         })
 
       if (insertError) {
-        console.error('❌ Failed to save reset token:', insertError)
+        logger.error('Failed to save reset token:', insertError)
         throw new Error('Failed to process password reset request')
       }
 
@@ -467,9 +468,9 @@ export const authRouter = router({
           },
         })
 
-        console.log('✅ Password reset email sent to:', user.email)
+        logger.success('Password reset email sent to: ' + user.email)
       } catch (emailError) {
-        console.error('❌ Failed to send reset email:', emailError)
+        logger.error('Failed to send reset email:', emailError)
         // Don't throw error to user - security
       }
 
@@ -562,7 +563,7 @@ export const authRouter = router({
         .eq('id', tokenData.user_id)
 
       if (updateError) {
-        console.error('❌ Failed to update password:', updateError)
+        logger.error('Failed to update password:', updateError)
         throw new Error('Gagal mengupdate password')
       }
 
@@ -593,7 +594,7 @@ export const authRouter = router({
       // Revoke all refresh tokens for security (logout from all devices)
       await revokeAllUserTokens(tokenData.user_id)
 
-      console.log('✅ Password reset successful for user:', tokenData.user_id)
+      logger.success('Password reset successful for user: ' + tokenData.user_id)
 
       return {
         success: true,

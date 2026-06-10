@@ -17,6 +17,7 @@
  */
 
 import { Redis } from '@upstash/redis'
+import { logger } from '@/lib/logger'
 
 let redisClient: Redis | null = null
 let redisAvailable = true
@@ -34,7 +35,7 @@ export function getRedisClient(): Redis | null {
       const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.REDIS_TOKEN
 
       if (!url || !token) {
-        console.warn('Upstash Redis credentials not found. Session management will use JWT only.')
+        logger.warn('Upstash Redis credentials not found. Session management will use JWT only.')
         redisAvailable = false
         return null
       }
@@ -46,9 +47,9 @@ export function getRedisClient(): Redis | null {
         automaticDeserialization: true,
       })
 
-      console.log('✅ Upstash Redis client initialized')
+      logger.success('Upstash Redis client initialized')
     } catch (error) {
-      console.error('❌ Failed to initialize Upstash Redis:', error)
+      logger.error('Failed to initialize Upstash Redis:', error)
       redisAvailable = false
       return null
     }
@@ -81,7 +82,7 @@ export async function createSession(
 ): Promise<void> {
   const redis = getRedisClient()
   if (!redis) {
-    console.debug('Redis not available, skipping session creation')
+    logger.debug('Redis not available, skipping session creation')
     return
   }
 
@@ -96,7 +97,7 @@ export async function createSession(
 
     await redis.setex(`session:${userId}`, SESSION_TTL, JSON.stringify(sessionData))
   } catch (error) {
-    console.error('Failed to create session in Redis:', error)
+    logger.error('Failed to create session in Redis:', error)
   }
 }
 
@@ -119,7 +120,7 @@ export async function getSession(userId: string): Promise<SessionData | null> {
 
     return session
   } catch (error) {
-    console.error('Failed to get session from Redis:', error)
+    logger.error('Failed to get session from Redis:', error)
     return null
   }
 }
@@ -134,7 +135,7 @@ export async function deleteSession(userId: string): Promise<void> {
   try {
     await redis.del(`session:${userId}`)
   } catch (error) {
-    console.error('Failed to delete session from Redis:', error)
+    logger.error('Failed to delete session from Redis:', error)
   }
 }
 
@@ -148,7 +149,7 @@ export async function extendSession(userId: string): Promise<void> {
   try {
     await redis.expire(`session:${userId}`, SESSION_TTL)
   } catch (error) {
-    console.error('Failed to extend session in Redis:', error)
+    logger.error('Failed to extend session in Redis:', error)
   }
 }
 
@@ -166,7 +167,7 @@ export async function testConnection(): Promise<boolean> {
     await redis.del(testKey)
     return result === 'ok'
   } catch (error) {
-    console.error('Redis health check failed:', error)
+    logger.error('Redis health check failed:', error)
     return false
   }
 }

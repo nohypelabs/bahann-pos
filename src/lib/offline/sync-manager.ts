@@ -7,6 +7,7 @@
 
 import { offlineDb, type OfflineTransaction } from './database'
 import { vanillaTrpc } from '@/lib/trpc/client'
+import { logger } from '@/lib/logger'
 
 export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error'
 
@@ -29,13 +30,13 @@ export class SyncManager {
 
     // Listen for network status changes
     this.onlineListener = () => {
-      console.log('📡 Network restored - starting sync')
+      logger.info('Network restored - starting sync')
       this.notifyStatus('idle')
       this.syncAll()
     }
 
     this.offlineListener = () => {
-      console.log('📡 Network lost - entering offline mode')
+      logger.info('Network lost - entering offline mode')
       this.notifyStatus('idle')
     }
 
@@ -54,7 +55,7 @@ export class SyncManager {
       setTimeout(() => this.syncAll(), 2000) // Delay 2s after init
     }
 
-    console.log('✅ Sync manager started')
+    logger.success('Sync manager started')
   }
 
   /**
@@ -71,7 +72,7 @@ export class SyncManager {
       clearInterval(this.syncInterval)
     }
 
-    console.log('🛑 Sync manager stopped')
+    logger.info('Sync manager stopped')
   }
 
   /**
@@ -100,7 +101,7 @@ export class SyncManager {
     this.syncInProgress = true
     this.notifyStatus('syncing')
 
-    console.log('🔄 Starting sync...')
+    logger.info('Starting sync...')
 
     try {
       // 1. Sync pending transactions (highest priority)
@@ -115,7 +116,7 @@ export class SyncManager {
       // 4. Cleanup old data
       await offlineDb.cleanup()
 
-      console.log(`✅ Sync completed: ${syncedTransactions} transactions, ${syncedQueue} queue items`)
+      logger.success(`Sync completed: ${syncedTransactions} transactions, ${syncedQueue} queue items`)
       this.notifyStatus('success')
 
       // Dispatch event for UI updates
@@ -128,7 +129,7 @@ export class SyncManager {
         }))
       }
     } catch (error) {
-      console.error('❌ Sync failed:', error)
+      logger.error('Sync failed:', error)
       this.notifyStatus('error')
     } finally {
       this.syncInProgress = false
@@ -166,7 +167,7 @@ export class SyncManager {
           syncAttempts: transaction.syncAttempts + 1,
         })
         syncedCount++
-        console.log(`✅ Synced transaction: ${transaction.transactionId}`)
+        logger.success(`Synced transaction: ${transaction.transactionId}`)
       } catch (error: unknown) {
         const errorMessage = getErrorMessage(error)
         // Increment attempts and log error
@@ -174,7 +175,7 @@ export class SyncManager {
           syncError: errorMessage,
           syncAttempts: transaction.syncAttempts + 1,
         })
-        console.error(`❌ Failed to sync transaction ${transaction.transactionId}:`, errorMessage)
+        logger.error(`Failed to sync transaction ${transaction.transactionId}:`, undefined, { error: errorMessage })
       }
     }
 
@@ -210,7 +211,7 @@ export class SyncManager {
         if (response.ok) {
           await offlineDb.syncQueue.delete(item.id!)
           syncedCount++
-          console.log(`✅ Synced queue item: ${item.type}`)
+          logger.success(`Synced queue item: ${item.type}`)
         } else {
           throw new Error(`HTTP ${response.status}`)
         }
@@ -221,7 +222,7 @@ export class SyncManager {
           lastAttempt: Date.now(),
           error: errorMessage,
         })
-        console.error(`❌ Failed to sync queue item ${item.id}:`, errorMessage)
+        logger.error(`Failed to sync queue item ${item.id}:`, undefined, { error: errorMessage })
       }
     }
 
@@ -284,7 +285,7 @@ export class SyncManager {
    * Force sync now
    */
   forceSync() {
-    console.log('🔄 Force sync triggered')
+    logger.info('Force sync triggered')
     return this.syncAll()
   }
 

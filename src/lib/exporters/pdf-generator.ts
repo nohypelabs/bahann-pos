@@ -3,10 +3,12 @@
  * Heavy PDF generation library - only loaded when needed
  */
 
+import { logger } from '@/lib/logger'
+
 export async function generatePDF(data: any) {
   // This would use a library like jsPDF or pdfmake
   // For now, a simple implementation
-  console.log('Generating PDF...', data)
+  logger.info('Generating PDF...')
 
   // Simulate PDF generation
   const content = `

@@ -10,6 +10,7 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { getActivePaymentMethods } from '@/lib/payment/payment-service'
 import type { PaymentMethod } from '@/lib/payment/payment-service'
 import { Banknote, Smartphone, Building2, Wallet, CreditCard, DollarSign, Check } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 interface PaymentMethodOption {
   id: string
@@ -59,10 +60,10 @@ export function PaymentMethodSelector({
         }
       })
 
-      console.log('✅ Payment methods loaded:', methodOptions)
+      logger.success('Payment methods loaded')
       setMethods(methodOptions)
     } catch (error) {
-      console.error('❌ Failed to load payment methods:', error)
+      logger.error('Failed to load payment methods:', error)
       // Fallback to default methods
       setMethods([
         { id: '1', type: 'cash', name: 'Cash', icon: <Banknote className="w-6 h-6" />, isActive: true },

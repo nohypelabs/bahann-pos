@@ -3,8 +3,10 @@
  * CSV generation utility - only loaded when needed
  */
 
+import { logger } from '@/lib/logger'
+
 export async function generateCSV(data: any) {
-  console.log('Generating CSV...', data)
+  logger.info('Generating CSV...')
 
   // Generate CSV content
   let csv = 'Date,Revenue,Items Sold\n'

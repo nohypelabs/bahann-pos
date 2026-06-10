@@ -9,6 +9,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { getBankAccount } from '@/lib/payment/payment-service'
+import { logger } from '@/lib/logger'
 
 interface BankTransferDisplayProps {
   bankAccountId: string
@@ -61,7 +62,7 @@ export function BankTransferDisplay({
       const data = await getBankAccount(bankAccountId)
       setBankAccount(data)
     } catch (error) {
-      console.error('Failed to load bank account:', error)
+      logger.error('Failed to load bank account:', error)
     } finally {
       setLoading(false)
     }

@@ -15,6 +15,7 @@
 import { lazy, Suspense, useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { LazyModal } from '@/components/ui/LazyModal'
+import { logger } from '@/lib/logger'
 
 // Lazy load heavy components - these are NOT included in the initial bundle
 const LazyDatePicker = lazy(() => import('@/components/ui/LazyDatePicker'))
@@ -27,7 +28,7 @@ export default function LazyComponentsExample() {
   const [description, setDescription] = useState('')
 
   const handleSubmit = async (data: any) => {
-    console.log('Form submitted:', data)
+    logger.info('Form submitted')
     setIsModalOpen(false)
   }
 
