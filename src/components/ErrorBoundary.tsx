@@ -107,19 +107,18 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
               {/* Error Title */}
               <h1 className="text-xs md:text-lg md:text-3xl font-bold text-gray-900 text-center mb-4">
-                Oops! Something went wrong
+                Terjadi Kesalahan
               </h1>
 
               {/* Error Message */}
               <p className="text-gray-600 text-center mb-3 md:mb-6">
-                We apologize for the inconvenience. An unexpected error has occurred.
-                Our team has been notified and is working on a fix.
+                Mohon maaf, terjadi kesalahan tak terduga. Silakan coba lagi atau kembali ke halaman utama.
               </p>
 
               {/* Error Details (Development only) */}
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <div className="mb-3 md:mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl">
-                  <p className="text-sm font-semibold text-red-900 mb-2">Error Details:</p>
+                  <p className="text-sm font-semibold text-red-900 mb-2">Detail Error:</p>
                   <p className="text-sm text-red-800 font-mono mb-3">
                     {this.state.error.toString()}
                   </p>
@@ -142,13 +141,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   onClick={this.handleReset}
                   className="px-3 md:px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
                 >
-                  Try Again
+                  Coba Lagi
                 </button>
                 <button
                   onClick={() => window.location.href = '/'}
                   className="px-3 md:px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-xl hover:bg-gray-300 transition-colors"
                 >
-                  Go to Home
+                  Ke Halaman Utama
                 </button>
               </div>
 

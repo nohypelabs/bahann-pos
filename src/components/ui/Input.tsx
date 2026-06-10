@@ -1,4 +1,4 @@
-import { InputHTMLAttributes, forwardRef } from 'react'
+import { InputHTMLAttributes, forwardRef, useId } from 'react'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
@@ -7,16 +7,22 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, fullWidth = false, className = '', ...props }, ref) => {
+  ({ label, error, fullWidth = false, id, className = '', ...props }, ref) => {
+    const defaultId = useId()
+    const inputId = id || defaultId
+    const errorId = error ? `${inputId}-error` : undefined
     return (
       <div className={`${fullWidth ? 'w-full' : ''}`}>
         {label && (
-          <label className="block text-mobile-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor={inputId} className="block text-mobile-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             {label}
           </label>
         )}
         <input
           ref={ref}
+          id={inputId}
+          aria-invalid={!!error}
+          aria-describedby={errorId}
           className={`
             input-mobile w-full
             bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
@@ -35,7 +41,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {error && (
-          <p className="mt-1 text-mobile-sm text-red-600 dark:text-red-400">{error}</p>
+          <p id={errorId} className="mt-1 text-mobile-sm text-red-600 dark:text-red-400">{error}</p>
         )}
       </div>
     )
@@ -52,17 +58,23 @@ interface TextareaProps extends InputHTMLAttributes<HTMLTextAreaElement> {
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, rows = 4, fullWidth = false, className = '', ...props }, ref) => {
+  ({ label, error, rows = 4, fullWidth = false, id, className = '', ...props }, ref) => {
+    const defaultId = useId()
+    const inputId = id || defaultId
+    const errorId = error ? `${inputId}-error` : undefined
     return (
       <div className={`${fullWidth ? 'w-full' : ''}`}>
         {label && (
-          <label className="block text-mobile-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor={inputId} className="block text-mobile-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             {label}
           </label>
         )}
         <textarea
           ref={ref}
+          id={inputId}
           rows={rows}
+          aria-invalid={!!error}
+          aria-describedby={errorId}
           className={`
             input-mobile w-full
             bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
@@ -82,7 +94,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...props}
         />
         {error && (
-          <p className="mt-1 text-mobile-sm text-red-600 dark:text-red-400">{error}</p>
+          <p id={errorId} className="mt-1 text-mobile-sm text-red-600 dark:text-red-400">{error}</p>
         )}
       </div>
     )
@@ -99,16 +111,22 @@ interface SelectProps extends InputHTMLAttributes<HTMLSelectElement> {
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, fullWidth = false, className = '', ...props }, ref) => {
+  ({ label, error, options, fullWidth = false, id, className = '', ...props }, ref) => {
+    const defaultId = useId()
+    const inputId = id || defaultId
+    const errorId = error ? `${inputId}-error` : undefined
     return (
       <div className={`${fullWidth ? 'w-full' : ''}`}>
         {label && (
-          <label className="block text-mobile-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor={inputId} className="block text-mobile-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             {label}
           </label>
         )}
         <select
           ref={ref}
+          id={inputId}
+          aria-invalid={!!error}
+          aria-describedby={errorId}
           className={`
             input-mobile w-full
             bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
@@ -132,7 +150,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
         {error && (
-          <p className="mt-1 text-mobile-sm text-red-600 dark:text-red-400">{error}</p>
+          <p id={errorId} className="mt-1 text-mobile-sm text-red-600 dark:text-red-400">{error}</p>
         )}
       </div>
     )

@@ -22,7 +22,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden">
       <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} desktopOpen={desktopOpen} />
 
-      <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950">
+      <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-950" role="main">
         <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/60 dark:border-gray-800/60">
           <button
             onClick={() => { setMobileOpen(true); setDesktopOpen(!desktopOpen) }}

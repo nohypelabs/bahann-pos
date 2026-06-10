@@ -269,7 +269,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         )}
 
         {/* ── Nav ── */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
+        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5" role="navigation" aria-label="Menu navigasi">
 
           {isSuperAdmin && (
             <SidebarSection sectionKey="superadmin" title="Super Admin" isCollapsed={showCollapsed} activePaths={['/admin']}>

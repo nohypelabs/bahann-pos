@@ -57,12 +57,15 @@ export function Modal({
       <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
         <div
           className={`relative w-full ${sizeClasses[size]} bg-white dark:bg-gray-800 rounded-t-[1.5rem] sm:rounded-[0.75rem] shadow-2xl transform transition-all max-h-[95vh] sm:max-h-[90vh] flex flex-col`}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={title ? 'modal-title' : undefined}
           onClick={(e) => e.stopPropagation()}
         >
           {(title || showCloseButton) && (
             <div className="flex items-center justify-between card-mobile border-b-2 border-gray-200 dark:border-gray-700 flex-shrink-0">
               {title && (
-                <h2 className="text-mobile-xl font-bold text-gray-900 dark:text-gray-100">{title}</h2>
+                <h2 id="modal-title" className="text-mobile-xl font-bold text-gray-900 dark:text-gray-100">{title}</h2>
               )}
               {showCloseButton && (
                 <button

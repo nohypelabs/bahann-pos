@@ -268,7 +268,7 @@ export default function SalesTransactionPage() {
   }, [cart, selectedOutletId])
 
   const handleApplyPromo = async () => {
-    if (!promoCode) { setError('Please enter a promo code'); return }
+    if (!promoCode) { setError('Masukkan kode promo'); return }
     try {
       const result = await validatePromoMutation.mutateAsync({
         code: promoCode,
@@ -278,7 +278,7 @@ export default function SalesTransactionPage() {
       setAppliedPromo(result)
       setError('')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Invalid promo code')
+      setError(err instanceof Error ? err.message : 'Kode promo tidak valid')
       setAppliedPromo(null)
     }
   }

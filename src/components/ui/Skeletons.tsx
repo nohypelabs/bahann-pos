@@ -11,13 +11,13 @@ export function ChartSkeleton({ height = 320 }: { height?: number }) {
     >
       <div className="flex flex-col items-center gap-3">
         <div className="w-12 h-12 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
-        <p className="text-sm text-gray-500 font-medium">Loading chart...</p>
+        <p className="text-sm text-gray-500 font-medium">Memuat grafik...</p>
       </div>
     </div>
   )
 }
 
-export function ModalLoadingSkeleton({ message = 'Loading...' }: { message?: string }) {
+export function ModalLoadingSkeleton({ message = 'Memuat...' }: { message?: string }) {
   return (
     <div className="p-4 md:p-8 flex flex-col items-center gap-4">
       <div className="w-16 h-16 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin" />
@@ -67,7 +67,7 @@ export function ExportLoadingSkeleton() {
   return (
     <div className="flex items-center gap-2 p-4 bg-blue-50 rounded-lg">
       <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-      <span className="text-sm text-blue-700 font-medium">Preparing export...</span>
+      <span className="text-sm text-blue-700 font-medium">Menyiapkan ekspor...</span>
     </div>
   )
 }
