@@ -107,7 +107,7 @@ export default function RegisterPage() {
     setError('')
 
     if (!selectedType) {
-      setError(isId ? 'Pilih jenis usaha terlebih dahulu' : 'Please select a business type')
+      setError('Pilih jenis usaha terlebih dahulu')
       return
     }
 

@@ -71,7 +71,7 @@ export default function SetupPage() {
 
   const handleSetup = async () => {
     if (!selectedType) {
-      setError(language === 'id' ? 'Pilih jenis usaha terlebih dahulu' : 'Please select a business type')
+      setError('Pilih jenis usaha terlebih dahulu')
       return
     }
 
@@ -82,7 +82,7 @@ export default function SetupPage() {
       await utils.businessProfile.getMyProfile.refetch()
       router.replace('/dashboard')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Setup failed')
+      setError(err instanceof Error ? err.message : 'Gagal mengatur bisnis')
     }
   }
 
