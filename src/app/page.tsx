@@ -480,6 +480,7 @@ export default function LandingPage() {
     return 'id'
   })
   const [activeFeature, setActiveFeature] = useState(0)
+  const featureTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [pricingMode, setPricingMode] = useState<'subscription' | 'onetime'>('subscription')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [chatOpen, setChatOpen] = useState(false)
@@ -507,6 +508,26 @@ export default function LandingPage() {
     setLang(next)
     localStorage.setItem('landing-lang', next)
   }
+
+  const FEATURE_COUNT = T.features.items.length
+  const FEATURE_INTERVAL = 3000
+
+  const startFeatureTimer = useCallback(() => {
+    if (featureTimerRef.current) clearInterval(featureTimerRef.current)
+    featureTimerRef.current = setInterval(() => {
+      setActiveFeature(prev => (prev + 1) % FEATURE_COUNT)
+    }, FEATURE_INTERVAL)
+  }, [FEATURE_COUNT])
+
+  useEffect(() => {
+    startFeatureTimer()
+    return () => { if (featureTimerRef.current) clearInterval(featureTimerRef.current) }
+  }, [startFeatureTimer])
+
+  const handleFeatureHover = useCallback((index: number) => {
+    setActiveFeature(index)
+    startFeatureTimer()
+  }, [startFeatureTimer])
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [chatMessages])
 
@@ -737,11 +758,12 @@ export default function LandingPage() {
             {T.features.items.map((f, i) => (
               <button
                 key={i}
-                onClick={() => setActiveFeature(i)}
+                onMouseEnter={() => handleFeatureHover(i)}
+                onClick={() => { setActiveFeature(i); startFeatureTimer() }}
                 style={featuresReveal.getItemStyle(i)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
                   activeFeature === i
-                    ? 'bg-green-600 text-white shadow-md'
+                    ? 'bg-green-600 text-white shadow-md scale-105'
                     : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700'
                 }`}
               >
@@ -751,19 +773,19 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-300">
             <div className="flex flex-col md:flex-row gap-6">
-              <div className="flex-1">
+              <div className="flex-1 transition-all duration-300">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 text-green-600 rounded-xl flex items-center justify-center">
+                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 text-green-600 rounded-xl flex items-center justify-center transition-all duration-300">
                     {FEATURE_ICONS[activeFeature]}
                   </div>
-                  <h3 className="text-xl font-bold">{feat.title[lang]}</h3>
+                  <h3 className="text-xl font-bold transition-all duration-300">{feat.title[lang]}</h3>
                 </div>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">{feat.desc[lang]}</p>
+                <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4 transition-all duration-300">{feat.desc[lang]}</p>
                 <ul className="space-y-2">
                   {feat.points.map((p, j) => (
-                    <li key={j} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <li key={`${activeFeature}-${j}`} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: `${j * 60}ms` }}>
                       <Check className="w-4 h-4 text-green-500 shrink-0" />
                       {p[lang]}
                     </li>
