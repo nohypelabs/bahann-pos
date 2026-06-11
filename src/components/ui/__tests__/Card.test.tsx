@@ -42,7 +42,7 @@ describe('CardTitle', () => {
   it('applies mobile-first typography', () => {
     render(<CardTitle>Title</CardTitle>)
     const title = screen.getByText('Title')
-    expect(title).toHaveClass('text-mobile-xl', 'font-bold')
+    expect(title).toHaveClass('text-mobile-base', 'md:text-mobile-xl', 'font-bold')
   })
 })
 

@@ -93,16 +93,14 @@ export default function TransactionsPage() {
     } catch (err) { showToast(err instanceof Error ? err.message : 'Gagal refund transaksi', 'error') }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const canVoid = (tx: any) =>
+  const canVoid = (tx: { status: string; createdAt: string | Date }): boolean =>
     tx.status === 'completed' &&
-    new Date(tx.created_at).toDateString() === new Date().toDateString() &&
-    permissionsData?.permissions?.canVoidTransactions
+    new Date(tx.createdAt).toDateString() === new Date().toDateString() &&
+    !!permissionsData?.permissions?.canVoidTransactions
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const canRefund = (tx: any) =>
+  const canRefund = (tx: { status: string }): boolean =>
     (tx.status === 'completed' || tx.status === 'voided') &&
-    permissionsData?.permissions?.canVoidTransactions
+    !!permissionsData?.permissions?.canVoidTransactions
 
   const outletOptions = [
     { value: '', label: 'Semua Outlet' },
@@ -165,17 +163,17 @@ export default function TransactionsPage() {
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {data.transactions.map(tx => (
                   <tr key={tx.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                    <td className="px-3 md:px-4 py-3 font-mono text-xs text-gray-700 dark:text-gray-300">{tx.transaction_id}</td>
-                    <td className="px-3 md:px-4 py-3 text-xs text-gray-600 dark:text-gray-400">{formatDateTime(tx.created_at)}</td>
+                    <td className="px-3 md:px-4 py-3 font-mono text-xs text-gray-700 dark:text-gray-300">{tx.transactionId}</td>
+                    <td className="px-3 md:px-4 py-3 text-xs text-gray-600 dark:text-gray-400">{formatDateTime(tx.createdAt)}</td>
                     <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">
-                      {formatCurrency(tx.total_amount)}
-                      {tx.discount_amount > 0 && (
+                      {formatCurrency(tx.totalAmount)}
+                      {tx.discountAmount > 0 && (
                         <span className="block text-[10px] font-normal text-green-600 dark:text-green-400">
-                          -{formatCurrency(tx.discount_amount)}
+                          -{formatCurrency(tx.discountAmount)}
                         </span>
                       )}
                     </td>
-                    <td className="px-3 md:px-4 py-3 text-xs capitalize text-gray-600 dark:text-gray-400">{tx.payment_method}</td>
+                    <td className="px-3 md:px-4 py-3 text-xs capitalize text-gray-600 dark:text-gray-400">{tx.paymentMethod}</td>
                     <td className="px-3 md:px-4 py-3">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_BADGE[tx.status as TransactionStatus]}`}>
                         {tx.status.toUpperCase()}

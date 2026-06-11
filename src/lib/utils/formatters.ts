@@ -94,8 +94,8 @@ export function formatChartYAxis(value: number, language: string = 'id'): string
   return `${value}`
 }
 
-export function formatDateTime(dateString: string): string {
-  return new Date(dateString).toLocaleString('id-ID', {
+export function formatDateTime(date: string | Date): string {
+  return new Date(date).toLocaleString('id-ID', {
     day: '2-digit',
     month: 'short',
     hour: '2-digit',

@@ -147,7 +147,7 @@ function UserUpgradeView() {
   // Auto-poll every 15s when there's a pending crypto request — triggers on-chain check
   useEffect(() => {
     if (!pendingRequest) return
-    const isCryptoPending = !!pendingRequest.crypto_token
+    const isCryptoPending = !!pendingRequest.cryptoToken
     const interval = setInterval(async () => {
       if (isCryptoPending) {
         try { await checkPaymentMutation.mutateAsync() } catch { /* ignore */ }
@@ -291,21 +291,21 @@ function UserUpgradeView() {
       {/* Pending Request Banner */}
       {pendingRequest && (
         <div className={`p-4 rounded-xl border ${
-          pendingRequest.crypto_token
+          pendingRequest.cryptoToken
             ? 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800'
             : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
         }`}>
           <div className="flex items-start gap-3">
-            {pendingRequest.crypto_token
+            {pendingRequest.cryptoToken
               ? <Wallet className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
               : <Clock className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
             }
             <div className="flex-1">
-              <p className={`text-sm font-semibold ${pendingRequest.crypto_token ? 'text-purple-800 dark:text-purple-200' : 'text-yellow-800 dark:text-yellow-200'}`}>
-                Permintaan upgrade ke <PlanBadge plan={pendingRequest.plan} /> {pendingRequest.crypto_token ? 'menunggu pembayaran crypto' : 'sedang menunggu verifikasi'}
+              <p className={`text-sm font-semibold ${pendingRequest.cryptoToken ? 'text-purple-800 dark:text-purple-200' : 'text-yellow-800 dark:text-yellow-200'}`}>
+                Permintaan upgrade ke <PlanBadge plan={pendingRequest.plan} /> {pendingRequest.cryptoToken ? 'menunggu pembayaran crypto' : 'sedang menunggu verifikasi'}
               </p>
 
-              {pendingRequest.crypto_token && pendingRequest.crypto_amount && paymentConfig?.crypto?.walletAddress ? (
+              {pendingRequest.cryptoToken && pendingRequest.cryptoAmount && paymentConfig?.crypto?.walletAddress ? (
                 <div className="mt-3 space-y-3">
                   {/* QR Code */}
                   <div className="flex justify-center">
@@ -321,7 +321,7 @@ function UserUpgradeView() {
                   </div>
 
                   <div>
-                    <p className="text-xs text-purple-600 dark:text-purple-400 mb-1">Kirim {pendingRequest.crypto_token.toUpperCase()} ke wallet (Solana):</p>
+                    <p className="text-xs text-purple-600 dark:text-purple-400 mb-1">Kirim {pendingRequest.cryptoToken.toUpperCase()} ke wallet (Solana):</p>
                     <div className="flex items-center gap-2">
                       <code className="text-xs bg-white dark:bg-gray-900 px-2 py-1.5 rounded-lg border border-purple-200 dark:border-purple-700 text-gray-900 dark:text-gray-100 break-all font-mono flex-1">
                         {paymentConfig!.crypto.walletAddress}
@@ -333,10 +333,10 @@ function UserUpgradeView() {
                     </div>
                   </div>
                   <div className="p-2.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                    <p className="text-xs text-purple-600 dark:text-purple-400">Jumlah persis ({pendingRequest.crypto_token.toUpperCase()}):</p>
+                    <p className="text-xs text-purple-600 dark:text-purple-400">Jumlah persis ({pendingRequest.cryptoToken.toUpperCase()}):</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-lg font-bold text-purple-800 dark:text-purple-200">{parseFloat(pendingRequest.crypto_amount).toFixed(pendingRequest.crypto_token === 'sol' ? 6 : 4)}</span>
-                      <button onClick={() => copyToClipboard(parseFloat(pendingRequest.crypto_amount!).toFixed(pendingRequest.crypto_token === 'sol' ? 6 : 4), 'pa')}
+                      <span className="text-lg font-bold text-purple-800 dark:text-purple-200">{pendingRequest.cryptoAmount?.toFixed(pendingRequest.cryptoToken === 'sol' ? 6 : 4)}</span>
+                      <button onClick={() => copyToClipboard(pendingRequest.cryptoAmount!.toFixed(pendingRequest.cryptoToken === 'sol' ? 6 : 4), 'pa')}
                         className="p-1 rounded hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors">
                         {copied === 'pa' ? <CheckCircle className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5 text-purple-400" />}
                       </button>
@@ -349,9 +349,9 @@ function UserUpgradeView() {
               ) : (
                 <>
                   <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                    {fmtRupiah(pendingRequest.amount)} — {new Date(pendingRequest.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    {fmtRupiah(pendingRequest.amount)} — {new Date(pendingRequest.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </p>
-                  {!pendingRequest.proof_url && (
+                  {!pendingRequest.proofUrl && (
                     <div className="mt-3">
                       <input type="file" ref={fileInputRef} accept="image/*" className="hidden"
                         onChange={e => handleFileUpload(e, pendingRequest.id)} />
@@ -362,7 +362,7 @@ function UserUpgradeView() {
                       </button>
                     </div>
                   )}
-                  {pendingRequest.proof_url && (
+                  {pendingRequest.proofUrl && (
                     <div className="mt-2 flex items-center gap-2">
                       <Image className="w-4 h-4 text-green-500" />
                       <span className="text-xs text-green-700 dark:text-green-400 font-medium">Bukti transfer sudah diupload</span>
@@ -672,18 +672,18 @@ function UserUpgradeView() {
                       <span className="text-xs font-medium">{s.label}</span>
                     </div>
                     <p className="text-xs mt-1 opacity-80">
-                      {req.crypto_token
-                        ? `${parseFloat(req.crypto_amount!).toFixed(req.crypto_token === 'sol' ? 6 : 4)} ${req.crypto_token.toUpperCase()} (Solana)`
-                        : `${fmtRupiah(req.amount)} — ${req.payment_method === 'qris' ? 'QRIS' : 'Transfer Bank'}`}
+                      {req.cryptoToken
+                        ? `${req.cryptoAmount!.toFixed(req.cryptoToken === 'sol' ? 6 : 4)} ${req.cryptoToken.toUpperCase()} (Solana)`
+                        : `${fmtRupiah(req.amount)} — ${req.paymentMethod === 'qris' ? 'QRIS' : 'Transfer Bank'}`}
                     </p>
-                    {req.crypto_tx_hash && (
-                      <a href={`https://solscan.io/tx/${req.crypto_tx_hash}`} target="_blank" rel="noopener noreferrer"
+                    {req.cryptoTxHash && (
+                      <a href={`https://solscan.io/tx/${req.cryptoTxHash}`} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-xs mt-1 opacity-80 hover:opacity-100 underline">
-                        <ExternalLink className="w-3 h-3" /> TX: {req.crypto_tx_hash.slice(0, 12)}...
+                        <ExternalLink className="w-3 h-3" /> TX: {req.cryptoTxHash.slice(0, 12)}...
                       </a>
                     )}
-                    {req.admin_note && <p className="text-xs mt-1 opacity-70">Catatan: {req.admin_note}</p>}
-                    {req.status === 'pending' && !req.crypto_token && !req.proof_url && (
+                    {req.adminNote && <p className="text-xs mt-1 opacity-70">Catatan: {req.adminNote}</p>}
+                    {req.status === 'pending' && !req.cryptoToken && !req.proofUrl && (
                       <div className="mt-2">
                         <input type="file" id={`proof-${req.id}`} accept="image/*" className="hidden"
                           onChange={e => handleFileUpload(e, req.id)} />
@@ -694,19 +694,19 @@ function UserUpgradeView() {
                         </label>
                       </div>
                     )}
-                    {req.status === 'pending' && req.crypto_token && (
+                    {req.status === 'pending' && req.cryptoToken && (
                       <p className="text-xs mt-1.5 opacity-70 italic">Menunggu verifikasi otomatis on-chain...</p>
                     )}
-                    {req.proof_url && (
+                    {req.proofUrl && (
                       <div className="mt-1 flex items-center gap-1.5">
                         <Image className="w-3.5 h-3.5" />
-                        <a href={req.proof_url} target="_blank" rel="noopener noreferrer" className="text-xs underline hover:opacity-80">Lihat bukti</a>
+                        <a href={req.proofUrl} target="_blank" rel="noopener noreferrer" className="text-xs underline hover:opacity-80">Lihat bukti</a>
                       </div>
                     )}
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-xs opacity-70">
-                      {new Date(req.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {new Date(req.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   </div>
                 </div>

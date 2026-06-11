@@ -5,14 +5,10 @@
 
 import { z } from 'zod'
 import { router, protectedProcedure } from '../trpc'
-import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
-import { getTenantOwnerId } from '@/server/lib/tenant'
+import { resolveTenantOutletIds } from '@/server/lib/tenant'
 import { TRPCError } from '@trpc/server'
-import { StockService } from '@/domain/services/StockService'
-import { PricingService } from '@/domain/services/PricingService'
-import type { Product } from '@/domain/entities/Product'
-import { logger } from '@/lib/logger'
+import { container } from '@/infra/container'
 
 const PLAN_LIMITS: Record<string, number> = {
   free: 100,
@@ -23,84 +19,15 @@ const PLAN_LIMITS: Record<string, number> = {
   enterprise: Infinity,
 }
 
-async function getMonthlyTransactionCount(outletId: string): Promise<number> {
-  const now = new Date()
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-  const { count } = await supabase
-    .from('transactions')
-    .select('id', { count: 'exact', head: true })
-    .eq('outlet_id', outletId)
-    .eq('status', 'completed')
-    .gte('created_at', startOfMonth)
-  return count ?? 0
-}
-
-async function getAccountPlan(userId: string): Promise<string> {
-  const { data: user } = await supabase
-    .from('users')
-    .select('plan, role, outlet_id')
-    .eq('id', userId)
-    .single()
-
-  if (!user) return 'free'
-
-  // Admin / super_admin uses their own plan
-  if (user.role === 'admin' || user.role === 'super_admin') return user.plan ?? 'free'
-
-  // Cashier inherits plan from their outlet's owner (tenant root)
-  if (user.outlet_id) {
-    const { data: outlet } = await supabase
-      .from('outlets')
-      .select('owner_id')
-      .eq('id', user.outlet_id)
-      .single()
-
-    if (outlet?.owner_id) {
-      const { data: owner } = await supabase
-        .from('users')
-        .select('plan')
-        .eq('id', outlet.owner_id)
-        .single()
-
-      return owner?.plan ?? 'free'
-    }
-  }
-
-  return 'free'
-}
-
-async function getTenantOutletIds(userId: string, role: string | undefined, outletId: string | undefined): Promise<string[]> {
-  const ownerId = await getTenantOwnerId(userId, role, outletId)
-  if (!ownerId) return []
-  const { data } = await supabase
-    .from('outlets')
-    .select('id')
-    .eq('owner_id', ownerId)
-  return data?.map(o => o.id) ?? []
-}
-
 export const transactionsRouter = router({
-  /**
-   * Get current plan usage for the authenticated user
-   */
   getPlanUsage: protectedProcedure
     .input(z.object({ outletId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const plan = await getAccountPlan(ctx.userId)
-      const limit = PLAN_LIMITS[plan] ?? 100
-      const count = await getMonthlyTransactionCount(input.outletId)
-      return {
-        plan,
-        limit: limit === Infinity ? null : limit,
-        count,
-        remaining: limit === Infinity ? null : Math.max(0, limit - count),
-        isAtLimit: limit !== Infinity && count >= limit,
-      }
+      const plan = await container.getAccountPlanUseCase().execute(ctx.userId)
+      const useCase = container.listTransactionsUseCase()
+      return useCase.getPlanUsage(input.outletId, plan, PLAN_LIMITS)
     }),
 
-  /**
-   * Create new transaction (replaces direct sales.record for atomic transactions)
-   */
   create: protectedProcedure
     .input(
       z.object({
@@ -121,232 +48,64 @@ export const transactionsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      // Check plan transaction limit
-      const plan = await getAccountPlan(ctx.userId)
+      const plan = await container.getAccountPlanUseCase().execute(ctx.userId)
       const limit = PLAN_LIMITS[plan] ?? 100
+
+      let currentMonthCount = 0
       if (limit !== Infinity) {
-        const count = await getMonthlyTransactionCount(input.outletId)
-        if (count >= limit) {
+        const listUseCase = container.listTransactionsUseCase()
+        const planUsage = await listUseCase.getPlanUsage(input.outletId, plan, PLAN_LIMITS)
+        currentMonthCount = planUsage.count
+
+        if (currentMonthCount >= limit) {
           throw new TRPCError({
             code: 'FORBIDDEN',
-            message: `PLAN_LIMIT_REACHED:${plan}:${count}:${limit}`,
+            message: `PLAN_LIMIT_REACHED:${plan}:${currentMonthCount}:${limit}`,
           })
         }
       }
 
-      // Calculate totals
-      const subtotal = input.items.reduce(
-        (sum, item) => sum + item.quantity * item.unitPrice,
-        0
-      )
-      const taxAmount = 0 // Can be calculated if needed
-      const totalAmount = subtotal - input.discountAmount + taxAmount
-      const changeAmount = input.amountPaid - totalAmount
-
-      if (changeAmount < 0) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Insufficient payment amount',
-        })
-      }
-
-      // Generate transaction ID
-      const transactionId = `TRX-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+      const useCase = container.createTransactionUseCase()
 
       try {
-        // Create transaction
-        const { data: transaction, error: txError } = await supabase
-          .from('transactions')
-          .insert({
-            transaction_id: transactionId,
-            outlet_id: input.outletId,
-            cashier_id: ctx.userId,
-            status: 'completed',
-            subtotal,
-            discount_amount: input.discountAmount,
-            tax_amount: taxAmount,
-            total_amount: totalAmount,
-            payment_method: input.paymentMethod,
-            amount_paid: input.amountPaid,
-            change_amount: changeAmount,
-            notes: input.notes,
-          })
-          .select()
-          .single()
+        const result = await useCase.execute({
+          outletId: input.outletId,
+          cashierId: ctx.userId,
+          items: input.items,
+          paymentMethod: input.paymentMethod,
+          amountPaid: input.amountPaid,
+          discountAmount: input.discountAmount,
+          notes: input.notes,
+          planLimit: limit === Infinity ? null : limit,
+          currentMonthCount,
+        })
 
-        if (txError) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: `Failed to create transaction: ${txError.message}`,
-          })
-        }
-
-        // Insert transaction items
-        const items = input.items.map((item) => ({
-          transaction_id: transaction.id,
-          product_id: item.productId,
-          product_name: item.productName,
-          product_sku: item.productSku,
-          quantity: item.quantity,
-          unit_price: item.unitPrice,
-          line_total: item.quantity * item.unitPrice,
-        }))
-
-        const { error: itemsError } = await supabase
-          .from('transaction_items')
-          .insert(items)
-
-        if (itemsError) {
-          // Rollback transaction by voiding it
-          await supabase
-            .from('transactions')
-            .update({ status: 'voided', void_reason: 'Failed to insert items' })
-            .eq('id', transaction.id)
-
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: `Failed to create transaction items: ${itemsError.message}`,
-          })
-        }
-
-        // Record in daily_sales for backward compatibility
-        for (const item of input.items) {
-          const { error: salesError } = await supabase.from('daily_sales').insert({
-            product_id: item.productId,
-            outlet_id: input.outletId,
-            sale_date: new Date().toISOString().split('T')[0],
-            quantity_sold: item.quantity,
-            unit_price: item.unitPrice,
-            revenue: item.quantity * item.unitPrice,
-          })
-
-          if (salesError) {
-            logger.error('Failed to insert daily_sales:', salesError)
-            // Don't fail the whole transaction, but log the error
-            // Transaction is already committed, daily_sales is just for reporting
-          }
-        }
-
-        // Update stock - deduct sold items from inventory
-        // Skip stock deduction for UNTRACKED items (services, standard menu)
-        const today = new Date().toISOString().split('T')[0]
-
-        // Fetch product stock_behavior for all items in one query
-        const productIds = input.items.map(item => item.productId)
-        const { data: productsData } = await supabase
-          .from('products')
-          .select('id, stock_behavior, name')
-          .in('id', productIds)
-
-        const productMap = new Map(productsData?.map(p => [p.id, p]) ?? [])
-
-        for (const item of input.items) {
-          const productInfo = productMap.get(item.productId)
-          const stockBehavior = productInfo?.stock_behavior || 'TRACKED'
-
-          // Skip stock deduction for UNTRACKED items (services, standard menu)
-          if (stockBehavior === 'UNTRACKED' || stockBehavior === 'CONSUMED') {
-            continue
-          }
-
-          // TRACKED: get latest stock for this product at this outlet
-          const { data: latestStock } = await supabase
-            .from('daily_stock')
-            .select('*')
-            .eq('product_id', item.productId)
-            .eq('outlet_id', input.outletId)
-            .eq('stock_date', today)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single()
-
-          if (latestStock) {
-            // Update existing stock record - add to stock_out and recalculate stock_akhir
-            const newStockOut = (latestStock.stock_out || 0) + item.quantity
-            const newStockAkhir = latestStock.stock_awal + (latestStock.stock_in || 0) - newStockOut
-
-            const { error: stockUpdateError } = await supabase
-              .from('daily_stock')
-              .update({
-                stock_out: newStockOut,
-                stock_akhir: newStockAkhir,
-              })
-              .eq('id', latestStock.id)
-
-            if (stockUpdateError) {
-              logger.error('Failed to update stock:', stockUpdateError)
-              // Don't fail transaction, but log for monitoring
-            }
-          } else {
-            // No stock record for today - create new one with stock_out
-            // Get yesterday's stock as stock_awal
-            const yesterday = new Date()
-            yesterday.setDate(yesterday.getDate() - 1)
-            const yesterdayDate = yesterday.toISOString().split('T')[0]
-
-            const { data: yesterdayStock } = await supabase
-              .from('daily_stock')
-              .select('stock_akhir')
-              .eq('product_id', item.productId)
-              .eq('outlet_id', input.outletId)
-              .eq('stock_date', yesterdayDate)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .single()
-
-            const stockAwal = yesterdayStock?.stock_akhir || 0
-            const stockAkhir = stockAwal - item.quantity
-
-            const { error: stockInsertError } = await supabase
-              .from('daily_stock')
-              .insert({
-                product_id: item.productId,
-                outlet_id: input.outletId,
-                stock_date: today,
-                stock_awal: stockAwal,
-                stock_in: 0,
-                stock_out: item.quantity,
-                stock_akhir: stockAkhir,
-              })
-
-            if (stockInsertError) {
-              logger.error('Failed to create stock record:', stockInsertError)
-              // Don't fail transaction, but log for monitoring
-            }
-          }
-        }
-
-        // Create audit log
         await createAuditLog({
           userId: ctx.userId,
           userEmail: ctx.session?.email || 'unknown',
           action: 'CREATE',
           entityType: 'transaction',
-          entityId: transaction.id,
-          changes: { transaction },
-          metadata: { transactionId, totalAmount },
+          entityId: result.transaction.id,
+          changes: { transaction: result.transaction },
+          metadata: { transactionId: result.transactionId, totalAmount: result.transaction.totalAmount },
         })
 
-        return {
-          success: true,
-          transaction,
-          transactionId,
-        }
+        return result
       } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error
+        const message = error instanceof Error ? error.message : 'An unexpected error occurred while creating transaction'
+        if (message.startsWith('PLAN_LIMIT_REACHED:') || message === 'Insufficient payment amount') {
+          throw new TRPCError({
+            code: message.startsWith('PLAN_LIMIT_REACHED') ? 'FORBIDDEN' : 'BAD_REQUEST',
+            message,
+          })
         }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'An unexpected error occurred while creating transaction',
+          message,
         })
       }
     }),
 
-  /**
-   * Void transaction (before end of day)
-   * Can only void completed transactions from today
-   */
   void: protectedProcedure
     .input(
       z.object({
@@ -355,78 +114,43 @@ export const transactionsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const tenantOutlets = await getTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const useCase = container.voidTransactionUseCase()
 
-      // Get transaction
-      const { data: transaction, error: fetchError } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('id', input.transactionId)
-        .single()
-
-      if (fetchError || !transaction || !tenantOutlets.includes(transaction.outlet_id)) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Transaction not found',
+      try {
+        await useCase.execute({
+          transactionId: input.transactionId,
+          reason: input.reason,
+          userId: ctx.userId,
+          tenantOutletIds: tenantOutlets,
         })
+
+        await createAuditLog({
+          userId: ctx.userId,
+          userEmail: ctx.session?.email || 'unknown',
+          action: 'UPDATE',
+          entityType: 'transaction',
+          entityId: input.transactionId,
+          changes: {
+            before: { status: 'completed' },
+            after: { status: 'voided', reason: input.reason },
+          },
+          metadata: { action: 'void' },
+        })
+
+        return { success: true }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to void transaction'
+        if (message === 'Transaction not found') {
+          throw new TRPCError({ code: 'NOT_FOUND', message })
+        }
+        if (message.startsWith('Can only void')) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message })
+        }
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message })
       }
-
-      if (transaction.status !== 'completed') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Can only void completed transactions',
-        })
-      }
-
-      // Check if same day (can only void same-day transactions)
-      const txDate = new Date(transaction.created_at).toDateString()
-      const today = new Date().toDateString()
-      if (txDate !== today) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message:
-            'Can only void transactions from today. Use refund for older transactions.',
-        })
-      }
-
-      // Update transaction status
-      const { error } = await supabase
-        .from('transactions')
-        .update({
-          status: 'voided',
-          void_reason: input.reason,
-          voided_by: ctx.userId,
-          voided_at: new Date().toISOString(),
-        })
-        .eq('id', input.transactionId)
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to void transaction: ${error.message}`,
-        })
-      }
-
-      // Create audit log
-      await createAuditLog({
-        userId: ctx.userId,
-        userEmail: ctx.session?.email || 'unknown',
-        action: 'UPDATE',
-        entityType: 'transaction',
-        entityId: input.transactionId,
-        changes: {
-          before: { status: 'completed' },
-          after: { status: 'voided', reason: input.reason },
-        },
-        metadata: { action: 'void' },
-      })
-
-      return { success: true }
     }),
 
-  /**
-   * Refund transaction (after end of day or for partial refunds)
-   */
   refund: protectedProcedure
     .input(
       z.object({
@@ -436,105 +160,57 @@ export const transactionsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const tenantOutlets = await getTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const useCase = container.refundTransactionUseCase()
 
-      const { data: transaction, error: fetchError } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('id', input.transactionId)
-        .single()
-
-      if (fetchError || !transaction || !tenantOutlets.includes(transaction.outlet_id)) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Transaction not found',
+      try {
+        await useCase.execute({
+          transactionId: input.transactionId,
+          reason: input.reason,
+          refundAmount: input.refundAmount,
+          userId: ctx.userId,
+          tenantOutletIds: tenantOutlets,
         })
+
+        await createAuditLog({
+          userId: ctx.userId,
+          userEmail: ctx.session?.email || 'unknown',
+          action: 'UPDATE',
+          entityType: 'transaction',
+          entityId: input.transactionId,
+          changes: {
+            before: { status: 'completed' },
+            after: { status: 'refunded', refundAmount: input.refundAmount },
+          },
+          metadata: { action: 'refund' },
+        })
+
+        return { success: true }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to refund transaction'
+        if (message === 'Transaction not found') {
+          throw new TRPCError({ code: 'NOT_FOUND', message })
+        }
+        if (message.includes('already voided') || message.includes('cannot exceed')) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message })
+        }
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message })
       }
-
-      if (transaction.status === 'voided' || transaction.status === 'refunded') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Transaction already voided or refunded',
-        })
-      }
-
-      const refundAmount = input.refundAmount || transaction.total_amount
-
-      if (refundAmount > transaction.total_amount) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Refund amount cannot exceed transaction total',
-        })
-      }
-
-      const { error } = await supabase
-        .from('transactions')
-        .update({
-          status: 'refunded',
-          refund_reason: input.reason,
-          refunded_by: ctx.userId,
-          refunded_at: new Date().toISOString(),
-          refund_amount: refundAmount,
-        })
-        .eq('id', input.transactionId)
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to refund transaction: ${error.message}`,
-        })
-      }
-
-      await createAuditLog({
-        userId: ctx.userId,
-        userEmail: ctx.session?.email || 'unknown',
-        action: 'UPDATE',
-        entityType: 'transaction',
-        entityId: input.transactionId,
-        changes: {
-          before: { status: transaction.status },
-          after: { status: 'refunded', refundAmount },
-        },
-        metadata: { action: 'refund' },
-      })
-
-      return { success: true }
     }),
 
-  /**
-   * Get transaction by ID with items
-   */
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await getTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const useCase = container.listTransactionsUseCase()
 
-      const { data: transaction, error } = await supabase
-        .from('transactions')
-        .select(
-          `
-          *,
-          transaction_items (*),
-          outlets (id, name, address),
-          cashier:users!cashier_id (id, name, email)
-        `
-        )
-        .eq('id', input.id)
-        .single()
-
-      if (error || !transaction || !tenantOutlets.includes(transaction.outlet_id)) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Transaction not found',
-        })
+      try {
+        return await useCase.getById(input.id, tenantOutlets)
+      } catch {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Transaction not found' })
       }
-
-      return transaction
     }),
 
-  /**
-   * List transactions with filters
-   */
   list: protectedProcedure
     .input(
       z.object({
@@ -547,48 +223,26 @@ export const transactionsRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await getTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (tenantOutlets.length === 0) return { transactions: [], total: 0 }
+      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const useCase = container.listTransactionsUseCase()
 
-      let query = supabase
-        .from('transactions')
-        .select(
-          `
-          *,
-          transaction_items (*),
-          outlets (id, name),
-          cashier:users!cashier_id (id, name)
-        `,
-          { count: 'estimated' }
-        )
-        .in('outlet_id', tenantOutlets)
-        .order('created_at', { ascending: false })
-
-      if (input.outletId) query = query.eq('outlet_id', input.outletId)
-      if (input.status) query = query.eq('status', input.status)
-      if (input.dateFrom) query = query.gte('created_at', input.dateFrom)
-      if (input.dateTo) query = query.lte('created_at', input.dateTo)
-
-      query = query.range(input.offset, input.offset + input.limit - 1)
-
-      const { data, count, error } = await query
-
-      if (error) {
+      try {
+        return await useCase.list(tenantOutlets, {
+          outletId: input.outletId,
+          status: input.status,
+          dateFrom: input.dateFrom,
+          dateTo: input.dateTo,
+          limit: input.limit,
+          offset: input.offset,
+        })
+      } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to fetch transactions: ${error.message}`,
+          message: error instanceof Error ? error.message : 'Failed to fetch transactions',
         })
-      }
-
-      return {
-        transactions: data || [],
-        total: count || 0,
       }
     }),
 
-  /**
-   * Get transaction summary for a date range
-   */
   getSummary: protectedProcedure
     .input(
       z.object({
@@ -598,58 +252,16 @@ export const transactionsRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await getTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (tenantOutlets.length === 0) {
-        return { totalTransactions: 0, completedTransactions: 0, voidedTransactions: 0, refundedTransactions: 0, totalRevenue: 0, totalDiscounts: 0, cashSales: 0, cardSales: 0, transferSales: 0, ewalletSales: 0 }
-      }
+      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const useCase = container.listTransactionsUseCase()
 
-      let query = supabase
-        .from('transactions')
-        .select('*')
-        .in('outlet_id', tenantOutlets)
-        .gte('created_at', input.dateFrom)
-        .lte('created_at', input.dateTo)
-
-      if (input.outletId) {
-        query = query.eq('outlet_id', input.outletId)
-      }
-
-      const { data: transactions, error } = await query
-
-      if (error) {
+      try {
+        return await useCase.getSummary(tenantOutlets, input.outletId, input.dateFrom, input.dateTo)
+      } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to fetch transaction summary: ${error.message}`,
+          message: error instanceof Error ? error.message : 'Failed to fetch transaction summary',
         })
       }
-
-      const summary = {
-        totalTransactions: transactions?.length || 0,
-        completedTransactions: transactions?.filter((t) => t.status === 'completed')
-          .length || 0,
-        voidedTransactions: transactions?.filter((t) => t.status === 'voided').length || 0,
-        refundedTransactions: transactions?.filter((t) => t.status === 'refunded')
-          .length || 0,
-        totalRevenue: transactions
-          ?.filter((t) => t.status === 'completed')
-          .reduce((sum, t) => sum + t.total_amount, 0) || 0,
-        totalDiscounts: transactions
-          ?.filter((t) => t.status === 'completed')
-          .reduce((sum, t) => sum + t.discount_amount, 0) || 0,
-        cashSales: transactions
-          ?.filter((t) => t.status === 'completed' && t.payment_method === 'cash')
-          .reduce((sum, t) => sum + t.total_amount, 0) || 0,
-        cardSales: transactions
-          ?.filter((t) => t.status === 'completed' && t.payment_method === 'card')
-          .reduce((sum, t) => sum + t.total_amount, 0) || 0,
-        transferSales: transactions
-          ?.filter((t) => t.status === 'completed' && t.payment_method === 'transfer')
-          .reduce((sum, t) => sum + t.total_amount, 0) || 0,
-        ewalletSales: transactions
-          ?.filter((t) => t.status === 'completed' && t.payment_method === 'ewallet')
-          .reduce((sum, t) => sum + t.total_amount, 0) || 0,
-      }
-
-      return summary
     }),
 })

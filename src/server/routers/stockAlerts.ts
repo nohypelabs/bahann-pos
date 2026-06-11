@@ -5,24 +5,10 @@
 
 import { z } from 'zod'
 import { router, protectedProcedure, adminProcedure } from '../trpc'
-import { supabaseAdmin as supabase } from '@/infra/supabase/server'
+import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
-import { getTenantOwnerId } from '@/server/lib/tenant'
+import { getTenantOwnerId, resolveTenantOutletIds } from '@/server/lib/tenant'
 import { TRPCError } from '@trpc/server'
-
-async function getTenantOutletIds(userId: string, role: string | undefined, outletId: string | undefined): Promise<string[]> {
-  const ownerId = await getTenantOwnerId(userId, role, outletId)
-  if (!ownerId) return []
-  const { data } = await supabase.from('outlets').select('id').eq('owner_id', ownerId)
-  return data?.map(o => o.id) ?? []
-}
-
-interface StockRow {
-  product_id: string
-  outlet_id: string
-  stock_akhir: number | null
-  products?: { reorder_point: number | null } | null
-}
 
 export const stockAlertsRouter = router({
   /**
@@ -35,125 +21,20 @@ export const stockAlertsRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await getTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (tenantOutlets.length === 0) return []
-
-      let query = supabase
-        .from('stock_alerts')
-        .select('*')
-        .eq('is_acknowledged', false)
-        .in('outlet_id', tenantOutlets)
-        .order('created_at', { ascending: false })
-
-      if (input.outletId) {
-        query = query.eq('outlet_id', input.outletId)
-      }
-
-      const { data: alerts, error } = await query
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to fetch stock alerts: ${error.message}`,
-        })
-      }
-
-      if (!alerts || alerts.length === 0) return []
-
-      // Fetch related products and outlets separately to avoid PostgREST join issues
-      const productIds = [...new Set(alerts.map(a => a.product_id).filter(Boolean))]
-      const outletIds = [...new Set(alerts.map(a => a.outlet_id).filter(Boolean))]
-
-      const [{ data: products }, { data: outlets }] = await Promise.all([
-        supabase.from('products').select('id, name, sku, category').in('id', productIds),
-        supabase.from('outlets').select('id, name, address').in('id', outletIds),
-      ])
-
-      const productMap = Object.fromEntries((products || []).map(p => [p.id, p]))
-      const outletMap = Object.fromEntries((outlets || []).map(o => [o.id, o]))
-
-      return alerts.map(alert => ({
-        ...alert,
-        product: productMap[alert.product_id] ?? null,
-        outlet: outletMap[alert.outlet_id] ?? null,
-      }))
+      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const uc = container.stockAlertUseCase()
+      return uc.getActive(tenantOutlets, input.outletId)
     }),
 
   /**
    * Generate alerts (run periodically or on-demand)
    */
   generate: adminProcedure.mutation(async ({ ctx }) => {
+    const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+    const uc = container.stockAlertUseCase()
+
     try {
-      const tenantOutlets = await getTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (tenantOutlets.length === 0) return { alertsGenerated: 0 }
-
-      // Get latest stock for each product-outlet combination
-      const { data: stockData, error: stockError } = await supabase
-        .from('daily_stock')
-        .select(`
-          product_id,
-          outlet_id,
-          stock_akhir,
-          stock_date,
-          products!inner(id, reorder_point)
-        `)
-        .in('outlet_id', tenantOutlets)
-        .order('stock_date', { ascending: false })
-
-      if (stockError) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to fetch stock data: ${stockError.message}`,
-        })
-      }
-
-      // Deduplicate to get the latest stock per product-outlet
-      const latestStockMap = new Map<string, { product_id: string; outlet_id: string; current_stock: number; reorder_point: number }>()
-      for (const row of (stockData || []) as unknown as StockRow[]) {
-        const key = `${row.product_id}:${row.outlet_id}`
-        if (!latestStockMap.has(key)) {
-          latestStockMap.set(key, {
-            product_id: row.product_id,
-            outlet_id: row.outlet_id,
-            current_stock: row.stock_akhir ?? 0,
-            reorder_point: row.products?.reorder_point ?? 10,
-          })
-        }
-      }
-
-      // Get existing unacknowledged alerts to avoid duplicates
-      const { data: existingAlerts } = await supabase
-        .from('stock_alerts')
-        .select('product_id, outlet_id')
-        .eq('is_acknowledged', false)
-
-      const existingKeys = new Set(
-        (existingAlerts || []).map((a: { product_id: string; outlet_id: string }) => `${a.product_id}:${a.outlet_id}`)
-      )
-
-      // Build new alerts
-      const newAlerts: { product_id: string; outlet_id: string; alert_type: string; current_stock: number; reorder_point: number }[] = []
-      for (const stock of latestStockMap.values()) {
-        const key = `${stock.product_id}:${stock.outlet_id}`
-        if (existingKeys.has(key)) continue
-        if (stock.current_stock <= 0) {
-          newAlerts.push({ ...stock, alert_type: 'out_of_stock' })
-        } else if (stock.current_stock <= stock.reorder_point) {
-          newAlerts.push({ ...stock, alert_type: 'low_stock' })
-        }
-      }
-
-      if (newAlerts.length > 0) {
-        const { error: insertError } = await supabase.from('stock_alerts').insert(newAlerts)
-        if (insertError) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: `Failed to insert alerts: ${insertError.message}`,
-          })
-        }
-      }
-
-      const alertsGenerated = newAlerts.length
+      const alertsGenerated = await uc.generate(tenantOutlets)
 
       await createAuditLog({
         userId: ctx.userId,
@@ -164,14 +45,8 @@ export const stockAlertsRouter = router({
       })
 
       return { alertsGenerated }
-    } catch (error) {
-      if (error instanceof TRPCError) {
-        throw error
-      }
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to generate stock alerts',
-      })
+    } catch {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to generate stock alerts' })
     }
   }),
 
@@ -181,26 +56,13 @@ export const stockAlertsRouter = router({
   acknowledge: protectedProcedure
     .input(z.object({ alertId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      const tenantOutlets = await getTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
-      const { data: alert } = await supabase.from('stock_alerts').select('outlet_id').eq('id', input.alertId).single()
-      if (!alert || !tenantOutlets.includes(alert.outlet_id)) {
+      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const uc = container.stockAlertUseCase()
+
+      try {
+        await uc.acknowledge(input.alertId, ctx.userId, tenantOutlets)
+      } catch {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Alert not found' })
-      }
-
-      const { error } = await supabase
-        .from('stock_alerts')
-        .update({
-          is_acknowledged: true,
-          acknowledged_by: ctx.userId,
-          acknowledged_at: new Date().toISOString(),
-        })
-        .eq('id', input.alertId)
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to acknowledge alert: ${error.message}`,
-        })
       }
 
       await createAuditLog({
@@ -226,33 +88,9 @@ export const stockAlertsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const tenantOutlets = await getTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (tenantOutlets.length === 0) return { success: true }
-
-      let query = supabase
-        .from('stock_alerts')
-        .update({
-          is_acknowledged: true,
-          acknowledged_by: ctx.userId,
-          acknowledged_at: new Date().toISOString(),
-        })
-        .eq('product_id', input.productId)
-        .eq('is_acknowledged', false)
-        .in('outlet_id', tenantOutlets)
-
-      if (input.outletId) {
-        query = query.eq('outlet_id', input.outletId)
-      }
-
-      const { error } = await query
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to acknowledge alerts: ${error.message}`,
-        })
-      }
-
+      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const uc = container.stockAlertUseCase()
+      await uc.acknowledgeByProduct(input.productId, tenantOutlets, input.outletId)
       return { success: true }
     }),
 
@@ -271,43 +109,9 @@ export const stockAlertsRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await getTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (tenantOutlets.length === 0) return { alerts: [], total: 0 }
-
-      let query = supabase
-        .from('stock_alerts')
-        .select(
-          `
-          *,
-          product:products (id, name, sku),
-          outlet:outlets (id, name),
-          acknowledged_by_user:users!acknowledged_by (id, name)
-        `,
-          { count: 'exact' }
-        )
-        .in('outlet_id', tenantOutlets)
-        .order('created_at', { ascending: false })
-
-      if (input.outletId) query = query.eq('outlet_id', input.outletId)
-      if (input.productId) query = query.eq('product_id', input.productId)
-      if (input.dateFrom) query = query.gte('created_at', input.dateFrom)
-      if (input.dateTo) query = query.lte('created_at', input.dateTo)
-
-      query = query.range(input.offset, input.offset + input.limit - 1)
-
-      const { data, count, error } = await query
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to fetch alert history: ${error.message}`,
-        })
-      }
-
-      return {
-        alerts: data || [],
-        total: count || 0,
-      }
+      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const uc = container.stockAlertUseCase()
+      return uc.getHistory(tenantOutlets, input)
     }),
 
   /**
@@ -320,37 +124,9 @@ export const stockAlertsRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await getTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (tenantOutlets.length === 0) return { total: 0, outOfStock: 0, lowStock: 0, reorderSuggested: 0 }
-
-      let query = supabase
-        .from('stock_alerts')
-        .select('alert_type, is_acknowledged')
-        .eq('is_acknowledged', false)
-        .in('outlet_id', tenantOutlets)
-
-      if (input.outletId) {
-        query = query.eq('outlet_id', input.outletId)
-      }
-
-      const { data, error } = await query
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to fetch alert summary: ${error.message}`,
-        })
-      }
-
-      const summary = {
-        total: data?.length || 0,
-        outOfStock: data?.filter((a) => a.alert_type === 'out_of_stock').length || 0,
-        lowStock: data?.filter((a) => a.alert_type === 'low_stock').length || 0,
-        reorderSuggested:
-          data?.filter((a) => a.alert_type === 'reorder_suggested').length || 0,
-      }
-
-      return summary
+      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const uc = container.stockAlertUseCase()
+      return uc.getSummary(tenantOutlets, input.outletId)
     }),
 
   /**
@@ -367,27 +143,19 @@ export const stockAlertsRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (ownerId) {
-        const { data: prod } = await supabase.from('products').select('owner_id').eq('id', input.productId).single()
-        if (!prod || prod.owner_id !== ownerId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' })
-      }
+      const uc = container.stockAlertUseCase()
 
-      const { productId, ...updates } = input
-
-      const { error } = await supabase
-        .from('products')
-        .update({
-          reorder_point: updates.reorderPoint,
-          reorder_quantity: updates.reorderQuantity,
-          lead_time_days: updates.leadTimeDays,
-        })
-        .eq('id', productId)
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to update reorder settings: ${error.message}`,
-        })
+      try {
+        await uc.updateReorderSettings(input.productId, {
+          reorderPoint: input.reorderPoint,
+          reorderQuantity: input.reorderQuantity,
+          leadTimeDays: input.leadTimeDays,
+        }, ownerId)
+      } catch (e) {
+        if ((e as Error).message.includes('Access denied')) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' })
+        }
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
       }
 
       await createAuditLog({
@@ -395,8 +163,8 @@ export const stockAlertsRouter = router({
         userEmail: ctx.session?.email || 'unknown',
         action: 'UPDATE',
         entityType: 'product',
-        entityId: productId,
-        changes: { reorderSettings: updates },
+        entityId: input.productId,
+        changes: { reorderSettings: { reorderPoint: input.reorderPoint, reorderQuantity: input.reorderQuantity, leadTimeDays: input.leadTimeDays } },
       })
 
       return { success: true }

@@ -4,20 +4,16 @@ import { router, publicProcedure, protectedProcedure, adminProcedure } from '../
 import { LoginUserUseCase } from '@/use-cases/auth/LoginUserUseCase'
 import { RegisterUserUseCase } from '@/use-cases/auth/RegisterUserUseCase'
 import { LogoutUserUseCase } from '@/use-cases/auth/LogoutUserUseCase'
-import { SupabaseUserRepository } from '@/infra/repositories/SupabaseUserRepository'
-import { SupabaseBusinessProfileRepository } from '@/infra/repositories/SupabaseBusinessProfileRepository'
 import { BusinessProfile } from '@/domain/entities/BusinessProfile'
 import { BUSINESS_TYPES } from '@/domain/catalog/value-objects/business-type'
 import { setAuthCookie, deleteAuthCookie, setRefreshCookie, deleteRefreshCookie, getRefreshCookie } from '@/lib/cookies'
 import { createAuditLog } from '@/lib/audit'
-import { createRefreshToken, rotateRefreshToken, revokeRefreshToken, revokeAllUserTokens } from '@/lib/refreshToken'
-import { sendPasswordResetEmail, generateResetToken, sendNewUserNotification, sendWelcomeEmail, sendVerificationEmail } from '@/lib/email'
-import bcrypt from 'bcryptjs'
+import { createRefreshToken, revokeRefreshToken, revokeAllUserTokens } from '@/lib/refreshToken'
+import { generateResetToken, sendNewUserNotification, sendWelcomeEmail, sendVerificationEmail } from '@/lib/email'
+import { AppError } from '@/shared/exceptions/AppError'
 import { checkRateLimit, RateLimitPresets } from '@/lib/security/rateLimiter'
 import { logger } from '@/lib/logger'
-
-const userRepository = new SupabaseUserRepository()
-const profileRepo = new SupabaseBusinessProfileRepository()
+import { container } from '@/infra/container'
 
 export const authRouter = router({
   /**
@@ -35,7 +31,7 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const useCase = new RegisterUserUseCase(userRepository)
+      const useCase = new RegisterUserUseCase(container.userRepository())
       // Public registration always creates an admin (warung owner)
       const result = await useCase.execute({ ...input, role: 'admin' })
 
@@ -56,36 +52,16 @@ export const authRouter = router({
       })
 
       // Auto-create first outlet for new warung owner
-      const { supabaseAdmin } = await import('@/infra/supabase/server')
-      const { data: outlet } = await supabaseAdmin
-        .from('outlets')
-        .insert({
-          name: input.storeName,
-          owner_id: result.userId,
-        })
-        .select('id')
-        .single()
-
-      // Generate email verification token — trial activates after verified
       const verifyToken = generateResetToken()
-      const tokenExpiry = new Date()
-      tokenExpiry.setHours(tokenExpiry.getHours() + 24)
-
-      await supabaseAdmin
-        .from('users')
-        .update({
-          outlet_id: outlet?.id ?? null,
-          plan: 'free',
-          email_verify_token: verifyToken,
-        })
-        .eq('id', result.userId)
+      const regUseCase = container.completeRegistrationUseCase()
+      await regUseCase.execute(result.userId, input.storeName, verifyToken)
 
       // Create business profile based on selected type
       const profile = BusinessProfile.createDefaults(
         result.userId,
         input.businessType as import('@/domain/catalog/value-objects/business-type').BusinessType,
       )
-      await profileRepo.save(profile)
+      await container.businessProfileRepo().save(profile)
 
       // Fire-and-forget emails — don't block registration response
       sendVerificationEmail({
@@ -137,37 +113,22 @@ export const authRouter = router({
         })
       }
 
-      const useCase = new LoginUserUseCase(userRepository)
+      const useCase = new LoginUserUseCase(container.userRepository())
       const result = await useCase.execute(input)
 
       // Check if tenant (or tenant's admin) is suspended
-      const { supabaseAdmin } = await import('@/infra/supabase/server')
-      const { data: loginUser } = await supabaseAdmin
-        .from('users')
-        .select('is_suspended, outlet_id, role')
-        .eq('id', result.user.id)
-        .single()
+      const userRepo = container.userRepository()
+      const suspension = await userRepo.getSuspensionStatus(result.user.id)
 
-      if (loginUser?.is_suspended) {
+      if (suspension.isSuspended) {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Akun Anda telah dinonaktifkan. Hubungi admin.' })
       }
 
       // If cashier, check if their admin (outlet owner) is suspended
-      if (loginUser?.role === 'user' && loginUser?.outlet_id) {
-        const { data: outlet } = await supabaseAdmin
-          .from('outlets')
-          .select('owner_id')
-          .eq('id', loginUser.outlet_id)
-          .single()
-        if (outlet?.owner_id) {
-          const { data: owner } = await supabaseAdmin
-            .from('users')
-            .select('is_suspended')
-            .eq('id', outlet.owner_id)
-            .single()
-          if (owner?.is_suspended) {
-            throw new TRPCError({ code: 'FORBIDDEN', message: 'Akun bisnis Anda telah dinonaktifkan. Hubungi pemilik.' })
-          }
+      if (suspension.role === 'user' && suspension.outletId) {
+        const ownerSuspended = await userRepo.isOwnerSuspended(suspension.outletId)
+        if (ownerSuspended) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Akun bisnis Anda telah dinonaktifkan. Hubungi pemilik.' })
         }
       }
 
@@ -240,19 +201,14 @@ export const authRouter = router({
    * Get current user's full profile (for receipt/nota and profile page)
    */
   getProfile: protectedProcedure.query(async ({ ctx }) => {
-    const { supabaseAdmin } = await import('@/infra/supabase/server')
-    const { data } = await supabaseAdmin
-      .from('users')
-      .select('name, email, whatsapp_number, role, outlet_id')
-      .eq('id', ctx.userId)
-      .single()
+    const useCase = container.getProfileUseCase()
+    const profile = await useCase.execute({ userId: ctx.userId })
     return {
-      id: ctx.userId,
-      name: data?.name || ctx.session?.name || '',
-      email: data?.email || ctx.session?.email || '',
-      whatsappNumber: data?.whatsapp_number || '',
-      role: data?.role || ctx.session?.role || 'user',
-      outletId: data?.outlet_id || ctx.session?.outletId || null,
+      ...profile,
+      name: profile.name || ctx.session?.name || '',
+      email: profile.email || ctx.session?.email || '',
+      role: profile.role || ctx.session?.role || 'user',
+      outletId: profile.outletId || ctx.session?.outletId || null,
     }
   }),
 
@@ -265,15 +221,12 @@ export const authRouter = router({
       whatsappNumber: z.string().regex(/^[0-9+\-\s()]*$/).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const { supabaseAdmin } = await import('@/infra/supabase/server')
-      const { error } = await supabaseAdmin
-        .from('users')
-        .update({
-          name: input.name,
-          whatsapp_number: input.whatsappNumber || null,
-        })
-        .eq('id', ctx.userId)
-      if (error) throw new Error(`Failed to update profile: ${error.message}`)
+      const useCase = container.updateProfileUseCase()
+      await useCase.execute({
+        userId: ctx.userId,
+        name: input.name,
+        whatsappNumber: input.whatsappNumber,
+      })
       return { success: true }
     }),
 
@@ -281,13 +234,8 @@ export const authRouter = router({
    * Get current user's subscription plan
    */
   getPlan: protectedProcedure.query(async ({ ctx }) => {
-    const { supabaseAdmin } = await import('@/infra/supabase/server')
-    const { data } = await supabaseAdmin
-      .from('users')
-      .select('plan')
-      .eq('id', ctx.userId)
-      .single()
-    return { plan: (data?.plan as string) || 'free' }
+    const plan = await container.userRepository().getPlan(ctx.userId)
+    return { plan }
   }),
 
   /**
@@ -295,33 +243,8 @@ export const authRouter = router({
    * This implements token rotation for security
    */
   refresh: publicProcedure.mutation(async () => {
-    // Get refresh token from cookie
-    const refreshToken = await getRefreshCookie()
-
-    if (!refreshToken) {
-      throw new Error('No refresh token found')
-    }
-
-    try {
-      // Rotate refresh token (generates new refresh + access tokens)
-      const { refreshToken: newRefreshToken, accessToken: newAccessToken } =
-        await rotateRefreshToken(refreshToken)
-
-      // Set new cookies
-      await setAuthCookie(newAccessToken)
-      await setRefreshCookie(newRefreshToken)
-
-      return {
-        success: true,
-        message: 'Tokens refreshed successfully',
-      }
-    } catch (error) {
-      // Invalid/expired/revoked token - clear cookies
-      await deleteAuthCookie()
-      await deleteRefreshCookie()
-
-      throw new Error('Failed to refresh token - please login again')
-    }
+    const useCase = container.refreshTokenUseCase()
+    return await useCase.execute()
   }),
 
   /**
@@ -366,37 +289,19 @@ export const authRouter = router({
       }).optional()
     )
     .query(async ({ input }) => {
-      const { supabaseAdmin: supabase } = await import('@/infra/supabase/server')
       const page = input?.page || 1
       const limit = input?.limit || 20
       const search = input?.search
-      const offset = (page - 1) * limit
 
-      // Build query
-      let query = supabase
-        .from('users')
-        .select('id, email, name, outlet_id, role, created_at', { count: 'estimated' })
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1)
-
-      // Add search if provided
-      if (search) {
-        query = query.or(`email.ilike.%${search}%,name.ilike.%${search}%`)
-      }
-
-      const { data, error, count } = await query
-
-      if (error) {
-        throw new Error(`Failed to fetch users: ${error.message}`)
-      }
+      const result = await container.userRepository().findAll({ page, limit, search })
 
       return {
-        users: data || [],
+        users: result.users,
         pagination: {
           page,
           limit,
-          total: count || 0,
-          totalPages: Math.ceil((count || 0) / limit),
+          total: result.total,
+          totalPages: Math.ceil(result.total / limit),
         },
       }
     }),
@@ -411,73 +316,8 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const { supabaseAdmin: supabase } = await import('@/infra/supabase/server')
-
-      // Check if user exists
-      const { data: user, error } = await supabase
-        .from('users')
-        .select('id, email, name')
-        .eq('email', input.email)
-        .single()
-
-      // Security: Always return success even if user doesn't exist
-      // to prevent email enumeration attacks
-      if (error || !user) {
-        logger.warn('Password reset requested for non-existent email: ' + input.email)
-        return {
-          success: true,
-          message: 'If the email exists, a reset link has been sent',
-        }
-      }
-
-      // Generate reset token
-      const resetToken = generateResetToken()
-      const expiresAt = new Date()
-      expiresAt.setHours(expiresAt.getHours() + 1) // 1 hour expiry
-
-      // Save token to database
-      const { error: insertError } = await supabase
-        .from('password_reset_tokens')
-        .insert({
-          user_id: user.id,
-          token: resetToken,
-          expires_at: expiresAt.toISOString(),
-        })
-
-      if (insertError) {
-        logger.error('Failed to save reset token:', insertError)
-        throw new Error('Failed to process password reset request')
-      }
-
-      // Send email
-      try {
-        await sendPasswordResetEmail({
-          to: user.email,
-          name: user.name,
-          resetToken,
-        })
-
-        // Audit log
-        await createAuditLog({
-          userId: user.id,
-          userEmail: user.email,
-          action: 'PASSWORD_RESET_REQUEST',
-          entityType: 'auth',
-          metadata: {
-            name: user.name,
-          },
-        })
-
-        logger.success('Password reset email sent to: ' + user.email)
-      } catch (emailError) {
-        logger.error('Failed to send reset email:', emailError)
-        // Don't throw error to user - security
-      }
-
-      return {
-        success: true,
-        message: 'If the email exists, a reset link has been sent',
-      }
+      const useCase = container.requestPasswordResetUseCase()
+      return await useCase.execute({ email: input.email })
     }),
 
   /**
@@ -490,31 +330,8 @@ export const authRouter = router({
       })
     )
     .query(async ({ input }) => {
-      const { supabaseAdmin: supabase } = await import('@/infra/supabase/server')
-
-      const { data: tokenData, error } = await supabase
-        .from('password_reset_tokens')
-        .select('id, user_id, expires_at, used_at')
-        .eq('token', input.token)
-        .single()
-
-      if (error || !tokenData) {
-        return { valid: false, message: 'Token tidak valid' }
-      }
-
-      // Check if already used
-      if (tokenData.used_at) {
-        return { valid: false, message: 'Token sudah digunakan' }
-      }
-
-      // Check if expired
-      const now = new Date()
-      const expiresAt = new Date(tokenData.expires_at)
-      if (now > expiresAt) {
-        return { valid: false, message: 'Token sudah kadaluarsa' }
-      }
-
-      return { valid: true, userId: tokenData.user_id }
+      const useCase = container.verifyResetTokenUseCase()
+      return await useCase.execute(input.token)
     }),
 
   /**
@@ -528,158 +345,34 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const { supabaseAdmin: supabase } = await import('@/infra/supabase/server')
-
-      // Verify token first
-      const { data: tokenData, error } = await supabase
-        .from('password_reset_tokens')
-        .select('id, user_id, expires_at, used_at')
-        .eq('token', input.token)
-        .single()
-
-      if (error || !tokenData) {
-        throw new Error('Token tidak valid')
-      }
-
-      // Check if already used
-      if (tokenData.used_at) {
-        throw new Error('Token sudah digunakan')
-      }
-
-      // Check if expired
-      const now = new Date()
-      const expiresAt = new Date(tokenData.expires_at)
-      if (now > expiresAt) {
-        throw new Error('Token sudah kadaluarsa. Silakan request reset password lagi.')
-      }
-
-      // Hash new password
-      const hashedPassword = await bcrypt.hash(input.newPassword, 8)
-
-      // Update user password
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({ password_hash: hashedPassword })
-        .eq('id', tokenData.user_id)
-
-      if (updateError) {
-        logger.error('Failed to update password:', updateError)
-        throw new Error('Gagal mengupdate password')
-      }
-
-      // Mark token as used
-      await supabase
-        .from('password_reset_tokens')
-        .update({ used_at: new Date().toISOString() })
-        .eq('id', tokenData.id)
-
-      // Get user info for audit log
-      const { data: user } = await supabase
-        .from('users')
-        .select('email, name')
-        .eq('id', tokenData.user_id)
-        .single()
-
-      // Audit log
-      await createAuditLog({
-        userId: tokenData.user_id,
-        userEmail: user?.email || 'unknown',
-        action: 'PASSWORD_RESET_COMPLETE',
-        entityType: 'auth',
-        metadata: {
-          name: user?.name,
-        },
-      })
-
-      // Revoke all refresh tokens for security (logout from all devices)
-      await revokeAllUserTokens(tokenData.user_id)
-
-      logger.success('Password reset successful for user: ' + tokenData.user_id)
-
-      return {
-        success: true,
-        message: 'Password berhasil direset. Silakan login dengan password baru.',
+      try {
+        const useCase = container.resetPasswordUseCase()
+        return await useCase.execute({ token: input.token, newPassword: input.newPassword })
+      } catch (error) {
+        if (error instanceof AppError) {
+          throw new TRPCError({
+            code: error.statusCode === 400 ? 'BAD_REQUEST' : 'INTERNAL_SERVER_ERROR',
+            message: error.message,
+          })
+        }
+        throw error
       }
     }),
 
   verifyEmail: publicProcedure
     .input(z.object({ token: z.string().min(1) }))
     .mutation(async ({ input }) => {
-      const { supabaseAdmin } = await import('@/infra/supabase/server')
-
-      const { data: user, error } = await supabaseAdmin
-        .from('users')
-        .select('id, email, name, email_verified_at, plan')
-        .eq('email_verify_token', input.token)
-        .single()
-
-      if (error || !user) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Link verifikasi tidak valid atau sudah kadaluarsa.' })
-      }
-
-      if (user.email_verified_at) {
-        return { alreadyVerified: true }
-      }
-
-      // Activate 14-day Starter trial
-      const trialEndsAt = new Date()
-      trialEndsAt.setDate(trialEndsAt.getDate() + 14)
-
-      await supabaseAdmin
-        .from('users')
-        .update({
-          email_verified_at: new Date().toISOString(),
-          email_verify_token: null,
-          plan: 'starter',
-          is_trial: true,
-          trial_ends_at: trialEndsAt.toISOString(),
-        })
-        .eq('id', user.id)
-
-      await supabaseAdmin.from('billing_history').insert({
-        user_id: user.id,
-        plan: 'starter',
-        previous_plan: 'free',
-        amount: 0,
-        note: 'Trial 14 hari gratis — email terverifikasi',
-        is_trial: true,
-      })
-
-      return { alreadyVerified: false }
+      const useCase = container.verifyEmailUseCase()
+      return await useCase.execute(input.token)
     }),
 
   resendVerification: protectedProcedure.mutation(async ({ ctx }) => {
-    const { supabaseAdmin } = await import('@/infra/supabase/server')
-
-    const { data: user } = await supabaseAdmin
-      .from('users')
-      .select('email, name, email_verified_at')
-      .eq('id', ctx.userId)
-      .single()
-
-    if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User tidak ditemukan.' })
-    if (user.email_verified_at) throw new TRPCError({ code: 'BAD_REQUEST', message: 'Email sudah terverifikasi.' })
-
-    const newToken = generateResetToken()
-    await supabaseAdmin
-      .from('users')
-      .update({ email_verify_token: newToken })
-      .eq('id', ctx.userId)
-
-    await sendVerificationEmail({ to: user.email, name: user.name ?? 'Pengguna', token: newToken })
-    return { success: true }
+    const useCase = container.resendVerificationUseCase()
+    return await useCase.execute(ctx.userId)
   }),
 
   getEmailVerified: protectedProcedure.query(async ({ ctx }) => {
-    const { supabaseAdmin } = await import('@/infra/supabase/server')
-    const { data } = await supabaseAdmin
-      .from('users')
-      .select('email_verified_at, plan')
-      .eq('id', ctx.userId)
-      .single()
-    return {
-      verified: !!data?.email_verified_at,
-      plan: (data?.plan as string) || 'free',
-    }
+    const useCase = container.getEmailVerifiedUseCase()
+    return await useCase.execute(ctx.userId)
   }),
 })

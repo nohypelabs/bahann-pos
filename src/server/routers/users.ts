@@ -5,53 +5,21 @@
 
 import { z } from 'zod'
 import { router, protectedProcedure, adminProcedure, superAdminProcedure } from '../trpc'
-import { supabaseAdmin as supabase } from '@/infra/supabase/server'
+import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
 import { TRPCError } from '@trpc/server'
-import bcrypt from 'bcryptjs'
-import { getLimits, isUnlimited } from '@/lib/plans'
 import { sendPlanUpgradeEmail } from '@/lib/email'
 
 export const usersRouter = router({
-  /**
-   * List users scoped to the current admin's tenant (their outlets)
-   */
   list: adminProcedure.query(async ({ ctx }) => {
-    // Get all outlet IDs owned by this admin
-    const { data: outlets } = await supabase
-      .from('outlets')
-      .select('id')
-      .eq('owner_id', ctx.userId)
-
-    const outletIds = outlets?.map(o => o.id) || []
-
-    // Fetch admin themselves + all users assigned to their outlets
-    let query = supabase
-      .from('users')
-      .select('id, email, name, role, outlet_id, permissions, created_at')
-      .order('created_at', { ascending: false })
-
-    if (outletIds.length > 0) {
-      query = query.or(`id.eq.${ctx.userId},outlet_id.in.(${outletIds.join(',')})`)
-    } else {
-      query = query.eq('id', ctx.userId)
+    const uc = container.userManagementUseCase()
+    try {
+      return await uc.listByTenant(ctx.userId)
+    } catch (e) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
     }
-
-    const { data, error } = await query
-
-    if (error) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: `Failed to fetch users: ${error.message}`,
-      })
-    }
-
-    return data || []
   }),
 
-  /**
-   * Create a cashier account linked to one of the admin's outlets
-   */
   createCashier: adminProcedure
     .input(
       z.object({
@@ -63,86 +31,20 @@ export const usersRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('plan')
-        .eq('id', ctx.userId)
-        .single()
+      const uc = container.userManagementUseCase()
+      const { SupabaseUserManagementRepository } = await import('@/infra/repositories/SupabaseUserManagementRepository')
+      const userRepo = new SupabaseUserManagementRepository()
+      const plan = await userRepo.getPlan(ctx.userId)
 
-      const limits = getLimits(userData?.plan ?? 'free')
-
-      if (!isUnlimited(limits.maxCashiers)) {
-        const { count } = await supabase
-          .from('users')
-          .select('*', { count: 'estimated', head: true })
-          .eq('role', 'user')
-          .in(
-            'outlet_id',
-            (
-              await supabase
-                .from('outlets')
-                .select('id')
-                .eq('owner_id', ctx.userId)
-            ).data?.map((o) => o.id) ?? []
-          )
-
-        if ((count ?? 0) >= limits.maxCashiers) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: `Plan kamu hanya mendukung ${limits.maxCashiers} kasir. Upgrade untuk menambah lebih banyak.`,
-          })
-        }
-      }
-
-      // Verify the outlet belongs to this admin
-      const { data: outlet } = await supabase
-        .from('outlets')
-        .select('id, name')
-        .eq('id', input.outletId)
-        .eq('owner_id', ctx.userId)
-        .single()
-
-      if (!outlet) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Outlet tidak ditemukan atau bukan milik Anda',
-        })
-      }
-
-      // Check email not taken
-      const { data: existing } = await supabase
-        .from('users')
-        .select('id')
-        .eq('email', input.email.toLowerCase())
-        .single()
-
-      if (existing) {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          message: 'Email sudah digunakan',
-        })
-      }
-
-      const passwordHash = await bcrypt.hash(input.password, 8)
-
-      const { data: newUser, error } = await supabase
-        .from('users')
-        .insert({
-          email: input.email.toLowerCase(),
-          name: input.name,
-          password_hash: passwordHash,
-          whatsapp_number: input.whatsappNumber,
-          role: 'user',
-          outlet_id: input.outletId,
-        })
-        .select('id, email, name, role, outlet_id')
-        .single()
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Gagal membuat akun kasir: ${error.message}`,
-        })
+      let newUser
+      try {
+        newUser = await uc.createCashier(ctx.userId, input, plan)
+      } catch (e) {
+        const msg = (e as Error).message
+        if (msg.includes('Outlet')) throw new TRPCError({ code: 'FORBIDDEN', message: msg })
+        if (msg.includes('Email')) throw new TRPCError({ code: 'CONFLICT', message: msg })
+        if (msg.includes('kasir')) throw new TRPCError({ code: 'FORBIDDEN', message: msg })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: msg })
       }
 
       await createAuditLog({
@@ -152,68 +54,34 @@ export const usersRouter = router({
         entityType: 'user',
         entityId: newUser.id,
         changes: { created: { name: input.name, email: input.email, outletId: input.outletId } },
-        metadata: { role: 'user', outletName: outlet.name },
+        metadata: { role: 'user' },
       })
 
       return newUser
     }),
 
-  /**
-   * Get user by ID
-   */
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      // Users can only view their own profile unless they're admin
-      if (input.id !== ctx.userId && ctx.session?.role !== 'admin' && ctx.session?.role !== 'super_admin') {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'You can only view your own profile',
-        })
+      const uc = container.userManagementUseCase()
+      try {
+        return await uc.getById(input.id, ctx.userId, ctx.session?.role)
+      } catch (e) {
+        const msg = (e as Error).message
+        if (msg.includes('own profile')) throw new TRPCError({ code: 'FORBIDDEN', message: msg })
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
       }
-
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, email, name, role, outlet_id, permissions, created_at')
-        .eq('id', input.id)
-        .single()
-
-      if (error) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'User not found',
-        })
-      }
-
-      return data
     }),
 
-  /**
-   * Get current user's permissions
-   */
   getMyPermissions: protectedProcedure.query(async ({ ctx }) => {
-    const { data, error } = await supabase
-      .from('users')
-      .select('permissions, role')
-      .eq('id', ctx.userId)
-      .single()
-
-    if (error) {
-      throw new TRPCError({
-        code: 'NOT_FOUND',
-        message: 'User not found',
-      })
-    }
-
-    return {
-      permissions: data.permissions || {},
-      role: data.role,
+    const uc = container.userManagementUseCase()
+    try {
+      return await uc.getMyPermissions(ctx.userId)
+    } catch {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' })
     }
   }),
 
-  /**
-   * Update user permissions (admin only)
-   */
   updatePermissions: adminProcedure
     .input(
       z.object({
@@ -232,31 +100,12 @@ export const usersRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      // Get current permissions
-      const { data: currentUser } = await supabase
-        .from('users')
-        .select('permissions')
-        .eq('id', input.userId)
-        .single()
-
-      const currentPermissions = currentUser?.permissions || {}
-
-      // Merge with new permissions
-      const updatedPermissions = {
-        ...currentPermissions,
-        ...input.permissions,
-      }
-
-      const { error } = await supabase
-        .from('users')
-        .update({ permissions: updatedPermissions })
-        .eq('id', input.userId)
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to update permissions: ${error.message}`,
-        })
+      const uc = container.userManagementUseCase()
+      let result
+      try {
+        result = await uc.updatePermissions(input.userId, input.permissions)
+      } catch (e) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
       }
 
       await createAuditLog({
@@ -265,18 +114,12 @@ export const usersRouter = router({
         action: 'UPDATE',
         entityType: 'user',
         entityId: input.userId,
-        changes: {
-          before: { permissions: currentPermissions },
-          after: { permissions: updatedPermissions },
-        },
+        changes: { before: { permissions: result.before }, after: { permissions: result.after } },
       })
 
       return { success: true }
     }),
 
-  /**
-   * Update user role (admin only)
-   */
   updateRole: adminProcedure
     .input(
       z.object({
@@ -285,22 +128,12 @@ export const usersRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { data: currentUser } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', input.userId)
-        .single()
-
-      const { error } = await supabase
-        .from('users')
-        .update({ role: input.role })
-        .eq('id', input.userId)
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to update role: ${error.message}`,
-        })
+      const uc = container.userManagementUseCase()
+      let result
+      try {
+        result = await uc.updateRole(input.userId, input.role)
+      } catch (e) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
       }
 
       await createAuditLog({
@@ -309,32 +142,21 @@ export const usersRouter = router({
         action: 'UPDATE',
         entityType: 'user',
         entityId: input.userId,
-        changes: {
-          before: { role: currentUser?.role },
-          after: { role: input.role },
-        },
+        changes: { before: { role: result.before }, after: { role: result.after } },
       })
 
       return { success: true }
     }),
 
-  /**
-   * List ALL admin users across all tenants (super admin only)
-   */
   listAllAdmins: superAdminProcedure.query(async () => {
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, email, name, role, plan, created_at, outlet_id')
-      .eq('role', 'admin')
-      .order('created_at', { ascending: false })
-
-    if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
-    return data || []
+    const uc = container.userManagementUseCase()
+    try {
+      return await uc.listAllAdmins()
+    } catch (e) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
+    }
   }),
 
-  /**
-   * Update a user's subscription plan (super admin only)
-   */
   updatePlan: superAdminProcedure
     .input(z.object({
       userId: z.string().uuid(),
@@ -343,30 +165,13 @@ export const usersRouter = router({
       note: z.string().max(500).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
-
-      const { data: before } = await supabase
-        .from('users')
-        .select('plan, email, name')
-        .eq('id', input.userId)
-        .single()
-
-      const { error } = await supabase
-        .from('users')
-        .update({ plan: input.plan, is_trial: false })
-        .eq('id', input.userId)
-
-      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
-
-      // Record in billing history
-      await supabase.from('billing_history').insert({
-        user_id: input.userId,
-        plan: input.plan,
-        previous_plan: before?.plan ?? 'free',
-        amount: input.amount ?? 0,
-        note: input.note ?? null,
-        is_trial: false,
-        changed_by: ctx.userId,
-      })
+      const uc = container.userManagementUseCase()
+      let result
+      try {
+        result = await uc.updatePlan(input.userId, input.plan, input.amount ?? 0, input.note, ctx.userId)
+      } catch (e) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
+      }
 
       await createAuditLog({
         userId: ctx.userId,
@@ -374,16 +179,15 @@ export const usersRouter = router({
         action: 'UPDATE',
         entityType: 'user',
         entityId: input.userId,
-        changes: { before: { plan: before?.plan }, after: { plan: input.plan } },
-        metadata: { targetEmail: before?.email, targetName: before?.name, amount: input.amount, note: input.note },
+        changes: { before: { plan: result.before.plan }, after: { plan: result.after.plan } },
+        metadata: { targetEmail: result.before.email, targetName: result.before.name, amount: input.amount, note: input.note },
       })
 
-      // Notify user of plan change (non-fatal)
-      if (before?.email && before?.name) {
+      if (result.before.email && result.before.name) {
         await sendPlanUpgradeEmail({
-          to: before.email,
-          name: before.name,
-          oldPlan: before.plan ?? 'free',
+          to: result.before.email,
+          name: result.before.name,
+          oldPlan: result.before.plan,
           newPlan: input.plan,
         })
       }
@@ -392,39 +196,19 @@ export const usersRouter = router({
     }),
 
   getBillingHistory: protectedProcedure.query(async ({ ctx }) => {
-    const { data, error } = await supabase
-      .from('billing_history')
-      .select('id, plan, previous_plan, amount, note, is_trial, created_at')
-      .eq('user_id', ctx.userId)
-      .order('created_at', { ascending: false })
-      .limit(50)
-
-    if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
-    return data ?? []
+    const uc = container.userManagementUseCase()
+    try {
+      return await uc.getBillingHistory(ctx.userId)
+    } catch (e) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
+    }
   }),
 
-  /**
-   * Check if current user has specific permission
-   */
   checkPermission: protectedProcedure
     .input(z.object({ permission: z.string() }))
     .query(async ({ input, ctx }) => {
-      // Admins and super_admin have all permissions
-      if (ctx.session?.role === 'admin' || ctx.session?.role === 'super_admin') {
-        return { hasPermission: true }
-      }
-
-      const { data, error } = await supabase
-        .from('users')
-        .select('permissions')
-        .eq('id', ctx.userId)
-        .single()
-
-      if (error) {
-        return { hasPermission: false }
-      }
-
-      const permissions = data?.permissions || {}
-      return { hasPermission: !!permissions[input.permission] }
+      const uc = container.userManagementUseCase()
+      const hasPermission = await uc.checkPermission(ctx.userId, input.permission, ctx.session?.role)
+      return { hasPermission }
     }),
 })

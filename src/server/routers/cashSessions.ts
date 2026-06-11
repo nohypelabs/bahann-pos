@@ -5,17 +5,10 @@
 
 import { z } from 'zod'
 import { router, protectedProcedure } from '../trpc'
-import { supabaseAdmin as supabase } from '@/infra/supabase/server'
+import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
-import { getTenantOwnerId, assertOutletBelongsToTenant } from '@/server/lib/tenant'
+import { getTenantOwnerId, resolveTenantOutletIds } from '@/server/lib/tenant'
 import { TRPCError } from '@trpc/server'
-
-async function getTenantOutletIds(userId: string, role: string | undefined, outletId: string | undefined): Promise<string[]> {
-  const ownerId = await getTenantOwnerId(userId, role, outletId)
-  if (!ownerId) return []
-  const { data } = await supabase.from('outlets').select('id').eq('owner_id', ownerId)
-  return data?.map(o => o.id) ?? []
-}
 
 export const cashSessionsRouter = router({
   /**
@@ -30,40 +23,17 @@ export const cashSessionsRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (ownerId) await assertOutletBelongsToTenant(input.outletId, ownerId)
-
-      // Check if there's already an open session
-      const { data: existing } = await supabase
-        .from('cash_sessions')
-        .select('*')
-        .eq('outlet_id', input.outletId)
-        .eq('status', 'open')
-        .maybeSingle()
-
-      if (existing) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'There is already an open cash session for this outlet',
-        })
+      if (ownerId) {
+        const { assertOutletBelongsToTenant } = await import('@/server/lib/tenant')
+        await assertOutletBelongsToTenant(input.outletId, ownerId)
       }
 
-      const { data, error } = await supabase
-        .from('cash_sessions')
-        .insert({
-          outlet_id: input.outletId,
-          opened_by: ctx.userId,
-          opened_at: new Date().toISOString(),
-          opening_cash: input.openingCash,
-          status: 'open',
-        })
-        .select()
-        .single()
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to open cash session: ${error.message}`,
-        })
+      const uc = container.cashSessionUseCase()
+      let data
+      try {
+        data = await uc.open(input.outletId, ctx.userId, input.openingCash)
+      } catch (e) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: (e as Error).message })
       }
 
       await createAuditLog({
@@ -91,100 +61,17 @@ export const cashSessionsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const tenantOutlets = await getTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const uc = container.cashSessionUseCase()
 
-      const { data: session, error: sessionError } = await supabase
-        .from('cash_sessions')
-        .select('*')
-        .eq('id', input.sessionId)
-        .single()
-
-      if (sessionError || !session || !tenantOutlets.includes(session.outlet_id)) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Session not found',
-        })
-      }
-
-      if (session.status === 'closed') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Session already closed',
-        })
-      }
-
-      // Calculate sales summary from transactions
-      const { data: transactions, error: txError } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('outlet_id', session.outlet_id)
-        .eq('status', 'completed')
-        .gte('created_at', session.opened_at)
-        .lte('created_at', new Date().toISOString())
-
-      if (txError) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to fetch transactions: ${txError.message}`,
-        })
-      }
-
-      const summary = (transactions || []).reduce(
-        (acc, tx) => ({
-          totalSales: acc.totalSales + tx.total_amount,
-          totalTransactions: acc.totalTransactions + 1,
-          cashSales:
-            acc.cashSales + (tx.payment_method === 'cash' ? tx.total_amount : 0),
-          cardSales:
-            acc.cardSales + (tx.payment_method === 'card' ? tx.total_amount : 0),
-          transferSales:
-            acc.transferSales + (tx.payment_method === 'transfer' ? tx.total_amount : 0),
-          ewalletSales:
-            acc.ewalletSales + (tx.payment_method === 'ewallet' ? tx.total_amount : 0),
-          totalDiscount: acc.totalDiscount + tx.discount_amount,
-        }),
-        {
-          totalSales: 0,
-          totalTransactions: 0,
-          cashSales: 0,
-          cardSales: 0,
-          transferSales: 0,
-          ewalletSales: 0,
-          totalDiscount: 0,
-        }
-      )
-
-      const expectedCash = session.opening_cash + summary.cashSales
-      const actualCash = input.closingCash
-      const difference = actualCash - expectedCash
-
-      // Update session
-      const { error } = await supabase
-        .from('cash_sessions')
-        .update({
-          closed_by: ctx.userId,
-          closed_at: new Date().toISOString(),
-          closing_cash: input.closingCash,
-          expected_cash: expectedCash,
-          actual_cash: actualCash,
-          difference,
-          total_sales: summary.totalSales,
-          total_transactions: summary.totalTransactions,
-          cash_sales: summary.cashSales,
-          card_sales: summary.cardSales,
-          transfer_sales: summary.transferSales,
-          ewallet_sales: summary.ewalletSales,
-          total_discount: summary.totalDiscount,
-          notes: input.notes,
-          status: 'closed',
-        })
-        .eq('id', input.sessionId)
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to close session: ${error.message}`,
-        })
+      let result
+      try {
+        result = await uc.close(input.sessionId, ctx.userId, input.closingCash, input.notes, tenantOutlets)
+      } catch (e) {
+        const msg = (e as Error).message
+        if (msg.includes('not found')) throw new TRPCError({ code: 'NOT_FOUND', message: msg })
+        if (msg.includes('already closed')) throw new TRPCError({ code: 'BAD_REQUEST', message: msg })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: msg })
       }
 
       await createAuditLog({
@@ -195,12 +82,12 @@ export const cashSessionsRouter = router({
         entityId: input.sessionId,
         changes: {
           before: { status: 'open' },
-          after: { status: 'closed', difference },
+          after: { status: 'closed', difference: result.difference },
         },
-        metadata: { action: 'close', difference },
+        metadata: { action: 'close', difference: result.difference },
       })
 
-      return { success: true, difference }
+      return result
     }),
 
   /**
@@ -210,21 +97,13 @@ export const cashSessionsRouter = router({
     .input(z.object({ outletId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
       const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (ownerId) await assertOutletBelongsToTenant(input.outletId, ownerId)
-      const { data } = await supabase
-        .from('cash_sessions')
-        .select(
-          `
-          *,
-          outlet:outlets (id, name, address),
-          opened_by_user:users!opened_by (id, name)
-        `
-        )
-        .eq('outlet_id', input.outletId)
-        .eq('status', 'open')
-        .maybeSingle()
+      if (ownerId) {
+        const { assertOutletBelongsToTenant } = await import('@/server/lib/tenant')
+        await assertOutletBelongsToTenant(input.outletId, ownerId)
+      }
 
-      return data
+      const uc = container.cashSessionUseCase()
+      return uc.getCurrent(input.outletId)
     }),
 
   /**
@@ -233,40 +112,27 @@ export const cashSessionsRouter = router({
   getReport: protectedProcedure
     .input(z.object({ sessionId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await getTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const uc = container.cashSessionUseCase()
 
-      const { data: session, error: sessionError } = await supabase
-        .from('cash_sessions')
-        .select(
-          `
-          *,
-          outlet:outlets (id, name, address),
-          opened_by_user:users!opened_by (id, name),
-          closed_by_user:users!closed_by (id, name)
-        `
+      try {
+        const session = await uc.getReport(input.sessionId, tenantOutlets)
+        const txRepo = container.transactionRepo()
+        const { transactions } = await txRepo.findByOutletIds(
+          [session.outlet_id],
+          {
+            dateFrom: session.opened_at,
+            dateTo: session.closed_at || new Date().toISOString(),
+            limit: 1000,
+          },
         )
-        .eq('id', input.sessionId)
-        .single()
 
-      if (sessionError || !session || !tenantOutlets.includes(session.outlet_id)) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Session not found',
-        })
-      }
-
-      // Get detailed breakdown of transactions
-      const { data: transactions } = await supabase
-        .from('transactions')
-        .select('*, transaction_items(*)')
-        .eq('outlet_id', session.outlet_id)
-        .gte('created_at', session.opened_at)
-        .lte('created_at', session.closed_at || new Date().toISOString())
-        .order('created_at', { ascending: false })
-
-      return {
-        session,
-        transactions: transactions || [],
+        return {
+          session,
+          transactions,
+        }
+      } catch {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Session not found' })
       }
     }),
 
@@ -285,41 +151,16 @@ export const cashSessionsRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await getTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (tenantOutlets.length === 0) return { sessions: [], total: 0 }
+      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const uc = container.cashSessionUseCase()
 
-      let query = supabase
-        .from('cash_sessions')
-        .select(
-          `
-          *,
-          outlet:outlets (id, name),
-          opened_by_user:users!opened_by (id, name)
-        `,
-          { count: 'estimated' }
-        )
-        .in('outlet_id', tenantOutlets)
-        .order('opened_at', { ascending: false })
-
-      if (input.outletId) query = query.eq('outlet_id', input.outletId)
-      if (input.status) query = query.eq('status', input.status)
-      if (input.dateFrom) query = query.gte('opened_at', input.dateFrom)
-      if (input.dateTo) query = query.lte('opened_at', input.dateTo)
-
-      query = query.range(input.offset, input.offset + input.limit - 1)
-
-      const { data, count, error } = await query
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to fetch cash sessions: ${error.message}`,
-        })
-      }
-
-      return {
-        sessions: data || [],
-        total: count || 0,
-      }
+      return uc.list(tenantOutlets, {
+        outletId: input.outletId,
+        status: input.status,
+        dateFrom: input.dateFrom,
+        dateTo: input.dateTo,
+        limit: input.limit,
+        offset: input.offset,
+      })
     }),
 })

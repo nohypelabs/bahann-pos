@@ -1,15 +1,11 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure, adminProcedure } from '../trpc'
-import { supabaseAdmin as supabase } from '@/infra/supabase/server'
+import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
-import { getTenantOwnerId, assertOutletBelongsToTenant } from '@/server/lib/tenant'
-import { getLimits, isUnlimited } from '@/lib/plans'
+import { getTenantOwnerId } from '@/server/lib/tenant'
 
 export const outletsRouter = router({
-  /**
-   * Get all outlets scoped to the current user's tenant
-   */
   getAll: protectedProcedure
     .input(
       z.object({
@@ -19,119 +15,57 @@ export const outletsRouter = router({
       }).optional()
     )
     .query(async ({ input, ctx }) => {
-      const page = input?.page || 1
-      const limit = input?.limit || 50
-      const offset = (page - 1) * limit
-
       const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
+      if (!ownerId) return { outlets: [], pagination: { page: 1, limit: 50, total: 0, totalPages: 0 } }
 
-      // Build count query
-      let countQuery = supabase
-        .from('outlets')
-        .select('*', { count: 'estimated', head: true })
+      const uc = container.outletUseCase()
+      const result = await uc.listByOwner(ownerId, {
+        search: input?.search,
+        page: input?.page ?? 1,
+        limit: input?.limit ?? 50,
+      })
 
-      // Build data query
-      let dataQuery = supabase
-        .from('outlets')
-        .select('*')
-        .order('name', { ascending: true })
-        .range(offset, offset + limit - 1)
-
-      // Scope to tenant when owner is known
-      if (ownerId) {
-        countQuery = countQuery.eq('owner_id', ownerId)
-        dataQuery = dataQuery.eq('owner_id', ownerId)
-      }
-
-      // Apply search filter
-      if (input?.search) {
-        const searchFilter = `name.ilike.%${input.search}%,address.ilike.%${input.search}%`
-        countQuery = countQuery.or(searchFilter)
-        dataQuery = dataQuery.or(searchFilter)
-      }
-
-      const [{ count, error: countError }, { data, error: dataError }] = await Promise.all([
-        countQuery,
-        dataQuery,
-      ])
-
-      if (countError) throw new Error(`Failed to count outlets: ${countError.message}`)
-      if (dataError) throw new Error(`Failed to fetch outlets: ${dataError.message}`)
-
+      const page = input?.page ?? 1
+      const limit = input?.limit ?? 50
       return {
-        outlets: data || [],
+        outlets: result.outlets,
         pagination: {
           page,
           limit,
-          total: count || 0,
-          totalPages: Math.ceil((count || 0) / limit),
+          total: result.total,
+          totalPages: Math.ceil(result.total / limit),
         },
       }
     }),
 
-  /**
-   * Get outlet by ID
-   */
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      // Tenant isolation: fetch only outlets belonging to the current tenant
       const ownerId = await getTenantOwnerId(ctx.session.userId, ctx.session.role, ctx.session.outletId)
-
-      let query = supabase
-        .from('outlets')
-        .select('id, name, address, phone, owner_id, is_active, created_at, updated_at')
-        .eq('id', input.id)
-
-      // Apply tenant filter if we can determine ownership
-      if (ownerId) {
-        query = query.eq('owner_id', ownerId)
+      const uc = container.outletUseCase()
+      try {
+        return await uc.getById(input.id, ownerId)
+      } catch {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Outlet tidak ditemukan' })
       }
-
-      const { data, error } = await query.single()
-
-      if (error) throw new TRPCError({ code: 'NOT_FOUND', message: 'Outlet tidak ditemukan' })
-      return data
     }),
 
-  /**
-   * Create new outlet - ADMIN ONLY
-   */
   create: adminProcedure
     .input(z.object({ name: z.string().min(1) }))
     .mutation(async ({ input, ctx }) => {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('plan')
-        .eq('id', ctx.userId)
-        .single()
+      const uc = container.outletUseCase()
+      const { SupabaseUserManagementRepository } = await import('@/infra/repositories/SupabaseUserManagementRepository')
+      const userRepo = new SupabaseUserManagementRepository()
+      const plan = await userRepo.getPlan(ctx.userId)
 
-      const limits = getLimits(userData?.plan ?? 'free')
-
-      if (!isUnlimited(limits.maxOutlets)) {
-        const { count } = await supabase
-          .from('outlets')
-          .select('*', { count: 'estimated', head: true })
-          .eq('owner_id', ctx.userId)
-
-        if ((count ?? 0) >= limits.maxOutlets) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: `Plan kamu hanya mendukung ${limits.maxOutlets} outlet. Upgrade untuk menambah lebih banyak.`,
-          })
-        }
+      let data
+      try {
+        data = await uc.create(input.name, ctx.userId, plan)
+      } catch (e) {
+        const msg = (e as Error).message
+        if (msg.includes('Plan')) throw new TRPCError({ code: 'FORBIDDEN', message: msg })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: msg })
       }
-
-      const { data, error } = await supabase
-        .from('outlets')
-        .insert({
-          name: input.name,
-          owner_id: ctx.userId,
-        })
-        .select()
-        .single()
-
-      if (error) throw new Error(`Failed to create outlet: ${error.message}`)
 
       await createAuditLog({
         userId: ctx.userId,
@@ -146,28 +80,23 @@ export const outletsRouter = router({
       return data
     }),
 
-  /**
-   * Update outlet - ADMIN ONLY
-   */
   update: adminProcedure
     .input(z.object({ id: z.string().uuid(), name: z.string().min(1) }))
     .mutation(async ({ input, ctx }) => {
-      await assertOutletBelongsToTenant(input.id, ctx.userId)
+      const uc = container.outletUseCase()
+      let oldData
+      try {
+        oldData = await uc.getById(input.id, ctx.userId)
+      } catch {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied: resource belongs to a different tenant' })
+      }
 
-      const { data: oldData } = await supabase
-        .from('outlets')
-        .select('*')
-        .eq('id', input.id)
-        .single()
-
-      const { data, error } = await supabase
-        .from('outlets')
-        .update({ name: input.name })
-        .eq('id', input.id)
-        .select()
-        .single()
-
-      if (error) throw new Error(`Failed to update outlet: ${error.message}`)
+      let data
+      try {
+        data = await uc.update(input.id, input.name, ctx.userId)
+      } catch (e) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
+      }
 
       await createAuditLog({
         userId: ctx.userId,
@@ -182,26 +111,16 @@ export const outletsRouter = router({
       return data
     }),
 
-  /**
-   * Delete outlet - ADMIN ONLY
-   */
   delete: adminProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      await assertOutletBelongsToTenant(input.id, ctx.userId)
-
-      const { data: outletData } = await supabase
-        .from('outlets')
-        .select('*')
-        .eq('id', input.id)
-        .single()
-
-      const { error } = await supabase
-        .from('outlets')
-        .delete()
-        .eq('id', input.id)
-
-      if (error) throw new Error(`Failed to delete outlet: ${error.message}`)
+      const uc = container.outletUseCase()
+      let outletData
+      try {
+        outletData = await uc.delete(input.id, ctx.userId)
+      } catch {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied: resource belongs to a different tenant' })
+      }
 
       await createAuditLog({
         userId: ctx.userId,

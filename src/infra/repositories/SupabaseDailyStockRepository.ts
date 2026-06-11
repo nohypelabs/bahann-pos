@@ -1,7 +1,7 @@
 import { supabaseAdmin as supabase } from '../supabase/server';
 import { type Tables, type TablesInsert } from '../database.types';
 import { DailyStock } from '@/domain/entities/DailyStock';
-import { DailyStockRepository } from '@/domain/repositories/DailyStockRepository';
+import { DailyStockRepository, type DailyStockWithOutlet } from '@/domain/repositories/DailyStockRepository';
 
 type DailyStockRow = Tables<'daily_stock'>;
 
@@ -48,6 +48,33 @@ export class SupabaseDailyStockRepository implements DailyStockRepository {
       stockAkhir: data.stock_akhir ?? 0,
       createdAt: data.created_at ? new Date(data.created_at) : new Date(),
     };
+  }
+
+  async getStockByProduct(productId: string, outletId?: string): Promise<DailyStockWithOutlet[]> {
+    let query = supabase
+      .from('daily_stock')
+      .select('*, outlets(name)')
+      .eq('product_id', productId);
+
+    if (outletId) {
+      query = query.eq('outlet_id', outletId);
+    }
+
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+
+    return (data || []).map((row) => ({
+      id: row.id,
+      productId: row.product_id!,
+      outletId: row.outlet_id!,
+      stockDate: new Date(row.stock_date),
+      stockAwal: row.stock_awal ?? 0,
+      stockIn: row.stock_in ?? 0,
+      stockOut: row.stock_out ?? 0,
+      stockAkhir: row.stock_akhir ?? 0,
+      createdAt: row.created_at ? new Date(row.created_at) : new Date(),
+      outletName: (row.outlets as unknown as { name: string })?.name,
+    }));
   }
 
   async getByDate(outletId: string, productId: string, date: Date): Promise<DailyStock | null> {

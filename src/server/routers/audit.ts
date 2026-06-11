@@ -5,20 +5,8 @@
 
 import { z } from 'zod'
 import { router, adminProcedure } from '../trpc'
-import { supabaseAdmin as supabase } from '@/infra/supabase/server'
-import { getTenantOwnerId } from '@/server/lib/tenant'
+import { container } from '@/infra/container'
 import { TRPCError } from '@trpc/server'
-
-async function getTenantUserIds(userId: string, role: string | undefined, outletId: string | undefined): Promise<string[]> {
-  const ownerId = await getTenantOwnerId(userId, role, outletId)
-  if (!ownerId) return []
-  const { data: outlets } = await supabase.from('outlets').select('id').eq('owner_id', ownerId)
-  const outletIds = outlets?.map(o => o.id) ?? []
-  const { data: users } = await supabase.from('users').select('id').in('outlet_id', outletIds)
-  const userIds = users?.map(u => u.id) ?? []
-  if (!userIds.includes(ownerId)) userIds.push(ownerId)
-  return userIds
-}
 
 export const auditRouter = router({
   /**
@@ -38,44 +26,9 @@ export const auditRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const tenantUserIds = await getTenantUserIds(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (tenantUserIds.length === 0) return { logs: [], total: 0 }
-
-      let query = supabase
-        .from('audit_logs')
-        .select('*', { count: 'estimated' })
-        .in('user_id', tenantUserIds)
-        .order('created_at', { ascending: false })
-
-      if (input.userId) query = query.eq('user_id', input.userId)
-      if (input.action) query = query.eq('action', input.action)
-      if (input.entityType) query = query.eq('entity_type', input.entityType)
-      if (input.dateFrom) query = query.gte('created_at', input.dateFrom)
-      if (input.dateTo) query = query.lte('created_at', input.dateTo)
-
-      // Search in user_email or entity_id
-      if (input.searchQuery) {
-        query = query.or(
-          `user_email.ilike.%${input.searchQuery}%,entity_id.eq.${input.searchQuery}`
-        )
-      }
-
-      // Pagination
-      query = query.range(input.offset, input.offset + input.limit - 1)
-
-      const { data, count, error } = await query
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to fetch audit logs: ${error.message}`,
-        })
-      }
-
-      return {
-        logs: data || [],
-        total: count || 0,
-      }
+      const uc = container.auditUseCase()
+      const tenantUserIds = await uc.getTenantUserIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      return uc.getLogs(tenantUserIds, input)
     }),
 
   /**
@@ -84,22 +37,13 @@ export const auditRouter = router({
   getById: adminProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const tenantUserIds = await getTenantUserIds(ctx.userId, ctx.session.role, ctx.session.outletId)
-
-      const { data, error } = await supabase
-        .from('audit_logs')
-        .select('*')
-        .eq('id', input.id)
-        .single()
-
-      if (error || !tenantUserIds.includes(data?.user_id)) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Audit log not found',
-        })
+      const uc = container.auditUseCase()
+      const tenantUserIds = await uc.getTenantUserIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      try {
+        return await uc.getById(input.id, tenantUserIds)
+      } catch {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Audit log not found' })
       }
-
-      return data
     }),
 
   /**
@@ -113,83 +57,17 @@ export const auditRouter = router({
       }).optional()
     )
     .query(async ({ input, ctx }) => {
-      const tenantUserIds = await getTenantUserIds(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (tenantUserIds.length === 0) return { totalLogs: 0, byAction: {}, byEntityType: {}, uniqueUsersCount: 0 }
-
-      let query = supabase
-        .from('audit_logs')
-        .select('action, entity_type, user_id')
-        .in('user_id', tenantUserIds)
-
-      if (input?.dateFrom) query = query.gte('created_at', input.dateFrom)
-      if (input?.dateTo) query = query.lte('created_at', input.dateTo)
-
-      const { data, error } = await query
-
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to fetch audit stats: ${error.message}`,
-        })
-      }
-
-      // Aggregate stats
-      const stats = {
-        totalLogs: data?.length || 0,
-        byAction: {} as Record<string, number>,
-        byEntityType: {} as Record<string, number>,
-        uniqueUsers: new Set<string>(),
-      }
-
-      data?.forEach((log) => {
-        // Count by action
-        stats.byAction[log.action] = (stats.byAction[log.action] || 0) + 1
-
-        // Count by entity type
-        stats.byEntityType[log.entity_type] =
-          (stats.byEntityType[log.entity_type] || 0) + 1
-
-        // Unique users
-        stats.uniqueUsers.add(log.user_id)
-      })
-
-      return {
-        totalLogs: stats.totalLogs,
-        byAction: stats.byAction,
-        byEntityType: stats.byEntityType,
-        uniqueUsersCount: stats.uniqueUsers.size,
-      }
+      const uc = container.auditUseCase()
+      const tenantUserIds = await uc.getTenantUserIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      return uc.getStats(tenantUserIds, input)
     }),
 
   /**
    * Get distinct values for filters
    */
   getFilterOptions: adminProcedure.query(async ({ ctx }) => {
-    const tenantUserIds = await getTenantUserIds(ctx.userId, ctx.session.role, ctx.session.outletId)
-    if (tenantUserIds.length === 0) return { actions: [], entityTypes: [], users: [] }
-
-    const { data: actions } = await supabase
-      .from('audit_logs')
-      .select('action')
-      .in('user_id', tenantUserIds)
-      .order('action')
-
-    const { data: entityTypes } = await supabase
-      .from('audit_logs')
-      .select('entity_type')
-      .in('user_id', tenantUserIds)
-      .order('entity_type')
-
-    const { data: users } = await supabase
-      .from('audit_logs')
-      .select('user_id, user_email')
-      .in('user_id', tenantUserIds)
-      .order('user_email')
-
-    return {
-      actions: [...new Set(actions?.map((a) => a.action) || [])],
-      entityTypes: [...new Set(entityTypes?.map((e) => e.entity_type) || [])],
-      users: users || [],
-    }
+    const uc = container.auditUseCase()
+    const tenantUserIds = await uc.getTenantUserIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+    return uc.getFilterOptions(tenantUserIds)
   }),
 })

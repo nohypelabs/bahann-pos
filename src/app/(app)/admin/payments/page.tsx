@@ -170,32 +170,32 @@ function PaymentsContent() {
                           </div>
                         </td>
                         <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                          {req.crypto_amount
-                            ? <span className="text-purple-600 dark:text-purple-400">{parseFloat(req.crypto_amount).toFixed(4)} {req.crypto_token?.toUpperCase()}</span>
+                          {req.cryptoAmount
+                            ? <span className="text-purple-600 dark:text-purple-400">{req.cryptoAmount.toFixed(4)} {req.cryptoToken?.toUpperCase()}</span>
                             : (
                               <div>
-                                <span>{fmtRupiah(req.unique_amount || req.amount)}</span>
-                                {req.unique_amount && (
+                                <span>{fmtRupiah(req.uniqueAmount || req.amount)}</span>
+                                {req.uniqueAmount && (
                                   <p className="text-[10px] text-green-600 dark:text-green-400 font-normal">unik</p>
                                 )}
                               </div>
                             )}
                         </td>
                         <td className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                          {req.crypto_token ? (
+                          {req.cryptoToken ? (
                             <span className="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400">
-                              <Wallet className="w-3.5 h-3.5" /> {req.crypto_token.toUpperCase()} (SOL)
+                              <Wallet className="w-3.5 h-3.5" /> {req.cryptoToken.toUpperCase()} (SOL)
                             </span>
-                          ) : req.payment_method === 'qris' ? 'QRIS' : 'Transfer Bank'}
+                          ) : req.paymentMethod === 'qris' ? 'QRIS' : 'Transfer Bank'}
                         </td>
                         <td className="px-4 py-3">
-                          {req.crypto_tx_hash ? (
-                            <a href={`https://solscan.io/tx/${req.crypto_tx_hash}`} target="_blank" rel="noopener noreferrer"
+                          {req.cryptoTxHash ? (
+                            <a href={`https://solscan.io/tx/${req.cryptoTxHash}`} target="_blank" rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:underline">
                               <ExternalLink className="w-3.5 h-3.5" /> TX
                             </a>
-                          ) : req.proof_url ? (
-                            <button onClick={() => setProofModal(req.proof_url!)}
+                          ) : req.proofUrl ? (
+                            <button onClick={() => setProofModal(req.proofUrl!)}
                               className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline">
                               <Eye className="w-3.5 h-3.5" /> Lihat
                             </button>
@@ -208,7 +208,7 @@ function PaymentsContent() {
                             {s.icon} {s.label}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{fmtDate(req.created_at)}</td>
+                        <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{fmtDate(req.createdAt)}</td>
                         <td className="px-4 py-3">
                           {req.status === 'pending' ? (
                             <div className="flex items-center gap-1.5">
@@ -222,7 +222,7 @@ function PaymentsContent() {
                               </button>
                             </div>
                           ) : (
-                            <span className="text-xs text-gray-400">{req.admin_note || '-'}</span>
+                            <span className="text-xs text-gray-400">{req.adminNote || '-'}</span>
                           )}
                         </td>
                       </tr>
@@ -259,32 +259,32 @@ function PaymentsContent() {
                         {req.plan}
                       </span>
                       <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 ml-auto">
-                        {req.crypto_amount
-                          ? <span className="text-purple-600 dark:text-purple-400">{parseFloat(req.crypto_amount).toFixed(4)} {req.crypto_token?.toUpperCase()}</span>
+                        {req.cryptoAmount
+                          ? <span className="text-purple-600 dark:text-purple-400">{req.cryptoAmount.toFixed(4)} {req.cryptoToken?.toUpperCase()}</span>
                           : (
                             <span>
-                              {fmtRupiah(req.unique_amount || req.amount)}
-                              {req.unique_amount && <span className="text-[10px] text-green-600 dark:text-green-400 ml-1">unik</span>}
+                              {fmtRupiah(req.uniqueAmount || req.amount)}
+                              {req.uniqueAmount && <span className="text-[10px] text-green-600 dark:text-green-400 ml-1">unik</span>}
                             </span>
                           )}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">
-                      <span>{req.crypto_token
-                        ? <span className="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400"><Wallet className="w-3 h-3" /> {req.crypto_token.toUpperCase()} (SOL)</span>
-                        : req.payment_method === 'qris' ? 'QRIS' : 'Transfer Bank'}</span>
-                      <span>{fmtDate(req.created_at)}</span>
+                      <span>{req.cryptoToken
+                        ? <span className="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400"><Wallet className="w-3 h-3" /> {req.cryptoToken.toUpperCase()} (SOL)</span>
+                        : req.paymentMethod === 'qris' ? 'QRIS' : 'Transfer Bank'}</span>
+                      <span>{fmtDate(req.createdAt)}</span>
                     </div>
 
                     <div className="flex items-center justify-between">
-                      {req.crypto_tx_hash ? (
-                        <a href={`https://solscan.io/tx/${req.crypto_tx_hash}`} target="_blank" rel="noopener noreferrer"
+                      {req.cryptoTxHash ? (
+                        <a href={`https://solscan.io/tx/${req.cryptoTxHash}`} target="_blank" rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs font-medium text-purple-600 dark:text-purple-400">
-                          <ExternalLink className="w-3.5 h-3.5" /> TX: {req.crypto_tx_hash.slice(0, 8)}...
+                          <ExternalLink className="w-3.5 h-3.5" /> TX: {req.cryptoTxHash.slice(0, 8)}...
                         </a>
-                      ) : req.proof_url ? (
-                        <button onClick={() => setProofModal(req.proof_url!)}
+                      ) : req.proofUrl ? (
+                        <button onClick={() => setProofModal(req.proofUrl!)}
                           className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400">
                           <Eye className="w-3.5 h-3.5" /> Lihat Bukti
                         </button>
@@ -303,8 +303,8 @@ function PaymentsContent() {
                             Tolak
                           </button>
                         </div>
-                      ) : req.admin_note ? (
-                        <span className="text-xs text-gray-400 max-w-[150px] truncate">{req.admin_note}</span>
+                      ) : req.adminNote ? (
+                        <span className="text-xs text-gray-400 max-w-[150px] truncate">{req.adminNote}</span>
                       ) : null}
                     </div>
                   </div>
