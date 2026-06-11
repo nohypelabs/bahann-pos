@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from '@/lib/theme/ThemeContext'
 import { useScrollReveal, useStaggerReveal, useFadeInScale, useSlideIn } from '@/hooks/useScrollReveal'
 import {
@@ -776,41 +777,64 @@ export default function LandingPage() {
 
           <div ref={featuresReveal.ref} className="flex flex-wrap justify-center gap-2 mb-8 w-full max-w-full">
             {T.features.items.map((f, i) => (
-              <button
+              <motion.button
                 key={i}
                 onMouseEnter={() => handleFeatureHover(i)}
                 onClick={() => { setActiveFeature(i); startFeatureTimer() }}
                 style={featuresReveal.getItemStyle(i)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
                   activeFeature === i
-                    ? 'bg-green-600 text-white shadow-md scale-105'
+                    ? 'bg-green-600 text-white shadow-md'
                     : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700'
                 }`}
               >
                 {FEATURE_ICONS[i]}
                 <span className="hidden sm:inline">{f.title[lang]}</span>
-              </button>
+              </motion.button>
             ))}
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 border border-gray-100 dark:border-gray-700 shadow-sm transition-all duration-300">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
             <div className="flex flex-col md:flex-row gap-6">
-              <div className="flex-1 transition-all duration-300">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900/40 text-green-600 rounded-xl flex items-center justify-center transition-all duration-300">
-                    {FEATURE_ICONS[activeFeature]}
-                  </div>
-                  <h3 className="text-xl font-bold transition-all duration-300">{feat.title[lang]}</h3>
-                </div>
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4 transition-all duration-300">{feat.desc[lang]}</p>
-                <ul className="space-y-2">
-                  {feat.points.map((p, j) => (
-                    <li key={`${activeFeature}-${j}`} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 animate-[fadeIn_0.3s_ease-out_both]" style={{ animationDelay: `${j * 60}ms` }}>
-                      <Check className="w-4 h-4 text-green-500 shrink-0" />
-                      {p[lang]}
-                    </li>
-                  ))}
-                </ul>
+              <div className="flex-1 min-h-[200px]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeFeature}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <motion.div
+                        className="w-10 h-10 bg-green-100 dark:bg-green-900/40 text-green-600 rounded-xl flex items-center justify-center"
+                        initial={{ scale: 0.8, rotate: -10 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                      >
+                        {FEATURE_ICONS[activeFeature]}
+                      </motion.div>
+                      <h3 className="text-xl font-bold">{feat.title[lang]}</h3>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed mb-4">{feat.desc[lang]}</p>
+                    <ul className="space-y-2">
+                      {feat.points.map((p, j) => (
+                        <motion.li
+                          key={`${activeFeature}-${j}`}
+                          className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
+                          initial={{ opacity: 0, x: -8 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.2, delay: j * 0.06, ease: 'easeOut' }}
+                        >
+                          <Check className="w-4 h-4 text-green-500 shrink-0" />
+                          {p[lang]}
+                        </motion.li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                </AnimatePresence>
               </div>
               <div className="md:w-48 flex flex-wrap md:flex-col gap-1.5 md:border-l md:border-gray-100 md:dark:border-gray-700 md:pl-4">
                 {T.trustBadges.map((b, i) => (
