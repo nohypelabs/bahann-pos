@@ -484,6 +484,8 @@ export default function LandingPage() {
   const [pricingMode, setPricingMode] = useState<'subscription' | 'onetime'>('subscription')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [chatOpen, setChatOpen] = useState(false)
+  const [exitModalOpen, setExitModalOpen] = useState(false)
+  const exitTriggeredRef = useRef(false)
   const [chatMessage, setChatMessage] = useState('')
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [quickActionsVisible, setQuickActionsVisible] = useState(true)
@@ -561,7 +563,25 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', updateBg)
   }, [updateBg])
 
+  useEffect(() => {
+    if (sessionStorage.getItem('exit-modal-dismissed')) return
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (exitTriggeredRef.current) return
+      if (e.clientY <= 0) {
+        exitTriggeredRef.current = true
+        setExitModalOpen(true)
+      }
+    }
+    document.addEventListener('mouseleave', handleMouseLeave)
+    return () => document.removeEventListener('mouseleave', handleMouseLeave)
+  }, [])
+
   function openWa(msg: string) { window.open(buildWaLink(msg), '_blank', 'noopener,noreferrer') }
+
+  function dismissExitModal() {
+    setExitModalOpen(false)
+    sessionStorage.setItem('exit-modal-dismissed', '1')
+  }
 
   function handleQuickAction(action: typeof T.chat.quickActions[number]) {
     setQuickActionsVisible(false)
@@ -1017,6 +1037,47 @@ export default function LandingPage() {
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
         </button>
       </div>
+
+      {/* ── EXIT INTENT MODAL ── */}
+      {exitModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={dismissExitModal}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-[fadeIn_0.25s_ease-out]" onClick={e => e.stopPropagation()}>
+            <button onClick={dismissExitModal} className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-gray-500 dark:text-gray-400 text-lg" aria-label="Close">✕</button>
+            <div className="bg-gradient-to-br from-green-600 to-emerald-600 p-6 text-center text-white">
+              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Zap className="w-7 h-7" />
+              </div>
+              <h3 className="text-xl font-extrabold mb-1">
+                {lang === 'id' ? 'Tunggu Dulu!' : 'Wait!'}
+              </h3>
+              <p className="text-sm opacity-90">
+                {lang === 'id' ? 'Dapatkan akses gratis sekarang — tanpa kartu kredit.' : 'Get free access now — no credit card needed.'}
+              </p>
+            </div>
+            <div className="p-6">
+              <ul className="space-y-2.5 mb-5">
+                {[
+                  { id: 'Gratis selamanya — paket dasar', en: 'Free forever — basic plan' },
+                  { id: 'Setup kurang dari 5 menit', en: 'Setup in under 5 minutes' },
+                  { id: 'Tanpa install, langsung di HP', en: 'No install, works on phone' },
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <Check className="w-4 h-4 text-green-500 shrink-0" />
+                    {item[lang]}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/register" onClick={dismissExitModal} className="block w-full bg-green-600 hover:bg-green-700 text-white text-center font-bold py-3 rounded-xl transition-all hover:shadow-lg text-sm">
+                {lang === 'id' ? 'Daftar Gratis Sekarang' : 'Sign Up Free Now'} <ArrowRight className="w-4 h-4 inline ml-1" />
+              </Link>
+              <p className="text-center text-xs text-gray-400 mt-3">
+                {lang === 'id' ? 'Kapan saja bisa upgrade atau downgrade' : 'Upgrade or downgrade anytime'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
