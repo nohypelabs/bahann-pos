@@ -8,23 +8,18 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ children, variant = 'default', padding = 'md', className = '', ...props }, ref) => {
     const baseStyles = `
-      card-mobile bg-gray-50 dark:bg-gray-800 rounded-[40px]
+      card-mobile bg-white dark:bg-gray-800 rounded-[40px]
       transition-all duration-200
     `
 
     const variantStyles = {
       default: `
-        shadow-[8px_8px_0px_0px_rgba(0,0,0,0.15)] dark:shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)]
-        border-2 border-gray-300 dark:border-gray-600
-        hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,0.2)] dark:hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,0.6)]
-        hover:translate-x-[-2px] hover:translate-y-[-2px]
+        border-2 border-gray-200 dark:border-gray-700
       `,
       elevated: `
-        shadow-[10px_10px_0px_0px_rgba(0,0,0,0.2)] dark:shadow-[10px_10px_0px_0px_rgba(0,0,0,0.6)]
-        border-2 border-gray-400 dark:border-gray-500
+        border-2 border-gray-300 dark:border-gray-600
       `,
       flat: `
-        shadow-[5px_5px_0px_0px_rgba(0,0,0,0.1)] dark:shadow-[5px_5px_0px_0px_rgba(0,0,0,0.4)]
         border-2 border-gray-200 dark:border-gray-600
       `,
     }
