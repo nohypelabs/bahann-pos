@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
@@ -148,16 +147,15 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <Card variant="elevated" padding="lg">
-          <CardHeader>
-            <CardTitle>
+        <div className="bg-white border border-neutral-200 rounded-[40px] p-6 sm:p-8">
+          <div className="mb-4">
+            <h2 className="text-mobile-base md:text-mobile-xl font-bold text-gray-900 dark:text-gray-100">
               {step === 1
                 ? (isId ? 'Informasi Akun' : 'Account Information')
                 : (isId ? 'Jenis Usaha' : 'Business Type')}
-            </CardTitle>
-          </CardHeader>
-
-          <CardBody>
+            </h2>
+          </div>
+          <div>
             {success ? (
               <div className="text-center py-8">
                 <div className="mb-4 text-6xl">✅</div>
@@ -360,8 +358,8 @@ export default function RegisterPage() {
                 </div>
               </div>
             )}
-          </CardBody>
-        </Card>
+          </div>
+        </div>
 
         {!success && step === 1 && (
           <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-[40px]">

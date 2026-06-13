@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
@@ -75,12 +74,11 @@ function LoginContent() {
         </div>
 
         {/* Login Card */}
-        <Card variant="elevated" padding="lg">
-          <CardHeader className="pb-2 sm:pb-4">
-            <CardTitle>{t('login.title')}</CardTitle>
-          </CardHeader>
-
-          <CardBody className="pt-0 sm:pt-2">
+        <div className="bg-white border border-neutral-200 rounded-[40px] p-6 sm:p-8">
+          <div className="pb-2 sm:pb-4">
+            <h2 className="text-mobile-base md:text-mobile-xl font-bold text-gray-900 dark:text-gray-100">{t('login.title')}</h2>
+          </div>
+          <div className="pt-0 sm:pt-2">
             <form onSubmit={handleLogin} className="space-y-3 sm:space-y-6">
               {showRegisteredMessage && (
                 <div className="p-3 bg-green-50 border-2 border-green-200 rounded-[40px]">
@@ -157,8 +155,8 @@ function LoginContent() {
                 </a>
               </p>
             </div>
-          </CardBody>
-        </Card>
+          </div>
+        </div>
 
         <p className="text-center text-xs text-gray-400 dark:text-gray-500 mt-6">
           &copy; {new Date().getFullYear()} Laku POS. All rights reserved.
