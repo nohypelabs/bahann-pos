@@ -68,7 +68,7 @@ function LoginContent() {
         {/* Logo/Header — compact on mobile */}
         <div className="text-center mb-4 sm:mb-8">
           <div className="flex justify-center mb-2 sm:mb-3">
-            <img src="/logo.svg" alt="Laku POS" className="w-10 h-10 sm:w-16 sm:h-16 rounded-2xl shadow-md" />
+            <img src="/logo.svg" alt="Laku POS" className="w-10 h-10 sm:w-16 sm:h-16 rounded-[40px] shadow-md" />
           </div>
           <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-1 sm:mb-2">Laku POS</h1>
           <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 hidden sm:block">Warehouse & Point of Sale System</p>
@@ -83,7 +83,7 @@ function LoginContent() {
           <CardBody className="pt-0 sm:pt-2">
             <form onSubmit={handleLogin} className="space-y-3 sm:space-y-6">
               {showRegisteredMessage && (
-                <div className="p-3 bg-green-50 border-2 border-green-200 rounded-xl">
+                <div className="p-3 bg-green-50 border-2 border-green-200 rounded-[40px]">
                   <p className="text-sm font-semibold text-green-600">
                     ✅ {t('register.success')}
                   </p>
@@ -91,7 +91,7 @@ function LoginContent() {
               )}
 
               {error && (
-                <div className="p-3 bg-red-50 border-2 border-red-200 rounded-xl">
+                <div className="p-3 bg-red-50 border-2 border-red-200 rounded-[40px]">
                   <p className="text-sm text-red-600">{error}</p>
                 </div>
               )}
@@ -116,7 +116,7 @@ function LoginContent() {
                     placeholder="Masukkan password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-2.5 sm:py-3 pr-12 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 text-sm sm:text-base"
+                    className="w-full px-4 py-2.5 sm:py-3 pr-12 border-2 border-gray-300 dark:border-gray-600 rounded-[40px] focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 text-sm sm:text-base"
                     required
                   />
                   <button

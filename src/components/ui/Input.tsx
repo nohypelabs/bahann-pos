@@ -27,7 +27,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             input-mobile w-full
             bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
             border-2 border-gray-200 dark:border-gray-600
-            rounded-xl
+            rounded-[40px]
             shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)] dark:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.4)]
             focus:outline-none focus:border-gray-400 dark:focus:border-gray-400
             focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.12)]
@@ -79,7 +79,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             input-mobile w-full
             bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
             border-2 border-gray-200 dark:border-gray-600
-            rounded-xl
+            rounded-[40px]
             shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)] dark:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.4)]
             focus:outline-none focus:border-gray-400 dark:focus:border-gray-400
             focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.12)]
@@ -131,7 +131,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             input-mobile w-full
             bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
             border-2 border-gray-200 dark:border-gray-600
-            rounded-xl
+            rounded-[40px]
             shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)] dark:shadow-[3px_3px_0px_0px_rgba(0,0,0,0.4)]
             focus:outline-none focus:border-gray-400 dark:focus:border-gray-400
             focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,0.12)]

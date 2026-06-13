@@ -136,15 +136,15 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-3"><img src="/logo.svg" alt="Laku POS" className="w-16 h-16 rounded-2xl shadow-md" /></div>
+          <div className="flex justify-center mb-3"><img src="/logo.svg" alt="Laku POS" className="w-16 h-16 rounded-[40px] shadow-md" /></div>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">Laku POS</h1>
           <p className="text-gray-600 dark:text-gray-400">
             {isId ? 'Daftar sebagai pemilik warung' : 'Register as a store owner'}
           </p>
           {/* Step indicator */}
           <div className="flex justify-center gap-2 mt-4">
-            <span className={`w-8 h-1 rounded-full ${step === 1 ? 'bg-blue-500' : 'bg-blue-500'}`} />
-            <span className={`w-8 h-1 rounded-full ${step === 2 ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-700'}`} />
+            <span className={`w-8 h-1 rounded-[40px] ${step === 1 ? 'bg-blue-500' : 'bg-blue-500'}`} />
+            <span className={`w-8 h-1 rounded-[40px] ${step === 2 ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-700'}`} />
           </div>
         </div>
 
@@ -172,7 +172,7 @@ export default function RegisterPage() {
               /* Step 1: Account Info */
               <form onSubmit={handleNextStep} className="space-y-4">
                 {error && (
-                  <div className="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+                  <div className="p-4 bg-red-50 border-2 border-red-200 rounded-[40px]">
                     <p className="text-sm font-semibold text-red-600">❌ {error}</p>
                   </div>
                 )}
@@ -213,7 +213,7 @@ export default function RegisterPage() {
                       placeholder="8123456789"
                       value={formData.whatsappNumber}
                       onChange={handleChange}
-                      className="w-full pl-14 pr-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                      className="w-full pl-14 pr-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-[40px] focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                       required
                     />
                   </div>
@@ -241,7 +241,7 @@ export default function RegisterPage() {
                       placeholder={isId ? 'Minimal 8 karakter' : 'At least 8 characters'}
                       value={formData.password}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 pr-12 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                      className="w-full px-4 py-3 pr-12 border-2 border-gray-300 dark:border-gray-600 rounded-[40px] focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                       required
                     />
                     <button
@@ -265,7 +265,7 @@ export default function RegisterPage() {
                       placeholder={isId ? 'Konfirmasi password' : 'Confirm password'}
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 pr-12 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                      className="w-full px-4 py-3 pr-12 border-2 border-gray-300 dark:border-gray-600 rounded-[40px] focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
                       required
                     />
                     <button
@@ -297,7 +297,7 @@ export default function RegisterPage() {
               /* Step 2: Business Type Selection */
               <div className="space-y-4">
                 {error && (
-                  <div className="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+                  <div className="p-4 bg-red-50 border-2 border-red-200 rounded-[40px]">
                     <p className="text-sm font-semibold text-red-600">❌ {error}</p>
                   </div>
                 )}
@@ -315,14 +315,14 @@ export default function RegisterPage() {
                       <button
                         key={bt.type}
                         onClick={() => setSelectedType(bt.type)}
-                        className={`relative text-left p-4 rounded-xl border-2 transition-all ${
+                        className={`relative text-left p-4 rounded-[40px] border-2 transition-all ${
                           isSelected
                             ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-md'
                             : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
                         }`}
                       >
                         {isSelected && (
-                          <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                          <div className="absolute top-3 right-3 w-5 h-5 rounded-[40px] bg-blue-500 flex items-center justify-center">
                             <span className="text-white text-xs font-bold">✓</span>
                           </div>
                         )}
@@ -364,7 +364,7 @@ export default function RegisterPage() {
         </Card>
 
         {!success && step === 1 && (
-          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
+          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-[40px]">
             <p className="text-sm text-blue-900 dark:text-blue-200 font-semibold mb-2">
               ℹ️ {isId ? 'Informasi Pendaftaran' : 'Registration Info'}:
             </p>
