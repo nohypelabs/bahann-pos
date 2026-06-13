@@ -71,3 +71,50 @@ export function ExportLoadingSkeleton() {
     </div>
   )
 }
+
+export function ProductListSkeleton({ rows = 5 }: { rows?: number }) {
+  return (
+    <div className="space-y-0 divide-y divide-gray-100">
+      {Array.from({ length: rows }).map((_, i) => (
+        <div key={i} className="px-3 py-2.5 animate-pulse">
+          <div className="grid grid-cols-12 gap-2 items-center">
+            {/* Product name + SKU */}
+            <div className="col-span-5 space-y-1.5">
+              <div className="h-4 bg-gray-200 rounded w-3/4" />
+              <div className="h-3 bg-gray-100 rounded w-1/2" />
+            </div>
+            {/* Price */}
+            <div className="col-span-3">
+              <div className="h-4 bg-gray-200 rounded w-20" />
+            </div>
+            {/* Stock badge */}
+            <div className="col-span-2 flex justify-center">
+              <div className="h-5 w-10 bg-gray-200 rounded-full" />
+            </div>
+            {/* Select indicator */}
+            <div className="col-span-2 flex justify-center">
+              <div className="h-5 w-5 bg-gray-200 rounded-full" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="p-3 rounded-xl border-2 border-gray-200 animate-pulse space-y-2">
+          <div className="h-4 bg-gray-200 rounded w-3/4" />
+          <div className="h-3 bg-gray-100 rounded w-1/2" />
+          <div className="flex items-center justify-between mt-2">
+            <div className="h-4 bg-gray-200 rounded w-16" />
+            <div className="h-4 w-8 bg-gray-200 rounded-full" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}

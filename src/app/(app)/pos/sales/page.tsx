@@ -11,6 +11,7 @@ import { BarcodeScanner } from '@/components/barcode/BarcodeScanner'
 import { PaymentModal } from '@/components/payment'
 import { formatCurrency, formatDateTime, generateTransactionId } from '@/lib/utils'
 import { List, LayoutGrid } from 'lucide-react'
+import { ProductListSkeleton, ProductGridSkeleton } from '@/components/ui/Skeletons'
 
 interface CartItem {
   productId: string
@@ -59,6 +60,7 @@ export default function SalesTransactionPage() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false)
   const [pendingTransactionId, setPendingTransactionId] = useState<string>('')
   const [productSearch, setProductSearch] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
   const [outletSearch, setOutletSearch] = useState('')
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>(() => {
@@ -151,10 +153,15 @@ export default function SalesTransactionPage() {
 
   const filteredProducts = products?.filter(p => {
     const q = productSearch.toLowerCase()
-    return p.name.toLowerCase().includes(q)
+    const matchesSearch = p.name.toLowerCase().includes(q)
       || p.sku.toLowerCase().includes(q)
       || (p.barcode && p.barcode.toLowerCase().includes(q))
+    const matchesCategory = !selectedCategory || p.category === selectedCategory
+    return matchesSearch && matchesCategory
   }) || []
+
+  // Get unique categories from products
+  const categories = [...new Set(products?.map(p => p.category).filter((c): c is string => !!c))].sort()
 
   const handleAddToCart = () => {
     if (!selectedProduct) { setError('Silakan pilih produk'); return }
@@ -383,7 +390,7 @@ export default function SalesTransactionPage() {
             <span className="hidden sm:inline">Keranjang</span>
             {cartItemCount > 0 && (
               <>
-                <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">{cartItemCount}</span>
+                <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">{cartItemCount}</span>
                 <span className="hidden md:inline text-blue-200 text-xs font-normal">{formatCurrency(cartTotal)}</span>
               </>
             )}
@@ -443,7 +450,7 @@ export default function SalesTransactionPage() {
             <div className="flex items-center justify-between px-3 md:px-4 py-2 md:py-2.5 border-b border-gray-200 dark:border-gray-700 shrink-0 gap-2">
               <p className="font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm shrink-0">Produk</p>
               <div className="flex gap-1 items-center">
-                <input ref={barcodeInputRef} type="text" value={barcodeInput} onChange={handleBarcodeInputChange} onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleBarcodeInputSubmit() } }} placeholder="Scan SKU..." disabled={!selectedOutletId} className="hidden md:block w-28 px-2 py-1.5 text-xs border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-purple-500 focus:outline-none uppercase disabled:opacity-50" />
+                <input ref={barcodeInputRef} type="text" value={barcodeInput} onChange={handleBarcodeInputChange} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleBarcodeInputSubmit() } }} placeholder="Scan SKU..." disabled={!selectedOutletId} className="hidden md:block w-28 px-2 py-1.5 text-xs border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-purple-500 focus:outline-none uppercase disabled:opacity-50" />
                 <Button variant="secondary" size="sm" onClick={handleBarcodeInputSubmit} disabled={!selectedOutletId || !barcodeInput.trim()} className="hidden md:flex">✓</Button>
                 <Button variant="secondary" size="sm" onClick={() => setIsScannerOpen(true)} disabled={!selectedOutletId}>📷 <span className="hidden sm:inline ml-1">Scan</span></Button>
               </div>
@@ -457,12 +464,25 @@ export default function SalesTransactionPage() {
               )}
 
               {/* Search + View Toggle */}
-              <div className="flex gap-2 shrink-0">
+              <div className="flex gap-2 shrink-0 flex-wrap">
                 <div className="relative flex-1">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
                   <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Cari produk (nama atau SKU)..." disabled={!selectedOutletId} className="w-full pl-9 pr-8 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none disabled:opacity-50" />
                   {productSearch && <button onClick={() => setProductSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">✕</button>}
                 </div>
+                {categories.length > 0 && (
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    disabled={!selectedOutletId}
+                    className="px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none disabled:opacity-50 cursor-pointer"
+                  >
+                    <option value="">Semua Kategori</option>
+                    {categories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                )}
                 <div className="flex border-2 border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden shrink-0">
                   <button onClick={() => { setViewMode('list'); localStorage.setItem('lakupos-view-mode', 'list') }}
                     className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
@@ -493,10 +513,22 @@ export default function SalesTransactionPage() {
                   <span className="col-span-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Stok</span>
                 </div>
                 <div className="overflow-y-auto flex-1 divide-y divide-gray-100 dark:divide-gray-700">
-                  {!selectedOutletId ? (
+                  {productsLoading ? (
+                    <ProductListSkeleton rows={6} />
+                  ) : !selectedOutletId ? (
                     <div className="py-4 md:py-8 text-center text-sm text-gray-400 dark:text-gray-500">Pilih outlet untuk melihat produk</div>
                   ) : filteredProducts.length === 0 ? (
-                    <div className="py-4 md:py-8 text-center text-sm text-gray-400 dark:text-gray-500">{productSearch ? `"${productSearch}" tidak ditemukan` : 'Tidak ada produk'}</div>
+                    <div className="py-8 text-center">
+                      <div className="w-16 h-16 mx-auto mb-3 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                        <span className="text-2xl">📦</span>
+                      </div>
+                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                        {productSearch ? `"${productSearch}" tidak ditemukan` : 'Tidak ada produk'}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {productSearch ? 'Coba kata kunci lain' : 'Tambahkan produk terlebih dahulu'}
+                      </p>
+                    </div>
                   ) : filteredProducts.map(product => {
                     const stock = inventoryList?.find(p => p.id === product.id)?.currentStock ?? 0
                     const isSelected = selectedProductId === product.id
@@ -567,10 +599,22 @@ export default function SalesTransactionPage() {
                 ) : (
                   /* Grid view */
                   <div className="overflow-y-auto flex-1 p-3">
-                    {!selectedOutletId ? (
+                    {productsLoading ? (
+                      <ProductGridSkeleton count={8} />
+                    ) : !selectedOutletId ? (
                       <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">Pilih outlet untuk melihat produk</div>
                     ) : filteredProducts.length === 0 ? (
-                      <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">{productSearch ? `"${productSearch}" tidak ditemukan` : 'Tidak ada produk'}</div>
+                      <div className="py-8 text-center">
+                        <div className="w-16 h-16 mx-auto mb-3 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                          <span className="text-2xl">📦</span>
+                        </div>
+                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                          {productSearch ? `"${productSearch}" tidak ditemukan` : 'Tidak ada produk'}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {productSearch ? 'Coba kata kunci lain' : 'Tambahkan produk terlebih dahulu'}
+                        </p>
+                      </div>
                     ) : (
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                         {filteredProducts.map(product => {
@@ -580,7 +624,7 @@ export default function SalesTransactionPage() {
                           const isOutOfStock = !isUntrackedItem && stock === 0
                           return (
                             <button key={product.id} onClick={() => !isOutOfStock && handleProductChange(isSelected ? '' : product.id)} disabled={isOutOfStock}
-                              className={`text-left p-3 rounded-xl border-2 transition-all ${
+                              className={`text-left p-3 rounded-xl border-2 transition-all duration-200 ${
                                 isSelected ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/40 shadow-[3px_3px_0px_0px_rgba(37,99,235,0.3)]'
                                 : isOutOfStock ? 'border-gray-200 dark:border-gray-700 opacity-40 cursor-not-allowed bg-white dark:bg-gray-800'
                                 : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.08)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px]'
@@ -634,10 +678,10 @@ export default function SalesTransactionPage() {
                         <button key={q} onClick={() => handleQuickQuantity(q)} className={`min-w-11 min-h-11 text-xs font-bold rounded-lg border transition-colors ${quantity === q ? 'bg-blue-500 text-white border-blue-500' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-300'}`}>{q}</button>
                       ))}
                     </div>
-                    <input ref={quantityInputRef} type="number" min="1" max={availableStock || 999} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} onKeyPress={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddToCart() } }} onFocus={(e) => e.target.select()} className="w-14 px-2 py-1.5 text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none text-sm font-bold shrink-0" />
+                    <input ref={quantityInputRef} type="number" min="1" max={availableStock || 999} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddToCart() } }} onFocus={(e) => e.target.select()} className="w-14 px-2 py-1.5 text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none text-sm font-bold shrink-0" />
                   </div>
                   {/* Add button — full width */}
-                  <Button variant="primary" size="md" fullWidth onClick={handleAddToCart} disabled={productsLoading || (!!selectedOutletId && availableStock === 0 && selectedProduct.stock_behavior === 'TRACKED')}>
+                  <Button variant="primary" size="md" fullWidth onClick={handleAddToCart} disabled={productsLoading || (!!selectedOutletId && availableStock === 0 && selectedProduct.stock_behavior === 'TRACKED')} className="active:scale-95 transition-transform duration-100">
                     ➕ Tambah ke Keranjang
                   </Button>
                 </div>
@@ -698,10 +742,14 @@ export default function SalesTransactionPage() {
               {recordSaleMutation.isPending ? 'Memproses...' : cart.length === 0 ? '🛒 Keranjang kosong' : `💳 Bayar ${formatCurrency(cartTotal)}`}
             </Button>
 
-            <div className="flex gap-2 text-xs text-gray-400 dark:text-gray-500 flex-wrap">
-              <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400">F2</kbd> produk</span>
-              <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400">Enter</kbd> tambah</span>
-              <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400">F8</kbd> bayar</span>
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Shortcut</p>
+              <div className="flex gap-2 text-xs text-gray-400 dark:text-gray-500 flex-wrap">
+                <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-mono">F2</kbd> Cari produk</span>
+                <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-mono">Enter</kbd> Tambah</span>
+                <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-mono">F8</kbd> Bayar</span>
+                <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-mono">Esc</kbd> Batal</span>
+              </div>
             </div>
           </div>
 
@@ -827,10 +875,12 @@ export default function SalesTransactionPage() {
 
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {cart.length === 0 ? (
-                <div className="py-16 text-center text-gray-400 dark:text-gray-500">
-                  <div className="text-base md:text-4xl mb-2">🛒</div>
-                  <p className="text-sm font-semibold">Keranjang kosong</p>
-                  <p className="text-xs">Pilih produk untuk menambah item</p>
+                <div className="py-16 text-center">
+                  <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                    <span className="text-4xl">🛒</span>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Keranjang kosong</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Pilih produk untuk menambah item</p>
                 </div>
               ) : cart.map((item) => (
                 <div key={item.productId} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
