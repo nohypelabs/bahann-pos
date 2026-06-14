@@ -185,11 +185,11 @@ export default function SalesHistoryPage() {
                 ))}
                 <tr className="bg-gray-900 dark:bg-gray-700 text-white font-bold">
                   <td className="px-3 md:px-4 py-3 text-sm" colSpan={2}>Total</td>
-                  <td className="px-3 md:px-4 py-3 text-sm">—</td>
+                  <td className="px-3 md:px-4 py-3 text-sm">{productSummary.reduce((s, p) => s + p.currentStock + p.totalQty, 0).toLocaleString()} unit</td>
                   <td className="px-3 md:px-4 py-3 text-sm">{productSummary.reduce((s, p) => s + p.totalQty, 0).toLocaleString()} unit</td>
                   <td className="px-3 md:px-4 py-3 text-sm">{formatCurrency(productSummary.reduce((s, p) => s + p.totalRevenue, 0))}</td>
                   <td className="px-3 md:px-4 py-3 text-sm">{productSummary.reduce((s, p) => s + p.transactionCount, 0)}x</td>
-                  <td className="px-3 md:px-4 py-3 text-sm">—</td>
+                  <td className="px-3 md:px-4 py-3 text-sm">{productSummary.reduce((s, p) => s + p.currentStock, 0).toLocaleString()} unit</td>
                 </tr>
               </tbody>
             </table>
