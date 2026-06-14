@@ -121,8 +121,8 @@ export class SupabaseDashboardRepository implements DashboardRepository {
     }));
   }
 
-  async getRecentTransactions(outletIds: string[], limit: number): Promise<RecentTransaction[]> {
-    const { data } = await supabase
+  async getRecentTransactions(outletIds: string[], limit: number, startDate?: string, endDate?: string): Promise<RecentTransaction[]> {
+    let query = supabase
       .from('transactions')
       .select(`
         id,
@@ -143,6 +143,11 @@ export class SupabaseDashboardRepository implements DashboardRepository {
         cashier:users!cashier_id(id, name, email)
       `)
       .in('outlet_id', outletIds)
+
+    if (startDate) query = query.gte('created_at', startDate)
+    if (endDate) query = query.lte('created_at', endDate)
+
+    const { data } = await query
       .order('created_at', { ascending: false })
       .limit(limit);
 

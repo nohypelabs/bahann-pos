@@ -49,7 +49,7 @@ export interface DashboardRepository {
   getSalesTrend(outletIds: string[], startDate: string, endDate: string): Promise<SalesTrendRow[]>;
   getTopProducts(outletIds: string[], startDate: string, endDate: string, limit: number): Promise<TopProductRow[]>;
   getLowStock(outletIds: string[], threshold: number): Promise<LowStockItem[]>;
-  getRecentTransactions(outletIds: string[], limit: number): Promise<RecentTransaction[]>;
+  getRecentTransactions(outletIds: string[], limit: number, startDate?: string, endDate?: string): Promise<RecentTransaction[]>;
   getProductCount(ownerId: string): Promise<number>;
   getOutletCount(ownerId: string): Promise<number>;
 }

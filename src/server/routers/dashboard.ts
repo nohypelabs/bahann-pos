@@ -124,19 +124,21 @@ export const dashboardRouter = router({
       z.object({
         outletId: z.string().uuid().optional(),
         limit: z.number().default(10),
+        days: z.number().optional(),
       }).optional()
     )
     .query(async ({ input, ctx }) => {
       const limit = input?.limit || 10
+      const days = input?.days
 
       const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
       if (!ownerId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Tenant not found' })
 
       const useCase = container.dashboardUseCase()
-      const cacheKey = dashKey('recent', ownerId, input?.outletId, `${limit}`)
+      const cacheKey = dashKey('recent', ownerId, input?.outletId, `${limit}:${days ?? 'all'}`)
       return withCache(cacheKey, 30, async () => {
         const outletIds = await resolveOutletIds(ownerId, input?.outletId)
-        return useCase.getRecentTransactions(outletIds, limit)
+        return useCase.getRecentTransactions(outletIds, limit, days)
       })
     }),
 

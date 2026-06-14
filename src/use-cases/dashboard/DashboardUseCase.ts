@@ -90,9 +90,11 @@ export class DashboardUseCase {
     return this.repo.getLowStock(outletIds, threshold)
   }
 
-  async getRecentTransactions(outletIds: string[], limit: number) {
+  async getRecentTransactions(outletIds: string[], limit: number, days?: number) {
     if (outletIds.length === 0) return []
-    return this.repo.getRecentTransactions(outletIds, limit)
+    const now = new Date()
+    const { startTs, endTs } = buildDateRange(days, now)
+    return this.repo.getRecentTransactions(outletIds, limit, startTs, endTs)
   }
 
   async exportReport(outletIds: string[], userId: string, plan: string, days: number) {

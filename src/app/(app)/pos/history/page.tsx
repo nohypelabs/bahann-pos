@@ -43,7 +43,7 @@ export default function SalesHistoryPage() {
   const outlets                  = outletsResponse?.outlets || []
 
   const { data: salesTrend }         = trpc.dashboard.getSalesTrend.useQuery({ outletId: selectedOutletId || undefined, days: dateRange })
-  const { data: recentTransactions } = trpc.dashboard.getRecentTransactions.useQuery({ outletId: selectedOutletId || undefined, limit: 50 })
+  const { data: recentTransactions } = trpc.dashboard.getRecentTransactions.useQuery({ outletId: selectedOutletId || undefined, limit: 50, days: dateRange || undefined })
   const { data: stats }              = trpc.dashboard.getStats.useQuery({ outletId: selectedOutletId || undefined, days: dateRange })
 
   const filteredTransactions = recentTransactions?.filter(tx => {
