@@ -121,6 +121,44 @@ export default function SalesHistoryPage() {
         </div>
       </SectionCard>
 
+      {/* Per-Product Summary — top report */}
+      {productSummary.length > 0 && (
+        <SectionCard title="Laporan Per Produk">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
+                  {['Produk', 'SKU', 'Total Qty', 'Total Revenue', 'Jml Transaksi'].map(h => (
+                    <th key={h} className="px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {productSummary.map(p => (
+                  <tr key={p.name} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                    <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{p.name}</td>
+                    <td className="px-3 md:px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">{p.sku}</td>
+                    <td className="px-3 md:px-4 py-3">
+                      <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-xs font-bold">
+                        {p.totalQty.toLocaleString()} unit
+                      </span>
+                    </td>
+                    <td className="px-3 md:px-4 py-3 text-sm font-bold text-green-600 dark:text-green-400">{formatCurrency(p.totalRevenue)}</td>
+                    <td className="px-3 md:px-4 py-3 text-xs text-gray-600 dark:text-gray-400">{p.transactionCount}x</td>
+                  </tr>
+                ))}
+                <tr className="bg-gray-900 dark:bg-gray-700 text-white font-bold">
+                  <td className="px-3 md:px-4 py-3 text-sm" colSpan={2}>Total</td>
+                  <td className="px-3 md:px-4 py-3 text-sm">{productSummary.reduce((s, p) => s + p.totalQty, 0).toLocaleString()} unit</td>
+                  <td className="px-3 md:px-4 py-3 text-sm">{formatCurrency(productSummary.reduce((s, p) => s + p.totalRevenue, 0))}</td>
+                  <td className="px-3 md:px-4 py-3 text-sm">{productSummary.reduce((s, p) => s + p.transactionCount, 0)}x</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
         <StatCard icon={<DollarSign />} label="Total Revenue"   value={formatCurrency(stats?.totalRevenue || 0)}     color="green"  sub={dateRange === 0 ? 'All time' : `${dateRange} hari`} />
@@ -153,44 +191,6 @@ export default function SalesHistoryPage() {
                   <td className="px-3 md:px-4 py-3 text-sm">Total</td>
                   <td className="px-3 md:px-4 py-3 text-sm">{formatCurrency(salesTrend.reduce((s, d) => s + d.revenue, 0))}</td>
                   <td className="px-3 md:px-4 py-3 text-sm">{salesTrend.reduce((s, d) => s + d.itemsSold, 0).toLocaleString()} unit</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </SectionCard>
-      )}
-
-      {/* Per-Product Summary */}
-      {productSummary.length > 0 && (
-        <SectionCard title="Ringkasan Per Produk">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
-                  {['Produk', 'SKU', 'Total Qty', 'Total Revenue', 'Jml Transaksi'].map(h => (
-                    <th key={h} className="px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {productSummary.map(p => (
-                  <tr key={p.name} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                    <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{p.name}</td>
-                    <td className="px-3 md:px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">{p.sku}</td>
-                    <td className="px-3 md:px-4 py-3">
-                      <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-xs font-bold">
-                        {p.totalQty.toLocaleString()} unit
-                      </span>
-                    </td>
-                    <td className="px-3 md:px-4 py-3 text-sm font-bold text-green-600 dark:text-green-400">{formatCurrency(p.totalRevenue)}</td>
-                    <td className="px-3 md:px-4 py-3 text-xs text-gray-600 dark:text-gray-400">{p.transactionCount}x</td>
-                  </tr>
-                ))}
-                <tr className="bg-gray-900 dark:bg-gray-700 text-white font-bold">
-                  <td className="px-3 md:px-4 py-3 text-sm" colSpan={2}>Total</td>
-                  <td className="px-3 md:px-4 py-3 text-sm">{productSummary.reduce((s, p) => s + p.totalQty, 0).toLocaleString()} unit</td>
-                  <td className="px-3 md:px-4 py-3 text-sm">{formatCurrency(productSummary.reduce((s, p) => s + p.totalRevenue, 0))}</td>
-                  <td className="px-3 md:px-4 py-3 text-sm">{productSummary.reduce((s, p) => s + p.transactionCount, 0)}x</td>
                 </tr>
               </tbody>
             </table>
