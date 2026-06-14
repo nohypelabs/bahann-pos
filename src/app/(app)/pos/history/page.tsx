@@ -48,6 +48,7 @@ export default function SalesHistoryPage() {
   const { data: salesTrend }         = trpc.dashboard.getSalesTrend.useQuery({ outletId: selectedOutletId || undefined, days: dateRange })
   const { data: recentTransactions } = trpc.dashboard.getRecentTransactions.useQuery({ outletId: selectedOutletId || undefined, limit: 50, days: dateRange || undefined })
   const { data: stats }              = trpc.dashboard.getStats.useQuery({ outletId: selectedOutletId || undefined, days: dateRange })
+  const { data: inventoryList }      = trpc.stock.getInventoryList.useQuery({ outletId: selectedOutletId || undefined })
 
   const filteredTransactions = recentTransactions?.filter(tx => {
     if (selectedProductId && !tx.id.includes(selectedProductId)) {
@@ -82,22 +83,24 @@ export default function SalesHistoryPage() {
       }
     }
 
-    // Merge with all products list
+    // Merge with all products list + stock
     const result = products.map(p => {
       const sold = soldMap.get(p.name)
+      const inv = inventoryList?.find(i => i.id === p.id)
       return {
         name: p.name,
         sku: p.sku || 'N/A',
         totalQty: sold?.totalQty ?? 0,
         totalRevenue: sold?.totalRevenue ?? 0,
         transactionCount: sold?.transactionCount ?? 0,
+        currentStock: inv?.currentStock ?? 0,
       }
     })
 
     // Include any sold products not in the products list (edge case)
     for (const [name, data] of soldMap) {
       if (!result.find(r => r.name === name)) {
-        result.push({ name, sku: 'N/A', ...data })
+        result.push({ name, sku: 'N/A', ...data, currentStock: 0 })
       }
     }
 
@@ -148,7 +151,7 @@ export default function SalesHistoryPage() {
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
-                  {['Produk', 'SKU', 'Total Qty', 'Total Revenue', 'Jml Transaksi'].map(h => (
+                  {['Produk', 'SKU', 'Sisa Stok', 'Total Qty', 'Total Revenue', 'Jml Transaksi'].map(h => (
                     <th key={h} className="px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
@@ -162,6 +165,11 @@ export default function SalesHistoryPage() {
                     </td>
                     <td className="px-3 md:px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">{p.sku}</td>
                     <td className="px-3 md:px-4 py-3">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${p.currentStock <= 0 ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' : p.currentStock <= 5 ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300' : 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'}`}>
+                        {p.currentStock.toLocaleString()} unit
+                      </span>
+                    </td>
+                    <td className="px-3 md:px-4 py-3">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${p.totalQty === 0 ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500' : 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'}`}>
                         {p.totalQty.toLocaleString()} unit
                       </span>
@@ -172,6 +180,7 @@ export default function SalesHistoryPage() {
                 ))}
                 <tr className="bg-gray-900 dark:bg-gray-700 text-white font-bold">
                   <td className="px-3 md:px-4 py-3 text-sm" colSpan={2}>Total</td>
+                  <td className="px-3 md:px-4 py-3 text-sm">—</td>
                   <td className="px-3 md:px-4 py-3 text-sm">{productSummary.reduce((s, p) => s + p.totalQty, 0).toLocaleString()} unit</td>
                   <td className="px-3 md:px-4 py-3 text-sm">{formatCurrency(productSummary.reduce((s, p) => s + p.totalRevenue, 0))}</td>
                   <td className="px-3 md:px-4 py-3 text-sm">{productSummary.reduce((s, p) => s + p.transactionCount, 0)}x</td>
