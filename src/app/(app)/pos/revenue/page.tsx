@@ -24,13 +24,13 @@ function fmtDateTime(d: string) {
 
 export default function RevenueTrackingPage() {
   const [selectedOutletId, setSelectedOutletId] = useState('')
-  const [dateRange, setDateRange] = useState<1 | 7 | 14 | 30 | 0>(7)
+  const [dateRange, setDateRange] = useState<1 | 7 | 14 | 30 | 0>(1)
 
   const { data: outletsResponse } = trpc.outlets.getAll.useQuery()
   const outlets = outletsResponse?.outlets || []
   const { data: stats }            = trpc.dashboard.getStats.useQuery({ outletId: selectedOutletId || undefined, days: dateRange })
   const { data: salesTrend }       = trpc.dashboard.getSalesTrend.useQuery({ outletId: selectedOutletId || undefined, days: dateRange })
-  const { data: recentTransactions } = trpc.dashboard.getRecentTransactions.useQuery({ outletId: selectedOutletId || undefined, limit: 10 })
+  const { data: recentTransactions } = trpc.dashboard.getRecentTransactions.useQuery({ outletId: selectedOutletId || undefined, limit: 10, days: dateRange || undefined })
 
   const totalRevenue  = salesTrend?.reduce((s, d) => s + d.revenue, 0) || 0
   const averageDaily  = salesTrend && salesTrend.length > 0 ? totalRevenue / salesTrend.length : 0
