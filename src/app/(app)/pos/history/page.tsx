@@ -66,22 +66,42 @@ export default function SalesHistoryPage() {
     )
   })
 
-  // Per-product summary
+  // Per-product summary — includes ALL products (even zero sales)
   const productSummary = (() => {
-    if (!filteredTransactions?.length) return []
-    const map = new Map<string, { name: string; sku: string; totalQty: number; totalRevenue: number; transactionCount: number }>()
-    for (const tx of filteredTransactions) {
-      const key = tx.productName
-      const existing = map.get(key)
-      if (existing) {
-        existing.totalQty += tx.quantity
-        existing.totalRevenue += tx.revenue
-        existing.transactionCount += 1
-      } else {
-        map.set(key, { name: tx.productName, sku: tx.productSku || 'N/A', totalQty: tx.quantity, totalRevenue: tx.revenue, transactionCount: 1 })
+    const soldMap = new Map<string, { totalQty: number; totalRevenue: number; transactionCount: number }>()
+    if (filteredTransactions?.length) {
+      for (const tx of filteredTransactions) {
+        const existing = soldMap.get(tx.productName)
+        if (existing) {
+          existing.totalQty += tx.quantity
+          existing.totalRevenue += tx.revenue
+          existing.transactionCount += 1
+        } else {
+          soldMap.set(tx.productName, { totalQty: tx.quantity, totalRevenue: tx.revenue, transactionCount: 1 })
+        }
       }
     }
-    return [...map.values()].sort((a, b) => b.totalRevenue - a.totalRevenue)
+
+    // Merge with all products list
+    const result = products.map(p => {
+      const sold = soldMap.get(p.name)
+      return {
+        name: p.name,
+        sku: p.sku || 'N/A',
+        totalQty: sold?.totalQty ?? 0,
+        totalRevenue: sold?.totalRevenue ?? 0,
+        transactionCount: sold?.transactionCount ?? 0,
+      }
+    })
+
+    // Include any sold products not in the products list (edge case)
+    for (const [name, data] of soldMap) {
+      if (!result.find(r => r.name === name)) {
+        result.push({ name, sku: 'N/A', ...data })
+      }
+    }
+
+    return result.sort((a, b) => b.totalRevenue - a.totalRevenue)
   })()
 
   const outletOptions = outlets.map(o => ({ value: o.id, label: o.name }))
@@ -135,11 +155,14 @@ export default function SalesHistoryPage() {
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {productSummary.map(p => (
-                  <tr key={p.name} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                    <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{p.name}</td>
+                  <tr key={p.name} className={`hover:bg-gray-50 dark:hover:bg-gray-700/30 ${p.totalQty === 0 ? 'opacity-60' : ''}`}>
+                    <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      {p.name}
+                      {p.totalQty === 0 && <span className="ml-2 text-[10px] font-bold text-gray-400 dark:text-gray-500">Tidak Terjual</span>}
+                    </td>
                     <td className="px-3 md:px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">{p.sku}</td>
                     <td className="px-3 md:px-4 py-3">
-                      <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-xs font-bold">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${p.totalQty === 0 ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500' : 'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300'}`}>
                         {p.totalQty.toLocaleString()} unit
                       </span>
                     </td>
