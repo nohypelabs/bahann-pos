@@ -151,7 +151,7 @@ export default function SalesHistoryPage() {
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
-                  {['Produk', 'SKU', 'Sisa Stok', 'Total Qty', 'Total Revenue', 'Jml Transaksi'].map(h => (
+                  {['Produk', 'SKU', 'Stok Awal', 'Sisa Stok', 'Total Qty', 'Total Revenue', 'Jml Transaksi'].map(h => (
                     <th key={h} className="px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
@@ -164,6 +164,11 @@ export default function SalesHistoryPage() {
                       {p.totalQty === 0 && <span className="ml-2 text-[10px] font-bold text-gray-400 dark:text-gray-500">Tidak Terjual</span>}
                     </td>
                     <td className="px-3 md:px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">{p.sku}</td>
+                    <td className="px-3 md:px-4 py-3">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                        {(p.currentStock + p.totalQty).toLocaleString()} unit
+                      </span>
+                    </td>
                     <td className="px-3 md:px-4 py-3">
                       <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${p.currentStock <= 0 ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' : p.currentStock <= 5 ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300' : 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'}`}>
                         {p.currentStock.toLocaleString()} unit
@@ -180,6 +185,7 @@ export default function SalesHistoryPage() {
                 ))}
                 <tr className="bg-gray-900 dark:bg-gray-700 text-white font-bold">
                   <td className="px-3 md:px-4 py-3 text-sm" colSpan={2}>Total</td>
+                  <td className="px-3 md:px-4 py-3 text-sm">—</td>
                   <td className="px-3 md:px-4 py-3 text-sm">—</td>
                   <td className="px-3 md:px-4 py-3 text-sm">{productSummary.reduce((s, p) => s + p.totalQty, 0).toLocaleString()} unit</td>
                   <td className="px-3 md:px-4 py-3 text-sm">{formatCurrency(productSummary.reduce((s, p) => s + p.totalRevenue, 0))}</td>
