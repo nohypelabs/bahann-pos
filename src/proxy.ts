@@ -28,7 +28,7 @@ export default function middleware(request: NextRequest) {
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon') ||
-    pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico)$/)
+    pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico|js|json|css|woff2?|ttf|eot|mp3|mp4)$/)
   ) {
     return NextResponse.next()
   }
@@ -53,6 +53,6 @@ export default function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|js|json|css|woff2?|ttf|eot|mp3|mp4)$).*)',
   ],
 }
