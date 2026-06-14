@@ -515,21 +515,22 @@ export default function StockManagementPage() {
               const reason = adjReason === 'Lainnya' ? adjCustomReason : adjReason
               if (!reason) { setAdjError('Alasan wajib diisi'); return }
               try {
-                // Record as stock movement with adjustment type
-                const res = await fetch('/api/trpc/stock.record', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ 0: { json: {
-                    productId: adjProductId,
-                    outletId: adjOutletId,
-                    stockDate: today,
-                    stockAwal: 0,
-                    stockIn: 0,
-                    stockOut: adjQty,
-                    stockAkhir: 0,
-                  }}})
+                // Get current stock first
+                const latestRes = await fetch(`/api/trpc/stock.getLatest?batch=1&input=${encodeURIComponent(JSON.stringify({ "0": { "json": { productId: adjProductId, outletId: adjOutletId } }}))}`)
+                const latestData = await latestRes.json()
+                const currentStock = latestData?.[0]?.result?.data?.json?.stockAkhir ?? 0
+                const newStock = currentStock - adjQty
+                if (newStock < 0) { setAdjError(`Stok tidak cukup! Sisa ${currentStock} unit`); return }
+
+                await recordStockMutation.mutateAsync({
+                  productId: adjProductId,
+                  outletId: adjOutletId,
+                  stockDate: today,
+                  stockAwal: currentStock,
+                  stockIn: 0,
+                  stockOut: adjQty,
+                  stockAkhir: newStock,
                 })
-                if (!res.ok) throw new Error('Gagal menyimpan penyesuaian')
                 setAdjSuccess(true)
                 setAdjQty(0)
                 setAdjReason('')
