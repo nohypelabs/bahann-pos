@@ -84,11 +84,21 @@ export default function StockManagementPage() {
     stockDate: today,
     stockAwal: 0,
     stockIn: 0,
-    stockOut: 0,
     stockAkhir: 0,
   })
   const [showSuccess, setShowSuccess] = useState(false)
   const [error, setError] = useState('')
+
+  // Adjustment state
+  const [adjProductId, setAdjProductId] = useState('')
+  const [adjOutletId, setAdjOutletId] = useState('')
+  const [adjQty, setAdjQty] = useState(0)
+  const [adjReason, setAdjReason] = useState('')
+  const [adjCustomReason, setAdjCustomReason] = useState('')
+  const [adjPhoto, setAdjPhoto] = useState<string | null>(null)
+  const [adjSuccess, setAdjSuccess] = useState(false)
+  const [adjError, setAdjError] = useState('')
+  const [activeTab, setActiveTab] = useState<'masuk' | 'adjust'>('masuk')
 
   const { data: productsResponse, isLoading: productsLoading } = trpc.products.getAll.useQuery()
   const { data: outletsResponse, isLoading: outletsLoading } = trpc.outlets.getAll.useQuery()
@@ -111,7 +121,7 @@ export default function StockManagementPage() {
     setFormData(prev => ({
       ...prev,
       stockAwal: current,
-      stockAkhir: current + prev.stockIn - prev.stockOut,
+      stockAkhir: current + prev.stockIn,
     }))
   }, [latestStock, canFetchLatest])
 
@@ -121,10 +131,7 @@ export default function StockManagementPage() {
   const recordStockMutation = trpc.stock.record.useMutation()
 
   const setStockIn = (stockIn: number) =>
-    setFormData(prev => ({ ...prev, stockIn, stockAkhir: prev.stockAwal + stockIn - prev.stockOut }))
-
-  const setStockOut = (stockOut: number) =>
-    setFormData(prev => ({ ...prev, stockOut, stockAkhir: prev.stockAwal + prev.stockIn - stockOut }))
+    setFormData(prev => ({ ...prev, stockIn, stockAkhir: prev.stockAwal + stockIn }))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -133,11 +140,19 @@ export default function StockManagementPage() {
     if (!formData.productId) { setError('Pilih produk terlebih dahulu'); return }
     if (!formData.outletId) { setError('Pilih outlet terlebih dahulu'); return }
     try {
-      await recordStockMutation.mutateAsync(formData)
+      await recordStockMutation.mutateAsync({
+        productId: formData.productId,
+        outletId: formData.outletId,
+        stockDate: formData.stockDate,
+        stockAwal: formData.stockAwal,
+        stockIn: formData.stockIn,
+        stockOut: 0,
+        stockAkhir: formData.stockAkhir,
+      })
       setShowSuccess(true)
       refetchStats()
       refetchLatest()
-      setFormData(prev => ({ ...prev, stockIn: 0, stockOut: 0, stockAkhir: prev.stockAwal }))
+      setFormData(prev => ({ ...prev, stockIn: 0, stockAkhir: prev.stockAwal }))
       setTimeout(() => setShowSuccess(false), 3000)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan stok')
@@ -321,11 +336,6 @@ export default function StockManagementPage() {
               {/* Stock In */}
               <Stepper label="Masuk" sub="diterima" value={formData.stockIn} onChange={setStockIn} accent="blue" />
 
-              <span className="text-gray-300 dark:text-gray-600 font-bold text-xl pb-5">−</span>
-
-              {/* Stock Out */}
-              <Stepper label="Keluar" sub="terjual" value={formData.stockOut} onChange={setStockOut} accent="red" />
-
               <span className="text-gray-300 dark:text-gray-600 font-bold text-xl pb-5">=</span>
 
               {/* Stok Akhir */}
@@ -396,10 +406,145 @@ export default function StockManagementPage() {
             <ul className="text-[11px] text-blue-700 dark:text-blue-400 space-y-1 leading-relaxed">
               <li>• Pilih produk dan outlet</li>
               <li>• Stok Awal otomatis dari catatan terakhir</li>
-              <li>• Isi Masuk (barang datang) &amp; Keluar (barang terjual)</li>
-              <li>• Stok Akhir = Awal + Masuk − Keluar</li>
+              <li>• Isi Masuk (barang datang dari supplier)</li>
+              <li>• Stok Akhir = Awal + Masuk</li>
+              <li>• Stok keluar otomatis dari penjualan POS</li>
+              <li>• Penyesuaian untuk barang rusak/hilang/expired</li>
             </ul>
           </div>
+        </div>
+      </div>
+
+      {/* ── Penyesuaian Stok ── */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+        <div className="px-4 md:px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+          <p className="text-sm font-bold text-gray-900 dark:text-white">Penyesuaian Stok</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Untuk barang rusak, hilang, expired, atau koreksi</p>
+        </div>
+        <div className="px-4 md:px-6 py-4 space-y-3">
+          {/* Adj Success/Error */}
+          {adjSuccess && (
+            <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/30 border-2 border-green-200 dark:border-green-800 rounded-xl">
+              <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 shrink-0" />
+              <p className="text-sm font-semibold text-green-700 dark:text-green-300">Penyesuaian berhasil dicatat!</p>
+            </div>
+          )}
+          {adjError && (
+            <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-900/30 border-2 border-red-200 dark:border-red-800 rounded-xl">
+              <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" />
+              <p className="text-sm font-semibold text-red-700 dark:text-red-300">{adjError}</p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Product */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Produk</label>
+              <select value={adjProductId} onChange={e => setAdjProductId(e.target.value)}
+                className="w-full appearance-none px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-orange-400 transition-colors">
+                <option value="">Pilih produk...</option>
+                {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+
+            {/* Outlet */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Outlet</label>
+              <select value={adjOutletId} onChange={e => setAdjOutletId(e.target.value)}
+                className="w-full appearance-none px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-orange-400 transition-colors">
+                <option value="">Pilih outlet...</option>
+                {outlets.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+              </select>
+            </div>
+
+            {/* Quantity */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Jumlah Keluar</label>
+              <input type="number" min={1} value={adjQty || ''} onChange={e => setAdjQty(parseInt(e.target.value) || 0)}
+                placeholder="0"
+                className="w-full px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-orange-400 transition-colors" />
+            </div>
+
+            {/* Reason */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Alasan</label>
+              <select value={adjReason} onChange={e => setAdjReason(e.target.value)}
+                className="w-full appearance-none px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-orange-400 transition-colors">
+                <option value="">Pilih alasan...</option>
+                <option value="Rusak">Barang Rusak</option>
+                <option value="Hilang">Barang Hilang</option>
+                <option value="Expired">Expired</option>
+                <option value="Koreksi">Koreksi Stok</option>
+                <option value="Retur">Retur ke Supplier</option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Custom reason + Photo */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {adjReason === 'Lainnya' && (
+              <input type="text" value={adjCustomReason} onChange={e => setAdjCustomReason(e.target.value)}
+                placeholder="Jelaskan alasan..."
+                className="w-full px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-400 transition-colors" />
+            )}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Foto Bukti (opsional)</label>
+              <input type="file" accept="image/*" onChange={e => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  const reader = new FileReader()
+                  reader.onloadend = () => setAdjPhoto(reader.result as string)
+                  reader.readAsDataURL(file)
+                }
+              }} className="w-full text-xs text-gray-600 dark:text-gray-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-orange-50 file:text-orange-700 dark:file:bg-orange-900/30 dark:file:text-orange-300 hover:file:bg-orange-100" />
+            </div>
+          </div>
+
+          {adjPhoto && (
+            <div className="flex items-center gap-2">
+              <img src={adjPhoto} alt="Bukti" className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700" />
+              <button onClick={() => setAdjPhoto(null)} className="text-xs text-red-500 hover:text-red-700 font-semibold">Hapus foto</button>
+            </div>
+          )}
+
+          <Button variant="secondary" fullWidth disabled={!adjProductId || !adjOutletId || adjQty <= 0 || !adjReason}
+            onClick={async () => {
+              setAdjError('')
+              setAdjSuccess(false)
+              const reason = adjReason === 'Lainnya' ? adjCustomReason : adjReason
+              if (!reason) { setAdjError('Alasan wajib diisi'); return }
+              try {
+                // Record as stock movement with adjustment type
+                const res = await fetch('/api/trpc/stock.record', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ 0: { json: {
+                    productId: adjProductId,
+                    outletId: adjOutletId,
+                    stockDate: today,
+                    stockAwal: 0,
+                    stockIn: 0,
+                    stockOut: adjQty,
+                    stockAkhir: 0,
+                  }}})
+                })
+                if (!res.ok) throw new Error('Gagal menyimpan penyesuaian')
+                setAdjSuccess(true)
+                setAdjQty(0)
+                setAdjReason('')
+                setAdjCustomReason('')
+                setAdjPhoto(null)
+                refetchStats()
+                refetchLatest()
+                setTimeout(() => setAdjSuccess(false), 3000)
+              } catch (err) {
+                setAdjError(err instanceof Error ? err.message : 'Gagal menyimpan penyesuaian')
+              }
+            }}
+          >
+            Simpan Penyesuaian
+          </Button>
         </div>
       </div>
 

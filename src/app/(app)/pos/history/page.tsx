@@ -33,7 +33,7 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 export default function SalesHistoryPage() {
-  const [dateRange, setDateRange]           = useState<1 | 7 | 14 | 30 | 0>(7)
+  const [dateRange, setDateRange]           = useState<1 | 7 | 14 | 30 | 0>(1)
   const [selectedOutletId, setSelectedOutletId] = useState('')
   const [selectedProductId, setSelectedProductId] = useState('')
   const [searchQuery, setSearchQuery]       = useState('')
