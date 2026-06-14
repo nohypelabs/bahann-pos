@@ -35,18 +35,26 @@ const STATUS_LABEL: Record<string, string> = {
 export default function SalesHistoryPage() {
   const [dateRange, setDateRange]           = useState<1 | 7 | 14 | 30 | 0>(7)
   const [selectedOutletId, setSelectedOutletId] = useState('')
+  const [selectedProductId, setSelectedProductId] = useState('')
   const [searchQuery, setSearchQuery]       = useState('')
 
   const { data: planData }       = trpc.auth.getPlan.useQuery()
   const canExport                = getLimits(planData?.plan ?? 'free').canExport
   const { data: outletsResponse } = trpc.outlets.getAll.useQuery()
   const outlets                  = outletsResponse?.outlets || []
+  const { data: productsResponse } = trpc.products.getAll.useQuery()
+  const products                 = productsResponse?.products || []
 
   const { data: salesTrend }         = trpc.dashboard.getSalesTrend.useQuery({ outletId: selectedOutletId || undefined, days: dateRange })
   const { data: recentTransactions } = trpc.dashboard.getRecentTransactions.useQuery({ outletId: selectedOutletId || undefined, limit: 50, days: dateRange || undefined })
   const { data: stats }              = trpc.dashboard.getStats.useQuery({ outletId: selectedOutletId || undefined, days: dateRange })
 
   const filteredTransactions = recentTransactions?.filter(tx => {
+    if (selectedProductId && !tx.id.includes(selectedProductId)) {
+      // Filter by product name since the flat tx has productName
+      const prod = products.find(p => p.id === selectedProductId)
+      if (prod && tx.productName !== prod.name) return false
+    }
     if (!searchQuery) return true
     const q = searchQuery.toLowerCase()
     return (
@@ -57,6 +65,24 @@ export default function SalesHistoryPage() {
       tx.cashierName?.toLowerCase().includes(q)
     )
   })
+
+  // Per-product summary
+  const productSummary = (() => {
+    if (!filteredTransactions?.length) return []
+    const map = new Map<string, { name: string; sku: string; totalQty: number; totalRevenue: number; transactionCount: number }>()
+    for (const tx of filteredTransactions) {
+      const key = tx.productName
+      const existing = map.get(key)
+      if (existing) {
+        existing.totalQty += tx.quantity
+        existing.totalRevenue += tx.revenue
+        existing.transactionCount += 1
+      } else {
+        map.set(key, { name: tx.productName, sku: tx.productSku || 'N/A', totalQty: tx.quantity, totalRevenue: tx.revenue, transactionCount: 1 })
+      }
+    }
+    return [...map.values()].sort((a, b) => b.totalRevenue - a.totalRevenue)
+  })()
 
   const outletOptions = outlets.map(o => ({ value: o.id, label: o.name }))
   const avgTx = stats?.transactionCount ? stats.totalRevenue / stats.transactionCount : 0
@@ -75,8 +101,23 @@ export default function SalesHistoryPage() {
             periodValue={dateRange}
             onPeriodChange={v => setDateRange(v as 1 | 7 | 14 | 30 | 0)}
           />
-          <Input type="text" placeholder="Cari ID transaksi, produk, SKU, outlet, kasir..."
-            value={searchQuery} onChange={e => setSearchQuery(e.target.value)} fullWidth />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="relative">
+              <select
+                value={selectedProductId}
+                onChange={e => setSelectedProductId(e.target.value)}
+                className="w-full appearance-none pl-3 pr-8 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
+              >
+                <option value="">Semua Produk</option>
+                {products.map(p => (
+                  <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">▾</span>
+            </div>
+            <Input type="text" placeholder="Cari ID transaksi, produk, SKU, outlet, kasir..."
+              value={searchQuery} onChange={e => setSearchQuery(e.target.value)} fullWidth />
+          </div>
         </div>
       </SectionCard>
 
@@ -112,6 +153,44 @@ export default function SalesHistoryPage() {
                   <td className="px-3 md:px-4 py-3 text-sm">Total</td>
                   <td className="px-3 md:px-4 py-3 text-sm">{formatCurrency(salesTrend.reduce((s, d) => s + d.revenue, 0))}</td>
                   <td className="px-3 md:px-4 py-3 text-sm">{salesTrend.reduce((s, d) => s + d.itemsSold, 0).toLocaleString()} unit</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </SectionCard>
+      )}
+
+      {/* Per-Product Summary */}
+      {productSummary.length > 0 && (
+        <SectionCard title="Ringkasan Per Produk">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
+                  {['Produk', 'SKU', 'Total Qty', 'Total Revenue', 'Jml Transaksi'].map(h => (
+                    <th key={h} className="px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {productSummary.map(p => (
+                  <tr key={p.name} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                    <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{p.name}</td>
+                    <td className="px-3 md:px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">{p.sku}</td>
+                    <td className="px-3 md:px-4 py-3">
+                      <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-xs font-bold">
+                        {p.totalQty.toLocaleString()} unit
+                      </span>
+                    </td>
+                    <td className="px-3 md:px-4 py-3 text-sm font-bold text-green-600 dark:text-green-400">{formatCurrency(p.totalRevenue)}</td>
+                    <td className="px-3 md:px-4 py-3 text-xs text-gray-600 dark:text-gray-400">{p.transactionCount}x</td>
+                  </tr>
+                ))}
+                <tr className="bg-gray-900 dark:bg-gray-700 text-white font-bold">
+                  <td className="px-3 md:px-4 py-3 text-sm" colSpan={2}>Total</td>
+                  <td className="px-3 md:px-4 py-3 text-sm">{productSummary.reduce((s, p) => s + p.totalQty, 0).toLocaleString()} unit</td>
+                  <td className="px-3 md:px-4 py-3 text-sm">{formatCurrency(productSummary.reduce((s, p) => s + p.totalRevenue, 0))}</td>
+                  <td className="px-3 md:px-4 py-3 text-sm">{productSummary.reduce((s, p) => s + p.transactionCount, 0)}x</td>
                 </tr>
               </tbody>
             </table>
