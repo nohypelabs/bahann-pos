@@ -464,10 +464,10 @@ export default function SalesTransactionPage() {
               )}
 
               {/* Search + View Toggle */}
-              <div className="flex gap-2 shrink-0 flex-wrap">
-                <div className="relative flex-1">
+              <div className="flex gap-2 shrink-0">
+                <div className="relative flex-1 min-w-0">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-                  <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Cari produk (nama atau SKU)..." disabled={!selectedOutletId} className="w-full pl-9 pr-8 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none disabled:opacity-50" />
+                  <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Cari produk..." disabled={!selectedOutletId} className="w-full pl-9 pr-8 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none disabled:opacity-50" />
                   {productSearch && <button onClick={() => setProductSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">✕</button>}
                 </div>
                 {categories.length > 0 && (
@@ -475,9 +475,9 @@ export default function SalesTransactionPage() {
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
                     disabled={!selectedOutletId}
-                    className="px-3 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none disabled:opacity-50 cursor-pointer"
+                    className="hidden sm:block px-2 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-xs text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none disabled:opacity-50 cursor-pointer max-w-[140px]"
                   >
-                    <option value="">Semua Kategori</option>
+                    <option value="">Semua</option>
                     {categories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
@@ -485,15 +485,32 @@ export default function SalesTransactionPage() {
                 )}
                 <div className="flex border-2 border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden shrink-0">
                   <button onClick={() => { setViewMode('list'); localStorage.setItem('lakupos-view-mode', 'list') }}
-                    className={`p-2 transition-colors ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
-                    <List size={18} />
+                    className={`p-1.5 md:p-2 transition-colors ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
+                    <List size={16} />
                   </button>
                   <button onClick={() => { setViewMode('grid'); localStorage.setItem('lakupos-view-mode', 'grid') }}
-                    className={`p-2 transition-colors ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
-                    <LayoutGrid size={18} />
+                    className={`p-1.5 md:p-2 transition-colors ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
+                    <LayoutGrid size={16} />
                   </button>
                 </div>
               </div>
+
+              {/* Mobile category filter (inline pills) */}
+              {categories.length > 0 && (
+                <div className="flex sm:hidden gap-1.5 overflow-x-auto shrink-0 pb-0.5 -mx-0.5 px-0.5">
+                  <button
+                    onClick={() => setSelectedCategory('')}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors ${selectedCategory === '' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}
+                  >Semua</button>
+                  {categories.map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors ${selectedCategory === cat ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}
+                    >{cat}</button>
+                  ))}
+                </div>
+              )}
 
               {/* Product table/grid */}
               <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden flex flex-col flex-1 min-h-0">
