@@ -284,6 +284,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
                   <div className="space-y-0.5">
                     <SidebarItem href="/admin" icon={<Crown />} label={t('sidebar.adminPanel')} isCollapsed={false} />
                     <SidebarItem href="/admin/tenants" icon={<Users />} label={t('sidebar.adminTenants')} isCollapsed={false} />
+                    <SidebarItem href="/admin/roles" icon={<Shield />} label="Kelola Role" isCollapsed={false} />
                     <SidebarItem href="/admin/payments" icon={<CreditCard />} label={t('sidebar.adminPayments')} isCollapsed={false} />
                     <SidebarItem href="/admin/settings" icon={<Settings />} label={t('sidebar.adminSettings')} isCollapsed={false} />
                   </div>
@@ -293,6 +294,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
                   <div className="h-px bg-purple-300 dark:bg-purple-700 mx-3 mb-1" />
                   <SidebarItem href="/admin" icon={<Crown />} label={t('sidebar.adminPanel')} isCollapsed={true} />
                   <SidebarItem href="/admin/tenants" icon={<Users />} label={t('sidebar.adminTenants')} isCollapsed={true} />
+                  <SidebarItem href="/admin/roles" icon={<Shield />} label="Kelola Role" isCollapsed={true} />
                   <SidebarItem href="/admin/payments" icon={<CreditCard />} label={t('sidebar.adminPayments')} isCollapsed={true} />
                   <SidebarItem href="/admin/settings" icon={<Settings />} label={t('sidebar.adminSettings')} isCollapsed={true} />
                   <div className="h-px bg-purple-300 dark:bg-purple-700 mx-3 mt-1" />
