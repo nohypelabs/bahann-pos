@@ -15,6 +15,15 @@ const PLAN_COLORS: Record<string, string> = {
 }
 const PLANS = ['free', 'warung', 'starter', 'professional', 'business', 'enterprise'] as const
 
+const PLAN_META: Record<string, { label: string; price: number; color: string; bg: string; border: string; features: string[] }> = {
+  free:         { label: 'Free',         price: 0,       color: 'text-gray-600',    bg: 'bg-gray-50 dark:bg-gray-800',       border: 'border-gray-200 dark:border-gray-700',    features: ['1 Outlet', '1 Kasir', '100 tx/bulan'] },
+  warung:       { label: 'Warung',       price: 99000,   color: 'text-green-600',   bg: 'bg-green-50 dark:bg-green-900/20',  border: 'border-green-300 dark:border-green-700',   features: ['1 Outlet', '2 Kasir', 'Unlimited tx'] },
+  starter:      { label: 'Starter',      price: 299000,  color: 'text-blue-600',    bg: 'bg-blue-50 dark:bg-blue-900/20',    border: 'border-blue-300 dark:border-blue-700',     features: ['1 Outlet', '3 User', 'Inventori'] },
+  professional: { label: 'Professional', price: 1200000, color: 'text-purple-600',  bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-300 dark:border-purple-700', features: ['3 Outlet', '10 User', 'API Access'] },
+  business:     { label: 'Business',     price: 0,       color: 'text-orange-600',  bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-300 dark:border-orange-700', features: ['Unlimited', 'Custom'] },
+  enterprise:   { label: 'Enterprise',   price: 0,       color: 'text-red-600',     bg: 'bg-red-50 dark:bg-red-900/20',      border: 'border-red-300 dark:border-red-700',       features: ['White-label', 'On-premise'] },
+}
+
 export default function TenantsPage() {
   return (
     <Suspense fallback={<div className="h-32 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>}>
@@ -76,6 +85,7 @@ function TenantsContent() {
   const [newPlan, setNewPlan] = useState('')
   const [planNote, setPlanNote] = useState('')
   const [planAmount, setPlanAmount] = useState('')
+  const [planExpiry, setPlanExpiry] = useState('')
 
   const [showSuspendModal, setShowSuspendModal] = useState(false)
   const [suspendReason, setSuspendReason] = useState('')
@@ -209,23 +219,87 @@ function TenantsContent() {
         {showPlanModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={e => e.target === e.currentTarget && setShowPlanModal(false)}>
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-            <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-gray-100 dark:border-gray-800">
-              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-4">Ubah Plan</h3>
+            <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-100 dark:border-gray-800 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-1">Ubah Plan</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                Saat ini: <span className={`font-bold ${PLAN_META[detail.plan || 'free']?.color || 'text-gray-600'}`}>{PLAN_META[detail.plan || 'free']?.label || 'Free'}</span>
+              </p>
+
+              {/* Plan cards — visual picker */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {PLANS.map(p => {
+                  const meta = PLAN_META[p]
+                  const isSelected = newPlan === p
+                  const isCurrent = detail.plan === p
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => {
+                        setNewPlan(p)
+                        if (meta.price > 0) setPlanAmount(String(meta.price))
+                        else setPlanAmount('')
+                      }}
+                      className={`relative p-3 rounded-xl border-2 text-left transition-all ${
+                        isSelected
+                          ? `${meta.bg} ${meta.border} ring-2 ring-blue-500/30`
+                          : `border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 ${meta.bg}`
+                      }`}
+                    >
+                      {isCurrent && (
+                        <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 text-[9px] font-bold bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">Aktif</span>
+                      )}
+                      <p className={`text-sm font-bold ${meta.color}`}>{meta.label}</p>
+                      {meta.price > 0 ? (
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{fmtCurrency(meta.price)}/bln</p>
+                      ) : (
+                        <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">Custom</p>
+                      )}
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {meta.features.slice(0, 2).map(f => (
+                          <span key={f} className="px-1.5 py-0.5 text-[9px] bg-white/60 dark:bg-gray-800/60 text-gray-500 dark:text-gray-400 rounded">{f}</span>
+                        ))}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Quick presets */}
+              <div className="flex gap-1.5 mb-4">
+                <button
+                  onClick={() => { setNewPlan('enterprise'); setPlanAmount('0'); setPlanNote('Unlimited plan — portfolio client') }}
+                  className="flex-1 px-2 py-1.5 text-[11px] font-semibold bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                >
+                  ⚡ Set Max
+                </button>
+                <button
+                  onClick={() => { setNewPlan('professional'); setPlanAmount('1200000') }}
+                  className="flex-1 px-2 py-1.5 text-[11px] font-semibold bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors"
+                >
+                  Pro Plan
+                </button>
+                <button
+                  onClick={() => { setNewPlan('free'); setPlanAmount('0'); setPlanNote('Reset ke free') }}
+                  className="flex-1 px-2 py-1.5 text-[11px] font-semibold bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                >
+                  Reset Free
+                </button>
+              </div>
+
+              {/* Amount + Expiry + Note */}
               <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Plan Baru</label>
-                  <div className="relative mt-1">
-                    <select value={newPlan} onChange={e => setNewPlan(e.target.value)}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm appearance-none pr-8">
-                      {PLANS.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Jumlah Bayar (Rp)</label>
+                    <input type="number" value={planAmount} onChange={e => setPlanAmount(e.target.value)} placeholder="0"
+                      className="w-full mt-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm" />
                   </div>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Jumlah Bayar (Rp)</label>
-                  <input type="number" value={planAmount} onChange={e => setPlanAmount(e.target.value)} placeholder="0"
-                    className="w-full mt-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm" />
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Expired</label>
+                    <input type="date" value={planExpiry} onChange={e => setPlanExpiry(e.target.value)}
+                      className="w-full mt-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm" />
+                    <p className="text-[10px] text-gray-400 mt-0.5">Kosongkan = tidak expired</p>
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-600 dark:text-gray-400">Catatan</label>
@@ -233,6 +307,20 @@ function TenantsContent() {
                     className="w-full mt-1 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm" />
                 </div>
               </div>
+
+              {/* Summary */}
+              {newPlan && newPlan !== detail.plan && (
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    <span className="font-bold">{PLAN_META[detail.plan || 'free']?.label || 'Free'}</span>
+                    {' → '}
+                    <span className="font-bold">{PLAN_META[newPlan]?.label || newPlan}</span>
+                    {planAmount && parseInt(planAmount) > 0 && <span className="ml-2">• {fmtCurrency(parseInt(planAmount))}</span>}
+                    {planExpiry && <span className="ml-2">• Exp: {new Date(planExpiry).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
+                  </p>
+                </div>
+              )}
+
               <div className="flex gap-3 mt-5">
                 <button onClick={() => setShowPlanModal(false)}
                   className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
@@ -246,7 +334,7 @@ function TenantsContent() {
                       plan: newPlan as any,
                       amount: parseInt(planAmount) || 0,
                       note: planNote || undefined,
-                    }, { onSuccess: () => setShowPlanModal(false) })
+                    }, { onSuccess: () => { setShowPlanModal(false); setPlanExpiry('') } })
                   }}
                   className="flex-1 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-sm font-semibold text-white transition-colors">
                   {updatePlanMutation.isPending ? 'Menyimpan...' : 'Simpan'}
