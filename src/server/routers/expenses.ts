@@ -175,7 +175,7 @@ export const expensesRouter = router({
       )
         .map(([category, total]) => ({
           category,
-          total,
+          total: total as number,
           count: (expenses || []).filter((e) => e.category === category).length,
         }))
         .sort((a, b) => b.total - a.total)

@@ -104,4 +104,113 @@ export const superAdminRouter = router({
       const url = await platformUseCase.uploadQris(input.base64, input.fileName, ctx.userId)
       return { url }
     }),
+
+  /**
+   * List all users across all tenants (superadmin only)
+   */
+  listAllUsers: superAdminProcedure
+    .input(z.object({
+      search: z.string().optional(),
+      role: z.string().optional(),
+      limit: z.number().default(50),
+      offset: z.number().default(0),
+    }).optional())
+    .query(async ({ input }) => {
+      const { supabaseAdmin } = await import('@/infra/supabase/server')
+
+      let query = supabaseAdmin
+        .from('users')
+        .select(`
+          id, name, email, role, outlet_id, is_active, created_at,
+          outlet:outlets!outlet_id(id, name, owner_id),
+          owner:outlets!outlet_id(owner_id)
+        `)
+        .order('created_at', { ascending: false })
+        .range(input?.offset ?? 0, (input?.offset ?? 0) + (input?.limit ?? 50) - 1)
+
+      if (input?.search) {
+        query = query.or(`name.ilike.%${input.search}%,email.ilike.%${input.search}%`)
+      }
+      if (input?.role) {
+        query = query.eq('role', input.role)
+      }
+
+      const { data, error } = await query
+
+      if (error) throw new Error(error.message)
+
+      // Get total count
+      let countQuery = supabaseAdmin
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+
+      if (input?.search) {
+        countQuery = countQuery.or(`name.ilike.%${input.search}%,email.ilike.%${input.search}%`)
+      }
+      if (input?.role) {
+        countQuery = countQuery.eq('role', input.role)
+      }
+
+      const { count } = await countQuery
+
+      return {
+        users: data || [],
+        total: count || 0,
+      }
+    }),
+
+  /**
+   * Update any user's role (superadmin only)
+   */
+  updateUserRole: superAdminProcedure
+    .input(z.object({
+      userId: z.string().uuid(),
+      role: z.string(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { supabaseAdmin } = await import('@/infra/supabase/server')
+
+      // Get current user data
+      const { data: currentUser, error: fetchError } = await supabaseAdmin
+        .from('users')
+        .select('id, name, email, role')
+        .eq('id', input.userId)
+        .single()
+
+      if (fetchError || !currentUser) {
+        throw new Error('User not found')
+      }
+
+      // Prevent self-demotion
+      if (input.userId === ctx.userId && input.role !== 'super_admin') {
+        throw new Error('Cannot change your own superadmin role')
+      }
+
+      // Update role
+      const { error: updateError } = await supabaseAdmin
+        .from('users')
+        .update({ role: input.role })
+        .eq('id', input.userId)
+
+      if (updateError) throw new Error(updateError.message)
+
+      // Audit log
+      await createAuditLog({
+        userId: ctx.userId,
+        userEmail: ctx.session?.email || 'unknown',
+        action: 'UPDATE',
+        entityType: 'user',
+        entityId: input.userId,
+        changes: {
+          before: { role: currentUser.role },
+          after: { role: input.role },
+        },
+        metadata: { targetUser: currentUser.email },
+      })
+
+      return {
+        success: true,
+        message: `Role ${currentUser.name} diubah ke ${input.role}`,
+      }
+    }),
 })
