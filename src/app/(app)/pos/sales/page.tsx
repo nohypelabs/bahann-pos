@@ -112,10 +112,85 @@ export default function SalesTransactionPage() {
 
   const { data: productsResponse, isLoading: productsLoading } = trpc.products.getAll.useQuery()
   const { data: outletsResponse, isLoading: outletsLoading } = trpc.outlets.getAll.useQuery()
+
+  // Cache products and outlets to localStorage for offline use
+  useEffect(() => {
+    if (productsResponse?.products) {
+      try { localStorage.setItem('lakupos-products-cache', JSON.stringify(productsResponse.products)) } catch {}
+    }
+  }, [productsResponse])
+  useEffect(() => {
+    if (outletsResponse?.outlets) {
+      try { localStorage.setItem('lakupos-outlets-cache', JSON.stringify(outletsResponse.outlets)) } catch {}
+    }
+  }, [outletsResponse])
   const { data: userProfile } = trpc.auth.getProfile.useQuery()
 
-  const products = productsResponse?.products || []
-  const outlets = outletsResponse?.outlets || []
+  // Offline detection
+  const [isOffline, setIsOffline] = useState(typeof window !== 'undefined' ? !navigator.onLine : false)
+  const [syncingCount, setSyncingCount] = useState(0)
+  useEffect(() => {
+    const goOffline = () => setIsOffline(true)
+    const goOnline = () => {
+      setIsOffline(false)
+      // Sync offline transaction queue when back online
+      syncOfflineQueue()
+    }
+    window.addEventListener('offline', goOffline)
+    window.addEventListener('online', goOnline)
+    // Also try syncing on mount (in case there are queued items from previous session)
+    syncOfflineQueue()
+    return () => { window.removeEventListener('offline', goOffline); window.removeEventListener('online', goOnline) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const syncOfflineQueue = async () => {
+    try {
+      const queue = JSON.parse(localStorage.getItem('lakupos-offline-tx-queue') || '[]')
+      const unsynced = queue.filter((tx: any) => !tx.synced)
+      if (unsynced.length === 0) return
+
+      setSyncingCount(unsynced.length)
+      let syncedCount = 0
+
+      for (const tx of unsynced) {
+        try {
+          await createTransactionMutation.mutateAsync(tx.payload)
+          tx.synced = true
+          syncedCount++
+        } catch {
+          // Keep in queue for next sync attempt
+        }
+      }
+
+      // Update queue — remove synced items
+      const remaining = queue.filter((tx: any) => !tx.synced)
+      localStorage.setItem('lakupos-offline-tx-queue', JSON.stringify(remaining))
+      setSyncingCount(0)
+
+      if (syncedCount > 0) {
+        refetchTransactions()
+      }
+    } catch {
+      setSyncingCount(0)
+    }
+  }
+
+  // Products: use API data if available, otherwise fallback to cached data
+  const products = productsResponse?.products || (() => {
+    if (isOffline || !productsResponse) {
+      try { return JSON.parse(localStorage.getItem('lakupos-products-cache') || '[]') } catch { return [] }
+    }
+    return []
+  })()
+
+  // Outlets: use API data if available, otherwise fallback to cached data
+  const outlets = outletsResponse?.outlets || (() => {
+    if (isOffline || !outletsResponse) {
+      try { return JSON.parse(localStorage.getItem('lakupos-outlets-cache') || '[]') } catch { return [] }
+    }
+    return []
+  })()
   // Auto-select outlet if user has only one
   useEffect(() => {
     if (outlets.length === 1 && !selectedOutletId) {
@@ -312,7 +387,8 @@ export default function SalesTransactionPage() {
         }
         return mapping[method] || 'cash'
       }
-      const result = await createTransactionMutation.mutateAsync({
+
+      const transactionPayload = {
         outletId: selectedOutletId,
         items: cart.map(item => ({
           productId: item.productId, productName: item.productName, productSku: item.productSku,
@@ -322,11 +398,34 @@ export default function SalesTransactionPage() {
         amountPaid: cartTotal,
         discountAmount,
         notes: appliedPromo ? `Promo applied: ${appliedPromo.promoName} | Payment ID: ${paymentId}` : `Payment ID: ${paymentId}`,
-      })
-      if (appliedPromo && result.transaction) {
-        await recordPromoUsageMutation.mutateAsync({
-          promotionId: appliedPromo.promoId, transactionId: result.transaction.id, discountApplied: discountAmount,
-        })
+      }
+
+      let result: any
+
+      if (isOffline) {
+        // OFFLINE: Save transaction to queue for later sync
+        const offlineTx = {
+          id: generateTransactionId(),
+          payload: transactionPayload,
+          paymentId,
+          paymentMethod,
+          createdAt: new Date().toISOString(),
+          synced: false,
+        }
+        try {
+          const queue = JSON.parse(localStorage.getItem('lakupos-offline-tx-queue') || '[]')
+          queue.push(offlineTx)
+          localStorage.setItem('lakupos-offline-tx-queue', JSON.stringify(queue))
+        } catch {}
+        result = { transactionId: offlineTx.id, transaction: { id: offlineTx.id } }
+      } else {
+        // ONLINE: Submit to server
+        result = await createTransactionMutation.mutateAsync(transactionPayload)
+        if (appliedPromo && result.transaction) {
+          await recordPromoUsageMutation.mutateAsync({
+            promotionId: appliedPromo.promoId, transactionId: result.transaction.id, discountApplied: discountAmount,
+          })
+        }
       }
       const now = new Date()
       const receipt: ReceiptData = {
@@ -399,6 +498,16 @@ export default function SalesTransactionPage() {
       </div>
 
       {/* ── Mobile error/success banner ── */}
+      {isOffline && (
+        <div className="px-3 py-2 text-xs font-semibold shrink-0 bg-orange-50 dark:bg-orange-900/30 text-orange-700 border-b border-orange-200 flex items-center gap-2">
+          ⚡ Mode Offline — Transaksi akan disinkronkan saat online
+        </div>
+      )}
+      {!isOffline && syncingCount > 0 && (
+        <div className="px-3 py-2 text-xs font-semibold shrink-0 bg-blue-50 dark:bg-blue-900/30 text-blue-700 border-b border-blue-200 flex items-center gap-2">
+          🔄 Menyinkronkan {syncingCount} transaksi offline...
+        </div>
+      )}
       {(error || showSuccess) && (
         <div className={`px-3 py-2 text-xs font-semibold shrink-0 ${error ? 'bg-red-50 dark:bg-red-900/30 text-red-700 border-b border-red-200' : 'bg-green-50 dark:bg-green-900/30 text-green-700 border-b border-green-200'}`}>
           {error ? `❌ ${error}` : '✅ Transaksi berhasil!'}
