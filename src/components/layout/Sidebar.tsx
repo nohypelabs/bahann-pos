@@ -15,7 +15,7 @@ import {
   User, HelpCircle, Info,
   LogOut, Download, X,
   Settings, ChevronDown, Crown,
-  Receipt,
+  Receipt, ArrowDownUp,
 } from 'lucide-react'
 
 function SidebarItem({ href, icon, label, badge, isCollapsed }: {
@@ -138,7 +138,6 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
   const isCollapsed = !desktopOpen
   const [showLogoutModal, setShowLogoutModal] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [subMasterData, setSubMasterData] = useState(false)
   const [subPengaturan, setSubPengaturan] = useState(false)
   const [subBantuan, setSubBantuan] = useState(false)
   const cancelRef = useRef<HTMLButtonElement>(null)
@@ -274,10 +273,10 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
 
           {isSuperAdmin && (
             <SidebarSection sectionKey="superadmin" title="Super Admin" isCollapsed={showCollapsed} activePaths={['/admin']}>
-              <SidebarItem href="/admin" icon={<Crown />} label="Admin Panel" isCollapsed={showCollapsed} />
-              <SidebarItem href="/admin/tenants" icon={<Users />} label="Tenant" isCollapsed={showCollapsed} />
-              <SidebarItem href="/admin/payments" icon={<CreditCard />} label="Pembayaran" isCollapsed={showCollapsed} />
-              <SidebarItem href="/admin/settings" icon={<Settings />} label="Pengaturan" isCollapsed={showCollapsed} />
+              <SidebarItem href="/admin" icon={<Crown />} label={t('sidebar.adminPanel')} isCollapsed={showCollapsed} />
+              <SidebarItem href="/admin/tenants" icon={<Users />} label={t('sidebar.adminTenants')} isCollapsed={showCollapsed} />
+              <SidebarItem href="/admin/payments" icon={<CreditCard />} label={t('sidebar.adminPayments')} isCollapsed={showCollapsed} />
+              <SidebarItem href="/admin/settings" icon={<Settings />} label={t('sidebar.adminSettings')} isCollapsed={showCollapsed} />
             </SidebarSection>
           )}
 
@@ -287,6 +286,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
 
           <SidebarSection sectionKey="warehouse" title={t('sidebar.warehouse')} isCollapsed={showCollapsed} activePaths={['/warehouse']}>
             <SidebarItem href="/warehouse/stock"     icon={<Package />}       label={t('sidebar.warehouse.stock')}     isCollapsed={showCollapsed} />
+            <SidebarItem href="/warehouse/movements" icon={<ArrowDownUp />}   label={t('sidebar.warehouse.movements')} isCollapsed={showCollapsed} />
             <SidebarItem href="/warehouse/inventory" icon={<ClipboardList />} label={t('sidebar.warehouse.inventory')} isCollapsed={showCollapsed} />
             <SidebarItem href="/warehouse/reports"   icon={<BarChart3 />}     label={t('sidebar.warehouse.reports')}   isCollapsed={showCollapsed} />
           </SidebarSection>
@@ -297,13 +297,18 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             <SidebarItem href="/pos/revenue" icon={<DollarSign />}   label={t('sidebar.pos.revenue')} isCollapsed={showCollapsed} />
           </SidebarSection>
 
-          <SidebarSection sectionKey="management" title="Manajemen" isCollapsed={showCollapsed} activePaths={['/transactions', '/payments', '/promotions', '/eod', '/alerts', '/expenses']}>
-            <SidebarItem href="/transactions" icon={<ArrowLeftRight />} label="Transaksi"    isCollapsed={showCollapsed} />
-            <SidebarItem href="/payments"     icon={<CreditCard />}     label="Pembayaran"   isCollapsed={showCollapsed} />
-            <SidebarItem href="/expenses"     icon={<Receipt />}        label="Pengeluaran"  isCollapsed={showCollapsed} />
-            <SidebarItem href="/promotions"   icon={<Ticket />}         label="Promosi"      isCollapsed={showCollapsed} />
-            <SidebarItem href="/eod"          icon={<Briefcase />}      label="Tutup Hari"   isCollapsed={showCollapsed} />
-            <SidebarItem href="/alerts"       icon={<Bell />}           label="Alert Stok"   isCollapsed={showCollapsed} />
+          <SidebarSection sectionKey="masterdata" title={t('sidebar.masterData')} isCollapsed={showCollapsed} activePaths={['/products', '/outlets']}>
+            <SidebarItem href="/products" icon={<Tag />}   label={t('sidebar.masterData.products')} isCollapsed={showCollapsed} />
+            <SidebarItem href="/outlets"  icon={<Store />} label={t('sidebar.masterData.outlets')}  isCollapsed={showCollapsed} />
+          </SidebarSection>
+
+          <SidebarSection sectionKey="operations" title={t('sidebar.operations')} isCollapsed={showCollapsed} activePaths={['/transactions', '/payments', '/expenses', '/promotions', '/eod', '/alerts']}>
+            <SidebarItem href="/transactions" icon={<ArrowLeftRight />} label={t('sidebar.operations.transactions')} isCollapsed={showCollapsed} />
+            <SidebarItem href="/payments"     icon={<CreditCard />}     label={t('sidebar.operations.payments')}     isCollapsed={showCollapsed} />
+            <SidebarItem href="/expenses"     icon={<Receipt />}        label={t('sidebar.operations.expenses')}     isCollapsed={showCollapsed} />
+            <SidebarItem href="/promotions"   icon={<Ticket />}         label={t('sidebar.operations.promotions')}   isCollapsed={showCollapsed} />
+            <SidebarItem href="/eod"          icon={<Briefcase />}      label={t('sidebar.operations.eod')}          isCollapsed={showCollapsed} />
+            <SidebarItem href="/alerts"       icon={<Bell />}           label={t('sidebar.operations.alerts')}       isCollapsed={showCollapsed} />
           </SidebarSection>
 
         </nav>
@@ -313,39 +318,26 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
           <div className="border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
             <button onClick={() => setSettingsOpen(!settingsOpen)}
               className="w-full flex items-center justify-between px-4 py-3.5 text-[15px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-              <span>Pengaturan & Bantuan</span>
+              <span>{t('sidebar.settingsHelp')}</span>
               <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />
             </button>
             <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
               <div className="px-2 pb-2">
-                {/* Master Data sub-group */}
-                <button onClick={() => setSubMasterData(!subMasterData)}
-                  className="w-full flex items-center justify-between px-3 py-2 group">
-                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors">Master Data</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-gray-300 dark:text-gray-600 transition-transform duration-200 ${subMasterData ? 'rotate-180' : ''}`} />
-                </button>
-                <div className={`overflow-hidden transition-all duration-200 ${subMasterData ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
-                  <div className="space-y-0.5 pb-1">
-                    <SidebarItem href="/products" icon={<Tag />}   label="Produk"  isCollapsed={false} />
-                    <SidebarItem href="/outlets"  icon={<Store />} label="Outlet"  isCollapsed={false} />
-                  </div>
-                </div>
-
                 {isAdmin && (
                   <>
                     {/* Pengaturan sub-group */}
                     <button onClick={() => setSubPengaturan(!subPengaturan)}
                       className="w-full flex items-center justify-between px-3 py-2 group">
-                      <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors">Pengaturan</span>
+                      <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors">{t('sidebar.settings')}</span>
                       <ChevronDown className={`w-3.5 h-3.5 text-gray-300 dark:text-gray-600 transition-transform duration-200 ${subPengaturan ? 'rotate-180' : ''}`} />
                     </button>
                     <div className={`overflow-hidden transition-all duration-200 ${subPengaturan ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
                       <div className="space-y-0.5 pb-1">
-                        <SidebarItem href="/settings/payments"      icon={<DollarSign />} label="Pembayaran"  isCollapsed={false} />
-                        <SidebarItem href="/settings/users"         icon={<Users />}      label="Pengguna"    isCollapsed={false} />
-                        <SidebarItem href="/settings/audit-logs"    icon={<Shield />}     label="Audit Log"   isCollapsed={false} />
-                        <SidebarItem href="/settings/reset"         icon={<Trash2 />}     label="Reset Data"  isCollapsed={false} />
-                        <SidebarItem href="/settings/subscriptions" icon={<Star />}       label="Langganan"   isCollapsed={false} />
+                        <SidebarItem href="/settings/payments"      icon={<DollarSign />} label={t('sidebar.settings.payment')}      isCollapsed={false} />
+                        <SidebarItem href="/settings/users"         icon={<Users />}      label={t('sidebar.settings.users')}         isCollapsed={false} />
+                        <SidebarItem href="/settings/audit-logs"    icon={<Shield />}     label={t('sidebar.settings.auditLogs')}    isCollapsed={false} />
+                        <SidebarItem href="/settings/reset"         icon={<Trash2 />}     label={t('sidebar.settings.reset')}         isCollapsed={false} />
+                        <SidebarItem href="/settings/subscriptions" icon={<Star />}       label={t('sidebar.settings.subscriptions')} isCollapsed={false} />
                       </div>
                     </div>
                   </>
@@ -354,19 +346,19 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
                 {/* Bantuan sub-group */}
                 <button onClick={() => setSubBantuan(!subBantuan)}
                   className="w-full flex items-center justify-between px-3 py-2 group">
-                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors">Bantuan</span>
+                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors">{t('sidebar.helpSection')}</span>
                   <ChevronDown className={`w-3.5 h-3.5 text-gray-300 dark:text-gray-600 transition-transform duration-200 ${subBantuan ? 'rotate-180' : ''}`} />
                 </button>
                 <div className={`overflow-hidden transition-all duration-200 ${subBantuan ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'}`}>
                   <div className="space-y-0.5 pb-1">
                     <SidebarItem href="/profile" icon={<User />}       label={t('sidebar.profile')} isCollapsed={false} />
-                    <SidebarItem href="/help"    icon={<HelpCircle />} label="Bantuan"               isCollapsed={false} />
+                    <SidebarItem href="/help"    icon={<HelpCircle />} label={t('sidebar.help')}    isCollapsed={false} />
                     <SidebarItem href="/about"   icon={<Info />}       label={t('sidebar.about')}   isCollapsed={false} />
                     {canInstall && !isInstalled && (
                       <button onClick={install}
                         className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors">
                         <Download className="w-5 h-5 opacity-80" />
-                        <span>Install Aplikasi</span>
+                        <span>{t('sidebar.installApp')}</span>
                       </button>
                     )}
                   </div>
@@ -379,14 +371,15 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         {/* Collapsed: settings + support icons */}
         {showCollapsed && (
           <div className="border-t border-gray-200 dark:border-gray-800 p-2 flex-shrink-0 space-y-1">
-            <SidebarItem href="/products"          icon={<Tag />}        label="Produk"                isCollapsed={true} />
-            <SidebarItem href="/outlets"           icon={<Store />}      label="Outlet"                isCollapsed={true} />
-            <SidebarItem href="/expenses"          icon={<Receipt />}     label="Pengeluaran"           isCollapsed={true} />
-            <SidebarItem href="/profile"           icon={<User />}       label={t('sidebar.profile')} isCollapsed={true} />
-            <SidebarItem href="/help"              icon={<HelpCircle />} label="Bantuan"               isCollapsed={true} />
-            <SidebarItem href="/settings/payments" icon={<Settings />}   label="Pengaturan"            isCollapsed={true} />
+            <SidebarItem href="/products"          icon={<Tag />}        label={t('sidebar.masterData.products')} isCollapsed={true} />
+            <SidebarItem href="/outlets"           icon={<Store />}      label={t('sidebar.masterData.outlets')}  isCollapsed={true} />
+            <SidebarItem href="/profile"           icon={<User />}       label={t('sidebar.profile')}             isCollapsed={true} />
+            <SidebarItem href="/help"              icon={<HelpCircle />} label={t('sidebar.help')}                isCollapsed={true} />
+            {isAdmin && (
+              <SidebarItem href="/settings/payments" icon={<Settings />}   label={t('sidebar.settings.payment')}  isCollapsed={true} />
+            )}
             {canInstall && !isInstalled && (
-              <button onClick={install} title="Install Aplikasi"
+              <button onClick={install} title={t('sidebar.installApp')}
                 className="w-full flex justify-center p-3 rounded-xl text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors">
                 <Download className="w-[18px] h-[18px]" />
               </button>
@@ -420,17 +413,17 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
               <LogOut className="w-7 h-7" />
             </div>
             <div className="text-center space-y-1">
-              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">Keluar dari akun?</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Sesi kamu akan diakhiri. Pastikan semua transaksi sudah tersimpan.</p>
+              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">{t('sidebar.logoutModal.title')}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('sidebar.logoutModal.description')}</p>
             </div>
             <div className="flex gap-3 w-full">
               <button ref={cancelRef} onClick={() => setShowLogoutModal(false)}
                 className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                Batal
+                {t('sidebar.logoutModal.cancel')}
               </button>
               <button onClick={confirmLogout}
                 className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-sm font-semibold text-white transition-colors shadow-sm">
-                Ya, Keluar
+                {t('sidebar.logoutModal.confirm')}
               </button>
             </div>
           </div>
