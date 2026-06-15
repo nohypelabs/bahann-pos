@@ -177,7 +177,7 @@ export default function SalesTransactionPage() {
   }
 
   // Products: use API data if available, otherwise fallback to cached data
-  const products = productsResponse?.products || (() => {
+  const products: NonNullable<typeof productsResponse>['products'] = productsResponse?.products || (() => {
     if (isOffline || !productsResponse) {
       try { return JSON.parse(localStorage.getItem('lakupos-products-cache') || '[]') } catch { return [] }
     }
@@ -185,7 +185,7 @@ export default function SalesTransactionPage() {
   })()
 
   // Outlets: use API data if available, otherwise fallback to cached data
-  const outlets = outletsResponse?.outlets || (() => {
+  const outlets: NonNullable<typeof outletsResponse>['outlets'] = outletsResponse?.outlets || (() => {
     if (isOffline || !outletsResponse) {
       try { return JSON.parse(localStorage.getItem('lakupos-outlets-cache') || '[]') } catch { return [] }
     }

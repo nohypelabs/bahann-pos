@@ -272,19 +272,50 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         {/* ── Nav ── */}
         <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5" role="navigation" aria-label="Menu navigasi">
 
+          {/* ═══ SUPERADMIN PANEL — distinct section at top ═══ */}
           {isSuperAdmin && (
-            <SidebarSection sectionKey="superadmin" title="Super Admin" isCollapsed={showCollapsed} activePaths={['/admin']}>
-              <SidebarItem href="/admin" icon={<Crown />} label={t('sidebar.adminPanel')} isCollapsed={showCollapsed} />
-              <SidebarItem href="/admin/tenants" icon={<Users />} label={t('sidebar.adminTenants')} isCollapsed={showCollapsed} />
-              <SidebarItem href="/admin/payments" icon={<CreditCard />} label={t('sidebar.adminPayments')} isCollapsed={showCollapsed} />
-              <SidebarItem href="/admin/settings" icon={<Settings />} label={t('sidebar.adminSettings')} isCollapsed={showCollapsed} />
-            </SidebarSection>
+            <>
+              {!showCollapsed ? (
+                <div className="mb-2 mx-1 p-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Crown className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest">Platform</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <SidebarItem href="/admin" icon={<Crown />} label={t('sidebar.adminPanel')} isCollapsed={false} />
+                    <SidebarItem href="/admin/tenants" icon={<Users />} label={t('sidebar.adminTenants')} isCollapsed={false} />
+                    <SidebarItem href="/admin/payments" icon={<CreditCard />} label={t('sidebar.adminPayments')} isCollapsed={false} />
+                    <SidebarItem href="/admin/settings" icon={<Settings />} label={t('sidebar.adminSettings')} isCollapsed={false} />
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-1">
+                  <div className="h-px bg-purple-300 dark:bg-purple-700 mx-3 mb-1" />
+                  <SidebarItem href="/admin" icon={<Crown />} label={t('sidebar.adminPanel')} isCollapsed={true} />
+                  <SidebarItem href="/admin/tenants" icon={<Users />} label={t('sidebar.adminTenants')} isCollapsed={true} />
+                  <SidebarItem href="/admin/payments" icon={<CreditCard />} label={t('sidebar.adminPayments')} isCollapsed={true} />
+                  <SidebarItem href="/admin/settings" icon={<Settings />} label={t('sidebar.adminSettings')} isCollapsed={true} />
+                  <div className="h-px bg-purple-300 dark:bg-purple-700 mx-3 mt-1" />
+                </div>
+              )}
+            </>
           )}
 
+          {/* ═══ SHARED: Dashboard ═══ */}
           <div className={`${showCollapsed ? 'mb-1' : 'mb-2'}`}>
             <SidebarItem href="/dashboard" icon={<LayoutDashboard />} label={t('sidebar.dashboard')} isCollapsed={showCollapsed} />
           </div>
 
+          {/* ═══ POS ═══ */}
+          <SidebarSection sectionKey="pos" title={t('sidebar.pos')} isCollapsed={showCollapsed} activePaths={['/pos']}>
+            <SidebarItem href="/pos/sales"   icon={<ShoppingCart />} label={t('sidebar.pos.sales')}   isCollapsed={showCollapsed} />
+            <SidebarItem href="/pos/history" icon={<History />}      label={t('sidebar.pos.history')} isCollapsed={showCollapsed} />
+            {isAdmin && (
+              <SidebarItem href="/pos/revenue" icon={<DollarSign />} label={t('sidebar.pos.revenue')} isCollapsed={showCollapsed} />
+            )}
+          </SidebarSection>
+
+          {/* ═══ WAREHOUSE — all roles ═══ */}
           <SidebarSection sectionKey="warehouse" title={t('sidebar.warehouse')} isCollapsed={showCollapsed} activePaths={['/warehouse']}>
             <SidebarItem href="/warehouse/stock"     icon={<Package />}       label={t('sidebar.warehouse.stock')}     isCollapsed={showCollapsed} />
             <SidebarItem href="/warehouse/movements" icon={<ArrowDownUp />}   label={t('sidebar.warehouse.movements')} isCollapsed={showCollapsed} />
@@ -292,17 +323,15 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             <SidebarItem href="/warehouse/reports"   icon={<BarChart3 />}     label={t('sidebar.warehouse.reports')}   isCollapsed={showCollapsed} />
           </SidebarSection>
 
-          <SidebarSection sectionKey="pos" title={t('sidebar.pos')} isCollapsed={showCollapsed} activePaths={['/pos']}>
-            <SidebarItem href="/pos/sales"   icon={<ShoppingCart />} label={t('sidebar.pos.sales')}   isCollapsed={showCollapsed} />
-            <SidebarItem href="/pos/history" icon={<History />}      label={t('sidebar.pos.history')} isCollapsed={showCollapsed} />
-            <SidebarItem href="/pos/revenue" icon={<DollarSign />}   label={t('sidebar.pos.revenue')} isCollapsed={showCollapsed} />
-          </SidebarSection>
+          {/* ═══ MASTER DATA — admin only ═══ */}
+          {isAdmin && (
+            <SidebarSection sectionKey="masterdata" title={t('sidebar.masterData')} isCollapsed={showCollapsed} activePaths={['/products', '/outlets']}>
+              <SidebarItem href="/products" icon={<Tag />}   label={t('sidebar.masterData.products')} isCollapsed={showCollapsed} />
+              <SidebarItem href="/outlets"  icon={<Store />} label={t('sidebar.masterData.outlets')}  isCollapsed={showCollapsed} />
+            </SidebarSection>
+          )}
 
-          <SidebarSection sectionKey="masterdata" title={t('sidebar.masterData')} isCollapsed={showCollapsed} activePaths={['/products', '/outlets']}>
-            <SidebarItem href="/products" icon={<Tag />}   label={t('sidebar.masterData.products')} isCollapsed={showCollapsed} />
-            <SidebarItem href="/outlets"  icon={<Store />} label={t('sidebar.masterData.outlets')}  isCollapsed={showCollapsed} />
-          </SidebarSection>
-
+          {/* ═══ OPERATIONS — all roles ═══ */}
           <SidebarSection sectionKey="operations" title={t('sidebar.operations')} isCollapsed={showCollapsed} activePaths={['/transactions', '/payments', '/expenses', '/promotions', '/eod', '/alerts']}>
             <SidebarItem href="/transactions" icon={<ArrowLeftRight />} label={t('sidebar.operations.transactions')} isCollapsed={showCollapsed} />
             <SidebarItem href="/payments"     icon={<CreditCard />}     label={t('sidebar.operations.payments')}     isCollapsed={showCollapsed} />
@@ -372,8 +401,12 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         {/* Collapsed: settings + support icons */}
         {showCollapsed && (
           <div className="border-t border-gray-200 dark:border-gray-800 p-2 flex-shrink-0 space-y-1">
-            <SidebarItem href="/products"          icon={<Tag />}          label={t('sidebar.masterData.products')} isCollapsed={true} />
-            <SidebarItem href="/outlets"           icon={<Store />}        label={t('sidebar.masterData.outlets')}  isCollapsed={true} />
+            {isAdmin && (
+              <>
+                <SidebarItem href="/products"          icon={<Tag />}          label={t('sidebar.masterData.products')} isCollapsed={true} />
+                <SidebarItem href="/outlets"           icon={<Store />}        label={t('sidebar.masterData.outlets')}  isCollapsed={true} />
+              </>
+            )}
             <SidebarItem href="/transactions"      icon={<ArrowLeftRight />} label={t('sidebar.operations.transactions')} isCollapsed={true} />
             <SidebarItem href="/expenses"          icon={<Receipt />}       label={t('sidebar.operations.expenses')} isCollapsed={true} />
             <SidebarItem href="/alerts"            icon={<Bell />}          label={t('sidebar.operations.alerts')} isCollapsed={true} badge={alertCount > 0 ? String(alertCount) : undefined} />
