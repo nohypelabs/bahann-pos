@@ -15,6 +15,7 @@ import {
   User, HelpCircle, Info,
   LogOut, Download, X,
   Settings, ChevronDown, Crown,
+  Receipt,
 } from 'lucide-react'
 
 function SidebarItem({ href, icon, label, badge, isCollapsed }: {
@@ -296,9 +297,10 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             <SidebarItem href="/pos/revenue" icon={<DollarSign />}   label={t('sidebar.pos.revenue')} isCollapsed={showCollapsed} />
           </SidebarSection>
 
-          <SidebarSection sectionKey="management" title="Manajemen" isCollapsed={showCollapsed} activePaths={['/transactions', '/payments', '/promotions', '/eod', '/alerts']}>
+          <SidebarSection sectionKey="management" title="Manajemen" isCollapsed={showCollapsed} activePaths={['/transactions', '/payments', '/promotions', '/eod', '/alerts', '/expenses']}>
             <SidebarItem href="/transactions" icon={<ArrowLeftRight />} label="Transaksi"    isCollapsed={showCollapsed} />
             <SidebarItem href="/payments"     icon={<CreditCard />}     label="Pembayaran"   isCollapsed={showCollapsed} />
+            <SidebarItem href="/expenses"     icon={<Receipt />}        label="Pengeluaran"  isCollapsed={showCollapsed} />
             <SidebarItem href="/promotions"   icon={<Ticket />}         label="Promosi"      isCollapsed={showCollapsed} />
             <SidebarItem href="/eod"          icon={<Briefcase />}      label="Tutup Hari"   isCollapsed={showCollapsed} />
             <SidebarItem href="/alerts"       icon={<Bell />}           label="Alert Stok"   isCollapsed={showCollapsed} />
@@ -379,6 +381,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
           <div className="border-t border-gray-200 dark:border-gray-800 p-2 flex-shrink-0 space-y-1">
             <SidebarItem href="/products"          icon={<Tag />}        label="Produk"                isCollapsed={true} />
             <SidebarItem href="/outlets"           icon={<Store />}      label="Outlet"                isCollapsed={true} />
+            <SidebarItem href="/expenses"          icon={<Receipt />}     label="Pengeluaran"           isCollapsed={true} />
             <SidebarItem href="/profile"           icon={<User />}       label={t('sidebar.profile')} isCollapsed={true} />
             <SidebarItem href="/help"              icon={<HelpCircle />} label="Bantuan"               isCollapsed={true} />
             <SidebarItem href="/settings/payments" icon={<Settings />}   label="Pengaturan"            isCollapsed={true} />
