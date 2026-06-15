@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ReactNode, useEffect, useState, useRef } from 'react'
+import { ReactNode, useEffect, useState } from 'react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { logger } from '@/lib/logger'
 import { usePWA } from '@/lib/pwa/PWAContext'
@@ -140,9 +140,10 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [subPengaturan, setSubPengaturan] = useState(false)
   const [subBantuan, setSubBantuan] = useState(false)
-  const cancelRef = useRef<HTMLButtonElement>(null)
 
   const { data: planData } = trpc.auth.getPlan.useQuery(undefined, { retry: false, staleTime: 5 * 60 * 1000 })
+  const { data: activeAlerts } = trpc.stockAlerts.getActive.useQuery({}, { retry: false, staleTime: 60 * 1000 })
+  const alertCount = activeAlerts?.length || 0
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -308,7 +309,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             <SidebarItem href="/expenses"     icon={<Receipt />}        label={t('sidebar.operations.expenses')}     isCollapsed={showCollapsed} />
             <SidebarItem href="/promotions"   icon={<Ticket />}         label={t('sidebar.operations.promotions')}   isCollapsed={showCollapsed} />
             <SidebarItem href="/eod"          icon={<Briefcase />}      label={t('sidebar.operations.eod')}          isCollapsed={showCollapsed} />
-            <SidebarItem href="/alerts"       icon={<Bell />}           label={t('sidebar.operations.alerts')}       isCollapsed={showCollapsed} />
+            <SidebarItem href="/alerts"       icon={<Bell />}           label={t('sidebar.operations.alerts')}       isCollapsed={showCollapsed} badge={alertCount > 0 ? String(alertCount) : undefined} />
           </SidebarSection>
 
         </nav>
@@ -371,10 +372,13 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         {/* Collapsed: settings + support icons */}
         {showCollapsed && (
           <div className="border-t border-gray-200 dark:border-gray-800 p-2 flex-shrink-0 space-y-1">
-            <SidebarItem href="/products"          icon={<Tag />}        label={t('sidebar.masterData.products')} isCollapsed={true} />
-            <SidebarItem href="/outlets"           icon={<Store />}      label={t('sidebar.masterData.outlets')}  isCollapsed={true} />
-            <SidebarItem href="/profile"           icon={<User />}       label={t('sidebar.profile')}             isCollapsed={true} />
-            <SidebarItem href="/help"              icon={<HelpCircle />} label={t('sidebar.help')}                isCollapsed={true} />
+            <SidebarItem href="/products"          icon={<Tag />}          label={t('sidebar.masterData.products')} isCollapsed={true} />
+            <SidebarItem href="/outlets"           icon={<Store />}        label={t('sidebar.masterData.outlets')}  isCollapsed={true} />
+            <SidebarItem href="/transactions"      icon={<ArrowLeftRight />} label={t('sidebar.operations.transactions')} isCollapsed={true} />
+            <SidebarItem href="/expenses"          icon={<Receipt />}       label={t('sidebar.operations.expenses')} isCollapsed={true} />
+            <SidebarItem href="/alerts"            icon={<Bell />}          label={t('sidebar.operations.alerts')} isCollapsed={true} badge={alertCount > 0 ? String(alertCount) : undefined} />
+            <SidebarItem href="/profile"           icon={<User />}         label={t('sidebar.profile')}             isCollapsed={true} />
+            <SidebarItem href="/help"              icon={<HelpCircle />}   label={t('sidebar.help')}                isCollapsed={true} />
             {isAdmin && (
               <SidebarItem href="/settings/payments" icon={<Settings />}   label={t('sidebar.settings.payment')}  isCollapsed={true} />
             )}
@@ -417,7 +421,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
               <p className="text-sm text-gray-500 dark:text-gray-400">{t('sidebar.logoutModal.description')}</p>
             </div>
             <div className="flex gap-3 w-full">
-              <button ref={cancelRef} onClick={() => setShowLogoutModal(false)}
+              <button onClick={() => setShowLogoutModal(false)}
                 className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                 {t('sidebar.logoutModal.cancel')}
               </button>

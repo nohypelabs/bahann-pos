@@ -294,7 +294,7 @@ export default function ExpensesPage() {
             icon={<Tag />}
             label="Kategori Terbesar"
             value={dailySummary?.byCategory?.[0]?.category?.replace('_', ' ') || '-'}
-            color="orange"
+            color="yellow"
           />
         </div>
       )}
