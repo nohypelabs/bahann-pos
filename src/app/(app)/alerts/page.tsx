@@ -67,7 +67,10 @@ export default function AlertsPage() {
 
       <SectionCard title="Alert Aktif">
         {!alerts || alerts.length === 0 ? (
-          <EmptyState icon={<CheckCircle />} title="Tidak ada alert aktif" description="Semua stok dalam kondisi aman." />
+          <EmptyState icon={<CheckCircle />} title="Tidak ada alert aktif" description="Semua stok dalam kondisi aman."
+            action={<Button variant="secondary" size="sm" onClick={handleGenerate} disabled={generateMutation.isPending}>
+              {generateMutation.isPending ? 'Generating…' : <><RefreshCw className="w-4 h-4 mr-1 inline" /> Periksa Stok</>}
+            </Button>} />
         ) : (
           <div className="space-y-2 md:space-y-3">
             {alerts.map(alert => {

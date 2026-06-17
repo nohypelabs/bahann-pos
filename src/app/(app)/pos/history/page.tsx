@@ -247,7 +247,12 @@ export default function SalesHistoryPage() {
 
         {!filteredTransactions || filteredTransactions.length === 0 ? (
           <EmptyState icon={<History />} title="Tidak ada transaksi"
-            description={searchQuery ? 'Coba ubah kata kunci pencarian.' : 'Belum ada penjualan yang dicatat.'} />
+            description={searchQuery ? 'Coba ubah kata kunci pencarian.' : 'Belum ada penjualan yang dicatat.'}
+            action={
+              searchQuery
+                ? <Button variant="secondary" onClick={() => setSearchQuery('')}>Reset Pencarian</Button>
+                : <Button variant="primary" onClick={() => window.location.href = '/pos/sales'}>Buka POS</Button>
+            } />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">

@@ -149,7 +149,13 @@ export default function TransactionsPage() {
         {isLoading ? (
           <div className="py-12 text-center text-gray-400 dark:text-gray-500 text-sm">Memuat…</div>
         ) : !data?.transactions?.length ? (
-          <EmptyState icon={<Receipt />} title="Tidak ada transaksi" description="Coba ubah filter untuk melihat data lain." />
+          <EmptyState icon={<Receipt />} title="Tidak ada transaksi"
+            description={Object.values(filters).some(v => v) ? 'Tidak ada transaksi cocok dengan filter saat ini.' : 'Belum ada transaksi tercatat.'}
+            action={
+              Object.values(filters).some(v => v)
+                ? <Button variant="secondary" onClick={() => setFilters({})}>Reset Filter</Button>
+                : <Button variant="primary" onClick={() => window.location.href = '/pos/sales'}>Buka POS</Button>
+            } />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">

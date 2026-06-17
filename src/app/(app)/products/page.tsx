@@ -435,7 +435,11 @@ export default function ProductsPage() {
         ) : products.length === 0 ? (
           <EmptyState icon={<Package />} title="Tidak ada produk"
             description={searchTerm || categoryFilter ? 'Tidak ada produk yang cocok. Coba ubah filter.' : 'Mulai dengan menambahkan produk pertama kamu.'}
-            action={!searchTerm && !categoryFilter ? <Button variant="primary" onClick={handleAddNew}>Tambah Produk Pertama</Button> : undefined}
+            action={
+              !searchTerm && !categoryFilter
+                ? <Button variant="primary" onClick={handleAddNew}>Tambah Produk Pertama</Button>
+                : <Button variant="secondary" onClick={() => { setSearchTerm(''); setCategoryFilter('') }}>Reset Filter</Button>
+            }
           />
         ) : (
           <div className="overflow-x-auto">

@@ -2,6 +2,7 @@
 
 import { lazy, Suspense, useState, type ReactNode } from 'react'
 import { SectionCard } from '@/components/ui/SectionCard'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { FilterBar } from '@/components/ui/FilterBar'
 import { Button } from '@/components/ui/Button'
 import { trpc } from '@/lib/trpc/client'
@@ -192,7 +193,9 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (
-            <p className="py-8 text-center text-sm text-gray-400">Belum ada data penjualan</p>
+            <EmptyState icon={<Trophy />} title="Belum ada data penjualan"
+              description="Data penjualan akan muncul di sini setelah ada transaksi."
+              action={<Button variant="primary" size="sm" onClick={() => router.push('/pos/sales')}>Buka POS</Button>} />
           )}
         </SectionCard>
 
@@ -218,7 +221,9 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (
-            <p className="py-8 text-center text-sm text-gray-400">Belum ada transaksi</p>
+            <EmptyState icon={<Receipt />} title="Belum ada transaksi"
+              description="Transaksi terakhir akan muncul di sini setelah ada penjualan."
+              action={<Button variant="primary" size="sm" onClick={() => router.push('/pos/sales')}>Buka POS</Button>} />
           )}
         </SectionCard>
 

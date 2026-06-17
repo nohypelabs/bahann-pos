@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { StatCard } from '@/components/ui/StatCard'
 import { Button } from '@/components/ui/Button'
@@ -307,10 +308,9 @@ export default function ExpensesPage() {
               {[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />)}
             </div>
           ) : expenses.length === 0 ? (
-            <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">
-              <Receipt className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              Belum ada pengeluaran
-            </div>
+            <EmptyState icon={<Receipt />} title="Belum ada pengeluaran"
+              description="Catat pengeluaran pertama untuk hari ini."
+              action={<Button variant="primary" size="sm" onClick={() => setShowForm(true)}>Catat Pengeluaran</Button>} />
           ) : (
             <div className="space-y-2">
               {expenses.map((exp: any) => {

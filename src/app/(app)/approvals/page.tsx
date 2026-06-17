@@ -182,7 +182,7 @@ export default function ApprovalsPage() {
             <p className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
               Tidak ada yang perlu disetujui
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               Semua transaksi outlet aman.
             </p>
           </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
@@ -174,7 +175,8 @@ export default function InventoryMonitorPage() {
         {inventoryLoading ? (
           <div className="py-10 text-center text-gray-400 dark:text-gray-500 text-sm">Memuat inventori...</div>
         ) : !products || products.length === 0 ? (
-          <EmptyState icon={<Package />} title="Tidak ada produk" description="Tambahkan produk untuk mulai memantau inventori." />
+          <EmptyState icon={<Package />} title="Tidak ada produk" description="Tambahkan produk untuk mulai memantau inventori."
+            action={<Button variant="primary" onClick={() => window.location.href = '/products'}>Tambah Produk</Button>} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
