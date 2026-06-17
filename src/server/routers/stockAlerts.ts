@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { router, protectedProcedure, adminProcedure } from '../trpc'
 import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
-import { getTenantOwnerId, resolveTenantOutletIds } from '@/server/lib/tenant'
+import { getUserOutletIds } from '@/server/lib/tenant'
 import { TRPCError } from '@trpc/server'
 
 export const stockAlertsRouter = router({
@@ -21,7 +21,7 @@ export const stockAlertsRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantOutlets = await getUserOutletIds(ctx.userId, ctx.session.tenantId!)
       const uc = container.stockAlertUseCase()
       return uc.getActive(tenantOutlets, input.outletId)
     }),
@@ -30,7 +30,7 @@ export const stockAlertsRouter = router({
    * Generate alerts (run periodically or on-demand)
    */
   generate: adminProcedure.mutation(async ({ ctx }) => {
-    const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+    const tenantOutlets = await getUserOutletIds(ctx.userId, ctx.session.tenantId!)
     const uc = container.stockAlertUseCase()
 
     try {
@@ -56,7 +56,7 @@ export const stockAlertsRouter = router({
   acknowledge: protectedProcedure
     .input(z.object({ alertId: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
-      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantOutlets = await getUserOutletIds(ctx.userId, ctx.session.tenantId!)
       const uc = container.stockAlertUseCase()
 
       try {
@@ -88,7 +88,7 @@ export const stockAlertsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantOutlets = await getUserOutletIds(ctx.userId, ctx.session.tenantId!)
       const uc = container.stockAlertUseCase()
       await uc.acknowledgeByProduct(input.productId, tenantOutlets, input.outletId)
       return { success: true }
@@ -109,7 +109,7 @@ export const stockAlertsRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantOutlets = await getUserOutletIds(ctx.userId, ctx.session.tenantId!)
       const uc = container.stockAlertUseCase()
       return uc.getHistory(tenantOutlets, input)
     }),
@@ -124,7 +124,7 @@ export const stockAlertsRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantOutlets = await getUserOutletIds(ctx.userId, ctx.session.tenantId!)
       const uc = container.stockAlertUseCase()
       return uc.getSummary(tenantOutlets, input.outletId)
     }),
@@ -142,7 +142,7 @@ export const stockAlertsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantId = ctx.session.tenantId!
       const uc = container.stockAlertUseCase()
 
       try {
@@ -150,7 +150,7 @@ export const stockAlertsRouter = router({
           reorderPoint: input.reorderPoint,
           reorderQuantity: input.reorderQuantity,
           leadTimeDays: input.leadTimeDays,
-        }, ownerId)
+        }, tenantId)
       } catch (e) {
         if ((e as Error).message.includes('Access denied')) {
           throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' })

@@ -1,0 +1,40 @@
+ schemaname |       tablename       | rowsecurity 
+------------+-----------------------+-------------
+ public     | _migrations           | t
+ public     | audit_logs            | t
+ public     | bank_accounts         | t
+ public     | billing_history       | t
+ public     | business_profiles     | t
+ public     | cash_sessions         | t
+ public     | daily_sales           | t
+ public     | daily_stock           | t
+ public     | operational_expenses  | t
+ public     | outlet_group_members  | t
+ public     | outlet_groups         | t
+ public     | outlets               | t
+ public     | password_reset_tokens | t
+ public     | payment_confirmations | t
+ public     | payment_methods       | t
+ public     | payment_requests      | t
+ public     | payments              | t
+ public     | permissions           | t
+ public     | platform_settings     | t
+ public     | pos_devices           | t
+ public     | products              | t
+ public     | promotions            | t
+ public     | qris_config           | t
+ public     | refresh_tokens        | t
+ public     | role_permissions      | t
+ public     | roles                 | t
+ public     | shifts                | t
+ public     | stock_alerts          | t
+ public     | stock_movements       | t
+ public     | tenants               | t
+ public     | transaction_approvals | t
+ public     | transaction_items     | t
+ public     | transactions          | t
+ public     | user_role_assignments | t
+ public     | users                 | t
+ public     | wa_templates          | t
+(36 rows)
+

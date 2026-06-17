@@ -5,6 +5,7 @@ import { verifyJWT, JWTPayload } from '@/lib/jwt'
 import { getRedisClient } from '@/lib/redis-upstash'
 import { parseAuthCookieFromHeader } from '@/lib/cookies'
 import { logger } from '@/lib/logger'
+import { getTenantId, userHasPermission } from '@/server/lib/tenant'
 
 /**
  * Session data interface
@@ -15,6 +16,7 @@ export interface SessionData extends JWTPayload {
   name: string
   role?: string
   outletId?: string
+  tenantId?: string
 }
 
 /**
@@ -61,7 +63,13 @@ export async function createContext(opts: FetchCreateContextFnOptions) {
           name: decoded.name,
           role: decoded.role,
           outletId: decoded.outletId,
+          tenantId: decoded.tenantId,
         }
+      }
+
+      // Ensure tenantId is populated
+      if (session && !session.tenantId) {
+        session.tenantId = await getTenantId(userId) ?? undefined
       }
     } catch (error) {
       // Invalid token, continue as unauthenticated
@@ -115,9 +123,10 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
 })
 
 /**
- * Admin procedure - requires authentication AND admin role
+ * Admin procedure - requires authentication AND admin-level role
+ * Checks via RBAC: OWNER or ADMIN_TENANT role
  */
-export const adminProcedure = t.procedure.use(({ ctx, next }) => {
+export const adminProcedure = t.procedure.use(async ({ ctx, next }) => {
   if (!ctx.userId || !ctx.session) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
@@ -125,8 +134,17 @@ export const adminProcedure = t.procedure.use(({ ctx, next }) => {
     })
   }
 
-  // Check if user has admin role (super_admin inherits all admin rights)
-  if (ctx.session.role !== 'admin' && ctx.session.role !== 'super_admin') {
+  // Legacy role check for backward compatibility
+  const legacyAdmin = ctx.session.role === 'admin' || ctx.session.role === 'super_admin'
+
+  // RBAC check: user has tenant-level access
+  const tenantId = ctx.session.tenantId
+  let rbacAdmin = false
+  if (tenantId) {
+    rbacAdmin = await userHasPermission(ctx.userId, tenantId, 'settings.manage')
+  }
+
+  if (!legacyAdmin && !rbacAdmin) {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'You do not have permission to access this resource. Admin role required.',
@@ -143,9 +161,7 @@ export const adminProcedure = t.procedure.use(({ ctx, next }) => {
 })
 
 /**
- * Super admin procedure - requires authentication AND super_admin role.
- * Super admin is the platform operator (not a tenant/warung owner).
- * Set via: node scripts/set-super-admin.js
+ * Super admin procedure - platform operator only
  */
 export const superAdminProcedure = t.procedure.use(async ({ ctx, next }) => {
   if (!ctx.userId || !ctx.session) {
@@ -168,11 +184,15 @@ export const superAdminProcedure = t.procedure.use(async ({ ctx, next }) => {
 })
 
 /**
- * Create a middleware that checks for specific permission
- * @param permission - The permission key to check (e.g., 'canVoidTransactions')
+ * Permission-based middleware using RBAC
+ * @param permissionKey - The permission key (e.g., 'pos.transaction.void.approve')
+ * @param outletIdExtractor - Optional function to extract outletId from input
  */
-export const requirePermission = (permission: string) => {
-  return t.middleware(async ({ ctx, next }) => {
+export const requirePermission = (
+  permissionKey: string,
+  outletIdExtractor?: (input: any) => string | undefined,
+) => {
+  return t.middleware(async ({ ctx, next, getRawInput }) => {
     if (!ctx.userId || !ctx.session) {
       throw new TRPCError({
         code: 'UNAUTHORIZED',
@@ -180,32 +200,70 @@ export const requirePermission = (permission: string) => {
       })
     }
 
-    // Admins and super_admin have all permissions
-    if (ctx.session.role === 'admin' || ctx.session.role === 'super_admin') {
-      return next()
-    }
-
-    // Check if user has the specific permission
-    const { data: user } = await (await import('@/infra/supabase/client')).supabase
-      .from('users')
-      .select('permissions')
-      .eq('id', ctx.userId)
-      .single()
-
-    const permissions = user?.permissions || {}
-
-    if (!permissions[permission]) {
+    const tenantId = ctx.session.tenantId
+    if (!tenantId) {
       throw new TRPCError({
         code: 'FORBIDDEN',
-        message: `Permission denied: ${permission}`,
+        message: 'No tenant associated with this account',
+      })
+    }
+
+    // Legacy admin bypass
+    if (ctx.session.role === 'admin' || ctx.session.role === 'super_admin') {
+      return next({ ctx: { ...ctx, tenantId } })
+    }
+
+    // Extract outletId from input if provided
+    const rawInput = await getRawInput()
+    const outletId = outletIdExtractor ? outletIdExtractor(rawInput) : undefined
+
+    // Check permission via RBAC
+    const hasPermission = await userHasPermission(
+      ctx.userId,
+      tenantId,
+      permissionKey,
+      outletId,
+    )
+
+    if (!hasPermission) {
+      throw new TRPCError({
+        code: 'FORBIDDEN',
+        message: `Permission denied: ${permissionKey}`,
       })
     }
 
     return next({
       ctx: {
         ...ctx,
-        permissions,
+        tenantId,
       },
     })
   })
 }
+
+/**
+ * Outlet-scoped procedure - requires user to have access to the specified outlet
+ */
+export const outletScopedProcedure = t.procedure.use(async ({ ctx, next }) => {
+  if (!ctx.userId || !ctx.session) {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'You must be logged in to access this resource',
+    })
+  }
+
+  const tenantId = ctx.session.tenantId
+  if (!tenantId) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'No tenant associated with this account',
+    })
+  }
+
+  return next({
+    ctx: {
+      ...ctx,
+      tenantId,
+    },
+  })
+})

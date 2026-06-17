@@ -1,0 +1,16 @@
+        name         |             email             |     role     | scope_type | outlet_id 
+---------------------+-------------------------------+--------------+------------+-----------
+ abdul gofur         | agdscid@gmail.com             | ADMIN_TENANT | TENANT     | 
+ abdul gofur         | abdulgofur100persen@gmail.com | ADMIN_TENANT | TENANT     | 
+ abdul gofur         | abdulgofurcoc5@gmail.com      | ADMIN_TENANT | TENANT     | 
+ agus suryana        | agus69@gmail.com              | ADMIN_TENANT | TENANT     | 
+ agus suryana 2      | agus699@gmail.com             | ADMIN_TENANT | TENANT     | 
+ arif                | gerraktv@gmail.com            | ADMIN_TENANT | TENANT     | 
+ Guns                | agus.paresbdg@gmail.com       | ADMIN_TENANT | TENANT     | 
+ Ujang Ruhiyat       | ujangruhiyatbandung@gmail.com | ADMIN_TENANT | TENANT     | 
+ abdul gofur 2       | abdulgofur.islam@gmail.com    | CASHIER      | OUTLET     | 
+ Admin User          | admin@test.com                | CASHIER      | OUTLET     | 
+ Agus Suryana        | agussuryana@gmail.com         | CASHIER      | OUTLET     | 
+ test flow user baru | tesflow@agds.com              | CASHIER      | OUTLET     | 
+(12 rows)
+

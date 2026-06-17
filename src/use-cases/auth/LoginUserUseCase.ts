@@ -17,6 +17,7 @@ export interface LoginUserOutput {
     name: string
     outletId?: string
     role?: string
+    tenantId?: string
   }
 }
 
@@ -43,6 +44,7 @@ export class LoginUserUseCase {
       name: user.name,
       outletId: user.outletId,
       role: user.role,
+      tenantId: user.tenantId,
     })
 
     // Create session in Redis (7 days TTL)
@@ -51,6 +53,7 @@ export class LoginUserUseCase {
       name: user.name,
       outletId: user.outletId,
       role: user.role,
+      tenantId: user.tenantId,
     })
 
     return {
@@ -61,6 +64,7 @@ export class LoginUserUseCase {
         name: user.name,
         outletId: user.outletId,
         role: user.role,
+        tenantId: user.tenantId,
       },
     }
   }

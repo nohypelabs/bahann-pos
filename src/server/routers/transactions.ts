@@ -1,12 +1,13 @@
 /**
  * Transactions Router
  * Handles transaction creation, void, refund, and management
+ * Now uses RBAC + outlet scoping via get_user_outlet_ids()
  */
 
 import { z } from 'zod'
 import { router, protectedProcedure } from '../trpc'
 import { createAuditLog } from '@/lib/audit'
-import { resolveTenantOutletIds } from '@/server/lib/tenant'
+import { getUserOutletIds, requirePermission, assertOutletAccessible } from '@/server/lib/tenant'
 import { TRPCError } from '@trpc/server'
 import { container } from '@/infra/container'
 
@@ -23,6 +24,8 @@ export const transactionsRouter = router({
   getPlanUsage: protectedProcedure
     .input(z.object({ outletId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
+      const tenantId = ctx.session.tenantId!
+      await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
       const plan = await container.getAccountPlanUseCase().execute(ctx.userId)
       const useCase = container.listTransactionsUseCase()
       return useCase.getPlanUsage(input.outletId, plan, PLAN_LIMITS)
@@ -31,6 +34,7 @@ export const transactionsRouter = router({
   create: protectedProcedure
     .input(
       z.object({
+        transactionId: z.string().min(1).optional(),
         outletId: z.string().uuid(),
         items: z.array(
           z.object({
@@ -48,6 +52,11 @@ export const transactionsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.session.tenantId!
+
+      // Verify outlet access
+      await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
+
       const plan = await container.getAccountPlanUseCase().execute(ctx.userId)
       const limit = PLAN_LIMITS[plan] ?? 100
 
@@ -69,6 +78,7 @@ export const transactionsRouter = router({
 
       try {
         const result = await useCase.execute({
+          transactionId: input.transactionId,
           outletId: input.outletId,
           cashierId: ctx.userId,
           items: input.items,
@@ -80,20 +90,26 @@ export const transactionsRouter = router({
           currentMonthCount,
         })
 
-        await createAuditLog({
-          userId: ctx.userId,
-          userEmail: ctx.session?.email || 'unknown',
-          action: 'CREATE',
-          entityType: 'transaction',
-          entityId: result.transaction.id,
-          changes: { transaction: result.transaction },
-          metadata: { transactionId: result.transactionId, totalAmount: result.transaction.totalAmount },
-        })
+        if (!result.replayed) {
+          await createAuditLog({
+            userId: ctx.userId,
+            userEmail: ctx.session?.email || 'unknown',
+            action: 'CREATE',
+            entityType: 'transaction',
+            entityId: result.transaction.id,
+            changes: { transaction: result.transaction },
+            metadata: { transactionId: result.transactionId, totalAmount: result.transaction.totalAmount },
+          })
+        }
 
         return result
       } catch (error) {
         const message = error instanceof Error ? error.message : 'An unexpected error occurred while creating transaction'
-        if (message.startsWith('PLAN_LIMIT_REACHED:') || message === 'Insufficient payment amount') {
+        if (
+          message.startsWith('PLAN_LIMIT_REACHED:')
+          || message === 'Insufficient payment amount'
+          || message === 'Transaction ID conflict'
+        ) {
           throw new TRPCError({
             code: message.startsWith('PLAN_LIMIT_REACHED') ? 'FORBIDDEN' : 'BAD_REQUEST',
             message,
@@ -114,7 +130,8 @@ export const transactionsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantId = ctx.session.tenantId!
+      const tenantOutlets = await getUserOutletIds(ctx.userId, tenantId)
       const useCase = container.voidTransactionUseCase()
 
       try {
@@ -160,7 +177,8 @@ export const transactionsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantId = ctx.session.tenantId!
+      const tenantOutlets = await getUserOutletIds(ctx.userId, tenantId)
       const useCase = container.refundTransactionUseCase()
 
       try {
@@ -201,7 +219,8 @@ export const transactionsRouter = router({
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantId = ctx.session.tenantId!
+      const tenantOutlets = await getUserOutletIds(ctx.userId, tenantId)
       const useCase = container.listTransactionsUseCase()
 
       try {
@@ -223,7 +242,8 @@ export const transactionsRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantId = ctx.session.tenantId!
+      const tenantOutlets = await getUserOutletIds(ctx.userId, tenantId)
       const useCase = container.listTransactionsUseCase()
 
       try {
@@ -252,7 +272,8 @@ export const transactionsRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantId = ctx.session.tenantId!
+      const tenantOutlets = await getUserOutletIds(ctx.userId, tenantId)
       const useCase = container.listTransactionsUseCase()
 
       try {

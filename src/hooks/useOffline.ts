@@ -29,6 +29,17 @@ export function useOffline(): OfflineStatus {
   const [totalCachedProducts, setTotalCachedProducts] = useState(0)
 
   useEffect(() => {
+    const updateCounts = async () => {
+      try {
+        const stats = await offlineDb.getSyncStats()
+        setPendingTransactions(stats.pendingTransactions)
+        setQueuedItems(stats.queuedItems)
+        setTotalCachedProducts(stats.totalProducts)
+      } catch (error) {
+        logger.error('Failed to get sync stats:', error)
+      }
+    }
+
     // Network status listeners
     const handleOnline = () => {
       logger.info('Online')
@@ -45,28 +56,20 @@ export function useOffline(): OfflineStatus {
       logger.success('Sync completed')
       updateCounts()
     }) as EventListener
+    const handleQueueUpdated = (() => {
+      updateCounts()
+    }) as EventListener
 
     // Add event listeners
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
     window.addEventListener('sync-completed', handleSyncCompleted)
+    window.addEventListener('offline-queue-updated', handleQueueUpdated)
 
     // Subscribe to sync status changes
     const unsubscribe = syncManager.onStatusChange((status) => {
       setSyncStatus(status)
     })
-
-    // Update counts function
-    const updateCounts = async () => {
-      try {
-        const stats = await offlineDb.getSyncStats()
-        setPendingTransactions(stats.pendingTransactions)
-        setQueuedItems(stats.queuedItems)
-        setTotalCachedProducts(stats.totalProducts)
-      } catch (error) {
-        logger.error('Failed to get sync stats:', error)
-      }
-    }
 
     // Initial counts
     updateCounts()
@@ -79,6 +82,7 @@ export function useOffline(): OfflineStatus {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
       window.removeEventListener('sync-completed', handleSyncCompleted)
+      window.removeEventListener('offline-queue-updated', handleQueueUpdated)
       clearInterval(interval)
       unsubscribe()
     }

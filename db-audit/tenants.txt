@@ -1,0 +1,13 @@
+                  id                  |      name      | status | plan 
+--------------------------------------+----------------+--------+------
+ b90020ed-1656-4ef4-a5b8-2c5597ceda26 | abdul gofur    | active | free
+ 2547d616-eeb9-4d02-9a20-3a116169cb18 | abdul gofur    | active | free
+ fccf26eb-f884-4b8c-9e45-3372cb65b9d6 | abdul gofur    | active | free
+ 049236a5-d0e8-4430-b76c-83a8a652e82a | agus suryana   | active | free
+ 3218b19e-4283-45c7-802e-2f65afd7dfff | agus suryana 2 | active | free
+ 90515f28-c414-48ce-8ca3-2a4eb208bce3 | arif           | active | free
+ bf47777d-e09f-4fc0-a97b-a1a37b6b22ec | Default Tenant | active | free
+ bd743458-eb9c-4e38-b685-3740773ded4b | Guns           | active | free
+ 4c039731-68cb-4efc-b7c4-ac3d4cba1f64 | Ujang Ruhiyat  | active | free
+(9 rows)
+

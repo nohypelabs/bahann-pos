@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '../trpc'
 import { container } from '@/infra/container'
-import { getTenantOwnerId, assertOutletBelongsToTenant, getTenantOutletIds } from '@/server/lib/tenant'
+import { assertOutletBelongsToTenant, getTenantOutletIds } from '@/server/lib/tenant'
 
 export const stockRouter = router({
   record: protectedProcedure
@@ -18,8 +18,8 @@ export const stockRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (ownerId) await assertOutletBelongsToTenant(input.outletId, ownerId)
+      const tenantId = ctx.session.tenantId!
+      if (tenantId) await assertOutletBelongsToTenant(ctx.userId, tenantId, input.outletId)
 
       const useCase = container.adjustStockUseCase()
       await useCase.execute({
@@ -38,8 +38,8 @@ export const stockRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (ownerId) await assertOutletBelongsToTenant(input.outletId, ownerId)
+      const tenantId = ctx.session.tenantId!
+      if (tenantId) await assertOutletBelongsToTenant(ctx.userId, tenantId, input.outletId)
 
       const useCase = container.listStockUseCase()
       return useCase.getLatest(input.outletId, input.productId)
@@ -52,7 +52,7 @@ export const stockRouter = router({
       }).optional()
     )
     .query(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const ownerId = ctx.session.tenantId!
 
       const useCase = container.listStockUseCase()
       return useCase.getInventoryList(ownerId ?? undefined, input?.outletId)
@@ -68,7 +68,7 @@ export const stockRouter = router({
       }).optional()
     )
     .query(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const ownerId = ctx.session.tenantId!
 
       let outletIds: string[] | undefined
       if (ownerId) {

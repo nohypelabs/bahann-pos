@@ -209,6 +209,7 @@ export const authRouter = router({
       email: profile.email || ctx.session?.email || '',
       role: profile.role || ctx.session?.role || 'user',
       outletId: profile.outletId || ctx.session?.outletId || null,
+      tenantId: profile.tenantId || ctx.session?.tenantId || null,
     }
   }),
 
@@ -316,8 +317,19 @@ export const authRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      const normalizedEmail = input.email.trim().toLowerCase()
+      const rateLimitKey = `password-reset:${normalizedEmail}`
+      const rateLimit = checkRateLimit(rateLimitKey, RateLimitPresets.PASSWORD_RESET)
+
+      if (!rateLimit.allowed) {
+        throw new TRPCError({
+          code: 'TOO_MANY_REQUESTS',
+          message: 'Terlalu banyak permintaan reset password. Coba lagi dalam 15 menit.',
+        })
+      }
+
       const useCase = container.requestPasswordResetUseCase()
-      return await useCase.execute({ email: input.email })
+      return await useCase.execute({ email: normalizedEmail })
     }),
 
   /**

@@ -1,8 +1,8 @@
 # 📊 Bahann POS System - Dokumentasi Lengkap
 
 **Versi:** 1.0.0
-**Tanggal:** November 2024
-**Status:** Production Ready
+**Tanggal:** 17 Juni 2026
+**Status:** Tenant Pilot / UAT
 
 ---
 
@@ -59,9 +59,9 @@
 | Feature | Status |
 |---------|--------|
 | Install to Device | ✅ Supported |
-| Offline Mode | ✅ Full support |
-| Push Notifications | ✅ Ready |
-| Background Sync | ✅ Implemented |
+| Offline Mode | ✅ Supported untuk transaksi dan cache data yang sudah pernah dimuat |
+| Push Notifications | ⏳ Planned |
+| Background Sync | ⚠️ Retry saat aplikasi kembali online |
 | Screen Orientation | ✅ Adaptive |
 
 ---
@@ -169,9 +169,10 @@
 
 **Receipt & Invoice**
 - Auto-generate receipt
-- Print receipt (thermal printer compatible)
-- Email receipt (optional)
-- WhatsApp receipt (optional)
+- Browser print receipt (thermal printer compatible)
+- Preview receipt sebelum cetak
+- Email receipt (planned)
+- WhatsApp receipt (planned)
 
 ---
 
@@ -248,9 +249,10 @@ Types:
 
 **Reorder Management**
 - Auto-reorder point
-- Purchase order creation
-- Supplier management
-- Receiving goods process
+- Low stock monitoring
+- Purchase order creation (planned)
+- Supplier management (planned)
+- Receiving goods process (planned)
 
 ---
 
@@ -605,7 +607,7 @@ Supported Hardware:
 
 ### Current Status
 - **Development Version:** Active
-- **Production Ready:** Yes
+- **Production Ready:** Belum, saat ini di tahap tenant pilot / UAT
 - **License:** Proprietary
 - **Pricing:** To be determined
 

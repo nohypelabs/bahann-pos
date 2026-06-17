@@ -69,6 +69,7 @@ export interface SessionData {
   name: string
   outletId?: string
   role?: string
+  tenantId?: string
   createdAt: number
   lastAccessedAt: number
 }

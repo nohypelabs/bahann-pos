@@ -1,0 +1,4 @@
+ schemaname | matviewname | definition 
+------------+-------------+------------
+(0 rows)
+

@@ -2,8 +2,7 @@ import { z } from 'zod'
 import { router, protectedProcedure } from '../trpc'
 import { RecordDailySaleUseCase } from '@/use-cases/sale/RecordDailySaleUseCase'
 import { SupabaseDailySaleRepository } from '@/infra/repositories/SupabaseDailySaleRepository'
-import { assertOutletBelongsToTenant } from '@/server/lib/tenant'
-import { getTenantOwnerId } from '@/server/lib/tenant'
+import { assertOutletAccessible } from '@/server/lib/tenant'
 import { TRPCError } from '@trpc/server'
 
 const salesRepository = new SupabaseDailySaleRepository()
@@ -44,8 +43,8 @@ export const salesRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (ownerId) await assertOutletBelongsToTenant(input.outletId, ownerId)
+      const tenantId = ctx.session.tenantId!
+      await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
 
       const useCase = new RecordDailySaleUseCase(salesRepository)
       await useCase.execute(input)
@@ -62,8 +61,8 @@ export const salesRouter = router({
         })
       }
 
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (ownerId) await assertOutletBelongsToTenant(input.outletId, ownerId)
+      const tenantId = ctx.session.tenantId!
+      await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
 
       const saleDate = new Date(input.timestamp ?? Date.now()).toISOString().split('T')[0]
       const useCase = new RecordDailySaleUseCase(salesRepository)
@@ -94,8 +93,8 @@ export const salesRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (ownerId) await assertOutletBelongsToTenant(input.outletId, ownerId)
+      const tenantId = ctx.session.tenantId!
+      await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
 
       const sales = await salesRepository.getByDateRange(
         input.outletId,

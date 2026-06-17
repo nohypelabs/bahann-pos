@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { router, protectedProcedure } from '../trpc'
 import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
-import { getTenantOwnerId, resolveTenantOutletIds } from '@/server/lib/tenant'
+import { getUserOutletIds } from '@/server/lib/tenant'
 import { TRPCError } from '@trpc/server'
 
 export const cashSessionsRouter = router({
@@ -22,10 +22,10 @@ export const cashSessionsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (ownerId) {
+      const tenantId = ctx.session.tenantId!
+      if (tenantId) {
         const { assertOutletBelongsToTenant } = await import('@/server/lib/tenant')
-        await assertOutletBelongsToTenant(input.outletId, ownerId)
+        await assertOutletBelongsToTenant(ctx.userId, tenantId, input.outletId)
       }
 
       const uc = container.cashSessionUseCase()
@@ -61,7 +61,7 @@ export const cashSessionsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantOutlets = await getUserOutletIds(ctx.userId, ctx.session.tenantId!)
       const uc = container.cashSessionUseCase()
 
       let result
@@ -96,10 +96,10 @@ export const cashSessionsRouter = router({
   getCurrent: protectedProcedure
     .input(z.object({ outletId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (ownerId) {
+      const tenantId = ctx.session.tenantId!
+      if (tenantId) {
         const { assertOutletBelongsToTenant } = await import('@/server/lib/tenant')
-        await assertOutletBelongsToTenant(input.outletId, ownerId)
+        await assertOutletBelongsToTenant(ctx.userId, tenantId, input.outletId)
       }
 
       const uc = container.cashSessionUseCase()
@@ -112,7 +112,7 @@ export const cashSessionsRouter = router({
   getReport: protectedProcedure
     .input(z.object({ sessionId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantOutlets = await getUserOutletIds(ctx.userId, ctx.session.tenantId!)
       const uc = container.cashSessionUseCase()
 
       try {
@@ -151,7 +151,7 @@ export const cashSessionsRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const tenantOutlets = await resolveTenantOutletIds(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const tenantOutlets = await getUserOutletIds(ctx.userId, ctx.session.tenantId!)
       const uc = container.cashSessionUseCase()
 
       return uc.list(tenantOutlets, {

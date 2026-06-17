@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '../trpc'
-import { getTenantOwnerId, getTenantOutletIds } from '@/server/lib/tenant'
+import { getTenantOutletIds } from '@/server/lib/tenant'
 import { supabaseAdmin } from '@/infra/supabase/server'
 
 const EXPENSE_CATEGORIES = [
@@ -38,11 +38,8 @@ export const expensesRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      // Verify user has access to this outlet
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (!ownerId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Tenant not found' })
-
-      const outletIds = await getTenantOutletIds(ownerId)
+      const tenantId = ctx.session.tenantId!
+      const outletIds = await getTenantOutletIds(tenantId)
       if (!outletIds.includes(input.outletId)) {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Outlet not accessible' })
       }
@@ -83,14 +80,13 @@ export const expensesRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (!ownerId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Tenant not found' })
+      const tenantId = ctx.session.tenantId!
 
       let outletIds: string[]
       if (input.outletId) {
         outletIds = [input.outletId]
       } else {
-        outletIds = await getTenantOutletIds(ownerId)
+        outletIds = await getTenantOutletIds(tenantId)
       }
 
       let query = supabaseAdmin
@@ -134,16 +130,14 @@ export const expensesRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (!ownerId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Tenant not found' })
-
+      const tenantId = ctx.session.tenantId!
       const targetDate = input.date || new Date().toISOString().split('T')[0]
 
       let outletIds: string[]
       if (input.outletId) {
         outletIds = [input.outletId]
       } else {
-        outletIds = await getTenantOutletIds(ownerId)
+        outletIds = await getTenantOutletIds(tenantId)
       }
 
       // Get expenses for the day

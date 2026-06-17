@@ -1,7 +1,9 @@
 import { z } from 'zod'
+import { TRPCError } from '@trpc/server'
 import { router, superAdminProcedure } from '../trpc'
 import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
+import { AppError } from '@/shared/exceptions/AppError'
 
 export const superAdminRouter = router({
   globalStats: superAdminProcedure.query(async () => {
@@ -100,9 +102,19 @@ export const superAdminRouter = router({
       fileName: z.string(),
     }))
     .mutation(async ({ input, ctx }) => {
-      const platformUseCase = container.platformUseCase()
-      const url = await platformUseCase.uploadQris(input.base64, input.fileName, ctx.userId)
-      return { url }
+      try {
+        const platformUseCase = container.platformUseCase()
+        const url = await platformUseCase.uploadQris(input.base64, input.fileName, ctx.userId)
+        return { url }
+      } catch (error) {
+        if (error instanceof AppError) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: error.message,
+          })
+        }
+        throw error
+      }
     }),
 
   /**

@@ -7,6 +7,7 @@ import type {
   TenantSummary,
   TenantDetail,
   GrowthEntry,
+  PlatformImageUpload,
 } from '@/domain/repositories/PlatformRepository';
 
 export class SupabasePlatformRepository implements PlatformRepository {
@@ -286,15 +287,13 @@ export class SupabasePlatformRepository implements PlatformRepository {
     }
   }
 
-  async uploadQris(base64: string, fileName: string, userId: string): Promise<string> {
-    const ext = fileName.split('.').pop() || 'png';
-    const filePath = `platform/qris.${ext}`;
+  async uploadQris(image: PlatformImageUpload, userId: string): Promise<string> {
+    const filePath = `platform/qris.${image.extension}`;
 
-    const buffer = Buffer.from(base64, 'base64');
     const { error: uploadError } = await supabase.storage
       .from('payment-proofs')
-      .upload(filePath, buffer, {
-        contentType: `image/${ext === 'png' ? 'png' : 'jpeg'}`,
+      .upload(filePath, image.buffer, {
+        contentType: image.mimeType,
         upsert: true,
       });
 

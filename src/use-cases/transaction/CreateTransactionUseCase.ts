@@ -7,6 +7,7 @@ import { DailySale } from '@/domain/entities/DailySale'
 import { logger } from '@/lib/logger'
 
 export interface CreateTransactionInput {
+  transactionId?: string
   outletId: string
   cashierId: string
   items: {
@@ -28,6 +29,7 @@ export interface CreateTransactionResult {
   success: boolean
   transaction: Transaction
   transactionId: string
+  replayed: boolean
 }
 
 export class CreateTransactionUseCase {
@@ -39,6 +41,23 @@ export class CreateTransactionUseCase {
   ) {}
 
   async execute(input: CreateTransactionInput): Promise<CreateTransactionResult> {
+    if (input.transactionId) {
+      const existingTransaction = await this.transactionRepo.findByTransactionId(input.transactionId)
+
+      if (existingTransaction) {
+        if (existingTransaction.outletId !== input.outletId) {
+          throw new Error('Transaction ID conflict')
+        }
+
+        return {
+          success: true,
+          transaction: existingTransaction,
+          transactionId: existingTransaction.transactionId,
+          replayed: true,
+        }
+      }
+    }
+
     // Check plan limit
     if (input.planLimit !== null && input.currentMonthCount >= input.planLimit) {
       throw new Error(`PLAN_LIMIT_REACHED:${input.currentMonthCount}:${input.planLimit}`)
@@ -58,7 +77,8 @@ export class CreateTransactionUseCase {
     }
 
     // Generate transaction ID
-    const transactionId = `TRX-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+    const transactionId = input.transactionId
+      ?? `TRX-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
 
     // Create transaction
     const transaction = await this.transactionRepo.create({
@@ -128,6 +148,7 @@ export class CreateTransactionUseCase {
       success: true,
       transaction,
       transactionId,
+      replayed: false,
     }
   }
 

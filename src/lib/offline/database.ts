@@ -7,6 +7,7 @@
 
 import Dexie, { Table } from 'dexie'
 import { logger } from '@/lib/logger'
+import type { PaymentMethod } from '@/domain/entities/Transaction'
 
 // Offline Transaction - pending sales when offline
 export interface OfflineTransaction {
@@ -25,10 +26,12 @@ export interface OfflineTransaction {
   subtotal: number
   discount: number
   total: number
-  paymentMethod: 'cash' | 'debit' | 'credit' | 'qris'
+  paymentMethod: PaymentMethod
   amountPaid: number
   change: number
   notes?: string
+  promotionId?: string
+  promotionName?: string
   timestamp: number
   synced: boolean
   syncError?: string

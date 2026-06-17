@@ -3,6 +3,7 @@ import { PasswordResetTokenRepository } from '@/domain/repositories/PasswordRese
 import { sendPasswordResetEmail, generateResetToken } from '@/lib/email'
 import { createAuditLog } from '@/lib/audit'
 import { logger } from '@/lib/logger'
+import { hashPasswordResetToken } from '@/lib/security/resetToken'
 
 export interface RequestPasswordResetInput {
   email: string
@@ -30,12 +31,13 @@ export class RequestPasswordResetUseCase {
     }
 
     const resetToken = generateResetToken()
+    const hashedResetToken = hashPasswordResetToken(resetToken)
     const expiresAt = new Date()
     expiresAt.setHours(expiresAt.getHours() + 1)
 
     await this.tokenRepository.save({
       userId: user.id,
-      token: resetToken,
+      token: hashedResetToken,
       expiresAt,
     })
 

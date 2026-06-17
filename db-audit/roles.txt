@@ -1,0 +1,10 @@
+      key      |     name      | is_system 
+---------------+---------------+-----------
+ ADMIN_TENANT  | Admin Tenant  | t
+ AREA_MANAGER  | Area Manager  | t
+ AUDITOR       | Auditor       | t
+ CASHIER       | Cashier       | t
+ OWNER         | Owner         | t
+ STORE_MANAGER | Store Manager | t
+(6 rows)
+

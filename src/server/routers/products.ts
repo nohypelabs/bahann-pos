@@ -3,7 +3,7 @@ import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure, adminProcedure } from '../trpc'
 import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
-import { getTenantOwnerId, assertProductBelongsToTenant } from '@/server/lib/tenant'
+import { assertProductBelongsToTenant } from '@/server/lib/tenant'
 import { DomainException } from '@/domain/errors/DomainException'
 import { ITEM_TYPES } from '@/domain/catalog/value-objects/item-type'
 import { STOCK_BEHAVIORS } from '@/domain/catalog/value-objects/stock-behavior'
@@ -22,7 +22,7 @@ export const productsRouter = router({
       }).optional()
     )
     .query(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const ownerId = ctx.session.tenantId!
 
       const useCase = container.listProductsUseCase()
       return useCase.execute({
@@ -41,7 +41,7 @@ export const productsRouter = router({
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const ownerId = await getTenantOwnerId(ctx.session.userId, ctx.session.role, ctx.session.outletId)
+      const ownerId = ctx.session.tenantId!
 
       const productRepo = container.productRepo()
       const data = await productRepo.getById(input.id, ownerId ?? undefined)
@@ -220,7 +220,7 @@ export const productsRouter = router({
     }),
 
   getCategories: protectedProcedure.query(async ({ ctx }) => {
-    const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
+    const ownerId = ctx.session.tenantId!
 
     const productRepo = container.productRepo()
     const categories = await productRepo.getCategories(ownerId ?? undefined)

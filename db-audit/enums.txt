@@ -1,0 +1,18 @@
+    typname     | enumlabel  | enumsortorder 
+----------------+------------+---------------
+ business_type  | FNB        |             1
+ business_type  | RETAIL     |             2
+ business_type  | SERVICE    |             3
+ business_type  | HYBRID     |             4
+ item_type      | PRODUCT    |             1
+ item_type      | MENU       |             2
+ item_type      | SERVICE    |             3
+ item_type      | PACKAGE    |             4
+ pricing_model  | FIXED      |             1
+ pricing_model  | TIERED     |             2
+ pricing_model  | TIME_BASED |             3
+ stock_behavior | TRACKED    |             1
+ stock_behavior | UNTRACKED  |             2
+ stock_behavior | CONSUMED   |             3
+(14 rows)
+

@@ -7,7 +7,6 @@ import { z } from 'zod'
 import { router, protectedProcedure, adminProcedure } from '../trpc'
 import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
-import { getTenantOwnerId } from '@/server/lib/tenant'
 import { TRPCError } from '@trpc/server'
 
 export const promotionsRouter = router({
@@ -30,7 +29,7 @@ export const promotionsRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const ownerId = ctx.session.tenantId!
       const uc = container.promotionUseCase()
 
       try {
@@ -153,7 +152,7 @@ export const promotionsRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const ownerId = ctx.session.tenantId!
       const uc = container.promotionUseCase()
       try {
         return await uc.list(ownerId, { activeOnly: input.activeOnly })
@@ -168,7 +167,7 @@ export const promotionsRouter = router({
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const ownerId = ctx.session.tenantId!
       const uc = container.promotionUseCase()
       try {
         return await uc.getById(input.id, ownerId)

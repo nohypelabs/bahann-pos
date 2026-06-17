@@ -1,0 +1,18 @@
+     table_name      |                                                        view_definition                                                        
+---------------------+-------------------------------------------------------------------------------------------------------------------------------
+ stock_sales_monitor |  SELECT p.name AS product,                                                                                                   +
+                     |     o.name AS outlet,                                                                                                        +
+                     |     ds.stock_date AS date,                                                                                                   +
+                     |     ds.stock_awal,                                                                                                           +
+                     |     ds.stock_in,                                                                                                             +
+                     |     ds.stock_out,                                                                                                            +
+                     |     ds.stock_akhir,                                                                                                          +
+                     |     COALESCE(dsl.quantity_sold, 0) AS sold,                                                                                  +
+                     |     COALESCE(dsl.revenue, (0)::numeric) AS revenue                                                                           +
+                     |    FROM (((daily_stock ds                                                                                                    +
+                     |      JOIN products p ON ((ds.product_id = p.id)))                                                                            +
+                     |      JOIN outlets o ON ((ds.outlet_id = o.id)))                                                                              +
+                     |      LEFT JOIN daily_sales dsl ON (((dsl.product_id = p.id) AND (dsl.outlet_id = o.id) AND (dsl.sale_date = ds.stock_date))))+
+                     |   ORDER BY ds.stock_date DESC, p.name;
+(1 row)
+

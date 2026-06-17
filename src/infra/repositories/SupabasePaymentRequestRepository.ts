@@ -4,6 +4,7 @@ import type {
   CreatePaymentRequestData,
   ListParams,
   PaymentRequestWithUser,
+  PaymentProofUpload,
 } from '@/domain/repositories/PaymentRequestRepository'
 import { supabaseAdmin } from '../supabase/server'
 
@@ -177,15 +178,13 @@ export class SupabasePaymentRequestRepository implements PaymentRequestRepositor
     return { requests, total: count || 0 }
   }
 
-  async uploadProof(userId: string, requestId: string, base64: string, fileName: string): Promise<string> {
-    const ext = fileName.split('.').pop() || 'jpg'
-    const filePath = `payment-proofs/${userId}/${requestId}.${ext}`
+  async uploadProof(userId: string, requestId: string, image: PaymentProofUpload): Promise<string> {
+    const filePath = `payment-proofs/${userId}/${requestId}.${image.extension}`
 
-    const buffer = Buffer.from(base64, 'base64')
     const { error: uploadError } = await supabaseAdmin.storage
       .from('payment-proofs')
-      .upload(filePath, buffer, {
-        contentType: `image/${ext === 'png' ? 'png' : 'jpeg'}`,
+      .upload(filePath, image.buffer, {
+        contentType: image.mimeType,
         upsert: true,
       })
 

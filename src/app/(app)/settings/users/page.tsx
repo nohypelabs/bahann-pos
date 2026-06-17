@@ -1,23 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { useToast } from '@/components/ui/Toast'
-import { UpgradeModal } from '@/components/ui/UpgradeModal'
 import { trpc } from '@/lib/trpc/client'
-import { getLimits } from '@/lib/plans'
 
-type UserRole = 'admin' | 'manager' | 'cashier' | 'user'
+const ROLES = [
+  { key: 'ADMIN_TENANT', label: '👑 Admin Tenant', desc: 'Akses penuh semua outlet', scope: 'TENANT', icon: '👑' },
+  { key: 'AREA_MANAGER', label: '📍 Area Manager', desc: 'Akses beberapa outlet (group)', scope: 'OUTLET_GROUP', icon: '📍' },
+  { key: 'STORE_MANAGER', label: '🏪 Store Manager', desc: 'Kelola 1 outlet', scope: 'OUTLET', icon: '🏪' },
+  { key: 'CASHIER', label: '👤 Kasir', desc: 'POS transaksi di 1 outlet', scope: 'OUTLET', icon: '👤' },
+  { key: 'AUDITOR', label: '🔍 Auditor', desc: 'Read-only laporan & audit log', scope: 'TENANT', icon: '🔍' },
+] as const
 
-const ROLE_BADGE: Record<string, string> = {
-  admin:   'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-700',
-  manager: 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-700',
-  default: 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-700',
-}
-const ROLE_LABEL: Record<string, string> = { admin: '👑 Admin', manager: '👔 Manager', default: '👤 Kasir' }
+type RoleKey = typeof ROLES[number]['key']
 
 function StyledSelect<T extends string>({ label, value, onChange, options }: {
   label: string; value: T; onChange: (v: T) => void
@@ -38,87 +37,121 @@ function StyledSelect<T extends string>({ label, value, onChange, options }: {
   )
 }
 
-const PERMISSIONS = [
-  { key: 'canVoidTransactions', label: 'Void Transaksi' },
-  { key: 'canGiveDiscount',     label: 'Beri Diskon' },
-  { key: 'canCloseDay',         label: 'Tutup Hari (EOD)' },
-  { key: 'canManageUsers',      label: 'Kelola Pengguna' },
-  { key: 'canEditPrices',       label: 'Edit Harga' },
-  { key: 'canManagePromotions', label: 'Kelola Promo' },
-  { key: 'canViewReports',      label: 'Lihat Laporan' },
-  { key: 'canManageInventory',  label: 'Kelola Inventori' },
-]
-
 export default function UsersManagementPage() {
   const { showToast } = useToast()
   const { data: users, refetch } = trpc.users.list.useQuery()
   const { data: outletsResponse } = trpc.outlets.getAll.useQuery()
+  const { data: roles } = trpc.users.getRoles.useQuery()
+  const { data: outletGroups } = trpc.users.getOutletGroups.useQuery()
   const outlets = outletsResponse?.outlets || []
-  const { data: planData } = trpc.auth.getPlan.useQuery()
-  const limits = getLimits(planData?.plan ?? 'free')
 
-  const [editingUser,   setEditingUser]   = useState<string | null>(null)
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [permissions,   setPermissions]   = useState<any>({})
-  const [selectedRole,  setSelectedRole]  = useState<UserRole>('user')
-  const [showAddCashier, setShowAddCashier] = useState(false)
-  const [cashierForm,   setCashierForm]   = useState({ name: '', email: '', password: '', whatsappNumber: '', outletId: '' })
-  const [cashierError,  setCashierError]  = useState('')
+  const [showAddUser, setShowAddUser] = useState(false)
+  const [editingUser, setEditingUser] = useState<any>(null)
+  const [form, setForm] = useState({
+    name: '', email: '', password: '', whatsappNumber: '',
+    roleKey: 'CASHIER' as RoleKey,
+    outletId: '', outletGroupId: '',
+  })
+  const [formError, setFormError] = useState('')
 
-  const updateMutation       = trpc.users.updatePermissions.useMutation({ onSuccess: () => { refetch(); setEditingUser(null) } })
-  const updateRoleMutation   = trpc.users.updateRole.useMutation({ onSuccess: () => refetch() })
-  const createCashierMutation = trpc.users.createCashier.useMutation({
+  const createUserMutation = trpc.users.create.useMutation({
     onSuccess: () => {
       refetch()
-      setShowAddCashier(false)
-      setCashierForm({ name: '', email: '', password: '', whatsappNumber: '', outletId: '' })
-      setCashierError('')
-      showToast('Kasir berhasil ditambahkan!', 'success')
+      closeForm()
+      showToast('Pengguna berhasil ditambahkan!', 'success')
     },
-    onError: err => setCashierError(err.message),
+    onError: err => setFormError(err.message),
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleEdit = (user: any) => {
-    setEditingUser(user.id)
-    setPermissions(user.permissions || {})
-    setSelectedRole(user.role || 'user')
+  const updateRoleMutation = trpc.users.updateRole.useMutation({
+    onSuccess: () => {
+      refetch()
+      setEditingUser(null)
+      showToast('Role berhasil diperbarui!', 'success')
+    },
+    onError: err => showToast(err.message, 'error'),
+  })
+
+  const closeForm = () => {
+    setShowAddUser(false)
+    setForm({ name: '', email: '', password: '', whatsappNumber: '', roleKey: 'CASHIER', outletId: '', outletGroupId: '' })
+    setFormError('')
   }
 
-  const handleSave = async (userId: string) => {
-    try {
-      const currentUser = users?.find(u => u.id === userId)
-      await updateMutation.mutateAsync({ userId, permissions })
-      if (currentUser && currentUser.role !== selectedRole) {
-        await updateRoleMutation.mutateAsync({ userId, role: selectedRole })
-      }
-      showToast('Pengguna berhasil diperbarui', 'success')
-      setEditingUser(null)
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Gagal update pengguna', 'error')
+  const selectedRole = ROLES.find(r => r.key === form.roleKey)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormError('')
+
+    if (!form.name || !form.email || !form.password) {
+      setFormError('Nama, email, dan password wajib diisi')
+      return
+    }
+
+    if (form.password.length < 8) {
+      setFormError('Password minimal 8 karakter')
+      return
+    }
+
+    await createUserMutation.mutateAsync({
+      name: form.name,
+      email: form.email,
+      password: form.password,
+      whatsappNumber: form.whatsappNumber || undefined,
+      roleKey: form.roleKey,
+      outletId: form.outletId || undefined,
+      outletGroupId: form.outletGroupId || undefined,
+    })
+  }
+
+  const handleUpdateRole = async (userId: string, roleKey: RoleKey, outletId?: string, outletGroupId?: string) => {
+    await updateRoleMutation.mutateAsync({
+      userId,
+      roleKey,
+      outletId: outletId || undefined,
+      outletGroupId: outletGroupId || undefined,
+    })
+  }
+
+  const getRoleBadge = (user: any) => {
+    const rbacRole = user.rbac_roles?.[0]
+    if (rbacRole) {
+      const role = ROLES.find(r => r.key === rbacRole.role_key)
+      return role ? `${role.icon} ${rbacRole.role_name}` : rbacRole.role_name
+    }
+    // Legacy fallback
+    switch (user.role) {
+      case 'admin': return '👑 Admin'
+      case 'manager': return '👔 Manager'
+      default: return '👤 Kasir'
     }
   }
 
-  const handleAddCashier = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setCashierError('')
-    if (!cashierForm.outletId) { setCashierError('Pilih outlet terlebih dahulu'); return }
-    await createCashierMutation.mutateAsync(cashierForm)
+  const getScopeInfo = (user: any) => {
+    const rbacRole = user.rbac_roles?.[0]
+    if (!rbacRole) return user.outlet_name || '—'
+    switch (rbacRole.scope_type) {
+      case 'TENANT': return 'Semua outlet'
+      case 'OUTLET': return user.outlet_name || 'Outlet assigned'
+      case 'OUTLET_GROUP': return `Group: ${rbacRole.outlet_group_id || '—'}`
+      default: return '—'
+    }
   }
 
   return (
     <div className="space-y-4 md:space-y-6">
       <PageHeader
         title="Manajemen Pengguna"
-        subtitle="Kelola kasir dan hak akses"
-        action={<Button variant="primary" onClick={() => {
-          const cashiers = users?.filter(u => u.role !== 'admin' && u.role !== 'manager') ?? []
-          if (cashiers.length >= limits.maxCashiers) { setShowUpgradeModal(true); return }
-          setShowAddCashier(true)
-        }}>+ Tambah Kasir</Button>}
+        subtitle="Kelola akun tim dan hak akses"
+        action={
+          <Button variant="primary" onClick={() => setShowAddUser(true)}>
+            + Tambah Pengguna
+          </Button>
+        }
       />
 
+      {/* Users Table */}
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
         <div className="px-4 md:px-6 py-4 border-b border-gray-100 dark:border-gray-700">
           <p className="text-sm font-semibold text-gray-900 dark:text-white">Daftar Pengguna</p>
@@ -127,31 +160,27 @@ export default function UsersManagementPage() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
-                {['Nama', 'Email', 'Role', 'Outlet', 'Aksi'].map(h => (
+                {['Nama', 'Email', 'Role', 'Scope', 'Aksi'].map(h => (
                   <th key={h} className="px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {users?.map(user => {
-                const outletName = outlets.find(o => o.id === user.outlet_id)?.name || '—'
-                const roleKey = user.role === 'admin' || user.role === 'manager' ? user.role : 'default'
-                return (
-                  <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                    <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">{user.name}</td>
-                    <td className="px-3 md:px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{user.email}</td>
-                    <td className="px-3 md:px-4 py-3">
-                      <span className={`px-2 py-0.5 text-[10px] rounded-full font-bold ${ROLE_BADGE[roleKey]}`}>
-                        {ROLE_LABEL[roleKey]}
-                      </span>
-                    </td>
-                    <td className="px-3 md:px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{outletName}</td>
-                    <td className="px-3 md:px-4 py-3">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(user)}>Edit</Button>
-                    </td>
-                  </tr>
-                )
-              })}
+              {users?.map(user => (
+                <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                  <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">{user.name}</td>
+                  <td className="px-3 md:px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{user.email}</td>
+                  <td className="px-3 md:px-4 py-3">
+                    <span className="px-2 py-0.5 text-[10px] rounded-full font-bold bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
+                      {getRoleBadge(user)}
+                    </span>
+                  </td>
+                  <td className="px-3 md:px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{getScopeInfo(user)}</td>
+                  <td className="px-3 md:px-4 py-3">
+                    <Button size="sm" variant="outline" onClick={() => setEditingUser(user)}>Edit</Button>
+                  </td>
+                </tr>
+              ))}
               {!users?.length && (
                 <tr>
                   <td colSpan={5} className="px-4 py-10 text-center text-gray-400 text-sm">Belum ada pengguna</td>
@@ -162,56 +191,106 @@ export default function UsersManagementPage() {
         </div>
       </div>
 
-      {/* Add Cashier Modal */}
-      {showAddCashier && (
+      {/* Add User Modal */}
+      {showAddUser && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="w-full max-w-md">
-            <SectionCard title="Tambah Kasir"
-              action={<button onClick={() => { setShowAddCashier(false); setCashierError('') }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">✕</button>}
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <SectionCard title="Tambah Pengguna"
+              action={<button onClick={closeForm} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">✕</button>}
             >
-              <form onSubmit={handleAddCashier} className="space-y-3">
-                {cashierError && (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {formError && (
                   <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
                     <span>❌</span>
-                    <p className="text-xs font-semibold text-red-700 dark:text-red-300">{cashierError}</p>
+                    <p className="text-xs font-semibold text-red-700 dark:text-red-300">{formError}</p>
                   </div>
                 )}
 
-                <Input type="text" label="Nama Kasir *" placeholder="Nama lengkap"
-                  value={cashierForm.name} onChange={e => setCashierForm(f => ({ ...f, name: e.target.value }))} fullWidth required />
-                <Input type="email" label="Email *" placeholder="email@kasir.com"
-                  value={cashierForm.email} onChange={e => setCashierForm(f => ({ ...f, email: e.target.value }))} fullWidth required />
-
+                {/* Role Selection */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Nomor WhatsApp *</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm select-none">+62</span>
-                    <input type="tel" placeholder="8123456789"
-                      value={cashierForm.whatsappNumber}
-                      onChange={e => setCashierForm(f => ({ ...f, whatsappNumber: e.target.value }))}
-                      className="w-full pl-12 pr-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
-                      required
-                    />
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Role *</label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {ROLES.map(role => (
+                      <button
+                        key={role.key}
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, roleKey: role.key, outletId: '', outletGroupId: '' }))}
+                        className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
+                          form.roleKey === role.key
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                        }`}
+                      >
+                        <span className="text-xl">{role.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white">{role.label}</p>
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400">{role.desc}</p>
+                        </div>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                          {role.scope}
+                        </span>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
-                <Input type="password" label="Password *" placeholder="Minimal 8 karakter"
-                  value={cashierForm.password} onChange={e => setCashierForm(f => ({ ...f, password: e.target.value }))} fullWidth required />
+                {/* Outlet Selection (for OUTLET scope) */}
+                {selectedRole?.scope === 'OUTLET' && (
+                  <StyledSelect<string>
+                    label="Outlet *"
+                    value={form.outletId}
+                    onChange={v => setForm(f => ({ ...f, outletId: v }))}
+                    options={[
+                      { value: '', label: 'Pilih outlet…' },
+                      ...outlets.map(o => ({ value: o.id, label: o.name })),
+                    ]}
+                  />
+                )}
 
-                <StyledSelect<string>
-                  label="Outlet *"
-                  value={cashierForm.outletId}
-                  onChange={v => setCashierForm(f => ({ ...f, outletId: v }))}
-                  options={[{ value: '', label: 'Pilih outlet…' }, ...outlets.map(o => ({ value: o.id, label: o.name }))]}
-                />
+                {/* Outlet Group Selection (for OUTLET_GROUP scope) */}
+                {selectedRole?.scope === 'OUTLET_GROUP' && (
+                  <div>
+                    <StyledSelect<string>
+                      label="Outlet Group *"
+                      value={form.outletGroupId}
+                      onChange={v => setForm(f => ({ ...f, outletGroupId: v }))}
+                      options={[
+                        { value: '', label: 'Pilih outlet group…' },
+                        ...(outletGroups || []).map(g => ({ value: g.id, label: `${g.name} (${g.outlet_ids.length} outlet)` })),
+                      ]}
+                    />
+                    <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">
+                      Outlet group mengelompokkan beberapa outlet untuk Area Manager
+                    </p>
+                  </div>
+                )}
+
+                {/* User Info */}
+                <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <Input type="text" label="Nama *" placeholder="Nama lengkap"
+                    value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} fullWidth required />
+                  <Input type="email" label="Email *" placeholder="email@example.com"
+                    value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} fullWidth required />
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Nomor WhatsApp</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm select-none">+62</span>
+                      <input type="tel" placeholder="8123456789"
+                        value={form.whatsappNumber}
+                        onChange={e => setForm(f => ({ ...f, whatsappNumber: e.target.value }))}
+                        className="w-full pl-12 pr-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <Input type="password" label="Password *" placeholder="Minimal 8 karakter"
+                    value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} fullWidth required />
+                </div>
 
                 <div className="flex gap-2 pt-1">
-                  <Button type="submit" variant="primary" fullWidth disabled={createCashierMutation.isPending}>
-                    {createCashierMutation.isPending ? 'Menyimpan…' : 'Tambah Kasir'}
+                  <Button type="submit" variant="primary" fullWidth disabled={createUserMutation.isPending}>
+                    {createUserMutation.isPending ? 'Menyimpan…' : 'Tambah Pengguna'}
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => { setShowAddCashier(false); setCashierError('') }}>
-                    Batal
-                  </Button>
+                  <Button type="button" variant="outline" onClick={closeForm}>Batal</Button>
                 </div>
               </form>
             </SectionCard>
@@ -219,66 +298,46 @@ export default function UsersManagementPage() {
         </div>
       )}
 
-      <UpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-        feature="cashiers"
-        currentPlan={planData?.plan ?? 'free'}
-        currentUsage={{ used: users?.filter(u => u.role !== 'admin' && u.role !== 'manager').length ?? 0, max: limits.maxCashiers }}
-      />
-
-      {/* Edit Permissions Modal */}
+      {/* Edit User Modal */}
       {editingUser && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <SectionCard title="Edit Pengguna & Hak Akses"
+            <SectionCard title={`Edit: ${editingUser.name}`}
               action={<button onClick={() => setEditingUser(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">✕</button>}
             >
-              <div className="space-y-5">
+              <div className="space-y-4">
                 <div>
-                  <StyledSelect<UserRole>
-                    label="Role"
-                    value={selectedRole}
-                    onChange={setSelectedRole}
-                    options={[
-                      { value: 'user',    label: '👤 Kasir' },
-                      { value: 'manager', label: '👔 Manager' },
-                      { value: 'admin',   label: '👑 Admin' },
-                    ]}
-                  />
-                  <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-                    Admin: akses penuh · Manager: lihat laporan · Kasir: transaksi sesuai permission
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    Ubah role dan scope pengguna. Permission otomatis sesuai role.
                   </p>
-                </div>
-
-                <div>
-                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-3">Permission Khusus</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {PERMISSIONS.map(({ key, label }) => (
-                      <label key={key} className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked={!!permissions[key]}
-                          onChange={e => setPermissions((p: Record<string, unknown>) => ({ ...p, [key]: e.target.checked }))}
-                          className="w-4 h-4 accent-blue-500 rounded" />
-                        <span className="text-xs text-gray-700 dark:text-gray-300">{label}</span>
-                      </label>
-                    ))}
+                  <div className="grid grid-cols-1 gap-2">
+                    {ROLES.map(role => {
+                      const isCurrentRole = editingUser.rbac_roles?.[0]?.role_key === role.key
+                      return (
+                        <button
+                          key={role.key}
+                          type="button"
+                          onClick={() => handleUpdateRole(editingUser.id, role.key, editingUser.outlet_id)}
+                          className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
+                            isCurrentRole
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                              : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                          }`}
+                        >
+                          <span className="text-xl">{role.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{role.label}</p>
+                            <p className="text-[11px] text-gray-500 dark:text-gray-400">{role.desc}</p>
+                          </div>
+                          {isCurrentRole && <span className="text-xs text-blue-500 font-semibold">✓ Aktif</span>}
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Maks Diskon (%)</label>
-                  <input type="number"
-                    value={permissions.maxDiscountPercent || 0}
-                    onChange={e => setPermissions((p: Record<string, unknown>) => ({ ...p, maxDiscountPercent: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                <div className="flex gap-2">
-                  <Button variant="primary" onClick={() => handleSave(editingUser)} disabled={updateMutation.isPending} fullWidth>
-                    {updateMutation.isPending ? 'Menyimpan…' : '✅ Simpan'}
-                  </Button>
-                  <Button variant="outline" onClick={() => setEditingUser(null)}>Batal</Button>
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setEditingUser(null)} fullWidth>Tutup</Button>
                 </div>
               </div>
             </SectionCard>

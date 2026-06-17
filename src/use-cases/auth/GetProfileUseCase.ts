@@ -12,6 +12,7 @@ export interface GetProfileOutput {
   whatsappNumber: string
   role: string
   outletId: string | null
+  tenantId: string | null
 }
 
 export class GetProfileUseCase {
@@ -30,6 +31,7 @@ export class GetProfileUseCase {
       whatsappNumber: user.whatsappNumber || '',
       role: user.role || 'user',
       outletId: user.outletId || null,
+      tenantId: user.tenantId || null,
     }
   }
 }

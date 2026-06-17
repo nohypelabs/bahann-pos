@@ -3,6 +3,7 @@
 import { useRef, useEffect } from 'react'
 import { PrintReceipt, ReceiptData } from './PrintReceipt'
 import { Button } from '@/components/ui/Button'
+import { printHtmlDocument } from '@/lib/print/printHtmlDocument'
 
 interface PrintPreviewModalProps {
   isOpen: boolean
@@ -24,46 +25,17 @@ export function PrintPreviewModal({ isOpen, onClose, receiptData }: PrintPreview
     return () => window.removeEventListener('keydown', handleEsc)
   }, [isOpen, onClose])
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (!componentRef.current) return
 
-    // Copy all <style> tags (including styled-jsx injected ones) so scoped
-    // selectors still match the receipt HTML in the new window.
-    const styleSheets = Array.from(document.querySelectorAll('style'))
-      .map((s) => s.outerHTML)
-      .join('\n')
+    const didPrint = await printHtmlDocument({
+      title: 'Struk Pembayaran',
+      bodyHtml: componentRef.current.outerHTML,
+    })
 
-    const receiptHTML = componentRef.current.outerHTML
-
-    const printWindow = window.open('', '_blank', 'width=400,height=800')
-    if (!printWindow) {
-      alert('Aktifkan popup di browser untuk fitur print.')
-      return
+    if (!didPrint) {
+      alert('Gagal menyiapkan print. Coba ulangi beberapa saat lagi.')
     }
-
-    printWindow.document.write(`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>Struk Pembayaran</title>
-  ${styleSheets}
-  <style>
-    @page { size: 80mm auto; margin: 0; }
-    body { margin: 0; padding: 0; background: white; }
-  </style>
-</head>
-<body>
-  ${receiptHTML}
-</body>
-</html>`)
-
-    printWindow.document.close()
-    printWindow.focus()
-    // Give the new window time to apply styles before printing
-    setTimeout(() => {
-      printWindow.print()
-      printWindow.close()
-    }, 300)
   }
 
   if (!isOpen) return null

@@ -1,0 +1,9 @@
+           trigger_name           | event_manipulation |  event_object_table   |                      action_statement                      | action_timing 
+----------------------------------+--------------------+-----------------------+------------------------------------------------------------+---------------
+ trg_audit_logs_immutable         | DELETE             | audit_logs            | EXECUTE FUNCTION prevent_audit_log_mutation()              | BEFORE
+ trg_audit_logs_immutable         | UPDATE             | audit_logs            | EXECUTE FUNCTION prevent_audit_log_mutation()              | BEFORE
+ trigger_expenses_updated_at      | UPDATE             | operational_expenses  | EXECUTE FUNCTION update_expenses_updated_at()              | BEFORE
+ password_reset_tokens_updated_at | UPDATE             | password_reset_tokens | EXECUTE FUNCTION update_password_reset_tokens_updated_at() | BEFORE
+ update_transactions_updated_at   | UPDATE             | transactions          | EXECUTE FUNCTION update_updated_at_column()                | BEFORE
+(5 rows)
+

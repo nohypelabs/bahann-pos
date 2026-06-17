@@ -1,0 +1,32 @@
+             key              |              description              |  module   
+------------------------------+---------------------------------------+-----------
+ audit.view                   | View audit logs                       | audit
+ cash.drawer.open             | Open cash drawer manually             | cash
+ cash.in_out                  | Record cash in/out                    | cash
+ inventory.adjust             | Adjust stock with reason              | inventory
+ inventory.opname             | Stock opname                          | inventory
+ inventory.transfer           | Transfer stock between outlets        | inventory
+ inventory.view               | View inventory                        | inventory
+ pos.discount.apply_large     | Apply large discount (needs approval) | pos
+ pos.discount.apply_small     | Apply small discount                  | pos
+ pos.receipt.reprint          | Reprint receipt                       | pos
+ pos.refund.approve           | Approve refund                        | pos
+ pos.refund.request           | Request refund                        | pos
+ pos.transaction.create       | Create sales transaction              | pos
+ pos.transaction.void.approve | Approve void transaction              | pos
+ pos.transaction.void.request | Request void transaction              | pos
+ price.manage                 | Manage product pricing                | product
+ product.manage               | Create/update products                | product
+ product.view                 | View products                         | product
+ report.export                | Export reports                        | report
+ report.outlet.view           | View outlet reports                   | report
+ report.tenant.view           | View tenant-wide reports              | report
+ settings.manage              | Manage tenant settings                | settings
+ shift.approve                | Approve closing shift                 | shift
+ shift.close                  | Close cash shift                      | shift
+ shift.open                   | Open cash shift                       | shift
+ role.manage                  | Manage roles and permissions          | user
+ user.manage                  | Create/update/suspend users           | user
+ user.view                    | View users                            | user
+(28 rows)
+

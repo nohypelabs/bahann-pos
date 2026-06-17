@@ -2,6 +2,7 @@ import { z } from 'zod/v4'
 import { TRPCError } from '@trpc/server'
 import { router, adminProcedure, protectedProcedure } from '../trpc'
 import { container } from '@/infra/container'
+import { AppError } from '@/shared/exceptions/AppError'
 
 export const paymentsRouter = router({
   getSettings: protectedProcedure.query(async () => {
@@ -63,6 +64,12 @@ export const paymentsRouter = router({
       try {
         return await useCase.updateQRIS(input)
       } catch (error) {
+        if (error instanceof AppError) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: error.message,
+          })
+        }
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: error instanceof Error ? error.message : 'Failed to update QRIS settings',

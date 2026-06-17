@@ -7,6 +7,7 @@ import type {
   TenantDetail,
   GrowthEntry,
 } from '@/domain/repositories/PlatformRepository';
+import { normalizeImageUpload } from '@/lib/security/imageUpload';
 
 const ALLOWED_SETTINGS_KEYS = [
   'solana_wallet_address', 'solana_rpc_url',
@@ -53,7 +54,12 @@ export class PlatformUseCase {
     return this.repo.updateSettings(entries);
   }
 
-  async uploadQris(base64: string, fileName: string, userId: string): Promise<string> {
-    return this.repo.uploadQris(base64, fileName, userId);
+  async uploadQris(base64: string, _fileName: string, userId: string): Promise<string> {
+    const qrisImage = normalizeImageUpload(base64, {
+      label: 'Gambar QRIS',
+      maxBytes: 2 * 1024 * 1024,
+    });
+
+    return this.repo.uploadQris(qrisImage, userId);
   }
 }

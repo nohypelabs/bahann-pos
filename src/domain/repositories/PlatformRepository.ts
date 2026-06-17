@@ -86,6 +86,12 @@ export interface GrowthEntry {
   totalTenants: number;
 }
 
+export interface PlatformImageUpload {
+  buffer: Buffer;
+  mimeType: string;
+  extension: string;
+}
+
 export interface PlatformRepository {
   getGlobalStats(): Promise<GlobalStats>;
   listTenants(params: TenantListParams): Promise<{ tenants: TenantSummary[]; total: number }>;
@@ -94,5 +100,5 @@ export interface PlatformRepository {
   getGrowthChart(days: number): Promise<GrowthEntry[]>;
   getSettings(): Promise<Record<string, string>>;
   updateSettings(entries: Array<{ key: string; value: string; updatedBy: string }>): Promise<void>;
-  uploadQris(base64: string, fileName: string, userId: string): Promise<string>;
+  uploadQris(image: PlatformImageUpload, userId: string): Promise<string>;
 }

@@ -6,6 +6,7 @@ export class User {
     public readonly passwordHash: string,
     public readonly outletId?: string,
     public readonly role?: string,
+    public readonly tenantId?: string,
     public readonly createdAt?: Date,
     public readonly whatsappNumber?: string
   ) {}
@@ -17,6 +18,7 @@ export class User {
     passwordHash: string
     outletId?: string
     role?: string
+    tenantId?: string
     whatsappNumber?: string
   }): User {
     return new User(
@@ -26,6 +28,7 @@ export class User {
       props.passwordHash,
       props.outletId,
       props.role,
+      props.tenantId,
       new Date(),
       props.whatsappNumber
     )

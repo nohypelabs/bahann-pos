@@ -1,25 +1,339 @@
 /**
  * Users Router
- * Handles user management and permissions
+ * Handles user management with RBAC role assignments
  */
 
 import { z } from 'zod'
 import { router, protectedProcedure, adminProcedure, superAdminProcedure } from '../trpc'
 import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
+import { supabaseAdmin } from '@/infra/supabase/server'
 import { TRPCError } from '@trpc/server'
 import { sendPlanUpgradeEmail } from '@/lib/email'
+import bcrypt from 'bcryptjs'
 
 export const usersRouter = router({
+  /**
+   * List all users in the tenant with RBAC role assignments
+   */
   list: adminProcedure.query(async ({ ctx }) => {
-    const uc = container.userManagementUseCase()
-    try {
-      return await uc.listByTenant(ctx.userId)
-    } catch (e) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
+    const tenantId = ctx.session.tenantId!
+
+    const { data: users, error } = await supabaseAdmin
+      .from('users')
+      .select(`
+        id, name, email, role, outlet_id, tenant_id, is_active, created_at,
+        outlet:outlets!outlet_id(id, name),
+        user_role_assignments(
+          id, scope_type, outlet_id, outlet_group_id,
+          role:roles!role_id(id, key, name)
+        )
+      `)
+      .eq('tenant_id', tenantId)
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
     }
+
+    // Get outlet groups for area manager assignments
+    const { data: outletGroups } = await supabaseAdmin
+      .from('outlet_groups')
+      .select('id, name')
+      .eq('tenant_id', tenantId)
+
+    return (users || []).map(u => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      outlet_id: u.outlet_id,
+      is_active: u.is_active,
+      created_at: u.created_at,
+      outlet_name: (u.outlet as any)?.name || null,
+      rbac_roles: (u.user_role_assignments || []).map((ura: any) => ({
+        id: ura.id,
+        role_key: ura.role?.key || null,
+        role_name: ura.role?.name || null,
+        scope_type: ura.scope_type,
+        outlet_id: ura.outlet_id,
+        outlet_group_id: ura.outlet_group_id,
+      })),
+    }))
   }),
 
+  /**
+   * Get available roles for user creation
+   */
+  getRoles: adminProcedure.query(async ({ ctx }) => {
+    const { data: roles } = await supabaseAdmin
+      .from('roles')
+      .select('id, key, name, description')
+      .eq('is_system', true)
+      .is('tenant_id', null)
+      .order('key')
+
+    return roles || []
+  }),
+
+  /**
+   * Get outlet groups for the tenant
+   */
+  getOutletGroups: adminProcedure.query(async ({ ctx }) => {
+    const tenantId = ctx.session.tenantId!
+
+    const { data: groups } = await supabaseAdmin
+      .from('outlet_groups')
+      .select(`
+        id, name, description,
+        members:outlet_group_members(outlet_id)
+      `)
+      .eq('tenant_id', tenantId)
+      .order('name')
+
+    return (groups || []).map(g => ({
+      id: g.id,
+      name: g.name,
+      description: g.description,
+      outlet_ids: (g.members || []).map((m: any) => m.outlet_id),
+    }))
+  }),
+
+  /**
+   * Create a new user with RBAC role assignment (universal)
+   */
+  create: adminProcedure
+    .input(
+      z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+        password: z.string().min(8),
+        whatsappNumber: z.string().min(9).regex(/^[0-9+\-\s()]+$/).optional(),
+        roleKey: z.enum(['ADMIN_TENANT', 'AREA_MANAGER', 'STORE_MANAGER', 'CASHIER', 'AUDITOR']),
+        scopeType: z.enum(['TENANT', 'OUTLET', 'OUTLET_GROUP']).optional(),
+        outletId: z.string().uuid().optional(),
+        outletGroupId: z.string().uuid().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.session.tenantId!
+
+      // Determine scope type from role if not provided
+      const scopeType = input.scopeType || (() => {
+        switch (input.roleKey) {
+          case 'ADMIN_TENANT':
+          case 'AUDITOR':
+            return 'TENANT'
+          case 'AREA_MANAGER':
+            return 'OUTLET_GROUP'
+          case 'STORE_MANAGER':
+          case 'CASHIER':
+            return 'OUTLET'
+          default:
+            return 'TENANT'
+        }
+      })()
+
+      // Validate scope matches role
+      if (input.roleKey === 'AREA_MANAGER' && scopeType !== 'OUTLET_GROUP') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Area Manager harus pakai OUTLET_GROUP scope' })
+      }
+      if ((input.roleKey === 'STORE_MANAGER' || input.roleKey === 'CASHIER') && scopeType !== 'OUTLET') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Store Manager / Kasir harus pakai OUTLET scope' })
+      }
+      if (scopeType === 'OUTLET' && !input.outletId) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Pilih outlet untuk role ini' })
+      }
+      if (scopeType === 'OUTLET_GROUP' && !input.outletGroupId) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Pilih outlet group untuk role ini' })
+      }
+
+      // Check email uniqueness
+      const { data: existingUser } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('email', input.email.toLowerCase())
+        .single()
+
+      if (existingUser) {
+        throw new TRPCError({ code: 'CONFLICT', message: 'Email sudah digunakan' })
+      }
+
+      // If OUTLET scope, verify outlet belongs to tenant
+      if (input.outletId) {
+        const { data: outlet } = await supabaseAdmin
+          .from('outlets')
+          .select('id')
+          .eq('id', input.outletId)
+          .eq('tenant_id', tenantId)
+          .single()
+
+        if (!outlet) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Outlet tidak ditemukan di tenant ini' })
+        }
+      }
+
+      // Get role ID
+      const { data: role } = await supabaseAdmin
+        .from('roles')
+        .select('id')
+        .eq('key', input.roleKey)
+        .eq('is_system', true)
+        .is('tenant_id', null)
+        .single()
+
+      if (!role) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: `Role ${input.roleKey} tidak ditemukan` })
+      }
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(input.password, 12)
+
+      // Create user
+      const { data: newUser, error: userError } = await supabaseAdmin
+        .from('users')
+        .insert({
+          name: input.name,
+          email: input.email.toLowerCase(),
+          password_hash: passwordHash,
+          tenant_id: tenantId,
+          role: input.roleKey === 'ADMIN_TENANT' ? 'admin' : input.roleKey === 'CASHIER' ? 'user' : 'manager',
+          outlet_id: scopeType === 'OUTLET' ? input.outletId : null,
+          whatsapp_number: input.whatsappNumber || null,
+        })
+        .select('id, name, email, role, tenant_id, outlet_id')
+        .single()
+
+      if (userError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: userError.message })
+      }
+
+      // Create RBAC role assignment
+      const { error: assignmentError } = await supabaseAdmin
+        .from('user_role_assignments')
+        .insert({
+          tenant_id: tenantId,
+          user_id: newUser.id,
+          role_id: role.id,
+          scope_type: scopeType,
+          outlet_id: scopeType === 'OUTLET' ? input.outletId : null,
+          outlet_group_id: scopeType === 'OUTLET_GROUP' ? input.outletGroupId : null,
+        })
+
+      if (assignmentError) {
+        // Rollback: delete user if assignment fails
+        await supabaseAdmin.from('users').delete().eq('id', newUser.id)
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: assignmentError.message })
+      }
+
+      await createAuditLog({
+        userId: ctx.userId,
+        userEmail: ctx.session?.email || 'unknown',
+        action: 'CREATE',
+        entityType: 'user',
+        entityId: newUser.id,
+        changes: {
+          created: {
+            name: input.name,
+            email: input.email,
+            roleKey: input.roleKey,
+            scopeType,
+            outletId: input.outletId,
+            outletGroupId: input.outletGroupId,
+          },
+        },
+      })
+
+      return newUser
+    }),
+
+  /**
+   * Update user's RBAC role assignment
+   */
+  updateRole: adminProcedure
+    .input(
+      z.object({
+        userId: z.string().uuid(),
+        roleKey: z.enum(['ADMIN_TENANT', 'AREA_MANAGER', 'STORE_MANAGER', 'CASHIER', 'AUDITOR']),
+        scopeType: z.enum(['TENANT', 'OUTLET', 'OUTLET_GROUP']).optional(),
+        outletId: z.string().uuid().optional(),
+        outletGroupId: z.string().uuid().optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.session.tenantId!
+
+      // Get role ID
+      const { data: role } = await supabaseAdmin
+        .from('roles')
+        .select('id')
+        .eq('key', input.roleKey)
+        .eq('is_system', true)
+        .is('tenant_id', null)
+        .single()
+
+      if (!role) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: `Role ${input.roleKey} tidak ditemukan` })
+      }
+
+      // Determine scope
+      const scopeType = input.scopeType || (() => {
+        switch (input.roleKey) {
+          case 'ADMIN_TENANT': case 'AUDITOR': return 'TENANT'
+          case 'AREA_MANAGER': return 'OUTLET_GROUP'
+          case 'STORE_MANAGER': case 'CASHIER': return 'OUTLET'
+          default: return 'TENANT'
+        }
+      })()
+
+      // Delete old assignments
+      await supabaseAdmin
+        .from('user_role_assignments')
+        .delete()
+        .eq('user_id', input.userId)
+        .eq('tenant_id', tenantId)
+
+      // Create new assignment
+      const { error } = await supabaseAdmin
+        .from('user_role_assignments')
+        .insert({
+          tenant_id: tenantId,
+          user_id: input.userId,
+          role_id: role.id,
+          scope_type: scopeType,
+          outlet_id: scopeType === 'OUTLET' ? input.outletId : null,
+          outlet_group_id: scopeType === 'OUTLET_GROUP' ? input.outletGroupId : null,
+        })
+
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      }
+
+      // Also update legacy role column for backward compat
+      await supabaseAdmin
+        .from('users')
+        .update({
+          role: input.roleKey === 'ADMIN_TENANT' ? 'admin' : input.roleKey === 'CASHIER' ? 'user' : 'manager',
+          outlet_id: scopeType === 'OUTLET' ? input.outletId : null,
+        })
+        .eq('id', input.userId)
+        .eq('tenant_id', tenantId)
+
+      await createAuditLog({
+        userId: ctx.userId,
+        userEmail: ctx.session?.email || 'unknown',
+        action: 'UPDATE',
+        entityType: 'user_role_assignment',
+        entityId: input.userId,
+        changes: { roleKey: input.roleKey, scopeType, outletId: input.outletId },
+      })
+
+      return { success: true }
+    }),
+
+  /**
+   * Legacy createCashier endpoint (backward compat)
+   */
   createCashier: adminProcedure
     .input(
       z.object({
@@ -31,20 +345,59 @@ export const usersRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const uc = container.userManagementUseCase()
-      const { SupabaseUserManagementRepository } = await import('@/infra/repositories/SupabaseUserManagementRepository')
-      const userRepo = new SupabaseUserManagementRepository()
-      const plan = await userRepo.getPlan(ctx.userId)
+      const tenantId = ctx.session.tenantId!
 
-      let newUser
-      try {
-        newUser = await uc.createCashier(ctx.userId, input, plan)
-      } catch (e) {
-        const msg = (e as Error).message
-        if (msg.includes('Outlet')) throw new TRPCError({ code: 'FORBIDDEN', message: msg })
-        if (msg.includes('Email')) throw new TRPCError({ code: 'CONFLICT', message: msg })
-        if (msg.includes('kasir')) throw new TRPCError({ code: 'FORBIDDEN', message: msg })
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: msg })
+      // Check email uniqueness
+      const { data: existingUser } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('email', input.email.toLowerCase())
+        .single()
+
+      if (existingUser) {
+        throw new TRPCError({ code: 'CONFLICT', message: 'Email sudah digunakan' })
+      }
+
+      // Get CASHIER role
+      const { data: role } = await supabaseAdmin
+        .from('roles')
+        .select('id')
+        .eq('key', 'CASHIER')
+        .eq('is_system', true)
+        .is('tenant_id', null)
+        .single()
+
+      const passwordHash = await bcrypt.hash(input.password, 12)
+
+      const { data: newUser, error: userError } = await supabaseAdmin
+        .from('users')
+        .insert({
+          name: input.name,
+          email: input.email.toLowerCase(),
+          password_hash: passwordHash,
+          tenant_id: tenantId,
+          role: 'user',
+          outlet_id: input.outletId,
+          whatsapp_number: input.whatsappNumber,
+        })
+        .select('id, name, email, role, tenant_id, outlet_id')
+        .single()
+
+      if (userError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: userError.message })
+      }
+
+      // Create RBAC assignment
+      if (role) {
+        await supabaseAdmin
+          .from('user_role_assignments')
+          .insert({
+            tenant_id: tenantId,
+            user_id: newUser.id,
+            role_id: role.id,
+            scope_type: 'OUTLET',
+            outlet_id: input.outletId,
+          })
       }
 
       await createAuditLog({
@@ -54,7 +407,7 @@ export const usersRouter = router({
         entityType: 'user',
         entityId: newUser.id,
         changes: { created: { name: input.name, email: input.email, outletId: input.outletId } },
-        metadata: { role: 'user' },
+        metadata: { role: 'CASHIER' },
       })
 
       return newUser
@@ -115,34 +468,6 @@ export const usersRouter = router({
         entityType: 'user',
         entityId: input.userId,
         changes: { before: { permissions: result.before }, after: { permissions: result.after } },
-      })
-
-      return { success: true }
-    }),
-
-  updateRole: adminProcedure
-    .input(
-      z.object({
-        userId: z.string().uuid(),
-        role: z.enum(['admin', 'manager', 'cashier', 'user']),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      const uc = container.userManagementUseCase()
-      let result
-      try {
-        result = await uc.updateRole(input.userId, input.role)
-      } catch (e) {
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
-      }
-
-      await createAuditLog({
-        userId: ctx.userId,
-        userEmail: ctx.session?.email || 'unknown',
-        action: 'UPDATE',
-        entityType: 'user',
-        entityId: input.userId,
-        changes: { before: { role: result.before }, after: { role: result.after } },
       })
 
       return { success: true }

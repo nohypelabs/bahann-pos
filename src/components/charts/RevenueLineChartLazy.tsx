@@ -22,6 +22,8 @@ export default function RevenueLineChartLazy({
   className,
   hideMobileYAxis = false,
 }: RevenueLineChartProps) {
+  const { language } = useLanguage()
+
   if (!data || data.length === 0) {
     return (
       <div className="flex h-[200px] items-center justify-center text-sm text-gray-400">
@@ -30,7 +32,6 @@ export default function RevenueLineChartLazy({
     )
   }
 
-  const { language } = useLanguage()
   const avg = data.reduce((s, d) => s + d.revenue, 0) / data.length
 
   return (

@@ -65,7 +65,7 @@ export async function createRefreshToken(
     // Get user data for JWT payload
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('id, email, name, outlet_id, role')
+      .select('id, email, name, outlet_id, role, tenant_id')
       .eq('id', userId)
       .single()
 
@@ -113,6 +113,7 @@ export async function createRefreshToken(
       name: user.name,
       outletId: user.outlet_id || undefined,
       role: user.role || undefined,
+      tenantId: user.tenant_id || undefined,
     }
 
     const accessToken = signJWT(jwtPayload, ACCESS_TOKEN_EXPIRY)

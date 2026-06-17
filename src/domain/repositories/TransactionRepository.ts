@@ -32,6 +32,7 @@ export interface TransactionRepository {
   create(transaction: Omit<Transaction, 'id' | 'createdAt'>): Promise<Transaction>
   createItems(items: Omit<TransactionItem, 'id'>[]): Promise<void>
   findById(id: string): Promise<TransactionWithRelations | null>
+  findByTransactionId(transactionId: string): Promise<TransactionWithRelations | null>
   findByOutletIds(outletIds: string[], filters: TransactionFilters): Promise<{ transactions: TransactionWithRelations[]; total: number }>
   findByOutletIdsForSummary(outletIds: string[], outletId: string | undefined, dateFrom: string, dateTo: string): Promise<Transaction[]>
   updateToVoided(id: string, reason: string, voidedBy: string): Promise<void>

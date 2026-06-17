@@ -3,7 +3,6 @@ import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure, adminProcedure } from '../trpc'
 import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
-import { getTenantOwnerId } from '@/server/lib/tenant'
 
 export const outletsRouter = router({
   getAll: protectedProcedure
@@ -15,8 +14,7 @@ export const outletsRouter = router({
       }).optional()
     )
     .query(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (!ownerId) return { outlets: [], pagination: { page: 1, limit: 50, total: 0, totalPages: 0 } }
+      const ownerId = ctx.session.tenantId!
 
       const uc = container.outletUseCase()
       const result = await uc.listByOwner(ownerId, {
@@ -41,7 +39,7 @@ export const outletsRouter = router({
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const ownerId = await getTenantOwnerId(ctx.session.userId, ctx.session.role, ctx.session.outletId)
+      const ownerId = ctx.session.tenantId!
       const uc = container.outletUseCase()
       try {
         return await uc.getById(input.id, ownerId)

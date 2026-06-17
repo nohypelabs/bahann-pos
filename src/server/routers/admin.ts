@@ -3,7 +3,6 @@ import { TRPCError } from '@trpc/server'
 import { router, adminProcedure } from '../trpc'
 import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
-import { getTenantOwnerId } from '@/server/lib/tenant'
 
 export const adminRouter = router({
   /**
@@ -19,7 +18,7 @@ export const adminRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
+      const ownerId = ctx.session.tenantId!
       if (!ownerId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Cannot determine tenant' })
 
       const resetAllDataUseCase = container.resetAllDataUseCase()

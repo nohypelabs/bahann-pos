@@ -1,15 +1,15 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '../trpc'
-import { getTenantOwnerId, getTenantOutletIds } from '@/server/lib/tenant'
+import { getUserOutletIds, getTenantOutletIds } from '@/server/lib/tenant'
 import { getLimits } from '@/lib/plans'
 import { getRedisClient } from '@/lib/redis-upstash'
 import { container } from '@/infra/container'
 
 const DASHBOARD_CACHE_TTL = 120 // 2 minutes
 
-function dashKey(type: string, ownerId: string, outletId: string | undefined, suffix: string) {
-  return `dash:${type}:${ownerId}:${outletId ?? 'all'}:${suffix}`
+function dashKey(type: string, tenantId: string, outletId: string | undefined, suffix: string) {
+  return `dash:${type}:${tenantId}:${outletId ?? 'all'}:${suffix}`
 }
 
 async function withCache<T>(key: string, ttl: number, fetcher: () => Promise<T>): Promise<T> {
@@ -27,12 +27,22 @@ async function withCache<T>(key: string, ttl: number, fetcher: () => Promise<T>)
   return result
 }
 
-async function resolveOutletIds(ownerId: string, specificOutletId?: string): Promise<string[]> {
+/**
+ * Resolve outlet IDs based on user's RBAC scope.
+ * If specificOutletId provided, verify access.
+ * Otherwise return all accessible outlets.
+ */
+async function resolveOutletIds(userId: string, tenantId: string, specificOutletId?: string): Promise<string[]> {
   if (specificOutletId) {
-    const outlet = await container.outletRepo().findByIdAndOwner(specificOutletId, ownerId)
-    return outlet ? [outlet.id] : []
+    // Verify user has access to this specific outlet
+    const userOutlets = await getUserOutletIds(userId, tenantId)
+    if (!userOutlets.includes(specificOutletId)) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Outlet not accessible' })
+    }
+    return [specificOutletId]
   }
-  return getTenantOutletIds(ownerId)
+  // Return all outlets user can access (RBAC-aware)
+  return getUserOutletIds(userId, tenantId)
 }
 
 export const dashboardRouter = router({
@@ -44,14 +54,12 @@ export const dashboardRouter = router({
       }).optional()
     )
     .query(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (!ownerId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Tenant not found' })
-
+      const tenantId = ctx.session.tenantId!
       const useCase = container.dashboardUseCase()
-      const cacheKey = dashKey('stats', ownerId, input?.outletId, `${input?.days ?? 'all'}`)
+      const cacheKey = dashKey('stats', tenantId, input?.outletId, `${input?.days ?? 'all'}`)
       return withCache(cacheKey, DASHBOARD_CACHE_TTL, async () => {
-        const outletIds = await resolveOutletIds(ownerId, input?.outletId)
-        return useCase.getStats(outletIds, ownerId, input?.days)
+        const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
+        return useCase.getStats(outletIds, tenantId, input?.days)
       })
     }),
 
@@ -64,13 +72,11 @@ export const dashboardRouter = router({
     )
     .query(async ({ input, ctx }) => {
       const days = input?.days ?? 7
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (!ownerId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Tenant not found' })
-
+      const tenantId = ctx.session.tenantId!
       const useCase = container.dashboardUseCase()
-      const cacheKey = dashKey('trend', ownerId, input?.outletId, `${days}`)
+      const cacheKey = dashKey('trend', tenantId, input?.outletId, `${days}`)
       return withCache(cacheKey, DASHBOARD_CACHE_TTL, async () => {
-        const outletIds = await resolveOutletIds(ownerId, input?.outletId)
+        const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
         return useCase.getSalesTrend(outletIds, days)
       })
     }),
@@ -86,13 +92,11 @@ export const dashboardRouter = router({
     .query(async ({ input, ctx }) => {
       const days = input?.days ?? 7
       const limit = input?.limit || 5
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (!ownerId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Tenant not found' })
-
+      const tenantId = ctx.session.tenantId!
       const useCase = container.dashboardUseCase()
-      const cacheKey = dashKey('top', ownerId, input?.outletId, `${days}:${limit}`)
+      const cacheKey = dashKey('top', tenantId, input?.outletId, `${days}:${limit}`)
       return withCache(cacheKey, DASHBOARD_CACHE_TTL, async () => {
-        const outletIds = await resolveOutletIds(ownerId, input?.outletId)
+        const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
         return useCase.getTopProducts(outletIds, days, limit)
       })
     }),
@@ -107,14 +111,11 @@ export const dashboardRouter = router({
     .query(async ({ input, ctx }) => {
       const threshold = input?.threshold || 10
       const today = new Date().toISOString().split('T')[0]
-
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (!ownerId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Tenant not found' })
-
+      const tenantId = ctx.session.tenantId!
       const useCase = container.dashboardUseCase()
-      const cacheKey = dashKey('low', ownerId, input?.outletId, `${threshold}:${today}`)
+      const cacheKey = dashKey('low', tenantId, input?.outletId, `${threshold}:${today}`)
       return withCache(cacheKey, DASHBOARD_CACHE_TTL * 2, async () => {
-        const outletIds = await resolveOutletIds(ownerId, input?.outletId)
+        const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
         return useCase.getLowStock(outletIds, threshold)
       })
     }),
@@ -130,14 +131,11 @@ export const dashboardRouter = router({
     .query(async ({ input, ctx }) => {
       const limit = input?.limit || 10
       const days = input?.days
-
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (!ownerId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Tenant not found' })
-
+      const tenantId = ctx.session.tenantId!
       const useCase = container.dashboardUseCase()
-      const cacheKey = dashKey('recent', ownerId, input?.outletId, `${limit}:${days ?? 'all'}`)
+      const cacheKey = dashKey('recent', tenantId, input?.outletId, `${limit}:${days ?? 'all'}`)
       return withCache(cacheKey, 30, async () => {
-        const outletIds = await resolveOutletIds(ownerId, input?.outletId)
+        const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
         return useCase.getRecentTransactions(outletIds, limit, days)
       })
     }),
@@ -148,13 +146,9 @@ export const dashboardRouter = router({
       days: z.number().default(30),
     }))
     .query(async ({ input, ctx }) => {
-      const ownerId = await getTenantOwnerId(ctx.userId, ctx.session.role, ctx.session.outletId)
-      if (!ownerId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Tenant not found' })
-
-      const outletIds = await resolveOutletIds(ownerId, input.outletId)
-
+      const tenantId = ctx.session.tenantId!
+      const outletIds = await resolveOutletIds(ctx.userId, tenantId, input.outletId)
       const plan = await container.userRepository().getPlan(ctx.userId)
-
       const useCase = container.dashboardUseCase()
       const result = await useCase.exportReport(outletIds, ctx.userId, plan, input.days)
 

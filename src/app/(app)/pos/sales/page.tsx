@@ -9,7 +9,10 @@ import { PrintPreviewModal } from '@/components/print/PrintPreviewModal'
 import { PrintReceipt, ReceiptData } from '@/components/print/PrintReceipt'
 import { BarcodeScanner } from '@/components/barcode/BarcodeScanner'
 import { PaymentModal } from '@/components/payment'
+import { printHtmlDocument } from '@/lib/print/printHtmlDocument'
 import { formatCurrency, formatDateTime, generateTransactionId } from '@/lib/utils'
+import { offlineDb } from '@/lib/offline/database'
+import { useOffline } from '@/hooks/useOffline'
 import { List, LayoutGrid } from 'lucide-react'
 import { ProductListSkeleton, ProductGridSkeleton } from '@/components/ui/Skeletons'
 
@@ -20,6 +23,11 @@ interface CartItem {
   quantity: number
   unitPrice: number
   total: number
+}
+
+type CachedInventoryItem = {
+  id: string
+  currentStock: number
 }
 
 export default function SalesTransactionPage() {
@@ -98,16 +106,18 @@ export default function SalesTransactionPage() {
     }
   }, [selectedOutletId])
 
-  const handleDirectPrint = () => {
+  const handleDirectPrint = async () => {
     if (!receiptData) return
-    const styleSheets = Array.from(document.querySelectorAll('style')).map(s => s.outerHTML).join('\n')
     const receiptHTML = receiptRef.current?.outerHTML ?? ''
-    const printWindow = window.open('', '_blank', 'width=400,height=800')
-    if (!printWindow) { alert('Aktifkan popup di browser untuk fitur print.'); return }
-    printWindow.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Struk</title>${styleSheets}<style>@page{size:80mm auto;margin:0}body{margin:0;padding:0;background:white}</style></head><body>${receiptHTML}</body></html>`)
-    printWindow.document.close()
-    printWindow.focus()
-    setTimeout(() => { printWindow.print(); printWindow.close() }, 300)
+
+    const didPrint = await printHtmlDocument({
+      title: 'Struk',
+      bodyHtml: receiptHTML,
+    })
+
+    if (!didPrint) {
+      alert('Gagal menyiapkan print. Coba ulangi beberapa saat lagi.')
+    }
   }
 
   const { data: productsResponse, isLoading: productsLoading } = trpc.products.getAll.useQuery()
@@ -126,55 +136,8 @@ export default function SalesTransactionPage() {
   }, [outletsResponse])
   const { data: userProfile } = trpc.auth.getProfile.useQuery()
 
-  // Offline detection
-  const [isOffline, setIsOffline] = useState(typeof window !== 'undefined' ? !navigator.onLine : false)
-  const [syncingCount, setSyncingCount] = useState(0)
-  useEffect(() => {
-    const goOffline = () => setIsOffline(true)
-    const goOnline = () => {
-      setIsOffline(false)
-      // Sync offline transaction queue when back online
-      syncOfflineQueue()
-    }
-    window.addEventListener('offline', goOffline)
-    window.addEventListener('online', goOnline)
-    // Also try syncing on mount (in case there are queued items from previous session)
-    syncOfflineQueue()
-    return () => { window.removeEventListener('offline', goOffline); window.removeEventListener('online', goOnline) }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const syncOfflineQueue = async () => {
-    try {
-      const queue = JSON.parse(localStorage.getItem('lakupos-offline-tx-queue') || '[]')
-      const unsynced = queue.filter((tx: any) => !tx.synced)
-      if (unsynced.length === 0) return
-
-      setSyncingCount(unsynced.length)
-      let syncedCount = 0
-
-      for (const tx of unsynced) {
-        try {
-          await createTransactionMutation.mutateAsync(tx.payload)
-          tx.synced = true
-          syncedCount++
-        } catch {
-          // Keep in queue for next sync attempt
-        }
-      }
-
-      // Update queue — remove synced items
-      const remaining = queue.filter((tx: any) => !tx.synced)
-      localStorage.setItem('lakupos-offline-tx-queue', JSON.stringify(remaining))
-      setSyncingCount(0)
-
-      if (syncedCount > 0) {
-        refetchTransactions()
-      }
-    } catch {
-      setSyncingCount(0)
-    }
-  }
+  const { isOnline, syncStatus, pendingTransactions } = useOffline()
+  const isOffline = !isOnline
 
   // Products: use API data if available, otherwise fallback to cached data
   const products: NonNullable<typeof productsResponse>['products'] = productsResponse?.products || (() => {
@@ -191,18 +154,52 @@ export default function SalesTransactionPage() {
     }
     return []
   })()
-  // Auto-select outlet if user has only one
+  const showProductsLoading = productsLoading && products.length === 0 && !isOffline
+  const showOutletsLoading = outletsLoading && outlets.length === 0 && !isOffline
+
+  // RBAC: Lock kasir/cashier to their assigned outlet
+  const isKasirLocked = userProfile?.role === 'user' || userProfile?.role === 'cashier'
+
+  // Auto-select outlet: kasir locked to assigned outlet, admin picks if only 1
   useEffect(() => {
-    if (outlets.length === 1 && !selectedOutletId) {
+    if (isKasirLocked && userProfile?.outletId && !selectedOutletId) {
+      setSelectedOutletId(userProfile.outletId)
+    } else if (outlets.length === 1 && !selectedOutletId) {
       setSelectedOutletId(outlets[0].id)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [outlets])
+  }, [outlets, userProfile])
 
   const { data: inventoryList } = trpc.stock.getInventoryList.useQuery(
     { outletId: selectedOutletId || undefined },
     { enabled: !!selectedOutletId }
   )
+  const [cachedInventoryList, setCachedInventoryList] = useState<CachedInventoryItem[]>([])
+
+  useEffect(() => {
+    if (!selectedOutletId) {
+      setCachedInventoryList([])
+      return
+    }
+
+    try {
+      const cached = localStorage.getItem(`lakupos-inventory-cache:${selectedOutletId}`)
+      setCachedInventoryList(cached ? JSON.parse(cached) as CachedInventoryItem[] : [])
+    } catch {
+      setCachedInventoryList([])
+    }
+  }, [selectedOutletId])
+
+  useEffect(() => {
+    if (!selectedOutletId || !inventoryList) return
+
+    try {
+      localStorage.setItem(`lakupos-inventory-cache:${selectedOutletId}`, JSON.stringify(inventoryList))
+      setCachedInventoryList(inventoryList as CachedInventoryItem[])
+    } catch {
+      // Ignore cache write failures; live inventory still works.
+    }
+  }, [inventoryList, selectedOutletId])
 
   const { data: recentTransactions, refetch: refetchTransactions } = trpc.dashboard.getRecentTransactions.useQuery({ limit: 5 })
 
@@ -218,8 +215,9 @@ export default function SalesTransactionPage() {
 
   const selectedProduct = products?.find(p => p.id === selectedProductId)
   const selectedOutlet = outlets?.find(o => o.id === selectedOutletId)
-  const selectedProductStock = inventoryList?.find(p => p.id === selectedProductId)
-  const availableStock = selectedProductStock?.currentStock || 0
+  const effectiveInventoryList = inventoryList ?? cachedInventoryList
+  const selectedProductStock = effectiveInventoryList?.find(p => p.id === selectedProductId)
+  const availableStock = selectedProductStock?.currentStock ?? 0
 
   const filteredOutlets = outlets?.filter(o => {
     const q = outletSearch.toLowerCase()
@@ -388,7 +386,10 @@ export default function SalesTransactionPage() {
         return mapping[method] || 'cash'
       }
 
+      const stableTransactionId = pendingTransactionId || generateTransactionId()
+
       const transactionPayload = {
+        transactionId: stableTransactionId,
         outletId: selectedOutletId,
         items: cart.map(item => ({
           productId: item.productId, productName: item.productName, productSku: item.productSku,
@@ -403,21 +404,34 @@ export default function SalesTransactionPage() {
       let result: any
 
       if (isOffline) {
-        // OFFLINE: Save transaction to queue for later sync
-        const offlineTx = {
-          id: generateTransactionId(),
-          payload: transactionPayload,
-          paymentId,
-          paymentMethod,
-          createdAt: new Date().toISOString(),
+        await offlineDb.transactions.add({
+          transactionId: stableTransactionId,
+          outletId: selectedOutletId,
+          userId: getUserId(),
+          items: cart.map(item => ({
+            productId: item.productId,
+            productName: item.productName,
+            productSku: item.productSku,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
+          })),
+          subtotal: cartSubtotal,
+          discount: discountAmount,
+          total: cartTotal,
+          paymentMethod: transactionPayload.paymentMethod,
+          amountPaid: cartTotal,
+          change: 0,
+          notes: transactionPayload.notes,
+          promotionId: appliedPromo?.promoId,
+          promotionName: appliedPromo?.promoName,
+          timestamp: Date.now(),
           synced: false,
-        }
-        try {
-          const queue = JSON.parse(localStorage.getItem('lakupos-offline-tx-queue') || '[]')
-          queue.push(offlineTx)
-          localStorage.setItem('lakupos-offline-tx-queue', JSON.stringify(queue))
-        } catch {}
-        result = { transactionId: offlineTx.id, transaction: { id: offlineTx.id } }
+          syncAttempts: 0,
+        })
+
+        window.dispatchEvent(new CustomEvent('offline-queue-updated'))
+        result = { transactionId: stableTransactionId, transaction: { id: stableTransactionId } }
       } else {
         // ONLINE: Submit to server
         result = await createTransactionMutation.mutateAsync(transactionPayload)
@@ -503,9 +517,9 @@ export default function SalesTransactionPage() {
           ⚡ Mode Offline — Transaksi akan disinkronkan saat online
         </div>
       )}
-      {!isOffline && syncingCount > 0 && (
+      {!isOffline && syncStatus === 'syncing' && pendingTransactions > 0 && (
         <div className="px-3 py-2 text-xs font-semibold shrink-0 bg-blue-50 dark:bg-blue-900/30 text-blue-700 border-b border-blue-200 flex items-center gap-2">
-          🔄 Menyinkronkan {syncingCount} transaksi offline...
+          🔄 Menyinkronkan {pendingTransactions} transaksi offline...
         </div>
       )}
       {(error || showSuccess) && (
@@ -521,7 +535,17 @@ export default function SalesTransactionPage() {
         <div className="flex flex-col gap-3 flex-1 overflow-hidden min-w-0">
 
           {/* Outlet — compact pill once selected */}
-          {!selectedOutlet ? (
+          {isKasirLocked && selectedOutlet ? (
+            // Kasir locked: show outlet as read-only pill (no change button)
+            <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/30 border-2 border-purple-200 dark:border-purple-800 rounded-xl shrink-0">
+              <span className="text-purple-500">🏪</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs md:text-sm font-semibold text-purple-900 dark:text-purple-200 truncate">{selectedOutlet.name}</p>
+                {selectedOutlet.address && <p className="text-xs text-purple-600 dark:text-purple-400 truncate">{selectedOutlet.address}</p>}
+              </div>
+              <span className="text-xs text-purple-400">🔒</span>
+            </div>
+          ) : !selectedOutlet ? (
             <div className="shrink-0 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 space-y-2">
               <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pilih Outlet</p>
               <div className="relative">
@@ -529,7 +553,7 @@ export default function SalesTransactionPage() {
                 <input type="text" value={outletSearch} onChange={(e) => setOutletSearch(e.target.value)} placeholder="Cari outlet..." className="w-full pl-9 pr-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:border-purple-500 focus:outline-none" />
               </div>
               <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden max-h-28 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
-                {outletsLoading ? (
+                {showOutletsLoading ? (
                   <div className="py-4 text-center text-sm text-gray-400">Memuat...</div>
                 ) : filteredOutlets.map(outlet => (
                   <button key={outlet.id} onClick={() => { setSelectedOutletId(outlet.id); setOutletSearch('') }} className="w-full flex items-center justify-between px-3 py-2 hover:bg-purple-50 dark:hover:bg-purple-900/30 text-left transition-colors">
@@ -639,7 +663,7 @@ export default function SalesTransactionPage() {
                   <span className="col-span-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Stok</span>
                 </div>
                 <div className="overflow-y-auto flex-1 divide-y divide-gray-100 dark:divide-gray-700">
-                  {productsLoading ? (
+                  {showProductsLoading ? (
                     <ProductListSkeleton rows={6} />
                   ) : !selectedOutletId ? (
                     <div className="py-4 md:py-8 text-center text-sm text-gray-400 dark:text-gray-500">Pilih outlet untuk melihat produk</div>
@@ -656,7 +680,7 @@ export default function SalesTransactionPage() {
                       </p>
                     </div>
                   ) : filteredProducts.map(product => {
-                    const stock = inventoryList?.find(p => p.id === product.id)?.currentStock ?? 0
+                    const stock = effectiveInventoryList?.find(p => p.id === product.id)?.currentStock ?? 0
                     const isSelected = selectedProductId === product.id
                     const isUntrackedItem = product.stock_behavior === 'UNTRACKED' || product.stock_behavior === 'CONSUMED'
                     const isOutOfStock = !isUntrackedItem && stock === 0
@@ -725,7 +749,7 @@ export default function SalesTransactionPage() {
                 ) : (
                   /* Grid view */
                   <div className="overflow-y-auto flex-1 p-3">
-                    {productsLoading ? (
+                    {showProductsLoading ? (
                       <ProductGridSkeleton count={8} />
                     ) : !selectedOutletId ? (
                       <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">Pilih outlet untuk melihat produk</div>
@@ -744,7 +768,7 @@ export default function SalesTransactionPage() {
                     ) : (
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                         {filteredProducts.map(product => {
-                          const stock = inventoryList?.find(p => p.id === product.id)?.currentStock ?? 0
+                          const stock = effectiveInventoryList?.find(p => p.id === product.id)?.currentStock ?? 0
                           const isSelected = selectedProductId === product.id
                           const isUntrackedItem = product.stock_behavior === 'UNTRACKED' || product.stock_behavior === 'CONSUMED'
                           const isOutOfStock = !isUntrackedItem && stock === 0

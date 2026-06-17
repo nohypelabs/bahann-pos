@@ -1,0 +1,36 @@
+      table_name       |                 constraint_name                 | constraint_type |                                                                                                                check_def                                                                                                                
+-----------------------+-------------------------------------------------+-----------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ _migrations           | _migrations_filename_key                        | UNIQUE          | 
+ business_profiles     | business_profiles_user_id_key                   | UNIQUE          | 
+ daily_sales           | daily_sales_product_id_outlet_id_sale_date_key  | UNIQUE          | 
+ daily_stock           | daily_stock_product_id_outlet_id_stock_date_key | UNIQUE          | 
+ operational_expenses  | operational_expenses_amount_check               | CHECK           | CHECK ((amount > (0)::numeric))
+ operational_expenses  | operational_expenses_category_check             | CHECK           | CHECK ((category = ANY (ARRAY['listrik'::text, 'air'::text, 'gaji'::text, 'belanja_bahan'::text, 'perbaikan'::text, 'transport'::text, 'sewa'::text, 'lainnya'::text])))
+ outlet_groups         | outlet_groups_tenant_id_name_key                | UNIQUE          | 
+ outlets               | outlets_name_key                                | UNIQUE          | 
+ password_reset_tokens | password_reset_tokens_token_key                 | UNIQUE          | 
+ payment_methods       | payment_methods_code_key                        | UNIQUE          | 
+ payments              | payments_reference_number_key                   | UNIQUE          | 
+ permissions           | permissions_key_key                             | UNIQUE          | 
+ pos_devices           | pos_devices_status_check                        | CHECK           | CHECK ((status = ANY (ARRAY['active'::text, 'inactive'::text, 'maintenance'::text])))
+ pos_devices           | pos_devices_tenant_id_device_code_key           | UNIQUE          | 
+ products              | products_sku_key                                | UNIQUE          | 
+ products              | products_sku_owner_id_unique                    | UNIQUE          | 
+ promotions            | promotions_code_key                             | UNIQUE          | 
+ qris_config           | qris_config_merchant_id_key                     | UNIQUE          | 
+ refresh_tokens        | refresh_tokens_token_hash_key                   | UNIQUE          | 
+ roles                 | roles_tenant_id_key_key                         | UNIQUE          | 
+ shifts                | shifts_status_check                             | CHECK           | CHECK ((status = ANY (ARRAY['open'::text, 'pending_approval'::text, 'closed'::text, 'rejected'::text])))
+ shifts                | uq_shift_active                                 | UNIQUE          | 
+ stock_movements       | stock_movements_movement_type_check             | CHECK           | CHECK ((movement_type = ANY (ARRAY['IN'::text, 'OUT'::text, 'ADJUSTMENT'::text, 'RETURN'::text, 'DAMAGED'::text])))
+ tenants               | tenants_plan_check                              | CHECK           | CHECK ((plan = ANY (ARRAY['free'::text, 'warung'::text, 'starter'::text, 'professional'::text, 'business'::text, 'enterprise'::text])))
+ tenants               | tenants_status_check                            | CHECK           | CHECK ((status = ANY (ARRAY['active'::text, 'suspended'::text, 'cancelled'::text])))
+ tenants               | tenants_slug_key                                | UNIQUE          | 
+ transaction_approvals | transaction_approvals_status_check              | CHECK           | CHECK ((status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text])))
+ transaction_approvals | transaction_approvals_action_type_check         | CHECK           | CHECK ((action_type = ANY (ARRAY['void'::text, 'refund'::text, 'discount_override'::text, 'cash_drawer_open'::text, 'payment_correction'::text, 'shift_close'::text])))
+ transactions          | transactions_transaction_id_key                 | UNIQUE          | 
+ user_role_assignments | user_role_assignments_scope_type_check          | CHECK           | CHECK ((scope_type = ANY (ARRAY['TENANT'::text, 'OUTLET'::text, 'OUTLET_GROUP'::text])))
+ users                 | valid_plan                                      | CHECK           | CHECK (((plan)::text = ANY ((ARRAY['free'::character varying, 'warung'::character varying, 'starter'::character varying, 'professional'::character varying, 'business'::character varying, 'enterprise'::character varying])::text[])))
+ users                 | users_email_key                                 | UNIQUE          | 
+(32 rows)
+

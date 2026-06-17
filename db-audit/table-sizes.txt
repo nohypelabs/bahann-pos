@@ -1,0 +1,40 @@
+ schemaname |       tablename       | total_size 
+------------+-----------------------+------------
+ public     | audit_logs            | 440 kB
+ public     | refresh_tokens        | 288 kB
+ public     | transactions          | 264 kB
+ public     | users                 | 192 kB
+ public     | products              | 192 kB
+ public     | payments              | 160 kB
+ public     | daily_stock           | 144 kB
+ public     | user_role_assignments | 120 kB
+ public     | stock_movements       | 112 kB
+ public     | transaction_items     | 104 kB
+ public     | password_reset_tokens | 96 kB
+ public     | stock_alerts          | 88 kB
+ public     | payment_requests      | 80 kB
+ public     | outlets               | 80 kB
+ public     | roles                 | 72 kB
+ public     | business_profiles     | 64 kB
+ public     | operational_expenses  | 64 kB
+ public     | daily_sales           | 56 kB
+ public     | promotions            | 56 kB
+ public     | payment_methods       | 48 kB
+ public     | cash_sessions         | 48 kB
+ public     | payment_confirmations | 48 kB
+ public     | billing_history       | 48 kB
+ public     | tenants               | 48 kB
+ public     | shifts                | 48 kB
+ public     | _migrations           | 48 kB
+ public     | permissions           | 48 kB
+ public     | transaction_approvals | 40 kB
+ public     | qris_config           | 40 kB
+ public     | bank_accounts         | 32 kB
+ public     | platform_settings     | 32 kB
+ public     | outlet_groups         | 32 kB
+ public     | pos_devices           | 32 kB
+ public     | wa_templates          | 32 kB
+ public     | role_permissions      | 24 kB
+ public     | outlet_group_members  | 16 kB
+(36 rows)
+

@@ -15,6 +15,24 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unknown error'
 }
 
+function toTransactionCreateInput(transaction: OfflineTransaction) {
+  return {
+    transactionId: transaction.transactionId,
+    outletId: transaction.outletId,
+    items: transaction.items.map((item) => ({
+      productId: item.productId,
+      productName: item.productName,
+      productSku: item.productSku,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+    })),
+    paymentMethod: transaction.paymentMethod,
+    amountPaid: transaction.amountPaid,
+    discountAmount: transaction.discount,
+    notes: transaction.notes,
+  }
+}
+
 export class SyncManager {
   private syncInProgress = false
   private syncInterval: NodeJS.Timeout | null = null
@@ -157,8 +175,21 @@ export class SyncManager {
 
     for (const transaction of pendingTransactions) {
       try {
-        // Use the typed tRPC client so replay follows the same request path as online writes.
-        await vanillaTrpc.sales.recordOffline.mutate(transaction)
+        const result = await vanillaTrpc.transactions.create.mutate(toTransactionCreateInput(transaction))
+
+        if (transaction.promotionId) {
+          try {
+            await vanillaTrpc.promotions.recordUsage.mutate({
+              promotionId: transaction.promotionId,
+              transactionId: result.transaction.id,
+              discountApplied: transaction.discount,
+            })
+          } catch (promotionError) {
+            logger.warn(`Failed to sync promo usage for ${transaction.transactionId}`, {
+              error: getErrorMessage(promotionError),
+            })
+          }
+        }
 
         // Mark as synced
         await offlineDb.transactions.update(transaction.id!, {

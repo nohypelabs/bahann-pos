@@ -1,5 +1,5 @@
 import type { PaymentMethodRepository } from '@/domain/repositories/PaymentMethodRepository'
-import type { PaymentMethodCode } from '@/domain/entities/PaymentMethod'
+import { normalizeImageUpload } from '@/lib/security/imageUpload'
 
 interface BankTransferInput {
   bankName: string
@@ -42,8 +42,13 @@ export class CreatePaymentUseCase {
   }
 
   async updateQRIS(input: QRISInput): Promise<{ success: boolean }> {
+    const qrisImage = normalizeImageUpload(input.imageBase64, {
+      label: 'Gambar QRIS',
+      maxBytes: 2 * 1024 * 1024,
+    })
+
     const accountDetails = {
-      imageBase64: input.imageBase64,
+      imageBase64: qrisImage.dataUrl,
       merchantName: input.merchantName ?? 'Laku POS',
     }
     await this.paymentRepo.updateByCode('qris_static', accountDetails, input.isActive ?? true)

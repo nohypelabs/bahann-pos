@@ -14,6 +14,7 @@ import {
 } from '@/lib/payment/unique-amount'
 import { sendPlanUpgradeEmail } from '@/lib/email'
 import { logger } from '@/lib/logger'
+import { normalizeImageUpload } from '@/lib/security/imageUpload'
 import { AppError } from '@/shared/exceptions/AppError'
 
 export class ManagePaymentUseCase {
@@ -161,11 +162,15 @@ export class ManagePaymentUseCase {
       throw new AppError('Request sudah diproses', 400)
     }
 
+    const proofImage = normalizeImageUpload(params.proofBase64, {
+      label: 'Bukti pembayaran',
+      maxBytes: 5 * 1024 * 1024,
+    })
+
     const url = await this.paymentRequestRepo.uploadProof(
       params.userId,
       params.requestId,
-      params.proofBase64,
-      params.fileName,
+      proofImage,
     )
 
     await this.paymentRequestRepo.updateProofUrl(params.requestId, url)

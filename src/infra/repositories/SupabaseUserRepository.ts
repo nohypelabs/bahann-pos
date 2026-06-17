@@ -11,6 +11,7 @@ export class SupabaseUserRepository implements UserRepository {
       password_hash: user.passwordHash,
       outlet_id: user.outletId,
       role: user.role,
+      tenant_id: user.tenantId,
       created_at: user.createdAt?.toISOString(),
       whatsapp_number: user.whatsappNumber,
     })
@@ -23,7 +24,7 @@ export class SupabaseUserRepository implements UserRepository {
   async findByEmail(email: string): Promise<User | null> {
     const { data, error } = await supabaseAdmin
       .from('users')
-      .select('id, email, name, password_hash, outlet_id, role, created_at, whatsapp_number')
+      .select('id, email, name, password_hash, outlet_id, role, tenant_id, created_at, whatsapp_number')
       .eq('email', email)
       .single()
 
@@ -38,6 +39,7 @@ export class SupabaseUserRepository implements UserRepository {
       data.password_hash,
       data.outlet_id || undefined,
       data.role || undefined,
+      data.tenant_id || undefined,
       data.created_at ? new Date(data.created_at) : undefined,
       data.whatsapp_number || undefined
     )
@@ -61,6 +63,7 @@ export class SupabaseUserRepository implements UserRepository {
       data.password_hash,
       data.outlet_id || undefined,
       data.role || undefined,
+      data.tenant_id || undefined,
       data.created_at ? new Date(data.created_at) : undefined,
       data.whatsapp_number || undefined
     )

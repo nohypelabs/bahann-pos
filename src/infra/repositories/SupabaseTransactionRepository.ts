@@ -45,6 +45,13 @@ interface TransactionItemRow {
   line_total: number
 }
 
+const TRANSACTION_WITH_RELATIONS_SELECT = `
+  *,
+  transaction_items (*),
+  outlets (id, name, address),
+  cashier:users!cashier_id (id, name, email)
+`
+
 function toTransaction(row: TransactionRow): Transaction {
   return {
     id: row.id,
@@ -130,13 +137,31 @@ export class SupabaseTransactionRepository implements TransactionRepository {
   async findById(id: string): Promise<TransactionWithRelations | null> {
     const { data, error } = await supabase
       .from('transactions')
-      .select(`
-        *,
-        transaction_items (*),
-        outlets (id, name, address),
-        cashier:users!cashier_id (id, name, email)
-      `)
+      .select(TRANSACTION_WITH_RELATIONS_SELECT)
       .eq('id', id)
+      .single()
+
+    if (error || !data) return null
+
+    const row = data as TransactionRow & {
+      transaction_items: TransactionItemRow[]
+      outlets: { id: string; name: string; address?: string } | null
+      cashier: { id: string; name: string; email?: string } | null
+    }
+
+    return {
+      ...toTransaction(row),
+      items: (row.transaction_items ?? []).map(toTransactionItem),
+      outlet: row.outlets ?? undefined,
+      cashier: row.cashier ?? undefined,
+    }
+  }
+
+  async findByTransactionId(transactionId: string): Promise<TransactionWithRelations | null> {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select(TRANSACTION_WITH_RELATIONS_SELECT)
+      .eq('transaction_id', transactionId)
       .single()
 
     if (error || !data) return null

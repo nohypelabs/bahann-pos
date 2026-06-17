@@ -1,0 +1,53 @@
+                  proname                  |                                                return_type                                                |   kind   
+-------------------------------------------+-----------------------------------------------------------------------------------------------------------+----------
+ approve_shift                             | void                                                                                                      | function
+ cleanup_expired_refresh_tokens            | void                                                                                                      | function
+ compute_expected_cash                     | numeric                                                                                                   | function
+ create_income_from_sale                   | trigger                                                                                                   | function
+ generate_transaction_number               | trigger                                                                                                   | function
+ get_daily_expense_summary                 | TABLE(category text, total numeric, count bigint)                                                         | function
+ get_sales_summary                         | TABLE(total_revenue numeric, transaction_count bigint, total_items_sold bigint)                           | function
+ get_sales_trend                           | TABLE(sale_date date, revenue numeric, items_sold bigint)                                                 | function
+ get_top_products                          | TABLE(product_id uuid, product_name text, product_sku text, total_quantity bigint, total_revenue numeric) | function
+ get_user_outlet_ids                       | uuid[]                                                                                                    | function
+ gin_extract_query_trgm                    | internal                                                                                                  | function
+ gin_extract_value_trgm                    | internal                                                                                                  | function
+ gin_trgm_consistent                       | boolean                                                                                                   | function
+ gin_trgm_triconsistent                    | "char"                                                                                                    | function
+ gtrgm_compress                            | internal                                                                                                  | function
+ gtrgm_consistent                          | boolean                                                                                                   | function
+ gtrgm_decompress                          | internal                                                                                                  | function
+ gtrgm_distance                            | double precision                                                                                          | function
+ gtrgm_in                                  | gtrgm                                                                                                     | function
+ gtrgm_options                             | void                                                                                                      | function
+ gtrgm_out                                 | cstring                                                                                                   | function
+ gtrgm_penalty                             | internal                                                                                                  | function
+ gtrgm_picksplit                           | internal                                                                                                  | function
+ gtrgm_same                                | internal                                                                                                  | function
+ gtrgm_union                               | gtrgm                                                                                                     | function
+ prevent_audit_log_mutation                | trigger                                                                                                   | function
+ set_limit                                 | real                                                                                                      | function
+ show_limit                                | real                                                                                                      | function
+ show_trgm                                 | text[]                                                                                                    | function
+ similarity                                | real                                                                                                      | function
+ similarity_dist                           | real                                                                                                      | function
+ similarity_op                             | boolean                                                                                                   | function
+ strict_word_similarity                    | real                                                                                                      | function
+ strict_word_similarity_commutator_op      | boolean                                                                                                   | function
+ strict_word_similarity_dist_commutator_op | real                                                                                                      | function
+ strict_word_similarity_dist_op            | real                                                                                                      | function
+ strict_word_similarity_op                 | boolean                                                                                                   | function
+ submit_shift                              | void                                                                                                      | function
+ update_expenses_updated_at                | trigger                                                                                                   | function
+ update_password_reset_tokens_updated_at   | trigger                                                                                                   | function
+ update_product_stock                      | trigger                                                                                                   | function
+ update_shift_cash_totals                  | trigger                                                                                                   | function
+ update_updated_at_column                  | trigger                                                                                                   | function
+ user_has_permission                       | boolean                                                                                                   | function
+ word_similarity                           | real                                                                                                      | function
+ word_similarity_commutator_op             | boolean                                                                                                   | function
+ word_similarity_dist_commutator_op        | real                                                                                                      | function
+ word_similarity_dist_op                   | real                                                                                                      | function
+ word_similarity_op                        | boolean                                                                                                   | function
+(49 rows)
+

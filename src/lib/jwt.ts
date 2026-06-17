@@ -18,6 +18,7 @@ export interface JWTPayload {
   name: string
   outletId?: string
   role?: string
+  tenantId?: string
 }
 
 /**

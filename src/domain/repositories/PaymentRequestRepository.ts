@@ -41,6 +41,12 @@ export interface PaymentRequestWithUser extends PaymentRequest {
   } | null
 }
 
+export interface PaymentProofUpload {
+  buffer: Buffer
+  mimeType: string
+  extension: string
+}
+
 export interface PaymentRequestRepository {
   findPendingByUserId(userId: string): Promise<PaymentRequest | null>
   findPendingUniqueAmounts(): Promise<number[]>
@@ -53,6 +59,6 @@ export interface PaymentRequestRepository {
   reject(id: string, reviewedBy: string, note: string): Promise<void>
   updateStatus(id: string, status: string, data: Record<string, unknown>): Promise<void>
   listAll(params: ListParams): Promise<{ requests: PaymentRequestWithUser[]; total: number }>
-  uploadProof(userId: string, requestId: string, base64: string, fileName: string): Promise<string>
+  uploadProof(userId: string, requestId: string, image: PaymentProofUpload): Promise<string>
   getPlatformSettings(keys: string[]): Promise<Record<string, string>>
 }

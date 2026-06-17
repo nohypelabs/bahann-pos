@@ -28,6 +28,8 @@ export function RevenueLineChart({
   height = 260,
   className,
 }: RevenueLineChartProps) {
+  const { language } = useLanguage()
+
   if (!data || data.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-gray-400">
@@ -36,7 +38,6 @@ export function RevenueLineChart({
     )
   }
 
-  const { language } = useLanguage()
   const avg = data.reduce((s, d) => s + d.revenue, 0) / data.length
 
   return (
