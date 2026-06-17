@@ -7,6 +7,7 @@ import { DailySale } from '@/domain/entities/DailySale'
 import { logger } from '@/lib/logger'
 
 export interface CreateTransactionInput {
+  tenantId: string
   transactionId?: string
   outletId: string
   cashierId: string
@@ -127,6 +128,7 @@ export class CreateTransactionUseCase {
       try {
         const sale: DailySale = {
           id: crypto.randomUUID(),
+          tenantId: input.tenantId,
           productId: item.productId,
           outletId: input.outletId,
           saleDate: new Date(),
@@ -142,7 +144,7 @@ export class CreateTransactionUseCase {
     }
 
     // Deduct stock for TRACKED items
-    await this.deductStock(input.items, input.outletId)
+    await this.deductStock(input.items, input.outletId, input.tenantId)
 
     return {
       success: true,
@@ -155,6 +157,7 @@ export class CreateTransactionUseCase {
   private async deductStock(
     items: { productId: string; quantity: number }[],
     outletId: string,
+    tenantId: string,
   ): Promise<void> {
     const today = new Date().toISOString().split('T')[0]
 
@@ -202,6 +205,7 @@ export class CreateTransactionUseCase {
         try {
           const newStock = {
             id: crypto.randomUUID(),
+            tenantId,
             productId: item.productId,
             outletId,
             stockDate: new Date(today),

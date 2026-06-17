@@ -9,6 +9,7 @@ export class SupabaseDailyStockRepository implements DailyStockRepository {
   async save(stock: DailyStock): Promise<void> {
     const row: TablesInsert<'daily_stock'> = {
       id: stock.id,
+      tenant_id: stock.tenantId,
       product_id: stock.productId,
       outlet_id: stock.outletId,
       stock_date: stock.stockDate.toISOString().split('T')[0],
@@ -39,6 +40,7 @@ export class SupabaseDailyStockRepository implements DailyStockRepository {
 
     return {
       id: data.id,
+      tenantId: data.tenant_id!,
       productId: data.product_id!,
       outletId: data.outlet_id!,
       stockDate: new Date(data.stock_date),
@@ -65,6 +67,7 @@ export class SupabaseDailyStockRepository implements DailyStockRepository {
 
     return (data || []).map((row) => ({
       id: row.id,
+      tenantId: row.tenant_id!,
       productId: row.product_id!,
       outletId: row.outlet_id!,
       stockDate: new Date(row.stock_date),
@@ -91,6 +94,7 @@ export class SupabaseDailyStockRepository implements DailyStockRepository {
 
     return {
       id: data.id,
+      tenantId: data.tenant_id!,
       productId: data.product_id!,
       outletId: data.outlet_id!,
       stockDate: new Date(data.stock_date),

@@ -1,5 +1,6 @@
 export type DailyStock = {
   id: string;
+  tenantId: string;
   productId: string;
   outletId: string;
   stockDate: Date;        // Stock date (e.g., 2025-09-01)

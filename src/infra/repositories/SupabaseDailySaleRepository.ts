@@ -9,6 +9,7 @@ export class SupabaseDailySaleRepository implements DailySaleRepository {
   async save(sale: DailySale): Promise<void> {
     const row: TablesInsert<'daily_sales'> = {
       id: sale.id,
+      tenant_id: sale.tenantId,
       product_id: sale.productId,
       outlet_id: sale.outletId,
       sale_date: sale.saleDate.toISOString().split('T')[0],
@@ -33,6 +34,7 @@ export class SupabaseDailySaleRepository implements DailySaleRepository {
 
     return data.map((row) => ({
       id: row.id,
+      tenantId: row.tenant_id!,
       productId: row.product_id!,
       outletId: row.outlet_id!,
       saleDate: new Date(row.sale_date),

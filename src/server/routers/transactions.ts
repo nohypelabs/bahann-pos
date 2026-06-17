@@ -78,6 +78,7 @@ export const transactionsRouter = router({
 
       try {
         const result = await useCase.execute({
+          tenantId,
           transactionId: input.transactionId,
           outletId: input.outletId,
           cashierId: ctx.userId,

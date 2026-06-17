@@ -3,6 +3,7 @@ import { StockMovementRepository } from '@/domain/repositories/StockMovementRepo
 import { DailyStock } from '@/domain/entities/DailyStock';
 
 export interface AdjustStockInput {
+  tenantId: string;
   productId: string;
   outletId: string;
   stockDate: string;
@@ -29,6 +30,7 @@ export class AdjustStockUseCase {
 
     const stock: DailyStock = {
       id: crypto.randomUUID(),
+      tenantId: input.tenantId,
       productId: input.productId,
       outletId: input.outletId,
       stockDate: new Date(input.stockDate),

@@ -25,6 +25,7 @@ export const stockRouter = router({
       await useCase.execute({
         ...input,
         userId: ctx.userId,
+        tenantId,
       })
 
       return { success: true }

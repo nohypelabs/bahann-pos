@@ -2,6 +2,7 @@ import { DailyStock } from '@/domain/entities/DailyStock';
 import { DailyStockRepository } from '@/domain/repositories/DailyStockRepository';
 
 export type RecordDailyStockInput = {
+  tenantId: string;
   productId: string;
   outletId: string;
   stockDate: string; // ISO string (YYYY-MM-DD)
@@ -15,7 +16,7 @@ export class RecordDailyStockUseCase {
   constructor(private readonly repo: DailyStockRepository) {}
 
   async execute(input: RecordDailyStockInput): Promise<void> {
-    const { productId, outletId, stockDate, stockAwal, stockIn, stockOut, stockAkhir } = input;
+    const { tenantId, productId, outletId, stockDate, stockAwal, stockIn, stockOut, stockAkhir } = input;
 
     // Business logic validation
     if (stockAkhir !== stockAwal + stockIn - stockOut) {
@@ -24,6 +25,7 @@ export class RecordDailyStockUseCase {
 
     const stock: DailyStock = {
       id: crypto.randomUUID(),
+      tenantId,
       productId,
       outletId,
       stockDate: new Date(stockDate),

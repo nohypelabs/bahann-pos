@@ -47,7 +47,7 @@ export const salesRouter = router({
       await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
 
       const useCase = new RecordDailySaleUseCase(salesRepository)
-      await useCase.execute(input)
+      await useCase.execute({ ...input, tenantId })
       return { success: true }
     }),
 
@@ -74,6 +74,7 @@ export const salesRouter = router({
           saleDate,
           quantitySold: item.quantity,
           unitPrice: item.unitPrice,
+          tenantId,
         })
       }
 

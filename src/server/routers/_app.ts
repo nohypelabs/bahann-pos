@@ -17,6 +17,7 @@ import { superAdminRouter } from './superAdmin'
 import { paymentRequestsRouter } from './paymentRequests'
 import { businessProfileRouter } from './businessProfile'
 import { expensesRouter } from './expenses'
+import { shiftsRouter } from './shifts'
 
 /**
  * Main tRPC app router
@@ -41,6 +42,7 @@ export const appRouter = router({
   paymentRequests: paymentRequestsRouter,
   businessProfile: businessProfileRouter,
   expenses: expensesRouter,
+  shifts: shiftsRouter,
 })
 
 export type AppRouter = typeof appRouter
