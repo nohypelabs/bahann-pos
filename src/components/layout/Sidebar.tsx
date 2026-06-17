@@ -6,6 +6,7 @@ import { ReactNode, useEffect, useState } from 'react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { logger } from '@/lib/logger'
 import { usePWA } from '@/lib/pwa/PWAContext'
+import { hasPermission, hasAnyPermission, PERMISSIONS, LEGACY_ROLE_MAP, getRoleDisplayName } from '@/lib/rbac/permissions'
 import { trpc } from '@/lib/trpc/client'
 import {
   LayoutDashboard, Package, ClipboardList, BarChart3,
@@ -175,12 +176,16 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
     window.location.href = '/login'
   }
 
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case 'super_admin': return { label: 'Super Admin', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' }
-      case 'admin':   return { label: t('role.admin'),   color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' }
-      case 'manager': return { label: t('role.manager'), color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' }
-      default:        return { label: t('role.user'),    color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' }
+  const getRoleBadge = (roleKey: string) => {
+    const displayName = getRoleDisplayName(roleKey)
+    switch (roleKey) {
+      case 'OWNER': return { label: displayName, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' }
+      case 'ADMIN_TENANT': return { label: displayName, color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' }
+      case 'AREA_MANAGER': return { label: displayName, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' }
+      case 'STORE_MANAGER': return { label: displayName, color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300' }
+      case 'CASHIER': return { label: displayName, color: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' }
+      case 'AUDITOR': return { label: displayName, color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' }
+      default: return { label: displayName, color: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400' }
     }
   }
 
@@ -198,12 +203,17 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
     return () => mq.removeEventListener('change', handler)
   }, [])
 
-  const roleBadge   = getRoleBadge(userRole)
+  const userRoleKey = LEGACY_ROLE_MAP[userRole] || userRole
+  const roleBadge   = getRoleBadge(userRoleKey)
   const userInitial = userName.charAt(0).toUpperCase()
   const plan        = planData?.plan || 'free'
   const showCollapsed = isCollapsed && !isMobile
-  const isAdmin = userRole === 'admin' || userRole === 'super_admin'
-  const isSuperAdmin = userRole === 'super_admin'
+  const isSuperAdmin = userRoleKey === 'OWNER'
+  const canManageProducts = hasAnyPermission(userRole, [PERMISSIONS.PRODUCT_MANAGE, PERMISSIONS.PRODUCT_VIEW])
+  const canManageSettings = hasAnyPermission(userRole, [PERMISSIONS.SETTINGS_MANAGE, PERMISSIONS.USER_MANAGE])
+  const canViewReports = hasPermission(userRole, PERMISSIONS.REPORT_OUTLET_VIEW)
+  const canViewAudit = hasPermission(userRole, PERMISSIONS.AUDIT_VIEW)
+  const canManageUsers = hasPermission(userRole, PERMISSIONS.USER_MANAGE)
 
   return (
     <>
@@ -312,7 +322,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
           <SidebarSection sectionKey="pos" title={t('sidebar.pos')} isCollapsed={showCollapsed} activePaths={['/pos']}>
             <SidebarItem href="/pos/sales"   icon={<ShoppingCart />} label={t('sidebar.pos.sales')}   isCollapsed={showCollapsed} />
             <SidebarItem href="/pos/history" icon={<History />}      label={t('sidebar.pos.history')} isCollapsed={showCollapsed} />
-            {isAdmin && (
+            {canViewReports && (
               <SidebarItem href="/pos/revenue" icon={<DollarSign />} label={t('sidebar.pos.revenue')} isCollapsed={showCollapsed} />
             )}
           </SidebarSection>
@@ -325,8 +335,8 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             <SidebarItem href="/warehouse/reports"   icon={<BarChart3 />}     label={t('sidebar.warehouse.reports')}   isCollapsed={showCollapsed} />
           </SidebarSection>
 
-          {/* ═══ MASTER DATA — admin only ═══ */}
-          {isAdmin && (
+          {/* ═══ MASTER DATA — product.manage or product.view ═══ */}
+          {canManageProducts && (
             <SidebarSection sectionKey="masterdata" title={t('sidebar.masterData')} isCollapsed={showCollapsed} activePaths={['/products', '/outlets']}>
               <SidebarItem href="/products" icon={<Tag />}   label={t('sidebar.masterData.products')} isCollapsed={showCollapsed} />
               <SidebarItem href="/outlets"  icon={<Store />} label={t('sidebar.masterData.outlets')}  isCollapsed={showCollapsed} />
@@ -355,7 +365,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             </button>
             <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
               <div className="px-2 pb-2">
-                {isAdmin && (
+                {canManageSettings && (
                   <>
                     {/* Pengaturan sub-group */}
                     <button onClick={() => setSubPengaturan(!subPengaturan)}
@@ -365,11 +375,21 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
                     </button>
                     <div className={`overflow-hidden transition-all duration-200 ${subPengaturan ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
                       <div className="space-y-0.5 pb-1">
-                        <SidebarItem href="/settings/payments"      icon={<DollarSign />} label={t('sidebar.settings.payment')}      isCollapsed={false} />
-                        <SidebarItem href="/settings/users"         icon={<Users />}      label={t('sidebar.settings.users')}         isCollapsed={false} />
-                        <SidebarItem href="/settings/audit-logs"    icon={<Shield />}     label={t('sidebar.settings.auditLogs')}    isCollapsed={false} />
-                        <SidebarItem href="/settings/reset"         icon={<Trash2 />}     label={t('sidebar.settings.reset')}         isCollapsed={false} />
-                        <SidebarItem href="/settings/subscriptions" icon={<Star />}       label={t('sidebar.settings.subscriptions')} isCollapsed={false} />
+                        {canManageSettings && (
+                          <SidebarItem href="/settings/payments"      icon={<DollarSign />} label={t('sidebar.settings.payment')}      isCollapsed={false} />
+                        )}
+                        {canManageUsers && (
+                          <SidebarItem href="/settings/users"         icon={<Users />}      label={t('sidebar.settings.users')}         isCollapsed={false} />
+                        )}
+                        {canViewAudit && (
+                          <SidebarItem href="/settings/audit-logs"    icon={<Shield />}     label={t('sidebar.settings.auditLogs')}    isCollapsed={false} />
+                        )}
+                        {canManageSettings && (
+                          <>
+                            <SidebarItem href="/settings/reset"         icon={<Trash2 />}     label={t('sidebar.settings.reset')}         isCollapsed={false} />
+                            <SidebarItem href="/settings/subscriptions" icon={<Star />}       label={t('sidebar.settings.subscriptions')} isCollapsed={false} />
+                          </>
+                        )}
                       </div>
                     </div>
                   </>
@@ -403,7 +423,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         {/* Collapsed: settings + support icons */}
         {showCollapsed && (
           <div className="border-t border-gray-200 dark:border-gray-800 p-2 flex-shrink-0 space-y-1">
-            {isAdmin && (
+            {canManageProducts && (
               <>
                 <SidebarItem href="/products"          icon={<Tag />}          label={t('sidebar.masterData.products')} isCollapsed={true} />
                 <SidebarItem href="/outlets"           icon={<Store />}        label={t('sidebar.masterData.outlets')}  isCollapsed={true} />
@@ -414,7 +434,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             <SidebarItem href="/alerts"            icon={<Bell />}          label={t('sidebar.operations.alerts')} isCollapsed={true} badge={alertCount > 0 ? String(alertCount) : undefined} />
             <SidebarItem href="/profile"           icon={<User />}         label={t('sidebar.profile')}             isCollapsed={true} />
             <SidebarItem href="/help"              icon={<HelpCircle />}   label={t('sidebar.help')}                isCollapsed={true} />
-            {isAdmin && (
+            {canManageSettings && (
               <SidebarItem href="/settings/payments" icon={<Settings />}   label={t('sidebar.settings.payment')}  isCollapsed={true} />
             )}
             {canInstall && !isInstalled && (

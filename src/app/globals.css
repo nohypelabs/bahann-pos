@@ -8,28 +8,28 @@
 }
 
 :root {
-  --background: #f8fafc;
-  --foreground: #111827;
+  /* UIUX-SPEC compliant tokens */
+  --background: #FAFAF9;
+  --foreground: #1C1C1A;
 
-  /* Brand & Accent */
-  --accent-primary: #2563EB;
-  --accent-primary-hover: #1D4ED8;
-  --accent-primary-light: #DBEAFE;
-  --accent-secondary: #EA7317;
-  --accent-secondary-hover: #D97706;
+  /* Brand (navigation, non-critical surfaces only) */
+  --axi-blue: #0B4F6C;
+  --axi-gold: #FBBF24;
 
-  /* Semantic */
-  --success: #0A6B2E;
-  --success-light: #D1FAE5;
-  --warning: #EAB308;
-  --warning-light: #FEF9C3;
-  --error: #8B1A1A;
-  --error-light: #FEE2E2;
+  /* Surface & Border */
+  --surface: #FFFFFF;
+  --border: #E5E3DD;
+  --text-muted: #6B6A64;
 
-  /* Score badges */
-  --score-high: #0A6B2E;
-  --score-mid: #EAB308;
-  --score-low: #8B1A1A;
+  /* Status colors (meaning-driven, not decorative) */
+  --success: #15803D;
+  --success-bg: #EFFAF1;
+  --warning: #B45309;
+  --warning-bg: #FFF8EC;
+  --danger: #B91C1C;
+  --danger-bg: #FEF1F1;
+  --info: #1D4ED8;
+  --info-bg: #EFF5FF;
 
   /* Chart color palette */
   --chart-1: #10b981;
@@ -48,28 +48,30 @@ html {
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--background);
+  --color-fg: var(--foreground);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-text-muted: var(--text-muted);
 
-  /* Brand colors available as Tailwind utilities */
-  --color-accent: #2563EB;
-  --color-accent-hover: #1D4ED8;
-  --color-accent-light: #DBEAFE;
-  --color-warm: #EA7317;
-  --color-warm-hover: #D97706;
+  /* Brand */
+  --color-axi-blue: var(--axi-blue);
+  --color-axi-gold: var(--axi-gold);
 
-  /* Semantic colors */
-  --color-success: #0A6B2E;
-  --color-success-light: #D1FAE5;
-  --color-warning: #EAB308;
-  --color-warning-light: #FEF9C3;
-  --color-danger: #8B1A1A;
-  --color-danger-light: #FEE2E2;
+  /* Status */
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
 
   /* Score colors */
-  --color-score-high: #0A6B2E;
-  --color-score-mid: #EAB308;
-  --color-score-low: #8B1A1A;
+  --color-score-high: var(--success);
+  --color-score-mid: var(--warning);
+  --color-score-low: var(--danger);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
