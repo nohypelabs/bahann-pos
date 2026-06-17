@@ -16,7 +16,7 @@ import {
   User, HelpCircle, Info,
   LogOut, Download, X,
   Settings, ChevronDown, Crown,
-  Receipt, ArrowDownUp,
+  Receipt, ArrowDownUp, CheckCircle,
 } from 'lucide-react'
 
 function SidebarItem({ href, icon, label, badge, isCollapsed }: {
@@ -145,6 +145,11 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
   const { data: planData } = trpc.auth.getPlan.useQuery(undefined, { retry: false, staleTime: 5 * 60 * 1000 })
   const { data: activeAlerts } = trpc.stockAlerts.getActive.useQuery({}, { retry: false, staleTime: 60 * 1000 })
   const alertCount = activeAlerts?.length || 0
+  const { data: pendingApprovalsData } = trpc.transactionApprovals.list.useQuery(
+    { status: 'pending', limit: 100 },
+    { retry: false, staleTime: 30 * 1000 },
+  )
+  const pendingApprovalsCount = pendingApprovalsData?.approvals?.length || 0
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -344,13 +349,14 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
           )}
 
           {/* ═══ OPERATIONS — all roles ═══ */}
-          <SidebarSection sectionKey="operations" title={t('sidebar.operations')} isCollapsed={showCollapsed} activePaths={['/transactions', '/payments', '/expenses', '/promotions', '/eod', '/alerts']}>
+          <SidebarSection sectionKey="operations" title={t('sidebar.operations')} isCollapsed={showCollapsed} activePaths={['/transactions', '/payments', '/expenses', '/promotions', '/eod', '/alerts', '/approvals']}>
             <SidebarItem href="/transactions" icon={<ArrowLeftRight />} label={t('sidebar.operations.transactions')} isCollapsed={showCollapsed} />
             <SidebarItem href="/payments"     icon={<CreditCard />}     label={t('sidebar.operations.payments')}     isCollapsed={showCollapsed} />
             <SidebarItem href="/expenses"     icon={<Receipt />}        label={t('sidebar.operations.expenses')}     isCollapsed={showCollapsed} />
             <SidebarItem href="/promotions"   icon={<Ticket />}         label={t('sidebar.operations.promotions')}   isCollapsed={showCollapsed} />
             <SidebarItem href="/eod"          icon={<Briefcase />}      label={t('sidebar.operations.eod')}          isCollapsed={showCollapsed} />
             <SidebarItem href="/alerts"       icon={<Bell />}           label={t('sidebar.operations.alerts')}       isCollapsed={showCollapsed} badge={alertCount > 0 ? String(alertCount) : undefined} />
+            <SidebarItem href="/approvals"    icon={<CheckCircle />}    label="Persetujuan"      isCollapsed={showCollapsed} badge={pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined} />
           </SidebarSection>
 
         </nav>
@@ -432,6 +438,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             <SidebarItem href="/transactions"      icon={<ArrowLeftRight />} label={t('sidebar.operations.transactions')} isCollapsed={true} />
             <SidebarItem href="/expenses"          icon={<Receipt />}       label={t('sidebar.operations.expenses')} isCollapsed={true} />
             <SidebarItem href="/alerts"            icon={<Bell />}          label={t('sidebar.operations.alerts')} isCollapsed={true} badge={alertCount > 0 ? String(alertCount) : undefined} />
+            <SidebarItem href="/approvals"         icon={<CheckCircle />}   label="Persetujuan"     isCollapsed={true} badge={pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined} />
             <SidebarItem href="/profile"           icon={<User />}         label={t('sidebar.profile')}             isCollapsed={true} />
             <SidebarItem href="/help"              icon={<HelpCircle />}   label={t('sidebar.help')}                isCollapsed={true} />
             {canManageSettings && (
