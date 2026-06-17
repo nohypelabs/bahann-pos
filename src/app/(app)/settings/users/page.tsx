@@ -58,7 +58,7 @@ export default function UsersManagementPage() {
     onSuccess: () => {
       refetch()
       closeForm()
-      showToast('Pengguna berhasil ditambahkan!', 'success')
+      showToast('Pengguna ditambahkan', 'success')
     },
     onError: err => setFormError(err.message),
   })
@@ -67,9 +67,9 @@ export default function UsersManagementPage() {
     onSuccess: () => {
       refetch()
       setEditingUser(null)
-      showToast('Role berhasil diperbarui!', 'success')
+      showToast('Role diperbarui', 'success')
     },
-    onError: err => showToast(err.message, 'error'),
+    onError: err => showToast(err.message || 'Gagal memperbarui role. Periksa koneksi dan coba lagi.', 'error'),
   })
 
   const closeForm = () => {

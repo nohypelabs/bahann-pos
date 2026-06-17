@@ -67,20 +67,20 @@ export default function ApprovalsPage() {
   // Mutations
   const approveMutation = trpc.transactionApprovals.approve.useMutation({
     onSuccess: () => {
-      showToast('Persetujuan berhasil disetujui', 'success')
+      showToast('Permintaan disetujui', 'success')
       utils.transactionApprovals.list.invalidate()
     },
-    onError: (err) => showToast(err.message || 'Gagal menyetujui', 'error'),
+    onError: (err) => showToast(err.message || 'Gagal menyetujui permintaan. Periksa koneksi lalu coba lagi.', 'error'),
   })
 
   const rejectMutation = trpc.transactionApprovals.reject.useMutation({
     onSuccess: () => {
-      showToast('Permintaan berhasil ditolak', 'success')
+      showToast('Permintaan ditolak', 'success')
       setRejectModal({ open: false, approvalId: null })
       setRejectionReason('')
       utils.transactionApprovals.list.invalidate()
     },
-    onError: (err) => showToast(err.message || 'Gagal menolak', 'error'),
+    onError: (err) => showToast(err.message || 'Gagal menolak permintaan. Periksa koneksi lalu coba lagi.', 'error'),
   })
 
   // Filter approvals by tab

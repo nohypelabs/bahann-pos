@@ -1,6 +1,6 @@
 {
   "common.loading": "Memuat...",
-  "common.error": "Terjadi kesalahan",
+  "common.error": "Terjadi kesalahan. Coba beberapa saat lagi.",
   "common.success": "Berhasil",
   "common.save": "Simpan",
   "common.cancel": "Batal",
@@ -200,7 +200,7 @@
   "warehouse.stock.submit": "Simpan",
   "warehouse.stock.reset": "Reset",
   "warehouse.stock.success": "Operasi stok berhasil",
-  "warehouse.stock.error": "Terjadi kesalahan saat memproses stok",
+  "warehouse.stock.error": "Gagal memproses stok. Periksa data dan coba lagi.",
   "warehouse.stock.inventorySummary": "Ringkasan Inventori",
   "warehouse.stock.lowStockAlert": "Peringatan Stok Menipis",
   "warehouse.stock.noLowStock": "Semua produk memiliki stok yang cukup",
@@ -252,7 +252,7 @@
   "profile.changePassword": "Ubah Kata Sandi",
   "profile.logout": "Keluar",
   "profile.updateSuccess": "Profil berhasil diperbarui",
-  "profile.updateError": "Gagal memperbarui profil",
+  "profile.updateError": "Gagal memperbarui profil. Periksa koneksi dan coba lagi.",
 
   "about.title": "Tentang Aplikasi",
   "about.subtitle": "Sistem manajemen Point of Sale dan Gudang yang modern",
@@ -386,7 +386,7 @@
   "error.notFound": "Halaman tidak ditemukan",
   "error.unauthorized": "Tidak diotorisasi",
   "error.serverError": "Kesalahan server",
-  "error.networkError": "Kesalahan jaringan",
+  "error.networkError": "Koneksi terputus. Periksa jaringan Anda dan coba lagi.",
   "error.tryAgain": "Coba lagi",
 
   "scanner.title": "Scan Barcode",

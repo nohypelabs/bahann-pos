@@ -37,7 +37,7 @@ export default function EODPage() {
     { enabled: !!selectedOutlet }
   )
 
-  const openMutation  = trpc.shifts.open.useMutation({ onSuccess: () => { refetch(); setOpeningCash(0); flash('success', 'Shift berhasil dibuka!') } })
+  const openMutation  = trpc.shifts.open.useMutation({ onSuccess: () => { refetch(); setOpeningCash(0); flash('success', 'Shift dibuka') } })
   const submitMutation = trpc.shifts.submit.useMutation({ onSuccess: () => { refetch(); setClosingCash(0); setNotes('') } })
 
   const handleOpenDay = async () => {
@@ -45,7 +45,7 @@ export default function EODPage() {
     try {
       await openMutation.mutateAsync({ outletId: selectedOutlet, openingCash })
     } catch (err) {
-      flash('error', err instanceof Error ? err.message : 'Gagal membuka shift')
+      flash('error', err instanceof Error ? err.message : 'Gagal membuka shift. Periksa koneksi dan coba lagi.')
     }
   }
 
@@ -53,9 +53,9 @@ export default function EODPage() {
     if (!activeShift) return
     try {
       await submitMutation.mutateAsync({ shiftId: activeShift.id, actualCash: closingCash, cashierNote: notes })
-      flash('success', 'Shift berhasil diajukan untuk ditutup!')
+      flash('success', 'Penutupan shift diajukan')
     } catch (err) {
-      flash('error', err instanceof Error ? err.message : 'Gagal menutup shift')
+      flash('error', err instanceof Error ? err.message : 'Gagal menutup shift. Periksa koneksi dan coba lagi.')
     }
   }
 

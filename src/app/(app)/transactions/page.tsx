@@ -82,7 +82,7 @@ export default function TransactionsPage() {
     try {
       await voidMutation.mutateAsync({ transactionId: selectedTx, reason: voidReason })
       showToast('Transaksi berhasil divoid', 'success')
-    } catch (err) { showToast(err instanceof Error ? err.message : 'Gagal void transaksi', 'error') }
+    } catch (err) { showToast(err instanceof Error ? err.message : 'Gagal void transaksi. Periksa koneksi dan coba lagi.', 'error') }
   }
 
   const handleRefund = async () => {
@@ -90,7 +90,7 @@ export default function TransactionsPage() {
     try {
       await refundMutation.mutateAsync({ transactionId: selectedTx, reason: refundReason })
       showToast('Transaksi berhasil direfund', 'success')
-    } catch (err) { showToast(err instanceof Error ? err.message : 'Gagal refund transaksi', 'error') }
+    } catch (err) { showToast(err instanceof Error ? err.message : 'Gagal refund transaksi. Periksa koneksi dan coba lagi.', 'error') }
   }
 
   const canVoid = (tx: { status: string; createdAt: string | Date }): boolean =>

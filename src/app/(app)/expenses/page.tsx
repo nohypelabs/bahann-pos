@@ -81,25 +81,25 @@ export default function ExpensesPage() {
   // Mutations
   const createMutation = trpc.expenses.create.useMutation({
     onSuccess: () => {
-      flash('success', 'Pengeluaran berhasil dicatat!')
+      flash('success', 'Pengeluaran dicatat')
       setDescription('')
       setAmount('')
       setReceiptUrl('')
       utils.expenses.getDailySummary.invalidate()
       utils.expenses.list.invalidate()
     },
-    onError: (err) => flash('error', err.message || 'Gagal mencatat pengeluaran'),
+    onError: (err) => flash('error', err.message || 'Gagal mencatat pengeluaran. Periksa data dan coba lagi.'),
   })
 
   const voidMutation = trpc.expenses.void.useMutation({
     onSuccess: () => {
-      flash('success', 'Pengeluaran berhasil dibatalkan')
+      flash('success', 'Pengeluaran dibatalkan')
       setVoidingId(null)
       setVoidReason('')
       utils.expenses.getDailySummary.invalidate()
       utils.expenses.list.invalidate()
     },
-    onError: (err) => flash('error', err.message || 'Gagal membatalkan'),
+    onError: (err) => flash('error', err.message || 'Gagal membatalkan pengeluaran. Coba beberapa saat lagi.'),
   })
 
   const outlets = outletsData?.outlets ?? []

@@ -118,14 +118,14 @@ function ProductFormModal({ product, onClose, onSuccess }: { product: Product | 
 
       if (product) {
         await updateProduct.mutateAsync({ id: product.id, ...data } as any)
-        showToast('Produk berhasil diperbarui!', 'success')
+        showToast('Produk diperbarui', 'success')
       } else {
         await createProduct.mutateAsync(data as any)
-        showToast('Produk berhasil dibuat!', 'success')
+        showToast('Produk dibuat', 'success')
       }
       onSuccess()
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Operasi gagal', 'error')
+      showToast(err instanceof Error ? err.message : 'Gagal menyimpan produk. Periksa data dan coba lagi.', 'error')
     }
   }
 
@@ -229,10 +229,10 @@ function BatchUpdateCategoryModal({ selectedCount, onClose, onSuccess, productId
     if (!newCategory.trim()) { showToast('Masukkan nama kategori', 'error'); return }
     try {
       const result = await batchUpdate.mutateAsync({ productIds, category: newCategory.trim() })
-      showToast(`${result.count} produk berhasil diperbarui!`, 'success')
+      showToast(`${result.count} produk diperbarui`, 'success')
       onSuccess()
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Gagal update produk', 'error')
+      showToast(err instanceof Error ? err.message : 'Gagal memperbarui kategori. Periksa koneksi dan coba lagi.', 'error')
     }
   }
 
@@ -261,7 +261,7 @@ function BatchUpdateCategoryModal({ selectedCount, onClose, onSuccess, productId
         <div className="flex gap-2 pt-2">
           <Button type="button" variant="secondary" onClick={onClose} fullWidth disabled={batchUpdate.isPending}>Batal</Button>
           <Button type="submit" variant="primary" fullWidth disabled={batchUpdate.isPending}>
-            {batchUpdate.isPending ? 'Updating…' : 'Update Semua'}
+            {batchUpdate.isPending ? 'Memperbarui…' : 'Perbarui Semua'}
           </Button>
         </div>
       </form>
@@ -286,11 +286,11 @@ function BatchDeleteModal({ selectedCount, onClose, onSuccess, productIds, produ
         showToast(`${result.count} dihapus. ${result.skippedCount} dilewati (ada riwayat): ${result.skippedNames?.join(', ')}`, 'success')
         onSuccess()
       } else {
-        showToast(`${result.count} produk berhasil dihapus!`, 'success')
+        showToast(`${result.count} produk dihapus`, 'success')
         onSuccess()
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Gagal menghapus produk', 'error')
+      showToast(err instanceof Error ? err.message : 'Gagal menghapus produk. Coba beberapa saat lagi.', 'error')
     }
   }
 
@@ -346,9 +346,9 @@ export default function ProductsPage() {
     if (!confirm(`Hapus "${name}"?`)) return
     try {
       await deleteProduct.mutateAsync({ id })
-      showToast('Produk berhasil dihapus!', 'success')
+      showToast('Produk dihapus', 'success')
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Gagal menghapus produk', 'error')
+      showToast(err instanceof Error ? err.message : 'Gagal menghapus produk. Coba beberapa saat lagi.', 'error')
     }
   }
 
