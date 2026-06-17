@@ -51,8 +51,17 @@ function LoginContent() {
         role: result.user.role,
       }))
 
+      // Role-based landing page (UIUX-SPEC compliance)
+      const roleRedirects: Record<string, string> = {
+        super_admin: '/admin',
+        admin: '/dashboard',
+        manager: '/eod',        // Kepala Toko → shift management
+        user: '/pos/sales',     // Kasir → langsung POS
+      }
+      const redirect = roleRedirects[result.user.role || 'user'] || '/dashboard'
+
       // Full reload ensures React Query cache from any previous user session is cleared
-      window.location.href = '/dashboard'
+      window.location.href = redirect
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : t('login.error')
       setError(errorMessage)
