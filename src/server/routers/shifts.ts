@@ -26,6 +26,24 @@ export const shiftsRouter = router({
       const tenantId = ctx.session.tenantId!
       await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
 
+      // Validate device belongs to outlet if provided
+      if (input.deviceId) {
+        const { data: device, error: deviceError } = await supabaseAdmin
+          .from('pos_devices')
+          .select('id')
+          .eq('id', input.deviceId)
+          .eq('tenant_id', tenantId)
+          .eq('outlet_id', input.outletId)
+          .single()
+
+        if (deviceError || !device) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Device not found or does not belong to this outlet',
+          })
+        }
+      }
+
       // Check for existing active shift
       const { data: existing } = await supabaseAdmin
         .from('shifts')

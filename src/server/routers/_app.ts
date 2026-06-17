@@ -18,6 +18,7 @@ import { paymentRequestsRouter } from './paymentRequests'
 import { businessProfileRouter } from './businessProfile'
 import { expensesRouter } from './expenses'
 import { shiftsRouter } from './shifts'
+import { posDevicesRouter } from './posDevices'
 import { transactionApprovalsRouter } from './transactionApprovals'
 
 /**
@@ -44,6 +45,7 @@ export const appRouter = router({
   businessProfile: businessProfileRouter,
   expenses: expensesRouter,
   shifts: shiftsRouter,
+  posDevices: posDevicesRouter,
   transactionApprovals: transactionApprovalsRouter,
 })
 
