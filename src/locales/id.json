@@ -380,8 +380,8 @@
   "about.footer.copyright": "Hak cipta dilindungi.",
 
   "role.admin": "Admin",
-  "role.manager": "Manajer",
-  "role.user": "Pengguna",
+  "role.manager": "Kepala Toko",
+  "role.user": "Kasir",
 
   "error.notFound": "Halaman tidak ditemukan",
   "error.unauthorized": "Tidak diotorisasi",

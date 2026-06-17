@@ -197,7 +197,7 @@ export const ROLE_DISPLAY_NAMES: Record<string, string> = {
   OWNER: 'Pemilik Platform',
   ADMIN_TENANT: 'Admin Tenant',
   AREA_MANAGER: 'Manajer Area',
-  STORE_MANAGER: 'Manajer Toko',
+  STORE_MANAGER: 'Kepala Toko',
   CASHIER: 'Kasir',
   AUDITOR: 'Auditor',
 }
