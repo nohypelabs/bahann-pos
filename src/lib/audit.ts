@@ -37,6 +37,7 @@ export type AuditEntity =
   | 'payment_request'
   | 'business_profile'
   | 'user_role_assignment'
+  | 'transaction_approval'
 
 export interface AuditLogData {
   userId: string
