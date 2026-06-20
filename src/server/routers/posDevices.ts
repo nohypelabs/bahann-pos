@@ -75,7 +75,7 @@ export const posDevicesRouter = router({
         .from('outlets')
         .select('id')
         .eq('id', input.outletId)
-        .eq('owner_id', tenantId)
+        .eq('tenant_id', tenantId)
         .single()
 
       if (outletError || !outlet) {

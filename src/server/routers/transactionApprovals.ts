@@ -13,6 +13,18 @@ import { getUserOutletIds, requirePermission } from '@/server/lib/tenant'
 import { supabaseAdmin } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
 
+const approvalActionSchema = z.enum(['void', 'refund'])
+
+function requestPermissionForAction(actionType: z.infer<typeof approvalActionSchema>) {
+  return actionType === 'void' ? 'pos.transaction.void.request' : 'pos.refund.request'
+}
+
+function approvePermissionForAction(actionType: string) {
+  if (actionType === 'void') return 'pos.transaction.void.approve'
+  if (actionType === 'refund') return 'pos.refund.approve'
+  throw new TRPCError({ code: 'BAD_REQUEST', message: `Unsupported approval action: ${actionType}` })
+}
+
 export const transactionApprovalsRouter = router({
   /**
    * List pending approvals for the user's accessible outlets
@@ -33,6 +45,10 @@ export const transactionApprovalsRouter = router({
 
       if (outletIds.length === 0) {
         return { approvals: [] }
+      }
+
+      if (input.outletId && !outletIds.includes(input.outletId)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied: outlet not accessible' })
       }
 
       let query = supabaseAdmin
@@ -74,9 +90,9 @@ export const transactionApprovalsRouter = router({
         outletId: z.string().uuid(),
         transactionId: z.string().uuid(),
         shiftId: z.string().uuid().optional(),
-        actionType: z.enum(['void', 'refund', 'discount_override', 'cash_drawer_open', 'payment_correction', 'shift_close']),
+        actionType: approvalActionSchema,
         reason: z.string().min(10, 'Reason must be at least 10 characters'),
-        amount: z.number().optional(),
+        amount: z.number().positive().optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
@@ -88,11 +104,14 @@ export const transactionApprovalsRouter = router({
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied: outlet not accessible' })
       }
 
+      await requirePermission(ctx.userId, tenantId, requestPermissionForAction(input.actionType), input.outletId)
+
       // Verify transaction exists and belongs to the outlet
       const { data: transaction, error: txError } = await supabaseAdmin
         .from('transactions')
-        .select('id, status, outlet_id')
+        .select('id, status, outlet_id, tenant_id, total_amount')
         .eq('id', input.transactionId)
+        .eq('tenant_id', tenantId)
         .single()
 
       if (txError || !transaction) {
@@ -103,6 +122,10 @@ export const transactionApprovalsRouter = router({
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Transaction does not belong to this outlet' })
       }
 
+      if (input.actionType === 'refund' && input.amount && input.amount > transaction.total_amount) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Refund amount cannot exceed transaction total' })
+      }
+
       if (transaction.status !== 'completed') {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Can only request approval for completed transactions' })
       }
@@ -111,6 +134,7 @@ export const transactionApprovalsRouter = router({
       const { data: existingApproval } = await supabaseAdmin
         .from('transaction_approvals')
         .select('id')
+        .eq('tenant_id', tenantId)
         .eq('transaction_id', input.transactionId)
         .eq('action_type', input.actionType)
         .eq('status', 'pending')
@@ -130,10 +154,12 @@ export const transactionApprovalsRouter = router({
           shift_id: input.shiftId || null,
           action_type: input.actionType,
           requested_by: ctx.userId,
+          approved_by: null,
           status: 'pending',
           reason: input.reason,
-          amount: input.amount || null,
+          amount: input.actionType === 'refund' ? input.amount ?? transaction.total_amount : null,
           requested_at: new Date().toISOString(),
+          decided_at: null,
         })
         .select()
         .single()
@@ -196,6 +222,7 @@ export const transactionApprovalsRouter = router({
         .from('transaction_approvals')
         .select('*')
         .eq('id', input.approvalId)
+        .eq('tenant_id', tenantId)
         .single()
 
       if (fetchError || !approval) {
@@ -217,7 +244,7 @@ export const transactionApprovalsRouter = router({
       }
 
       // Check if user has approval permission (admin/manager)
-      await requirePermission(ctx.userId, tenantId, 'pos.transaction.void.approve', approval.outlet_id)
+      await requirePermission(ctx.userId, tenantId, approvePermissionForAction(approval.action_type), approval.outlet_id)
 
       // Update approval status
       const { data: updatedApproval, error: updateError } = await supabaseAdmin
@@ -229,6 +256,7 @@ export const transactionApprovalsRouter = router({
           pin_verified_at: new Date().toISOString(),
         })
         .eq('id', input.approvalId)
+        .eq('tenant_id', tenantId)
         .select()
         .single()
 
@@ -257,10 +285,12 @@ export const transactionApprovalsRouter = router({
           .update({
             status: 'refunded',
             refund_reason: approval.reason,
+            refund_amount: approval.amount,
             refunded_by: ctx.userId,
             refunded_at: new Date().toISOString(),
           })
           .eq('id', approval.transaction_id)
+          .eq('tenant_id', tenantId)
 
         if (txUpdateError) {
           throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: txUpdateError.message })
@@ -299,6 +329,7 @@ export const transactionApprovalsRouter = router({
         .from('transaction_approvals')
         .select('*')
         .eq('id', input.approvalId)
+        .eq('tenant_id', tenantId)
         .single()
 
       if (fetchError || !approval) {
@@ -320,7 +351,7 @@ export const transactionApprovalsRouter = router({
       }
 
       // Check if user has approval permission (admin/manager)
-      await requirePermission(ctx.userId, tenantId, 'pos.transaction.void.approve', approval.outlet_id)
+      await requirePermission(ctx.userId, tenantId, approvePermissionForAction(approval.action_type), approval.outlet_id)
 
       // Update approval status to rejected
       const { data: updatedApproval, error: updateError } = await supabaseAdmin
@@ -331,6 +362,7 @@ export const transactionApprovalsRouter = router({
           decided_at: new Date().toISOString(),
         })
         .eq('id', input.approvalId)
+        .eq('tenant_id', tenantId)
         .select()
         .single()
 

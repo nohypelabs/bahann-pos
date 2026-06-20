@@ -8,7 +8,11 @@ export class CompleteRegistrationUseCase {
   ) {}
 
   async execute(userId: string, storeName: string, verifyToken: string): Promise<{ outletId: string }> {
-    const outlet = await this.outletRepository.create({ name: storeName, ownerId: userId })
+    const outlet = await this.outletRepository.create({
+      name: storeName,
+      ownerId: userId,
+      tenantId: userId,
+    })
     await this.userRepository.updateRegistrationDetails(userId, outlet.id, verifyToken)
     return { outletId: outlet.id }
   }

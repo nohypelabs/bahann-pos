@@ -8,11 +8,9 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
-import { getBankAccount } from '@/lib/payment/payment-service'
-import { logger } from '@/lib/logger'
 
 interface BankTransferDisplayProps {
-  bankAccountId: string
+  bankAccount?: Record<string, unknown> | null
   amount: number
   transactionId: string
   expiresAt?: Date
@@ -21,21 +19,15 @@ interface BankTransferDisplayProps {
 }
 
 export function BankTransferDisplay({
-  bankAccountId,
+  bankAccount,
   amount,
   transactionId,
   expiresAt,
   onCancel,
   onConfirm
 }: BankTransferDisplayProps) {
-  const [bankAccount, setBankAccount] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState<string | null>(null)
   const [timeRemaining, setTimeRemaining] = useState<string>('')
-
-  useEffect(() => {
-    loadBankAccount()
-  }, [bankAccountId])
 
   useEffect(() => {
     if (!expiresAt) return
@@ -57,29 +49,10 @@ export function BankTransferDisplay({
     return () => clearInterval(interval)
   }, [expiresAt])
 
-  async function loadBankAccount() {
-    try {
-      const data = await getBankAccount(bankAccountId)
-      setBankAccount(data)
-    } catch (error) {
-      logger.error('Failed to load bank account:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text)
     setCopied(field)
     setTimeout(() => setCopied(null), 2000)
-  }
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="h-64 bg-gray-100 rounded-xl animate-pulse" />
-      </div>
-    )
   }
 
   if (!bankAccount) {
@@ -90,10 +63,9 @@ export function BankTransferDisplay({
     )
   }
 
-  const config = (bankAccount.account_details as any) || {}
-  const bankName = config.bankName || process.env.NEXT_PUBLIC_BANK_NAME || '-'
-  const accountNumber = config.accountNumber || process.env.NEXT_PUBLIC_BANK_ACCOUNT || '-'
-  const accountHolder = config.accountHolder || process.env.NEXT_PUBLIC_BANK_HOLDER || '-'
+  const bankName = String(bankAccount.bankName || '-')
+  const accountNumber = String(bankAccount.accountNumber || '-')
+  const accountHolder = String(bankAccount.accountHolder || '-')
 
   return (
     <div className="space-y-3 md:space-y-6">
@@ -190,7 +162,7 @@ export function BankTransferDisplay({
           </li>
           <li className="flex gap-2">
             <span className="font-bold">2.</span>
-            <span>Pilih menu "Transfer" atau "Transfer Antar Bank"</span>
+            <span>Pilih menu &quot;Transfer&quot; atau &quot;Transfer Antar Bank&quot;</span>
           </li>
           <li className="flex gap-2">
             <span className="font-bold">3.</span>

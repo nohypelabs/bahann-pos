@@ -52,7 +52,7 @@ export class SupabaseDailyStockRepository implements DailyStockRepository {
     };
   }
 
-  async getStockByProduct(productId: string, outletId?: string): Promise<DailyStockWithOutlet[]> {
+  async getStockByProduct(productId: string, outletId?: string, tenantId?: string): Promise<DailyStockWithOutlet[]> {
     let query = supabase
       .from('daily_stock')
       .select('*, outlets(name)')
@@ -60,6 +60,10 @@ export class SupabaseDailyStockRepository implements DailyStockRepository {
 
     if (outletId) {
       query = query.eq('outlet_id', outletId);
+    }
+
+    if (tenantId) {
+      query = query.eq('tenant_id', tenantId);
     }
 
     const { data, error } = await query;

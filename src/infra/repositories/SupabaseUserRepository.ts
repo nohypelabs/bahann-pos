@@ -130,6 +130,18 @@ export class SupabaseUserRepository implements UserRepository {
     return (data?.plan as string) || 'free'
   }
 
+  async getPlanByTenantId(tenantId: string): Promise<string> {
+    const { data } = await supabaseAdmin
+      .from('users')
+      .select('plan')
+      .eq('tenant_id', tenantId)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    return (data?.plan as string) || 'free'
+  }
+
   async findByVerifyToken(token: string): Promise<{ id: string; email: string; name: string; emailVerifiedAt: string | null; plan: string } | null> {
     const { data, error } = await supabaseAdmin
       .from('users')

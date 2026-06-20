@@ -35,16 +35,16 @@ export class ListStockUseCase {
     return this.dailyStockRepo.getLatestByProduct(outletId, productId);
   }
 
-  async getInventoryList(ownerId?: string, outletId?: string): Promise<InventoryItem[]> {
+  async getInventoryList(tenantId?: string, outletId?: string): Promise<InventoryItem[]> {
     const { data: products } = await this.productRepo.list(
-      { ownerId },
+      { tenantId },
       1,
       10000,
     );
 
     const inventoryList = await Promise.all(
       products.map(async (product) => {
-        const stockRecords = await this.dailyStockRepo.getStockByProduct(product.id, outletId);
+        const stockRecords = await this.dailyStockRepo.getStockByProduct(product.id, outletId, tenantId);
 
         const stockByOutlet = stockRecords.reduce(
           (acc: StockRecord[], record) => {

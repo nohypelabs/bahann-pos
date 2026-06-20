@@ -200,14 +200,16 @@ export default function SalesTransactionPage() {
 
   const { data: recentTransactions, refetch: refetchTransactions } = trpc.dashboard.getRecentTransactions.useQuery({ limit: 5 })
 
-  const recordSaleMutation = trpc.sales.record.useMutation()
-  const createTransactionMutation = trpc.transactions.create.useMutation()
   const validatePromoMutation = trpc.promotions.validate.useMutation()
   const recordPromoUsageMutation = trpc.promotions.recordUsage.useMutation()
 
   const { data: planUsage, refetch: refetchPlanUsage } = trpc.transactions.getPlanUsage.useQuery(
     { outletId: selectedOutletId },
     { enabled: !!selectedOutletId }
+  )
+  const { data: activeShift } = trpc.shifts.getActive.useQuery(
+    { outletId: selectedOutletId },
+    { enabled: !!selectedOutletId && !isOffline }
   )
 
   const selectedProduct = products?.find(p => p.id === selectedProductId)
@@ -333,18 +335,29 @@ export default function SalesTransactionPage() {
   const discountAmount = appliedPromo?.discountAmount || 0
   const cartTotal = cartSubtotal - discountAmount
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+  const checkoutDisabled = isPaymentModalOpen || cart.length === 0 || !selectedOutletId || (!isOffline && !activeShift)
+  const checkoutLabel = !selectedOutletId
+    ? 'Pilih outlet'
+    : (!isOffline && !activeShift)
+      ? 'Buka shift dulu'
+      : isPaymentModalOpen
+        ? 'Memproses...'
+        : cart.length === 0
+          ? 'Keranjang kosong'
+          : `Bayar ${formatCurrency(cartTotal)}`
   const surfaceClass = 'rounded-[28px] border border-stone-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
   const chipClass = 'inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1 text-[11px] font-medium text-stone-600'
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === 'F2') { e.preventDefault(); productSelectRef.current?.focus() }
-      if (e.key === 'F8') { e.preventDefault(); if (cart.length > 0 && selectedOutletId) handleCompleteSale() }
+      if (e.key === 'F8') { e.preventDefault(); if (!checkoutDisabled) handleCompleteSale() }
       if (e.key === 'Escape') setError('')
     }
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [cart, selectedOutletId])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [checkoutDisabled])
 
   const handleApplyPromo = async () => {
     if (!promoCode) { setError('Masukkan kode promo'); return }
@@ -369,12 +382,21 @@ export default function SalesTransactionPage() {
     setShowSuccess(false)
     if (cart.length === 0) { setError('Keranjang kosong. Silakan tambahkan item ke keranjang.'); return }
     if (!selectedOutletId) { setError('Silakan pilih outlet'); return }
+    if (!isOffline && !activeShift) { setError('Shift kasir belum aktif. Buka shift sebelum checkout.'); return }
     const transactionId = generateTransactionId()
     setPendingTransactionId(transactionId)
+    if (isOffline) {
+      await handlePaymentSuccess('offline-cash', 'cash', { id: transactionId, number: transactionId })
+      return
+    }
     setIsPaymentModalOpen(true)
   }
 
-  const handlePaymentSuccess = async (paymentId: string, paymentMethod: string) => {
+  const handlePaymentSuccess = async (
+    paymentId: string,
+    paymentMethod: string,
+    transaction?: { id: string; number: string },
+  ) => {
     try {
       setIsPaymentModalOpen(false)
       const mapToBackendPaymentMethod = (method: string): 'cash' | 'card' | 'transfer' | 'ewallet' => {
@@ -385,7 +407,7 @@ export default function SalesTransactionPage() {
         return mapping[method] || 'cash'
       }
 
-      const stableTransactionId = pendingTransactionId || generateTransactionId()
+      const stableTransactionId = transaction?.number || pendingTransactionId || generateTransactionId()
 
       const transactionPayload = {
         transactionId: stableTransactionId,
@@ -400,7 +422,7 @@ export default function SalesTransactionPage() {
         notes: appliedPromo ? `Promo applied: ${appliedPromo.promoName} | Payment ID: ${paymentId}` : `Payment ID: ${paymentId}`,
       }
 
-      let result: any
+      let result: { transactionId: string; transaction: { id: string } }
 
       if (isOffline) {
         await offlineDb.transactions.add({
@@ -432,11 +454,13 @@ export default function SalesTransactionPage() {
         window.dispatchEvent(new CustomEvent('offline-queue-updated'))
         result = { transactionId: stableTransactionId, transaction: { id: stableTransactionId } }
       } else {
-        // ONLINE: Submit to server
-        result = await createTransactionMutation.mutateAsync(transactionPayload)
-        if (appliedPromo && result.transaction) {
+        result = {
+          transactionId: stableTransactionId,
+          transaction: { id: transaction?.id ?? stableTransactionId },
+        }
+        if (appliedPromo && transaction?.id) {
           await recordPromoUsageMutation.mutateAsync({
-            promotionId: appliedPromo.promoId, transactionId: result.transaction.id, discountApplied: discountAmount,
+            promotionId: appliedPromo.promoId, transactionId: transaction.id, discountApplied: discountAmount,
           })
         }
       }
@@ -462,7 +486,6 @@ export default function SalesTransactionPage() {
       setShowSuccess(true)
       refetchTransactions()
       setCart([])
-      setSelectedOutletId('')
       setPromoCode('')
       setAppliedPromo(null)
       setPendingTransactionId('')
@@ -961,8 +984,8 @@ export default function SalesTransactionPage() {
               </div>
             )}
 
-            <Button variant="primary" size="lg" fullWidth onClick={handleCompleteSale} disabled={recordSaleMutation.isPending || cart.length === 0 || !selectedOutletId} className="mt-4 !rounded-2xl !border-emerald-500 !bg-emerald-500 !text-white hover:!bg-emerald-400">
-              {recordSaleMutation.isPending ? 'Memproses...' : cart.length === 0 ? 'Keranjang kosong' : `Bayar ${formatCurrency(cartTotal)}`}
+            <Button variant="primary" size="lg" fullWidth onClick={handleCompleteSale} disabled={checkoutDisabled} className="mt-4 !rounded-2xl !border-emerald-500 !bg-emerald-500 !text-white hover:!bg-emerald-400">
+              {checkoutLabel}
             </Button>
 
             <div className="mt-4 space-y-1.5">
@@ -1070,10 +1093,10 @@ export default function SalesTransactionPage() {
             </div>
             <button
               onClick={handleCompleteSale}
-              disabled={recordSaleMutation.isPending || !selectedOutletId}
+              disabled={checkoutDisabled}
               className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:dark:bg-gray-700 text-white rounded-xl font-bold text-sm transition-colors shrink-0"
             >
-              {!selectedOutletId ? 'Pilih outlet' : recordSaleMutation.isPending ? 'Proses...' : '💳 Bayar'}
+              {!selectedOutletId ? 'Pilih outlet' : checkoutDisabled ? checkoutLabel : '💳 Bayar'}
             </button>
           </>
         ) : (
@@ -1136,8 +1159,8 @@ export default function SalesTransactionPage() {
                   <span className="text-base font-bold text-gray-900 dark:text-gray-100">Total</span>
                   <span className="text-sm md:text-xl font-bold text-blue-600">{formatCurrency(cartTotal)}</span>
                 </div>
-                <Button variant="primary" size="lg" fullWidth onClick={() => { setIsCartOpen(false); handleCompleteSale() }} disabled={recordSaleMutation.isPending || !selectedOutletId}>
-                  {!selectedOutletId ? 'Pilih outlet dulu' : recordSaleMutation.isPending ? 'Memproses...' : `💳 Bayar ${formatCurrency(cartTotal)}`}
+                <Button variant="primary" size="lg" fullWidth onClick={() => { setIsCartOpen(false); handleCompleteSale() }} disabled={checkoutDisabled}>
+                  {!selectedOutletId ? 'Pilih outlet dulu' : checkoutLabel}
                 </Button>
               </div>
             )}
@@ -1167,9 +1190,20 @@ export default function SalesTransactionPage() {
         isOpen={isPaymentModalOpen}
         onClose={() => { setIsPaymentModalOpen(false); setPendingTransactionId('') }}
         transactionId={pendingTransactionId}
+        outletId={selectedOutletId}
+        shiftId={activeShift?.id ?? ''}
+        deviceId={activeShift?.device_id ?? undefined}
         amount={cartTotal}
+        items={cart.map(item => ({
+          productId: item.productId,
+          productName: item.productName,
+          productSku: item.productSku,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+        }))}
+        discountAmount={discountAmount}
+        notes={appliedPromo ? `Promo applied: ${appliedPromo.promoName}` : undefined}
         customerName={selectedOutlet?.name}
-        userId={getUserId()}
         onSuccess={handlePaymentSuccess}
         onError={(error) => { setError(error); setIsPaymentModalOpen(false) }}
       />

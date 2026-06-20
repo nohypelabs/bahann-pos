@@ -35,6 +35,7 @@ export interface TransactionRepository {
   findByTransactionId(transactionId: string): Promise<TransactionWithRelations | null>
   findByOutletIds(outletIds: string[], filters: TransactionFilters): Promise<{ transactions: TransactionWithRelations[]; total: number }>
   findByOutletIdsForSummary(outletIds: string[], outletId: string | undefined, dateFrom: string, dateTo: string): Promise<Transaction[]>
+  updateToCompleted(id: string, amountPaid: number, changeAmount: number): Promise<void>
   updateToVoided(id: string, reason: string, voidedBy: string): Promise<void>
   updateToRefunded(id: string, reason: string, refundedBy: string, refundAmount: number): Promise<void>
   countByOutletSince(outletId: string, since: string): Promise<number>

@@ -10,12 +10,12 @@ export class SupabaseOutletRepository implements OutletRepository {
     let countQuery = supabaseAdmin
       .from('outlets')
       .select('*', { count: 'estimated', head: true })
-      .eq('owner_id', ownerId);
+      .eq('tenant_id', ownerId);
 
     let dataQuery = supabaseAdmin
       .from('outlets')
       .select('*')
-      .eq('owner_id', ownerId)
+      .eq('tenant_id', ownerId)
       .order('name', { ascending: true })
       .range(offset, offset + limit - 1);
 
@@ -52,7 +52,7 @@ export class SupabaseOutletRepository implements OutletRepository {
       .from('outlets')
       .select('*')
       .eq('id', id)
-      .eq('owner_id', ownerId)
+      .eq('tenant_id', ownerId)
       .single();
 
     if (error || !data) return null;
@@ -63,15 +63,15 @@ export class SupabaseOutletRepository implements OutletRepository {
     const { data } = await supabaseAdmin
       .from('outlets')
       .select('id')
-      .eq('owner_id', ownerId);
+      .eq('tenant_id', ownerId);
 
     return data?.map(o => o.id) ?? [];
   }
 
-  async create(data: { name: string; ownerId: string }): Promise<OutletRecord> {
+  async create(data: { name: string; ownerId: string; tenantId: string }): Promise<OutletRecord> {
     const { data: outlet, error } = await supabaseAdmin
       .from('outlets')
-      .insert({ name: data.name, owner_id: data.ownerId })
+      .insert({ name: data.name, owner_id: data.ownerId, tenant_id: data.tenantId })
       .select()
       .single();
 
@@ -104,7 +104,7 @@ export class SupabaseOutletRepository implements OutletRepository {
     const { count, error } = await supabaseAdmin
       .from('outlets')
       .select('*', { count: 'estimated', head: true })
-      .eq('owner_id', ownerId);
+      .eq('tenant_id', ownerId);
 
     if (error) throw new Error(`Failed to count outlets: ${error.message}`);
     return count ?? 0;

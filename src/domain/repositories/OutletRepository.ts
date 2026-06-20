@@ -4,6 +4,7 @@ export interface OutletRecord {
   address: string | null;
   phone?: string | null;
   owner_id?: string;
+  tenant_id?: string;
   is_active?: boolean;
   created_at: string;
   updated_at?: string;
@@ -20,7 +21,7 @@ export interface OutletRepository {
   findById(id: string): Promise<OutletRecord | null>;
   findByIdAndOwner(id: string, ownerId: string): Promise<OutletRecord | null>;
   findIdsByOwnerId(ownerId: string): Promise<string[]>;
-  create(data: { name: string; ownerId: string }): Promise<OutletRecord>;
+  create(data: { name: string; ownerId: string; tenantId: string }): Promise<OutletRecord>;
   update(id: string, data: { name: string }): Promise<OutletRecord>;
   delete(id: string): Promise<void>;
   countByOwnerId(ownerId: string): Promise<number>;

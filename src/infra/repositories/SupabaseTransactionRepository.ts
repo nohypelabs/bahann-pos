@@ -13,8 +13,11 @@ import type {
 interface TransactionRow {
   id: string
   transaction_id: string
+  tenant_id: string
   outlet_id: string
   cashier_id: string
+  device_id: string | null
+  shift_id: string | null
   status: string
   subtotal: number
   discount_amount: number
@@ -36,6 +39,7 @@ interface TransactionRow {
 
 interface TransactionItemRow {
   id: string
+  tenant_id: string
   transaction_id: string
   product_id: string
   product_name: string
@@ -56,8 +60,11 @@ function toTransaction(row: TransactionRow): Transaction {
   return {
     id: row.id,
     transactionId: row.transaction_id,
+    tenantId: row.tenant_id,
     outletId: row.outlet_id,
     cashierId: row.cashier_id,
+    deviceId: row.device_id,
+    shiftId: row.shift_id,
     status: row.status as Transaction['status'],
     subtotal: row.subtotal,
     discountAmount: row.discount_amount,
@@ -81,6 +88,7 @@ function toTransaction(row: TransactionRow): Transaction {
 function toTransactionItem(row: TransactionItemRow): TransactionItem {
   return {
     id: row.id,
+    tenantId: row.tenant_id,
     transactionId: row.transaction_id,
     productId: row.product_id,
     productName: row.product_name,
@@ -97,8 +105,11 @@ export class SupabaseTransactionRepository implements TransactionRepository {
       .from('transactions')
       .insert({
         transaction_id: transaction.transactionId,
+        tenant_id: transaction.tenantId,
         outlet_id: transaction.outletId,
         cashier_id: transaction.cashierId,
+        device_id: transaction.deviceId,
+        shift_id: transaction.shiftId,
         status: transaction.status,
         subtotal: transaction.subtotal,
         discount_amount: transaction.discountAmount,
@@ -118,6 +129,7 @@ export class SupabaseTransactionRepository implements TransactionRepository {
 
   async createItems(items: Omit<TransactionItem, 'id'>[]): Promise<void> {
     const rows = items.map((item) => ({
+      tenant_id: item.tenantId,
       transaction_id: item.transactionId,
       product_id: item.productId,
       product_name: item.productName,
@@ -248,6 +260,20 @@ export class SupabaseTransactionRepository implements TransactionRepository {
     if (error) throw new Error(`Failed to fetch transaction summary: ${error.message}`)
 
     return (data as TransactionRow[]).map(toTransaction)
+  }
+
+  async updateToCompleted(id: string, amountPaid: number, changeAmount: number): Promise<void> {
+    const { error } = await supabase
+      .from('transactions')
+      .update({
+        status: 'completed',
+        amount_paid: amountPaid,
+        change_amount: changeAmount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+
+    if (error) throw new Error(`Failed to finalize transaction: ${error.message}`)
   }
 
   async updateToVoided(id: string, reason: string, voidedBy: string): Promise<void> {

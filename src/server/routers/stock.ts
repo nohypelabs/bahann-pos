@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '../trpc'
 import { container } from '@/infra/container'
-import { assertOutletBelongsToTenant, getTenantOutletIds } from '@/server/lib/tenant'
+import { assertOutletAccessible, getUserOutletIds, requirePermission } from '@/server/lib/tenant'
 
 export const stockRouter = router({
   record: protectedProcedure
@@ -19,7 +19,8 @@ export const stockRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
-      if (tenantId) await assertOutletBelongsToTenant(ctx.userId, tenantId, input.outletId)
+      await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
+      await requirePermission(ctx.userId, tenantId, 'inventory.adjust', input.outletId)
 
       const useCase = container.adjustStockUseCase()
       await useCase.execute({
@@ -40,7 +41,8 @@ export const stockRouter = router({
     )
     .query(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
-      if (tenantId) await assertOutletBelongsToTenant(ctx.userId, tenantId, input.outletId)
+      await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
+      await requirePermission(ctx.userId, tenantId, 'inventory.view', input.outletId)
 
       const useCase = container.listStockUseCase()
       return useCase.getLatest(input.outletId, input.productId)
@@ -53,10 +55,15 @@ export const stockRouter = router({
       }).optional()
     )
     .query(async ({ input, ctx }) => {
-      const ownerId = ctx.session.tenantId!
+      const tenantId = ctx.session.tenantId!
+
+      if (input?.outletId) {
+        await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
+      }
+      await requirePermission(ctx.userId, tenantId, 'inventory.view', input?.outletId)
 
       const useCase = container.listStockUseCase()
-      return useCase.getInventoryList(ownerId ?? undefined, input?.outletId)
+      return useCase.getInventoryList(tenantId, input?.outletId)
     }),
 
   getMovements: protectedProcedure
@@ -69,18 +76,23 @@ export const stockRouter = router({
       }).optional()
     )
     .query(async ({ input, ctx }) => {
-      const ownerId = ctx.session.tenantId!
+      const tenantId = ctx.session.tenantId!
+      const outletIds = await getUserOutletIds(ctx.userId, tenantId)
 
-      let outletIds: string[] | undefined
-      if (ownerId) {
-        outletIds = await getTenantOutletIds(ownerId)
+      if (input?.outletId) {
+        if (!outletIds.includes(input.outletId)) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied: outlet not accessible' })
+        }
+        await requirePermission(ctx.userId, tenantId, 'inventory.view', input.outletId)
+      } else {
+        await requirePermission(ctx.userId, tenantId, 'inventory.view')
       }
 
       const useCase = container.listStockUseCase()
       return useCase.getMovements({
         outletId: input?.outletId,
         productId: input?.productId,
-        outletIds: outletIds && outletIds.length > 0 ? outletIds : undefined,
+        outletIds: outletIds.length > 0 ? outletIds : undefined,
         limit: input?.limit,
         offset: input?.offset,
       })

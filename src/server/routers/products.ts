@@ -22,7 +22,7 @@ export const productsRouter = router({
       }).optional()
     )
     .query(async ({ input, ctx }) => {
-      const ownerId = ctx.session.tenantId!
+      const tenantId = ctx.session.tenantId!
 
       const useCase = container.listProductsUseCase()
       return useCase.execute({
@@ -31,7 +31,7 @@ export const productsRouter = router({
           category: input?.category,
           itemType: input?.itemType,
           stockBehavior: input?.stockBehavior,
-          ownerId: ownerId ?? undefined,
+          tenantId,
         },
         page: input?.page,
         limit: input?.limit,
@@ -75,6 +75,7 @@ export const productsRouter = router({
         const data = await useCase.execute({
           ...input,
           ownerId: ctx.userId,
+          tenantId: ctx.session.tenantId!,
         })
 
         await createAuditLog({
@@ -119,6 +120,7 @@ export const productsRouter = router({
         category: p.category || null,
         price: p.price || null,
         ownerId: ctx.userId,
+        tenantId: ctx.session.tenantId!,
         itemType: 'PRODUCT',
         stockBehavior: 'TRACKED',
         pricingModel: 'FIXED',
@@ -236,12 +238,12 @@ export const productsRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const { productIds, category } = input
+      const tenantId = ctx.session.tenantId!
 
       const productRepo = container.productRepo()
-      const products = await productRepo.getByIds(productIds)
+      const products = await productRepo.getByIds(productIds, tenantId)
 
-      const unauthorized = products.filter((p) => p.owner_id !== ctx.userId)
-      if (unauthorized.length > 0) {
+      if (products.length !== productIds.length) {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied: some products belong to a different tenant' })
       }
 
@@ -264,12 +266,12 @@ export const productsRouter = router({
     .input(z.object({ productIds: z.array(z.string().uuid()).min(1) }))
     .mutation(async ({ input, ctx }) => {
       const { productIds } = input
+      const tenantId = ctx.session.tenantId!
 
       const productRepo = container.productRepo()
-      const productsData = await productRepo.getByIds(productIds)
+      const productsData = await productRepo.getByIds(productIds, tenantId)
 
-      const unauthorized = productsData.filter((p) => p.owner_id !== ctx.userId)
-      if (unauthorized.length > 0) {
+      if (productsData.length !== productIds.length) {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied: some products belong to a different tenant' })
       }
 

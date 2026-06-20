@@ -6,11 +6,11 @@
 
 'use client'
 
-import { useState, useEffect, type ReactNode } from 'react'
-import { getActivePaymentMethods } from '@/lib/payment/payment-service'
-import type { PaymentMethod } from '@/lib/payment/payment-service'
+import { type ReactNode } from 'react'
+import { trpc } from '@/lib/trpc/client'
 import { Banknote, Smartphone, Building2, Wallet, CreditCard, DollarSign, Check } from 'lucide-react'
-import { logger } from '@/lib/logger'
+
+export type PaymentMethod = 'cash' | 'qris' | 'bank_transfer' | 'ewallet' | 'debit' | 'credit'
 
 interface PaymentMethodOption {
   id: string
@@ -34,49 +34,7 @@ export function PaymentMethodSelector({
   amount,
   disabled = false
 }: PaymentMethodSelectorProps) {
-  const [methods, setMethods] = useState<PaymentMethodOption[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    loadPaymentMethods()
-  }, [])
-
-  async function loadPaymentMethods() {
-    try {
-      const data = await getActivePaymentMethods()
-
-      // Map database records to UI options
-      const methodOptions: PaymentMethodOption[] = data.map((method: any) => {
-        // Map database code to PaymentMethod type
-        const mappedType = mapDatabaseCodeToType(method.code)
-
-        return {
-          id: method.id,
-          type: mappedType,
-          name: method.name,
-          icon: getMethodIcon(mappedType),
-          description: method.description,
-          isActive: method.is_active
-        }
-      })
-
-      logger.success('Payment methods loaded')
-      setMethods(methodOptions)
-    } catch (error) {
-      logger.error('Failed to load payment methods:', error)
-      // Fallback to default methods
-      setMethods([
-        { id: '1', type: 'cash', name: 'Cash', icon: <Banknote className="w-6 h-6" />, isActive: true },
-        { id: '2', type: 'qris', name: 'QRIS', icon: <Smartphone className="w-6 h-6" />, isActive: true },
-        { id: '3', type: 'bank_transfer', name: 'Bank Transfer', icon: <Building2 className="w-6 h-6" />, isActive: true },
-        { id: '6', type: 'ewallet', name: 'E-Wallet', icon: <Wallet className="w-6 h-6" />, isActive: true },
-        { id: '4', type: 'debit', name: 'Debit Card', icon: <CreditCard className="w-6 h-6" />, isActive: true },
-        { id: '5', type: 'credit', name: 'Credit Card', icon: <CreditCard className="w-6 h-6" />, isActive: true }
-      ])
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data, isLoading } = trpc.payments.getActiveMethods.useQuery()
 
   function mapDatabaseCodeToType(code: string): PaymentMethod {
     // Map database payment method codes to PaymentMethod types
@@ -103,7 +61,25 @@ export function PaymentMethodSelector({
     return icons[type] || <DollarSign className="w-6 h-6" />
   }
 
-  if (loading) {
+  const fallbackMethods: PaymentMethodOption[] = [
+    { id: 'cash', type: 'cash', name: 'Cash', icon: <Banknote className="w-6 h-6" />, isActive: true },
+  ]
+
+  const methods: PaymentMethodOption[] = data && data.length > 0
+    ? data.map((method) => {
+      const mappedType = mapDatabaseCodeToType(method.code)
+      return {
+        id: method.id,
+        type: mappedType,
+        name: method.name,
+        icon: getMethodIcon(mappedType),
+        description: method.instructions ?? undefined,
+        isActive: method.is_active === true,
+      }
+    })
+    : fallbackMethods
+
+  if (isLoading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         {[1, 2, 3, 4, 5].map((i) => (

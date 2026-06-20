@@ -11,35 +11,73 @@
 'use client'
 
 import { useState } from 'react'
-import { PaymentMethodSelector } from './PaymentMethodSelector'
+import { PaymentMethodSelector, type PaymentMethod } from './PaymentMethodSelector'
 import { QRISDisplay } from './QRISDisplay'
 import { BankTransferDisplay } from './BankTransferDisplay'
 import { CashPaymentDisplay } from './CashPaymentDisplay'
 import { EWalletDisplay } from './EWalletDisplay'
-import { createPayment, confirmPayment } from '@/lib/payment/payment-service'
-import type { PaymentMethod, PaymentResult } from '@/lib/payment/payment-service'
-import { logger } from '@/lib/logger'
+import { trpc } from '@/lib/trpc/client'
+
+type CheckoutItem = {
+  productId: string
+  productName?: string
+  productSku?: string
+  quantity: number
+  unitPrice?: number
+}
+
+type PaymentResult = {
+  paymentId: string
+  status: string | null
+  method: PaymentMethod
+  amount: number
+  transactionId: string
+  transactionNumber: string
+  qrisImage?: string
+  qrisString?: string
+  bankAccountId?: string
+  displayDetails?: Record<string, unknown> | null
+  expiresAt?: Date
+}
 
 interface PaymentModalProps {
   transactionId: string
+  outletId: string
+  shiftId: string
+  deviceId?: string | null
   amount: number
+  items: CheckoutItem[]
+  discountAmount?: number
+  notes?: string
   customerName?: string
   customerPhone?: string
-  userId: string
   isOpen: boolean
   onClose: () => void
-  onSuccess: (paymentId: string, paymentMethod: PaymentMethod) => void
+  onSuccess: (
+    paymentId: string,
+    paymentMethod: PaymentMethod,
+    transaction?: { id: string; number: string },
+  ) => void
   onError?: (error: string) => void
 }
 
 type PaymentStep = 'method' | 'processing' | 'cash' | 'qris' | 'bank_transfer' | 'ewallet' | 'completed'
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback
+}
+
 export function PaymentModal({
   transactionId,
+  outletId,
+  shiftId,
+  deviceId,
   amount,
+  items,
+  discountAmount = 0,
+  notes,
   customerName,
   customerPhone,
-  userId,
   isOpen,
   onClose,
   onSuccess,
@@ -50,11 +88,32 @@ export function PaymentModal({
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>('')
+  const startCheckout = trpc.payments.startCheckout.useMutation()
+  const confirmCheckout = trpc.payments.confirmCheckout.useMutation()
 
   if (!isOpen) return null
 
+  const startPayment = async (method: PaymentMethod, amountPaid?: number) => {
+    if (!outletId || !shiftId) {
+      throw new Error('Shift kasir belum aktif. Buka shift sebelum checkout online.')
+    }
+
+    return startCheckout.mutateAsync({
+      transactionId,
+      outletId,
+      shiftId,
+      deviceId: deviceId ?? undefined,
+      method,
+      amountPaid,
+      items,
+      discountAmount,
+      notes,
+      customerName,
+      customerPhone,
+    })
+  }
+
   const handleMethodSelect = async (method: PaymentMethod) => {
-    logger.info('Payment method selected: ' + method)
     setSelectedMethod(method)
 
     // Cash — show change calculator first
@@ -74,26 +133,21 @@ export function PaymentModal({
     setError('')
 
     try {
-      const change = cashGiven ? cashGiven - amount : undefined
-      const result = await createPayment({
-        transactionId,
-        amount,
-        method,
-        customerName,
-        customerPhone,
-        notes: cashGiven ? `Tunai: ${cashGiven} | Kembalian: ${change}` : undefined
-      })
+      const result = await startPayment(method, cashGiven ?? amount)
 
       setPaymentResult(result)
       setStep('completed')
 
       // Auto-close and trigger success after 1 second
       setTimeout(() => {
-        onSuccess(result.paymentId, method)
+        onSuccess(result.paymentId, method, {
+          id: result.transactionId,
+          number: result.transactionNumber,
+        })
         onClose()
       }, 1000)
-    } catch (err: any) {
-      const errorMsg = err.message || 'Gagal memproses pembayaran'
+    } catch (err: unknown) {
+      const errorMsg = getErrorMessage(err, 'Gagal memproses pembayaran')
       setError(errorMsg)
       onError?.(errorMsg)
     } finally {
@@ -106,18 +160,12 @@ export function PaymentModal({
     setError('')
 
     try {
-      const result = await createPayment({
-        transactionId,
-        amount,
-        method: 'qris',
-        customerName,
-        customerPhone
-      })
+      const result = await startPayment('qris')
 
       setPaymentResult(result)
       setStep('qris')
-    } catch (err: any) {
-      const errorMsg = err.message || 'Gagal generate QRIS'
+    } catch (err: unknown) {
+      const errorMsg = getErrorMessage(err, 'Gagal generate QRIS')
       setError(errorMsg)
       onError?.(errorMsg)
     } finally {
@@ -130,18 +178,12 @@ export function PaymentModal({
     setError('')
 
     try {
-      const result = await createPayment({
-        transactionId,
-        amount,
-        method: 'bank_transfer',
-        customerName,
-        customerPhone
-      })
+      const result = await startPayment('bank_transfer')
 
       setPaymentResult(result)
       setStep('bank_transfer')
-    } catch (err: any) {
-      const errorMsg = err.message || 'Gagal memproses transfer bank'
+    } catch (err: unknown) {
+      const errorMsg = getErrorMessage(err, 'Gagal memproses transfer bank')
       setError(errorMsg)
       onError?.(errorMsg)
     } finally {
@@ -154,18 +196,12 @@ export function PaymentModal({
     setError('')
 
     try {
-      const result = await createPayment({
-        transactionId,
-        amount,
-        method: 'ewallet',
-        customerName,
-        customerPhone
-      })
+      const result = await startPayment('ewallet')
 
       setPaymentResult(result)
       setStep('ewallet')
-    } catch (err: any) {
-      const errorMsg = err.message || 'Gagal memproses pembayaran e-wallet'
+    } catch (err: unknown) {
+      const errorMsg = getErrorMessage(err, 'Gagal memproses pembayaran e-wallet')
       setError(errorMsg)
       onError?.(errorMsg)
     } finally {
@@ -180,19 +216,21 @@ export function PaymentModal({
     setError('')
 
     try {
-      await confirmPayment({
+      await confirmCheckout.mutateAsync({
         paymentId: paymentResult.paymentId,
-        confirmedBy: userId
       })
 
       setStep('completed')
 
       setTimeout(() => {
-        onSuccess(paymentResult.paymentId, selectedMethod)
+        onSuccess(paymentResult.paymentId, selectedMethod, {
+          id: paymentResult.transactionId,
+          number: paymentResult.transactionNumber,
+        })
         onClose()
       }, 1500)
-    } catch (err: any) {
-      const errorMsg = err.message || 'Gagal konfirmasi pembayaran'
+    } catch (err: unknown) {
+      const errorMsg = getErrorMessage(err, 'Gagal konfirmasi pembayaran')
       setError(errorMsg)
       onError?.(errorMsg)
     } finally {
@@ -320,7 +358,7 @@ export function PaymentModal({
           {/* Step: Bank Transfer Display */}
           {step === 'bank_transfer' && paymentResult && (
             <BankTransferDisplay
-              bankAccountId={paymentResult.bankAccountId!}
+              bankAccount={paymentResult.displayDetails}
               amount={amount}
               transactionId={transactionId}
               expiresAt={paymentResult.expiresAt}

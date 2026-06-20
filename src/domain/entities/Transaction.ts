@@ -3,6 +3,7 @@ export type PaymentMethod = 'cash' | 'card' | 'transfer' | 'ewallet'
 
 export type TransactionItem = {
   id: string
+  tenantId: string
   transactionId: string
   productId: string
   productName: string
@@ -15,8 +16,11 @@ export type TransactionItem = {
 export type Transaction = {
   id: string
   transactionId: string
+  tenantId: string
   outletId: string
   cashierId: string
+  deviceId: string | null
+  shiftId: string | null
   status: TransactionStatus
   subtotal: number
   discountAmount: number

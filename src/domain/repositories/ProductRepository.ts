@@ -6,6 +6,7 @@ export interface ProductFilters {
   itemType?: string;
   stockBehavior?: string;
   ownerId?: string;
+  tenantId?: string;
 }
 
 export interface BulkResult {
@@ -20,6 +21,7 @@ export interface CreateProductData {
   category?: string | null;
   price?: number | null;
   ownerId: string;
+  tenantId: string;
   itemType: string;
   stockBehavior: string;
   pricingModel: string;
@@ -48,6 +50,7 @@ export interface ProductRow {
   category: string | null;
   price: number | null;
   owner_id: string | null;
+  tenant_id: string;
   item_type: string;
   stock_behavior: string;
   pricing_model: string;
@@ -58,18 +61,18 @@ export interface ProductRow {
 }
 
 export interface ProductRepository {
-  getBySKU(sku: string): Promise<Product | null>;
-  listAll(): Promise<Product[]>;
-  getById(id: string, ownerId?: string): Promise<ProductRow | null>;
+  getBySKU(sku: string, tenantId?: string): Promise<Product | null>;
+  listAll(tenantId?: string): Promise<Product[]>;
+  getById(id: string, tenantId?: string): Promise<ProductRow | null>;
   list(filters: ProductFilters, page: number, limit: number): Promise<{ data: ProductRow[]; total: number }>;
   create(data: CreateProductData): Promise<ProductRow>;
   update(id: string, data: UpdateProductData): Promise<ProductRow>;
   delete(id: string): Promise<void>;
   bulkUpsert(products: CreateProductData[]): Promise<BulkResult>;
-  getCategories(ownerId?: string): Promise<string[]>;
+  getCategories(tenantId?: string): Promise<string[]>;
   batchUpdateCategory(productIds: string[], category: string | null): Promise<number>;
   batchDelete(productIds: string[]): Promise<void>;
-  getByIds(ids: string[]): Promise<ProductRow[]>;
+  getByIds(ids: string[], tenantId?: string): Promise<ProductRow[]>;
   countTransactions(productId: string): Promise<number>;
   countTransactionsByProducts(productIds: string[]): Promise<Map<string, number>>;
 }

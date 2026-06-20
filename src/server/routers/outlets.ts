@@ -55,10 +55,11 @@ export const outletsRouter = router({
       const { SupabaseUserManagementRepository } = await import('@/infra/repositories/SupabaseUserManagementRepository')
       const userRepo = new SupabaseUserManagementRepository()
       const plan = await userRepo.getPlan(ctx.userId)
+      const tenantId = ctx.session.tenantId!
 
       let data
       try {
-        data = await uc.create(input.name, ctx.userId, plan)
+        data = await uc.create(input.name, ctx.userId, tenantId, plan)
       } catch (e) {
         const msg = (e as Error).message
         if (msg.includes('Plan')) throw new TRPCError({ code: 'FORBIDDEN', message: msg })
@@ -82,16 +83,17 @@ export const outletsRouter = router({
     .input(z.object({ id: z.string().uuid(), name: z.string().min(1) }))
     .mutation(async ({ input, ctx }) => {
       const uc = container.outletUseCase()
+      const tenantId = ctx.session.tenantId!
       let oldData
       try {
-        oldData = await uc.getById(input.id, ctx.userId)
+        oldData = await uc.getById(input.id, tenantId)
       } catch {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied: resource belongs to a different tenant' })
       }
 
       let data
       try {
-        data = await uc.update(input.id, input.name, ctx.userId)
+        data = await uc.update(input.id, input.name, tenantId)
       } catch (e) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
       }
@@ -113,9 +115,10 @@ export const outletsRouter = router({
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ input, ctx }) => {
       const uc = container.outletUseCase()
+      const tenantId = ctx.session.tenantId!
       let outletData
       try {
-        outletData = await uc.delete(input.id, ctx.userId)
+        outletData = await uc.delete(input.id, tenantId)
       } catch {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied: resource belongs to a different tenant' })
       }

@@ -18,6 +18,7 @@ export interface UserRepository {
   updateProfileFields(id: string, fields: { name?: string; whatsappNumber?: string }): Promise<void>
   updatePassword(id: string, passwordHash: string): Promise<void>
   getPlan(userId: string): Promise<string>
+  getPlanByTenantId(tenantId: string): Promise<string>
   findByVerifyToken(token: string): Promise<{ id: string; email: string; name: string; emailVerifiedAt: string | null; plan: string } | null>
   activateTrial(userId: string): Promise<void>
   insertBillingHistory(data: { userId: string; plan: string; previousPlan: string; amount: number; note: string; isTrial: boolean; changedBy?: string }): Promise<void>

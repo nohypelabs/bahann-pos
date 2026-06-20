@@ -8,5 +8,5 @@ export interface DailyStockRepository {
   save(stock: DailyStock): Promise<void>;
   getLatestByProduct(outletId: string, productId: string): Promise<DailyStock | null>;
   getByDate(outletId: string, productId: string, date: Date): Promise<DailyStock | null>;
-  getStockByProduct(productId: string, outletId?: string): Promise<DailyStockWithOutlet[]>;
+  getStockByProduct(productId: string, outletId?: string, tenantId?: string): Promise<DailyStockWithOutlet[]>;
 }

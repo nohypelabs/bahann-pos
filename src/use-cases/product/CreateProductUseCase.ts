@@ -11,6 +11,7 @@ export interface CreateProductInput {
   category?: string;
   price?: number;
   ownerId: string;
+  tenantId: string;
   itemType: string;
   stockBehavior: string;
   pricingModel: string;
@@ -35,6 +36,7 @@ export class CreateProductUseCase {
       category: input.category || null,
       price: input.price || null,
       ownerId: input.ownerId,
+      tenantId: input.tenantId,
       itemType: input.itemType,
       stockBehavior: input.stockBehavior,
       pricingModel: input.pricingModel,

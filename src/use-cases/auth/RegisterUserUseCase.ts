@@ -50,17 +50,28 @@ export class RegisterUserUseCase {
       passwordHash,
       outletId: input.outletId,
       role: input.role || 'user',
+      tenantId: undefined,
       whatsappNumber: input.whatsappNumber,
+    })
+    const tenantScopedUser = User.create({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      passwordHash: user.passwordHash,
+      outletId: user.outletId,
+      role: user.role,
+      tenantId: user.role === 'admin' ? user.id : user.tenantId,
+      whatsappNumber: user.whatsappNumber,
     })
 
     // Save to database
-    await this.userRepository.save(user)
+    await this.userRepository.save(tenantScopedUser)
 
     return {
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-      whatsappNumber: user.whatsappNumber!,
+      userId: tenantScopedUser.id,
+      email: tenantScopedUser.email,
+      name: tenantScopedUser.name,
+      whatsappNumber: tenantScopedUser.whatsappNumber!,
     }
   }
 }

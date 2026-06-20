@@ -13,12 +13,17 @@ import type { StockBehavior } from '@/domain/catalog/value-objects/stock-behavio
 import type { PricingModel } from '@/domain/catalog/value-objects/pricing-model';
 
 export class SupabaseProductRepository implements ProductRepository {
-  async getBySKU(sku: string): Promise<Product | null> {
-    const { data, error } = await supabase
+  async getBySKU(sku: string, tenantId?: string): Promise<Product | null> {
+    let query = supabase
       .from('products')
       .select('*')
-      .eq('sku', sku)
-      .single();
+      .eq('sku', sku);
+
+    if (tenantId) {
+      query = query.eq('tenant_id', tenantId);
+    }
+
+    const { data, error } = await query.single();
 
     if (error || !data) return null;
 
@@ -38,11 +43,17 @@ export class SupabaseProductRepository implements ProductRepository {
     };
   }
 
-  async listAll(): Promise<Product[]> {
-    const { data, error } = await supabase
+  async listAll(tenantId?: string): Promise<Product[]> {
+    let query = supabase
       .from('products')
       .select('*')
       .order('name', { ascending: true });
+
+    if (tenantId) {
+      query = query.eq('tenant_id', tenantId);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw new Error(`Failed to fetch products: ${error.message}`);
 
@@ -62,14 +73,14 @@ export class SupabaseProductRepository implements ProductRepository {
     }));
   }
 
-  async getById(id: string, ownerId?: string): Promise<ProductRow | null> {
+  async getById(id: string, tenantId?: string): Promise<ProductRow | null> {
     let query = supabase
       .from('products')
       .select('*')
       .eq('id', id);
 
-    if (ownerId) {
-      query = query.eq('owner_id', ownerId);
+    if (tenantId) {
+      query = query.eq('tenant_id', tenantId);
     }
 
     const { data, error } = await query.single();
@@ -95,7 +106,10 @@ export class SupabaseProductRepository implements ProductRepository {
       .order('name', { ascending: true })
       .range(offset, offset + limit - 1);
 
-    if (filters.ownerId) {
+    if (filters.tenantId) {
+      countQuery = countQuery.eq('tenant_id', filters.tenantId);
+      dataQuery = dataQuery.eq('tenant_id', filters.tenantId);
+    } else if (filters.ownerId) {
       countQuery = countQuery.eq('owner_id', filters.ownerId);
       dataQuery = dataQuery.eq('owner_id', filters.ownerId);
     }
@@ -145,6 +159,7 @@ export class SupabaseProductRepository implements ProductRepository {
         category: data.category || null,
         price: data.price || null,
         owner_id: data.ownerId,
+        tenant_id: data.tenantId,
         item_type: data.itemType,
         stock_behavior: data.stockBehavior,
         pricing_model: data.pricingModel,
@@ -200,6 +215,12 @@ export class SupabaseProductRepository implements ProductRepository {
       category: p.category || null,
       price: p.price || null,
       owner_id: p.ownerId,
+      tenant_id: p.tenantId,
+      item_type: p.itemType,
+      stock_behavior: p.stockBehavior,
+      pricing_model: p.pricingModel,
+      pricing_tiers: p.pricingTiers || null,
+      duration_minutes: p.durationMinutes || null,
     }));
 
     const CHUNK = 100;
@@ -223,14 +244,14 @@ export class SupabaseProductRepository implements ProductRepository {
     return { inserted, skipped };
   }
 
-  async getCategories(ownerId?: string): Promise<string[]> {
+  async getCategories(tenantId?: string): Promise<string[]> {
     let query = supabase
       .from('products')
       .select('category')
       .not('category', 'is', null);
 
-    if (ownerId) {
-      query = query.eq('owner_id', ownerId);
+    if (tenantId) {
+      query = query.eq('tenant_id', tenantId);
     }
 
     const { data, error } = await query;
@@ -259,11 +280,17 @@ export class SupabaseProductRepository implements ProductRepository {
     if (error) throw new Error(`Failed to batch delete: ${error.message}`);
   }
 
-  async getByIds(ids: string[]): Promise<ProductRow[]> {
-    const { data, error } = await supabase
+  async getByIds(ids: string[], tenantId?: string): Promise<ProductRow[]> {
+    let query = supabase
       .from('products')
       .select('*')
       .in('id', ids);
+
+    if (tenantId) {
+      query = query.eq('tenant_id', tenantId);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw new Error(`Failed to fetch products: ${error.message}`);
     return (data || []) as unknown as ProductRow[];
