@@ -6,12 +6,14 @@ import { SectionCard } from '@/components/ui/SectionCard'
 import { ApprovalCard } from '@/components/ui/ApprovalCard'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { Modal } from '@/components/ui/Modal'
+import { PinConfirmModal } from '@/components/ui/PinConfirmModal'
 import { trpc } from '@/lib/trpc/client'
 import { formatCurrency } from '@/lib/utils'
 import { useToast } from '@/components/ui/Toast'
 import {
   CheckCircle, Clock, CheckCircle2, XCircle,
   ShieldAlert, RotateCcw, Percent, Loader2,
+  KeyRound,
 } from 'lucide-react'
 
 type ApprovalStatus = 'pending' | 'approved' | 'rejected'
@@ -48,9 +50,17 @@ export default function ApprovalsPage() {
     approvalId: null,
   })
   const [rejectionReason, setRejectionReason] = useState('')
+  const [pinModal, setPinModal] = useState<{ open: boolean; approvalId: string | null }>({
+    open: false,
+    approvalId: null,
+  })
+  const [pinError, setPinError] = useState('')
 
   const { showToast } = useToast()
   const utils = trpc.useUtils()
+
+  // Check if user has PIN set
+  const { data: pinData } = trpc.users.hasPin.useQuery()
 
   // Fetch all approvals (we'll filter client-side for tabs, or use status param)
   const { data: allData, isLoading: allLoading } = trpc.transactionApprovals.list.useQuery(
@@ -99,7 +109,24 @@ export default function ApprovalsPage() {
   })
 
   const handleApprove = async (approvalId: string) => {
-    await approveMutation.mutateAsync({ approvalId })
+    // Open PIN modal instead of direct approve
+    setPinModal({ open: true, approvalId })
+    setPinError('')
+  }
+
+  const handlePinConfirm = async (pin: string) => {
+    if (!pinModal.approvalId) return
+    setPinError('')
+    try {
+      await approveMutation.mutateAsync({
+        approvalId: pinModal.approvalId,
+        pin,
+      })
+      setPinModal({ open: false, approvalId: null })
+    } catch (err: any) {
+      setPinError(err.message || 'PIN salah')
+      throw err
+    }
   }
 
   const handleRejectClick = (approvalId: string) => {
@@ -138,6 +165,24 @@ export default function ApprovalsPage() {
           ) : undefined
         }
       />
+
+      {/* PIN not set warning */}
+      {pinData && !pinData.hasPin && (
+        <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30">
+          <KeyRound className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
+              PIN belum diatur
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+              Anda perlu mengatur PIN terlebih dahulu sebelum bisa menyetujui permintaan.{' '}
+              <a href="/profile" className="underline font-semibold hover:text-amber-900 dark:hover:text-amber-100">
+                Atur PIN di Profil →
+              </a>
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Filter Tabs */}
       <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
@@ -312,6 +357,17 @@ export default function ApprovalsPage() {
           />
         </div>
       </Modal>
+
+      {/* PIN Confirmation Modal */}
+      <PinConfirmModal
+        isOpen={pinModal.open}
+        onClose={() => setPinModal({ open: false, approvalId: null })}
+        onConfirm={handlePinConfirm}
+        error={pinError}
+        isLoading={approveMutation.isPending}
+        title="Verifikasi PIN Persetujuan"
+        description="Masukkan PIN Anda (Kepala Toko/Admin) untuk menyetujui permintaan void/refund ini."
+      />
     </div>
   )
 }

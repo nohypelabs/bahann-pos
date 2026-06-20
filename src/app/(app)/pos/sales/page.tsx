@@ -1,19 +1,18 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Input, Select } from '@/components/ui/Input'
+import { Input } from '@/components/ui/Input'
 import { trpc } from '@/lib/trpc/client'
 import { PrintPreviewModal } from '@/components/print/PrintPreviewModal'
 import { PrintReceipt, ReceiptData } from '@/components/print/PrintReceipt'
 import { BarcodeScanner } from '@/components/barcode/BarcodeScanner'
 import { PaymentModal } from '@/components/payment'
 import { printHtmlDocument } from '@/lib/print/printHtmlDocument'
-import { formatCurrency, formatDateTime, generateTransactionId } from '@/lib/utils'
+import { formatCurrency, generateTransactionId } from '@/lib/utils'
 import { offlineDb } from '@/lib/offline/database'
 import { useOffline } from '@/hooks/useOffline'
-import { List, LayoutGrid } from 'lucide-react'
+import { CloudOff, LayoutGrid, List, RefreshCw, ScanLine, Search, ShoppingCart, Store, WalletCards } from 'lucide-react'
 import { ProductListSkeleton, ProductGridSkeleton } from '@/components/ui/Skeletons'
 
 interface CartItem {
@@ -48,8 +47,6 @@ export default function SalesTransactionPage() {
     }
     return []
   })
-  const [saleDate] = useState(new Date().toISOString().split('T')[0])
-
   const [promoCode, setPromoCode] = useState('')
   const [appliedPromo, setAppliedPromo] = useState<{
     discountAmount: number
@@ -336,6 +333,8 @@ export default function SalesTransactionPage() {
   const discountAmount = appliedPromo?.discountAmount || 0
   const cartTotal = cartSubtotal - discountAmount
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+  const surfaceClass = 'rounded-[28px] border border-stone-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
+  const chipClass = 'inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1 text-[11px] font-medium text-stone-600'
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -477,59 +476,88 @@ export default function SalesTransactionPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden rounded-[30px] border border-stone-200 bg-[#f4f2ea] shadow-[0_20px_45px_-35px_rgba(28,25,23,0.45)]">
 
       {/* ── Top Bar ── */}
-      <div className="flex items-center justify-between px-3 md:px-4 py-2 md:py-2.5 border-b border-gray-200 dark:border-gray-700 shrink-0 gap-2">
-        <div className="min-w-0">
-          <h1 className="hidden md:block text-base font-bold text-gray-900 dark:text-gray-100 leading-tight">Point of Sale</h1>
-          {selectedOutlet && (
-            <p className="text-xs text-purple-600 dark:text-purple-400 font-medium truncate">{selectedOutlet.name}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5 shrink-0">
-          {planUsage && planUsage.limit !== null && !planUsage.isAtLimit && planUsage.count >= 80 && (
-            <button onClick={() => setShowUpgradeModal(true)} className="hidden sm:block text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 px-2 py-1 rounded-lg font-semibold border border-yellow-200">
-              ⚠️ {planUsage.count}/{planUsage.limit}
-            </button>
-          )}
-
-          {/* Cart Button */}
-          <button
-            onClick={() => setIsCartOpen(true)}
-            className="relative flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm transition-colors shadow-sm"
-          >
-            🛒
-            <span className="hidden sm:inline">Keranjang</span>
-            {cartItemCount > 0 && (
-              <>
-                <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-bounce">{cartItemCount}</span>
-                <span className="hidden md:inline text-blue-200 text-xs font-normal">{formatCurrency(cartTotal)}</span>
-              </>
+      <div className="shrink-0 border-b border-stone-200 bg-white/95 px-4 py-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-500">Kasir Aktif</p>
+            <div className="mt-0.5 flex items-center gap-2">
+              <h1 className="text-base font-semibold leading-tight text-stone-950 md:text-lg">Point of Sale</h1>
+              <span className={`hidden rounded-full px-2.5 py-1 text-[10px] font-semibold sm:inline-flex ${isOffline ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                {isOffline ? 'Offline Queue' : 'Online'}
+              </span>
+            </div>
+            <p className="mt-1 hidden text-xs text-stone-500 md:block">
+              Cari barang, scan SKU, lalu checkout dengan alur yang tetap cepat saat toko sedang ramai.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {selectedOutlet ? (
+                <span className={chipClass}>
+                  <Store className="h-3.5 w-3.5 text-emerald-600" />
+                  <span className="truncate">{selectedOutlet.name}</span>
+                </span>
+              ) : (
+                <span className={chipClass}>Pilih outlet untuk mulai transaksi</span>
+              )}
+              {pendingTransactions > 0 && (
+                <span className={chipClass}>
+                  <RefreshCw className="h-3.5 w-3.5 text-amber-600" />
+                  {pendingTransactions} pending sync
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {planUsage && planUsage.limit !== null && !planUsage.isAtLimit && planUsage.count >= 80 && (
+              <button onClick={() => setShowUpgradeModal(true)} className="hidden rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 sm:block">
+                ⚠️ {planUsage.count}/{planUsage.limit}
+              </button>
             )}
-          </button>
+
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative inline-flex items-center gap-2 rounded-2xl bg-stone-950 px-3.5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-stone-800"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              <span className="hidden sm:inline">Checkout</span>
+              {cartItemCount > 0 && (
+                <>
+                  <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                    {cartItemCount}
+                  </span>
+                  <span className="hidden text-xs font-normal text-stone-300 md:inline">
+                    {formatCurrency(cartTotal)}
+                  </span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* ── Mobile error/success banner ── */}
       {isOffline && (
-        <div className="px-3 py-2 text-xs font-semibold shrink-0 bg-orange-50 dark:bg-orange-900/30 text-orange-700 border-b border-orange-200 flex items-center gap-2">
-          ⚡ Mode Offline — Transaksi akan disinkronkan saat online
+        <div className="flex shrink-0 items-center gap-2 border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-800">
+          <CloudOff className="h-3.5 w-3.5" />
+          Mode offline aktif. Transaksi aman dan akan dikirim saat koneksi kembali.
         </div>
       )}
       {!isOffline && syncStatus === 'syncing' && pendingTransactions > 0 && (
-        <div className="px-3 py-2 text-xs font-semibold shrink-0 bg-blue-50 dark:bg-blue-900/30 text-blue-700 border-b border-blue-200 flex items-center gap-2">
-          🔄 Menyinkronkan {pendingTransactions} transaksi offline...
+        <div className="flex shrink-0 items-center gap-2 border-b border-sky-200 bg-sky-50 px-4 py-2 text-xs font-semibold text-sky-800">
+          <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+          Menyinkronkan {pendingTransactions} transaksi offline...
         </div>
       )}
       {(error || showSuccess) && (
-        <div className={`px-3 py-2 text-xs font-semibold shrink-0 ${error ? 'bg-red-50 dark:bg-red-900/30 text-red-700 border-b border-red-200' : 'bg-green-50 dark:bg-green-900/30 text-green-700 border-b border-green-200'}`}>
-          {error ? `❌ ${error}` : '✅ Transaksi berhasil!'}
+        <div className={`shrink-0 px-4 py-2 text-xs font-semibold ${error ? 'border-b border-red-200 bg-red-50 text-red-700' : 'border-b border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+          {error ? error : 'Transaksi berhasil dicatat.'}
         </div>
       )}
 
       {/* ── Main Content ── */}
-      <div className="flex flex-col md:flex-row flex-1 overflow-hidden gap-3 p-3">
+      <div className="flex flex-1 flex-col gap-4 overflow-hidden p-4 md:flex-row">
 
         {/* Left: Outlet picker + Product picker */}
         <div className="flex flex-col gap-3 flex-1 overflow-hidden min-w-0">
@@ -537,55 +565,68 @@ export default function SalesTransactionPage() {
           {/* Outlet — compact pill once selected */}
           {isKasirLocked && selectedOutlet ? (
             // Kasir locked: show outlet as read-only pill (no change button)
-            <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/30 border-2 border-purple-200 dark:border-purple-800 rounded-xl shrink-0">
-              <span className="text-purple-500">🏪</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs md:text-sm font-semibold text-purple-900 dark:text-purple-200 truncate">{selectedOutlet.name}</p>
-                {selectedOutlet.address && <p className="text-xs text-purple-600 dark:text-purple-400 truncate">{selectedOutlet.address}</p>}
+            <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                <Store className="h-4 w-4" />
               </div>
-              <span className="text-xs text-purple-400">🔒</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-emerald-950 truncate md:text-sm">{selectedOutlet.name}</p>
+                {selectedOutlet.address && <p className="text-xs text-emerald-700 truncate">{selectedOutlet.address}</p>}
+              </div>
+              <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-emerald-800">Terkunci</span>
             </div>
           ) : !selectedOutlet ? (
-            <div className="shrink-0 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 space-y-2">
-              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pilih Outlet</p>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-                <input type="text" value={outletSearch} onChange={(e) => setOutletSearch(e.target.value)} placeholder="Cari outlet..." className="w-full pl-9 pr-4 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:border-purple-500 focus:outline-none" />
+            <div className={`${surfaceClass} shrink-0 p-3.5 space-y-3`}>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-500">Mulai Transaksi</p>
+                <p className="mt-1 text-sm font-semibold text-stone-900">Pilih outlet yang sedang melayani</p>
               </div>
-              <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden max-h-28 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                <input type="text" value={outletSearch} onChange={(e) => setOutletSearch(e.target.value)} placeholder="Cari outlet..." className="w-full rounded-2xl border border-stone-200 bg-[#fcfbf7] py-3 pl-10 pr-4 text-sm text-stone-900 focus:border-emerald-500 focus:outline-none" />
+              </div>
+              <div className="max-h-32 overflow-y-auto divide-y divide-stone-100 rounded-2xl border border-stone-200 bg-[#fcfbf7]">
                 {showOutletsLoading ? (
-                  <div className="py-4 text-center text-sm text-gray-400">Memuat...</div>
+                  <div className="py-4 text-center text-sm text-stone-400">Memuat...</div>
                 ) : filteredOutlets.map(outlet => (
-                  <button key={outlet.id} onClick={() => { setSelectedOutletId(outlet.id); setOutletSearch('') }} className="w-full flex items-center justify-between px-3 py-2 hover:bg-purple-50 dark:hover:bg-purple-900/30 text-left transition-colors">
+                  <button key={outlet.id} onClick={() => { setSelectedOutletId(outlet.id); setOutletSearch('') }} className="w-full flex items-center justify-between px-3 py-3 hover:bg-emerald-50 text-left transition-colors">
                     <div>
-                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{outlet.name}</p>
-                      {outlet.address && <p className="text-xs text-gray-500 dark:text-gray-400">{outlet.address}</p>}
+                      <p className="text-sm font-semibold text-stone-900">{outlet.name}</p>
+                      {outlet.address && <p className="text-xs text-stone-500">{outlet.address}</p>}
                     </div>
-                    <span className="text-gray-300 text-sm ml-2">›</span>
+                    <span className="text-stone-300 text-sm ml-2">›</span>
                   </button>
                 ))}
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/30 border-2 border-purple-200 dark:border-purple-800 rounded-xl shrink-0">
-              <span className="text-purple-500">🏪</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs md:text-sm font-semibold text-purple-900 dark:text-purple-200 truncate">{selectedOutlet.name}</p>
-                {selectedOutlet.address && <p className="text-xs text-purple-600 dark:text-purple-400 truncate">{selectedOutlet.address}</p>}
+            <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                <Store className="h-4 w-4" />
               </div>
-              <button onClick={() => setSelectedOutletId('')} className="text-purple-400 hover:text-purple-600 text-xs md:text-lg leading-none shrink-0">✕</button>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-emerald-950 truncate md:text-sm">{selectedOutlet.name}</p>
+                {selectedOutlet.address && <p className="text-xs text-emerald-700 truncate">{selectedOutlet.address}</p>}
+              </div>
+              <button onClick={() => setSelectedOutletId('')} className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-emerald-800 transition-colors hover:bg-emerald-100">Ganti</button>
             </div>
           )}
 
           {/* Product Picker — fills remaining height */}
-          <div className="flex flex-col flex-1 overflow-hidden min-h-0 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl">
+          <div className={`${surfaceClass} flex flex-col flex-1 overflow-hidden min-h-0`}>
             {/* Header */}
-            <div className="flex items-center justify-between px-3 md:px-4 py-2 md:py-2.5 border-b border-gray-200 dark:border-gray-700 shrink-0 gap-2">
-              <p className="font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm shrink-0">Produk</p>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 shrink-0 gap-2">
+              <div>
+                <p className="font-semibold text-stone-900 text-sm shrink-0">Cari & pilih produk</p>
+                <p className="mt-1 text-xs text-stone-500">{selectedOutletId ? `${filteredProducts.length} item siap dijual` : 'Pilih outlet sebelum mencari barang'}</p>
+              </div>
               <div className="flex gap-1 items-center">
-                <input ref={barcodeInputRef} type="text" value={barcodeInput} onChange={handleBarcodeInputChange} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleBarcodeInputSubmit() } }} placeholder="Scan SKU..." disabled={!selectedOutletId} className="hidden md:block w-28 px-2 py-1.5 text-xs border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-purple-500 focus:outline-none uppercase disabled:opacity-50" />
-                <Button variant="secondary" size="sm" onClick={handleBarcodeInputSubmit} disabled={!selectedOutletId || !barcodeInput.trim()} className="hidden md:flex">✓</Button>
-                <Button variant="secondary" size="sm" onClick={() => setIsScannerOpen(true)} disabled={!selectedOutletId}>📷 <span className="hidden sm:inline ml-1">Scan</span></Button>
+                <input ref={barcodeInputRef} type="text" value={barcodeInput} onChange={handleBarcodeInputChange} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleBarcodeInputSubmit() } }} placeholder="Scan SKU..." disabled={!selectedOutletId} className="hidden md:block w-32 rounded-2xl border border-stone-200 bg-[#fcfbf7] px-3 py-2 text-xs uppercase text-stone-900 focus:border-emerald-500 focus:outline-none disabled:opacity-50" />
+                <Button variant="secondary" size="sm" onClick={handleBarcodeInputSubmit} disabled={!selectedOutletId || !barcodeInput.trim()} className="hidden md:flex !rounded-2xl !border-stone-200 !bg-[#fcfbf7] !text-stone-700 hover:!bg-white">OK</Button>
+                <Button variant="secondary" size="sm" onClick={() => setIsScannerOpen(true)} disabled={!selectedOutletId} className="!rounded-2xl !border-stone-200 !bg-[#fcfbf7] !text-stone-700 hover:!bg-white">
+                  <ScanLine className="mr-1 h-4 w-4" />
+                  <span className="hidden sm:inline">Scan</span>
+                </Button>
               </div>
             </div>
 
@@ -599,9 +640,9 @@ export default function SalesTransactionPage() {
               {/* Search + View Toggle */}
               <div className="flex gap-2 shrink-0">
                 <div className="relative flex-1 min-w-0">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-                  <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Cari produk..." disabled={!selectedOutletId} className="w-full pl-9 pr-8 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none disabled:opacity-50" />
-                  {productSearch && <button onClick={() => setProductSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">✕</button>}
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                  <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Cari produk..." disabled={!selectedOutletId} className="w-full pl-10 pr-8 py-2.5 border border-stone-200 rounded-xl bg-[#fcfbf7] text-sm text-stone-900 focus:border-emerald-500 focus:outline-none disabled:opacity-50" />
+                  {productSearch && <button onClick={() => setProductSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">✕</button>}
                 </div>
                 {categories.length > 0 && (
                   <select
@@ -616,13 +657,13 @@ export default function SalesTransactionPage() {
                     ))}
                   </select>
                 )}
-                <div className="flex border-2 border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden shrink-0">
+                <div className="flex border border-stone-200 rounded-xl overflow-hidden shrink-0 bg-white">
                   <button onClick={() => { setViewMode('list'); localStorage.setItem('lakupos-view-mode', 'list') }}
-                    className={`p-1.5 md:p-2 transition-colors ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
+                    className={`p-1.5 md:p-2 transition-colors ${viewMode === 'list' ? 'bg-stone-900 text-white' : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'}`}>
                     <List size={16} />
                   </button>
                   <button onClick={() => { setViewMode('grid'); localStorage.setItem('lakupos-view-mode', 'grid') }}
-                    className={`p-1.5 md:p-2 transition-colors ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}>
+                    className={`p-1.5 md:p-2 transition-colors ${viewMode === 'grid' ? 'bg-stone-900 text-white' : 'text-stone-400 hover:text-stone-700 hover:bg-stone-100'}`}>
                     <LayoutGrid size={16} />
                   </button>
                 </div>
@@ -804,11 +845,11 @@ export default function SalesTransactionPage() {
 
               {/* Qty + Add */}
               {selectedProduct && (
-                <div className="p-3 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-300 dark:border-blue-700 rounded-xl shrink-0">
+                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-[24px] shrink-0">
                   {/* Product info row */}
                   <div className="flex items-center gap-2 mb-2.5 min-w-0">
-                    <p className="text-xs md:text-sm font-bold text-blue-900 dark:text-blue-200 truncate flex-1">{selectedProduct.name}</p>
-                    <span className="text-xs font-bold text-blue-700 dark:text-blue-300 shrink-0">{formatCurrency(selectedProduct.price || 0)}</span>
+                    <p className="text-xs md:text-sm font-bold text-emerald-950 truncate flex-1">{selectedProduct.name}</p>
+                    <span className="text-xs font-bold text-emerald-800 shrink-0">{formatCurrency(selectedProduct.price || 0)}</span>
                     {selectedOutletId && (
                       selectedProduct.stock_behavior === 'UNTRACKED' || selectedProduct.stock_behavior === 'CONSUMED' ? (
                         <span className="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
@@ -831,8 +872,8 @@ export default function SalesTransactionPage() {
                     <input ref={quantityInputRef} type="number" min="1" max={availableStock || 999} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddToCart() } }} onFocus={(e) => e.target.select()} className="w-14 px-2 py-1.5 text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none text-sm font-bold shrink-0" />
                   </div>
                   {/* Add button — full width */}
-                  <Button variant="primary" size="md" fullWidth onClick={handleAddToCart} disabled={productsLoading || (!!selectedOutletId && availableStock === 0 && selectedProduct.stock_behavior === 'TRACKED')} className="active:scale-95 transition-transform duration-100">
-                    ➕ Tambah ke Keranjang
+                  <Button variant="primary" size="md" fullWidth onClick={handleAddToCart} disabled={productsLoading || (!!selectedOutletId && availableStock === 0 && selectedProduct.stock_behavior === 'TRACKED')} className="!rounded-2xl !border-emerald-700 !bg-emerald-600 !text-white hover:!bg-emerald-700 active:scale-95 transition-transform duration-100">
+                    Tambah ke Keranjang
                   </Button>
                 </div>
               )}
@@ -841,20 +882,52 @@ export default function SalesTransactionPage() {
         </div>
 
         {/* Right: Payment + Recent Transactions + Receipt — hidden on mobile (handled by sticky bar + cart drawer) */}
-        <div className="hidden md:flex flex-col gap-3 w-72 shrink-0 overflow-hidden">
+        <div className="hidden md:flex flex-col gap-4 w-[22rem] shrink-0 overflow-hidden">
 
           {/* Payment card */}
-          <div className="shrink-0 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 space-y-3">
+          <div className="shrink-0 rounded-[28px] bg-stone-950 p-4 text-white shadow-[0_20px_45px_-25px_rgba(28,25,23,0.75)]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-400">Checkout</p>
+                <p className="mt-1 text-sm font-semibold text-white">Ringkasan pembayaran</p>
+              </div>
+              <div className="rounded-2xl bg-white/10 p-2 text-white">
+                <WalletCards className="h-4 w-4" />
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-[24px] border border-white/10 bg-white/5 p-4">
+              <p className="text-xs text-stone-300">Total tagihan</p>
+              <p className="mt-1 text-3xl font-semibold tracking-tight text-white">
+                {cart.length > 0 ? formatCurrency(cartTotal) : 'Rp 0'}
+              </p>
+              <div className="mt-4 space-y-2 text-sm">
+                <div className="flex items-center justify-between text-stone-300">
+                  <span>Subtotal</span>
+                  <span className="text-white">{formatCurrency(cartSubtotal)}</span>
+                </div>
+                <div className="flex items-center justify-between text-stone-300">
+                  <span>Diskon</span>
+                  <span className={discountAmount > 0 ? 'text-emerald-300' : 'text-white'}>
+                    {discountAmount > 0 ? `- ${formatCurrency(discountAmount)}` : formatCurrency(0)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between border-t border-white/10 pt-3 text-sm font-semibold text-white">
+                  <span>{cartItemCount} item</span>
+                  <span>{formatCurrency(cartTotal)}</span>
+                </div>
+              </div>
+            </div>
             {/* Promo */}
-            <div>
+            <div className="mt-4">
               <button onClick={() => setIsPromoExpanded(!isPromoExpanded)} className="flex items-center justify-between w-full text-left">
-                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">🎫 Kode Promo</span>
-                <span className="text-gray-400 text-xs">{isPromoExpanded ? '▲' : '▼'}</span>
+                <span className="text-xs font-semibold text-stone-200">Kode Promo</span>
+                <span className="text-stone-500 text-xs">{isPromoExpanded ? '▲' : '▼'}</span>
               </button>
               {isPromoExpanded && !appliedPromo && (
                 <div className="flex gap-2 mt-2">
-                  <Input type="text" placeholder="Kode promo" value={promoCode} onChange={(e) => setPromoCode(e.target.value.toUpperCase())} fullWidth />
-                  <Button variant="outline" size="sm" onClick={handleApplyPromo} disabled={!promoCode || validatePromoMutation.isPending}>{validatePromoMutation.isPending ? '...' : 'Pakai'}</Button>
+                  <Input type="text" placeholder="Kode promo" value={promoCode} onChange={(e) => setPromoCode(e.target.value.toUpperCase())} fullWidth className="!rounded-2xl !border-white/15 !bg-white/10 !text-white !placeholder:text-stone-500" />
+                  <Button variant="outline" size="sm" onClick={handleApplyPromo} disabled={!promoCode || validatePromoMutation.isPending} className="!rounded-2xl !border-white/15 !bg-white/10 !text-white hover:!bg-white/15">{validatePromoMutation.isPending ? '...' : 'Pakai'}</Button>
                 </div>
               )}
               {appliedPromo && (
@@ -888,17 +961,17 @@ export default function SalesTransactionPage() {
               </div>
             )}
 
-            <Button variant="primary" size="lg" fullWidth onClick={handleCompleteSale} disabled={recordSaleMutation.isPending || cart.length === 0 || !selectedOutletId}>
-              {recordSaleMutation.isPending ? 'Memproses...' : cart.length === 0 ? '🛒 Keranjang kosong' : `💳 Bayar ${formatCurrency(cartTotal)}`}
+            <Button variant="primary" size="lg" fullWidth onClick={handleCompleteSale} disabled={recordSaleMutation.isPending || cart.length === 0 || !selectedOutletId} className="mt-4 !rounded-2xl !border-emerald-500 !bg-emerald-500 !text-white hover:!bg-emerald-400">
+              {recordSaleMutation.isPending ? 'Memproses...' : cart.length === 0 ? 'Keranjang kosong' : `Bayar ${formatCurrency(cartTotal)}`}
             </Button>
 
-            <div className="space-y-1.5">
-              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Shortcut</p>
-              <div className="flex gap-2 text-xs text-gray-400 dark:text-gray-500 flex-wrap">
-                <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-mono">F2</kbd> Cari produk</span>
-                <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-mono">Enter</kbd> Tambah</span>
-                <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-mono">F8</kbd> Bayar</span>
-                <span><kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 font-mono">Esc</kbd> Batal</span>
+            <div className="mt-4 space-y-1.5">
+              <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide">Shortcut</p>
+              <div className="flex gap-2 text-xs text-stone-300 flex-wrap">
+                <span><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 text-stone-200 font-mono">F2</kbd> Cari produk</span>
+                <span><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 text-stone-200 font-mono">Enter</kbd> Tambah</span>
+                <span><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 text-stone-200 font-mono">F8</kbd> Bayar</span>
+                <span><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 text-stone-200 font-mono">Esc</kbd> Batal</span>
               </div>
             </div>
           </div>

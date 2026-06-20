@@ -28,6 +28,7 @@ BEGIN
 END;
 $$;
 
+DROP TRIGGER IF EXISTS trg_audit_logs_immutable ON public.audit_logs;
 CREATE TRIGGER trg_audit_logs_immutable
   BEFORE UPDATE OR DELETE ON public.audit_logs
   FOR EACH ROW
@@ -36,6 +37,7 @@ CREATE TRIGGER trg_audit_logs_immutable
 -- ============================================================
 -- 3. RLS policies for audit_logs (tenant-scoped read)
 -- ============================================================
+DROP POLICY IF EXISTS "audit_logs_tenant_select" ON public.audit_logs;
 CREATE POLICY "audit_logs_tenant_select" ON public.audit_logs
   FOR SELECT TO authenticated
   USING (tenant_id IN (
@@ -45,6 +47,7 @@ CREATE POLICY "audit_logs_tenant_select" ON public.audit_logs
     WHERE ura.user_id = auth.uid() AND p.key = 'audit.view'
   ));
 
+DROP POLICY IF EXISTS "audit_logs_insert" ON public.audit_logs;
 CREATE POLICY "audit_logs_insert" ON public.audit_logs
   FOR INSERT TO authenticated
   WITH CHECK (true);
@@ -62,56 +65,68 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_actor ON public.audit_logs(actor_user_
 -- ============================================================
 
 -- transactions
+DROP POLICY IF EXISTS "transactions_tenant_select" ON public.transactions;
 CREATE POLICY "transactions_tenant_select" ON public.transactions
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "transactions_insert" ON public.transactions;
 CREATE POLICY "transactions_insert" ON public.transactions
   FOR INSERT TO authenticated
   WITH CHECK (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "transactions_update" ON public.transactions;
 CREATE POLICY "transactions_update" ON public.transactions
   FOR UPDATE TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
 -- transaction_items
+DROP POLICY IF EXISTS "transaction_items_tenant_select" ON public.transaction_items;
 CREATE POLICY "transaction_items_tenant_select" ON public.transaction_items
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "transaction_items_insert" ON public.transaction_items;
 CREATE POLICY "transaction_items_insert" ON public.transaction_items
   FOR INSERT TO authenticated
   WITH CHECK (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
 -- products
+DROP POLICY IF EXISTS "products_tenant_select" ON public.products;
 CREATE POLICY "products_tenant_select" ON public.products
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "products_insert" ON public.products;
 CREATE POLICY "products_insert" ON public.products
   FOR INSERT TO authenticated
   WITH CHECK (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "products_update" ON public.products;
 CREATE POLICY "products_update" ON public.products
   FOR UPDATE TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
 -- outlets
+DROP POLICY IF EXISTS "outlets_tenant_select" ON public.outlets;
 CREATE POLICY "outlets_tenant_select" ON public.outlets
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
 -- users
+DROP POLICY IF EXISTS "users_tenant_select" ON public.users;
 CREATE POLICY "users_tenant_select" ON public.users
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
 -- daily_sales
+DROP POLICY IF EXISTS "daily_sales_tenant_select" ON public.daily_sales;
 CREATE POLICY "daily_sales_tenant_select" ON public.daily_sales
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
 -- daily_stock
+DROP POLICY IF EXISTS "daily_stock_tenant_select" ON public.daily_stock;
 CREATE POLICY "daily_stock_tenant_select" ON public.daily_stock
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
@@ -119,20 +134,24 @@ CREATE POLICY "daily_stock_tenant_select" ON public.daily_stock
 -- stock_movements: tenant-scoped (drop old non-tenant policies first)
 DROP POLICY IF EXISTS stock_movements_select ON public.stock_movements;
 DROP POLICY IF EXISTS stock_movements_insert ON public.stock_movements;
+DROP POLICY IF EXISTS "stock_movements_tenant_select" ON public.stock_movements;
 CREATE POLICY "stock_movements_tenant_select" ON public.stock_movements
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "stock_movements_insert" ON public.stock_movements;
 CREATE POLICY "stock_movements_insert" ON public.stock_movements
   FOR INSERT TO authenticated
   WITH CHECK (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
 -- stock_alerts
+DROP POLICY IF EXISTS "stock_alerts_tenant_select" ON public.stock_alerts;
 CREATE POLICY "stock_alerts_tenant_select" ON public.stock_alerts
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
 -- cash_sessions (legacy)
+DROP POLICY IF EXISTS "cash_sessions_tenant_select" ON public.cash_sessions;
 CREATE POLICY "cash_sessions_tenant_select" ON public.cash_sessions
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
@@ -141,25 +160,30 @@ CREATE POLICY "cash_sessions_tenant_select" ON public.cash_sessions
 DROP POLICY IF EXISTS expenses_select ON public.operational_expenses;
 DROP POLICY IF EXISTS expenses_insert ON public.operational_expenses;
 DROP POLICY IF EXISTS expenses_update ON public.operational_expenses;
+DROP POLICY IF EXISTS "operational_expenses_tenant_select" ON public.operational_expenses;
 CREATE POLICY "operational_expenses_tenant_select" ON public.operational_expenses
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "operational_expenses_insert" ON public.operational_expenses;
 CREATE POLICY "operational_expenses_insert" ON public.operational_expenses
   FOR INSERT TO authenticated
   WITH CHECK (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
 -- promotions
+DROP POLICY IF EXISTS "promotions_tenant_select" ON public.promotions;
 CREATE POLICY "promotions_tenant_select" ON public.promotions
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
 -- billing_history
+DROP POLICY IF EXISTS "billing_history_tenant_select" ON public.billing_history;
 CREATE POLICY "billing_history_tenant_select" ON public.billing_history
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
 -- business_profiles
+DROP POLICY IF EXISTS "business_profiles_tenant_select" ON public.business_profiles;
 CREATE POLICY "business_profiles_tenant_select" ON public.business_profiles
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));

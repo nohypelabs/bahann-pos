@@ -20,9 +20,9 @@ CREATE TABLE IF NOT EXISTS public.roles (
 );
 
 -- System roles (tenant_id IS NULL) need partial unique index
-CREATE UNIQUE INDEX idx_roles_system_key ON public.roles(key) WHERE tenant_id IS NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_roles_system_key ON public.roles(key) WHERE tenant_id IS NULL;
 -- Tenant-specific roles
-CREATE UNIQUE INDEX idx_roles_tenant_key ON public.roles(tenant_id, key) WHERE tenant_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_roles_tenant_key ON public.roles(tenant_id, key) WHERE tenant_id IS NOT NULL;
 
 ALTER TABLE public.roles ENABLE ROW LEVEL SECURITY;
 
@@ -67,21 +67,21 @@ CREATE TABLE IF NOT EXISTS public.user_role_assignments (
 );
 
 -- Partial unique indexes for NULL-safe uniqueness
-CREATE UNIQUE INDEX idx_ura_unique_tenant_scope
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ura_unique_tenant_scope
   ON public.user_role_assignments(user_id, role_id, scope_type)
   WHERE scope_type = 'TENANT';
 
-CREATE UNIQUE INDEX idx_ura_unique_outlet_scope
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ura_unique_outlet_scope
   ON public.user_role_assignments(user_id, role_id, scope_type, outlet_id)
   WHERE scope_type = 'OUTLET';
 
-CREATE UNIQUE INDEX idx_ura_unique_group_scope
+CREATE UNIQUE INDEX IF NOT EXISTS idx_ura_unique_group_scope
   ON public.user_role_assignments(user_id, role_id, scope_type, outlet_group_id)
   WHERE scope_type = 'OUTLET_GROUP';
 
-CREATE INDEX idx_ura_user_id ON public.user_role_assignments(user_id);
-CREATE INDEX idx_ura_tenant_id ON public.user_role_assignments(tenant_id);
-CREATE INDEX idx_ura_outlet_id ON public.user_role_assignments(outlet_id);
+CREATE INDEX IF NOT EXISTS idx_ura_user_id ON public.user_role_assignments(user_id);
+CREATE INDEX IF NOT EXISTS idx_ura_tenant_id ON public.user_role_assignments(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ura_outlet_id ON public.user_role_assignments(outlet_id);
 
 ALTER TABLE public.user_role_assignments ENABLE ROW LEVEL SECURITY;
 
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS public.outlet_groups (
   UNIQUE (tenant_id, name)
 );
 
-CREATE INDEX idx_outlet_groups_tenant_id ON public.outlet_groups(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_outlet_groups_tenant_id ON public.outlet_groups(tenant_id);
 ALTER TABLE public.outlet_groups ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS public.outlet_group_members (
   PRIMARY KEY (outlet_group_id, outlet_id)
 );
 
-CREATE INDEX idx_ogm_outlet_id ON public.outlet_group_members(outlet_id);
+CREATE INDEX IF NOT EXISTS idx_ogm_outlet_id ON public.outlet_group_members(outlet_id);
 ALTER TABLE public.outlet_group_members ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================

@@ -163,10 +163,33 @@ export const transactionApprovalsRouter = router({
     .input(
       z.object({
         approvalId: z.string().uuid(),
+        pin: z.string().min(4).max(6).regex(/^\d+$/, 'PIN harus angka'),
       }),
     )
     .mutation(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
+
+      // Verify the approver's own PIN first
+      const { data: approver, error: approverError } = await supabaseAdmin
+        .from('users')
+        .select('id, pin_code_hash, name')
+        .eq('id', ctx.userId)
+        .eq('tenant_id', tenantId)
+        .single()
+
+      if (approverError || !approver) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User tidak ditemukan' })
+      }
+
+      if (!approver.pin_code_hash) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Anda belum mengatur PIN. Atur PIN di Pengaturan → Profil terlebih dahulu.' })
+      }
+
+      const bcrypt = await import('bcryptjs')
+      const pinValid = await bcrypt.compare(input.pin, approver.pin_code_hash)
+      if (!pinValid) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'PIN salah' })
+      }
 
       // Fetch the approval request
       const { data: approval, error: fetchError } = await supabaseAdmin
@@ -203,6 +226,7 @@ export const transactionApprovalsRouter = router({
           status: 'approved',
           approved_by: ctx.userId,
           decided_at: new Date().toISOString(),
+          pin_verified_at: new Date().toISOString(),
         })
         .eq('id', input.approvalId)
         .select()
@@ -216,7 +240,12 @@ export const transactionApprovalsRouter = router({
       if (approval.action_type === 'void') {
         const { error: txUpdateError } = await supabaseAdmin
           .from('transactions')
-          .update({ status: 'voided' })
+          .update({
+            status: 'voided',
+            void_reason: approval.reason,
+            voided_by: ctx.userId,
+            voided_at: new Date().toISOString(),
+          })
           .eq('id', approval.transaction_id)
 
         if (txUpdateError) {
@@ -225,7 +254,12 @@ export const transactionApprovalsRouter = router({
       } else if (approval.action_type === 'refund') {
         const { error: txUpdateError } = await supabaseAdmin
           .from('transactions')
-          .update({ status: 'refunded' })
+          .update({
+            status: 'refunded',
+            refund_reason: approval.reason,
+            refunded_by: ctx.userId,
+            refunded_at: new Date().toISOString(),
+          })
           .eq('id', approval.transaction_id)
 
         if (txUpdateError) {

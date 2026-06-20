@@ -536,4 +536,111 @@ export const usersRouter = router({
       const hasPermission = await uc.checkPermission(ctx.userId, input.permission, ctx.session?.role)
       return { hasPermission }
     }),
+
+  /**
+   * Set or update PIN code for the current user (kepala toko / admin)
+   * PIN is 4-6 digits, stored as bcrypt hash
+   */
+  setPin: protectedProcedure
+    .input(
+      z.object({
+        pin: z.string().min(4, 'PIN minimal 4 digit').max(6, 'PIN maksimal 6 digit').regex(/^\d+$/, 'PIN harus angka'),
+        currentPassword: z.string().min(1, 'Password saat ini wajib diisi'),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.session.tenantId!
+
+      // Verify current password
+      const { data: user, error: userError } = await supabaseAdmin
+        .from('users')
+        .select('id, password_hash')
+        .eq('id', ctx.userId)
+        .eq('tenant_id', tenantId)
+        .single()
+
+      if (userError || !user) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User tidak ditemukan' })
+      }
+
+      const passwordValid = await bcrypt.compare(input.currentPassword, user.password_hash)
+      if (!passwordValid) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Password saat ini salah' })
+      }
+
+      // Hash PIN
+      const pinHash = await bcrypt.hash(input.pin, 10)
+
+      // Update PIN
+      const { error: updateError } = await supabaseAdmin
+        .from('users')
+        .update({ pin_code_hash: pinHash })
+        .eq('id', ctx.userId)
+        .eq('tenant_id', tenantId)
+
+      if (updateError) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: updateError.message })
+      }
+
+      await createAuditLog({
+        userId: ctx.userId,
+        userEmail: ctx.session?.email || 'unknown',
+        action: 'UPDATE',
+        entityType: 'user',
+        entityId: ctx.userId,
+        changes: { pin_set: true },
+      })
+
+      return { success: true, message: 'PIN berhasil diset' }
+    }),
+
+  /**
+   * Check if current user has a PIN set
+   */
+  hasPin: protectedProcedure.query(async ({ ctx }) => {
+    const { data: user } = await supabaseAdmin
+      .from('users')
+      .select('pin_code_hash')
+      .eq('id', ctx.userId)
+      .single()
+
+    return { hasPin: !!user?.pin_code_hash }
+  }),
+
+  /**
+   * Verify a user's PIN (used during approval flow)
+   * Accepts targetUserId to verify kepala toko's PIN, not the requester's
+   */
+  verifyPin: protectedProcedure
+    .input(
+      z.object({
+        pin: z.string().min(4).max(6).regex(/^\d+$/, 'PIN harus angka'),
+        targetUserId: z.string().uuid(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.session.tenantId!
+
+      const { data: targetUser, error: userError } = await supabaseAdmin
+        .from('users')
+        .select('id, pin_code_hash, name')
+        .eq('id', input.targetUserId)
+        .eq('tenant_id', tenantId)
+        .single()
+
+      if (userError || !targetUser) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User tidak ditemukan' })
+      }
+
+      if (!targetUser.pin_code_hash) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'User belum mengatur PIN' })
+      }
+
+      const pinValid = await bcrypt.compare(input.pin, targetUser.pin_code_hash)
+      if (!pinValid) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'PIN salah' })
+      }
+
+      return { valid: true, userName: targetUser.name }
+    }),
 })

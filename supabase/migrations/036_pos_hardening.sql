@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS public.pos_devices (
   UNIQUE (tenant_id, device_code)
 );
 
-CREATE INDEX idx_pos_devices_tenant_outlet ON public.pos_devices(tenant_id, outlet_id);
+CREATE INDEX IF NOT EXISTS idx_pos_devices_tenant_outlet ON public.pos_devices(tenant_id, outlet_id);
 ALTER TABLE public.pos_devices ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
@@ -60,9 +60,9 @@ CREATE TABLE IF NOT EXISTS public.shifts (
   CONSTRAINT uq_shift_active UNIQUE NULLS NOT DISTINCT (cashier_user_id, outlet_id, closed_at)
 );
 
-CREATE INDEX idx_shifts_tenant_outlet ON public.shifts(tenant_id, outlet_id);
-CREATE INDEX idx_shifts_cashier ON public.shifts(cashier_user_id);
-CREATE INDEX idx_shifts_status ON public.shifts(status) WHERE status IN ('open', 'pending_approval');
+CREATE INDEX IF NOT EXISTS idx_shifts_tenant_outlet ON public.shifts(tenant_id, outlet_id);
+CREATE INDEX IF NOT EXISTS idx_shifts_cashier ON public.shifts(cashier_user_id);
+CREATE INDEX IF NOT EXISTS idx_shifts_status ON public.shifts(status) WHERE status IN ('open', 'pending_approval');
 
 ALTER TABLE public.shifts ENABLE ROW LEVEL SECURITY;
 
@@ -97,9 +97,9 @@ CREATE TABLE IF NOT EXISTS public.transaction_approvals (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_ta_tenant_outlet ON public.transaction_approvals(tenant_id, outlet_id);
-CREATE INDEX idx_ta_status ON public.transaction_approvals(status) WHERE status = 'pending';
-CREATE INDEX idx_ta_transaction ON public.transaction_approvals(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_ta_tenant_outlet ON public.transaction_approvals(tenant_id, outlet_id);
+CREATE INDEX IF NOT EXISTS idx_ta_status ON public.transaction_approvals(status) WHERE status = 'pending';
+CREATE INDEX IF NOT EXISTS idx_ta_transaction ON public.transaction_approvals(transaction_id);
 
 ALTER TABLE public.transaction_approvals ENABLE ROW LEVEL SECURITY;
 
@@ -139,16 +139,19 @@ ON CONFLICT DO NOTHING;
 -- ============================================================
 
 -- pos_devices: tenant-scoped
+DROP POLICY IF EXISTS "pos_devices_tenant_select" ON public.pos_devices;
 CREATE POLICY "pos_devices_tenant_select" ON public.pos_devices
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
 -- shifts: tenant-scoped, outlet-filtered for non-admins
+DROP POLICY IF EXISTS "shifts_tenant_select" ON public.shifts;
 CREATE POLICY "shifts_tenant_select" ON public.shifts
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));
 
 -- transaction_approvals: tenant-scoped
+DROP POLICY IF EXISTS "transaction_approvals_tenant_select" ON public.transaction_approvals;
 CREATE POLICY "transaction_approvals_tenant_select" ON public.transaction_approvals
   FOR SELECT TO authenticated
   USING (tenant_id IN (SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()));

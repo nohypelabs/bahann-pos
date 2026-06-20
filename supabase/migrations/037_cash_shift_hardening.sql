@@ -156,12 +156,14 @@ $$;
 -- ============================================================
 -- 6. RLS policies for shifts (insert/update for authenticated)
 -- ============================================================
+DROP POLICY IF EXISTS "shifts_insert" ON public.shifts;
 CREATE POLICY "shifts_insert" ON public.shifts
   FOR INSERT TO authenticated
   WITH CHECK (tenant_id IN (
     SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()
   ));
 
+DROP POLICY IF EXISTS "shifts_update" ON public.shifts;
 CREATE POLICY "shifts_update" ON public.shifts
   FOR UPDATE TO authenticated
   USING (tenant_id IN (
@@ -169,12 +171,14 @@ CREATE POLICY "shifts_update" ON public.shifts
   ));
 
 -- transaction_approvals insert/update
+DROP POLICY IF EXISTS "ta_insert" ON public.transaction_approvals;
 CREATE POLICY "ta_insert" ON public.transaction_approvals
   FOR INSERT TO authenticated
   WITH CHECK (tenant_id IN (
     SELECT ura.tenant_id FROM user_role_assignments ura WHERE ura.user_id = auth.uid()
   ));
 
+DROP POLICY IF EXISTS "ta_update" ON public.transaction_approvals;
 CREATE POLICY "ta_update" ON public.transaction_approvals
   FOR UPDATE TO authenticated
   USING (tenant_id IN (

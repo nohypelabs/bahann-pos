@@ -1,181 +1,175 @@
 'use client'
 
-import { useState, useEffect, type ReactNode } from 'react'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
+import { useState, useEffect } from 'react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
-import { useToast } from '@/components/ui/Toast'
+import { Input } from '@/components/ui/Input'
+import { PinInput } from '@/components/ui/PinInput'
 import { trpc } from '@/lib/trpc/client'
-import { useRouter } from 'next/navigation'
-import { Crown, Star, User as UserIcon, Pencil, Check, ShieldCheck, AlertOctagon, LogOut } from 'lucide-react'
-
-const ROLE_BADGE: Record<string, { label: string; icon: ReactNode; color: string }> = {
-  admin:   { label: 'Administrator', icon: <Crown className="w-3 h-3" />,    color: 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300' },
-  manager: { label: 'Manager',       icon: <Star className="w-3 h-3" />,     color: 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300' },
-  default: { label: 'Kasir',         icon: <UserIcon className="w-3 h-3" />, color: 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300' },
-}
-
-function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="p-3 md:p-4 bg-gray-50 dark:bg-gray-700/40 rounded-xl">
-      <p className="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 mb-0.5">{label}</p>
-      <p className="text-sm md:text-base font-semibold text-gray-900 dark:text-white">{value}</p>
-    </div>
-  )
-}
+import { useToast } from '@/components/ui/Toast'
+import {
+  User, KeyRound, Shield, CheckCircle, Loader2, Lock,
+} from 'lucide-react'
 
 export default function ProfilePage() {
-  const router = useRouter()
   const { showToast } = useToast()
-  const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState({ name: '', whatsappNumber: '' })
+  const utils = trpc.useUtils()
 
-  const { data: profile, isLoading, refetch } = trpc.auth.getProfile.useQuery()
-  const updateProfile = trpc.auth.updateProfile.useMutation()
-  const logoutMutation = trpc.auth.logout.useMutation()
+  // Check if user has PIN set
+  const { data: pinData, isLoading: pinLoading } = trpc.users.hasPin.useQuery()
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (profile) setFormData({ name: profile.name, whatsappNumber: profile.whatsappNumber })
-  }, [profile])
+  // Set PIN form
+  const [showPinForm, setShowPinForm] = useState(false)
+  const [newPin, setNewPin] = useState('')
+  const [confirmPin, setConfirmPin] = useState('')
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [pinFormError, setPinFormError] = useState('')
 
-  const handleSave = async () => {
-    try {
-      await updateProfile.mutateAsync(formData)
-      await refetch()
-      setIsEditing(false)
-      showToast('Profil berhasil diperbarui!', 'success')
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Gagal menyimpan profil', 'error')
+  const setPinMutation = trpc.users.setPin.useMutation({
+    onSuccess: () => {
+      showToast('PIN berhasil diset!', 'success')
+      setShowPinForm(false)
+      setNewPin('')
+      setConfirmPin('')
+      setCurrentPassword('')
+      setPinFormError('')
+      utils.users.hasPin.invalidate()
+    },
+    onError: (err) => {
+      setPinFormError(err.message || 'Gagal mengatur PIN')
+    },
+  })
+
+  const handleSetPin = async () => {
+    setPinFormError('')
+
+    if (newPin.length < 4) {
+      setPinFormError('PIN minimal 4 digit')
+      return
     }
+    if (newPin !== confirmPin) {
+      setPinFormError('PIN tidak cocok')
+      return
+    }
+    if (!currentPassword) {
+      setPinFormError('Password saat ini wajib diisi')
+      return
+    }
+
+    await setPinMutation.mutateAsync({
+      pin: newPin,
+      currentPassword,
+    })
   }
-
-  const handleCancel = () => {
-    if (profile) setFormData({ name: profile.name, whatsappNumber: profile.whatsappNumber })
-    setIsEditing(false)
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div className="text-center space-y-3">
-          <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-gray-200 dark:border-gray-700 border-t-blue-500" />
-          <p className="text-sm text-gray-500 dark:text-gray-400">Memuat profil…</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!profile) return null
-
-  const badge = ROLE_BADGE[profile.role] ?? ROLE_BADGE.default
 
   return (
-    <div className="space-y-4 md:space-y-6 max-w-4xl">
-      <PageHeader title="Profil Saya" subtitle="Kelola informasi akun dan pengaturan" />
+    <div className="space-y-4 md:space-y-6 max-w-2xl">
+      <PageHeader
+        title="Profil Saya"
+        subtitle="Kelola informasi akun dan keamanan"
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-
-        {/* ── Avatar Card ── */}
-        <SectionCard>
-          <div className="flex flex-col items-center text-center gap-3 md:gap-4">
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-2xl md:text-4xl font-bold shadow-lg">
-              {profile.name.charAt(0).toUpperCase()}
-            </div>
-
-            <div>
-              <p className="text-base md:text-lg font-bold text-gray-900 dark:text-white">{profile.name}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{profile.email}</p>
-              {profile.whatsappNumber && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">{profile.whatsappNumber}</p>
-              )}
-            </div>
-
-            <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${badge.color}`}>
-              {badge.icon} {badge.label}
+      {/* PIN Section */}
+      <SectionCard
+        title="PIN Persetujuan"
+        action={
+          pinData?.hasPin ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 rounded-full">
+              <CheckCircle className="w-3.5 h-3.5" />
+              Sudah diatur
             </span>
-
-            <div className="w-full pt-3 border-t border-gray-200 dark:border-gray-700 text-left">
-              <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-1">User ID</p>
-              <p className="text-[10px] font-mono text-gray-600 dark:text-gray-400 break-all">{profile.id}</p>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded-full">
+              <KeyRound className="w-3.5 h-3.5" />
+              Belum diatur
+            </span>
+          )
+        }
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800/30">
+            <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                PIN digunakan untuk menyetujui permintaan void/refund
+              </p>
+              <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                Saat kasir mengajukan void, Anda (Kepala Toko/Admin) harus memasukkan PIN ini untuk menyetujui. PIN 4-6 digit angka.
+              </p>
             </div>
           </div>
-        </SectionCard>
 
-        {/* ── Info + Settings ── */}
-        <div className="lg:col-span-2 space-y-4">
+          {pinLoading ? (
+            <div className="h-12 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
+          ) : !showPinForm ? (
+            <button
+              onClick={() => setShowPinForm(true)}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              <KeyRound className="w-4 h-4" />
+              {pinData?.hasPin ? 'Ubah PIN' : 'Atur PIN'}
+            </button>
+          ) : (
+            <div className="space-y-5 p-4 rounded-2xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+              <PinInput
+                length={6}
+                value={newPin}
+                onChange={setNewPin}
+                label="PIN Baru (4-6 digit)"
+                error={pinFormError && newPin.length < 4 ? 'PIN minimal 4 digit' : undefined}
+              />
 
-          <SectionCard
-            title="Informasi Pribadi"
-            action={!isEditing ? (
-              <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
-                <Pencil className="w-3.5 h-3.5 mr-1" /> Edit
-              </Button>
-            ) : undefined}
-          >
-            {isEditing ? (
-              <div className="space-y-3">
-                <Input type="text" label="Nama Lengkap" value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })} fullWidth required />
-                <Input type="email" label="Email" value={profile.email} fullWidth disabled />
-                <Input type="tel" label="Nomor HP / WhatsApp" value={formData.whatsappNumber}
-                  onChange={e => setFormData({ ...formData, whatsappNumber: e.target.value })}
-                  placeholder="08123456789" fullWidth />
-                <div className="flex gap-2 pt-1">
-                  <Button variant="primary" onClick={handleSave} fullWidth disabled={updateProfile.isPending}>
-                    {updateProfile.isPending ? 'Menyimpan…' : <><Check className="w-4 h-4 mr-1" /> Simpan</>}
-                  </Button>
-                  <Button variant="outline" onClick={handleCancel} fullWidth>Batal</Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <InfoRow label="Nama Lengkap" value={profile.name} />
-                <InfoRow label="Email" value={profile.email} />
-                <InfoRow label="Nomor HP / WhatsApp" value={profile.whatsappNumber || <span className="italic text-gray-400 font-normal text-xs">Belum diisi</span>} />
-                <InfoRow label="Role" value={<span className="inline-flex items-center gap-1">{badge.icon} {badge.label}</span>} />
-              </div>
-            )}
-          </SectionCard>
+              <PinInput
+                length={6}
+                value={confirmPin}
+                onChange={setConfirmPin}
+                label="Konfirmasi PIN"
+                error={confirmPin && newPin !== confirmPin ? 'PIN tidak cocok' : undefined}
+              />
 
-          <SectionCard title="Pengaturan Akun">
-            <div className="space-y-3">
-              <div className="p-3 md:p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-                <p className="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1 flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Informasi Sesi
-                </p>
-                <p className="text-xs text-blue-700 dark:text-blue-400">
-                  Sesi berlaku selama 7 hari dan akan logout otomatis setelah itu.
-                </p>
-              </div>
+              <Input
+                type="password"
+                label="Password Saat Ini"
+                placeholder="Masukkan password akun Anda"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                fullWidth
+                error={pinFormError && !currentPassword ? 'Password wajib diisi' : undefined}
+              />
 
-              <div className="p-3 md:p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
-                <p className="text-xs font-semibold text-red-800 dark:text-red-300 mb-1 flex items-center gap-1">
-                  <AlertOctagon className="w-3.5 h-3.5" /> Danger Zone
-                </p>
-                <p className="text-xs text-red-700 dark:text-red-400 mb-3">
-                  Setelah logout, kamu harus login ulang dengan kredensial kamu.
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={async () => {
-                    if (confirm('Yakin ingin logout?')) {
-                      try { await logoutMutation.mutateAsync() } catch { /* best-effort */ }
-                      localStorage.removeItem('auth_token')
-                      localStorage.removeItem('user')
-                      window.location.href = '/login'
-                    }
+              {pinFormError && (
+                <p className="text-sm text-red-600 dark:text-red-400 text-center">{pinFormError}</p>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowPinForm(false)
+                    setNewPin('')
+                    setConfirmPin('')
+                    setCurrentPassword('')
+                    setPinFormError('')
                   }}
+                  className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
-                  <LogOut className="w-3.5 h-3.5 mr-1" /> Logout
-                </Button>
+                  Batal
+                </button>
+                <button
+                  onClick={handleSetPin}
+                  disabled={setPinMutation.isPending || newPin.length < 4 || newPin !== confirmPin}
+                  className="flex-1 py-2.5 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {setPinMutation.isPending ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Menyimpan...</>
+                  ) : (
+                    <><Lock className="w-4 h-4" /> Simpan PIN</>
+                  )}
+                </button>
               </div>
             </div>
-          </SectionCard>
+          )}
         </div>
-      </div>
+      </SectionCard>
     </div>
   )
 }

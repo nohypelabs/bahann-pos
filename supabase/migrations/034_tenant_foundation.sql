@@ -218,6 +218,7 @@ CREATE INDEX IF NOT EXISTS idx_promotions_tenant_id ON public.promotions(tenant_
 -- ============================================================
 -- 7. RLS policy for tenants
 -- ============================================================
+DROP POLICY IF EXISTS "tenants_select_own" ON public.tenants;
 CREATE POLICY "tenants_select_own" ON public.tenants
   FOR SELECT TO authenticated
   USING (owner_user_id = auth.uid());

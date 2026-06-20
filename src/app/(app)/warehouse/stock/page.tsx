@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { trpc } from '@/lib/trpc/client'
-import { Package, Store, ShoppingCart, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react'
+import { Package, Store, ShoppingCart, AlertTriangle, CheckCircle2, XCircle, CalendarClock } from 'lucide-react'
 
 // ─── Stepper ────────────────────────────────────────────────────────────────
 function Stepper({
@@ -98,7 +98,6 @@ export default function StockManagementPage() {
   const [adjPhoto, setAdjPhoto] = useState<string | null>(null)
   const [adjSuccess, setAdjSuccess] = useState(false)
   const [adjError, setAdjError] = useState('')
-  const [activeTab, setActiveTab] = useState<'masuk' | 'adjust'>('masuk')
 
   const { data: productsResponse, isLoading: productsLoading } = trpc.products.getAll.useQuery()
   const { data: outletsResponse, isLoading: outletsLoading } = trpc.outlets.getAll.useQuery()
@@ -162,18 +161,38 @@ export default function StockManagementPage() {
   const selectedProduct = products.find(p => p.id === formData.productId)
   const selectedOutlet  = outlets.find(o => o.id === formData.outletId)
   const akhirNegative   = formData.stockAkhir < 0
+  const panelClass = 'rounded-[28px] border border-stone-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-5">
 
       {/* ── Header ── */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-          Manajemen Stok
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Catat pergerakan stok harian dan pantau inventori
-        </p>
+      <div className={`${panelClass} px-5 py-4`}>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-500">
+              Gudang Operasional
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold text-stone-950 md:text-3xl">
+              Manajemen Stok
+            </h1>
+            <p className="mt-1 text-sm text-stone-500">
+              Catat stok masuk, koreksi, dan pantau inventori tanpa harus pindah-pindah halaman.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-[#fcfbf7] px-3 py-1.5 text-[11px] font-medium text-stone-600">
+              <CalendarClock className="h-3.5 w-3.5 text-stone-500" />
+              {today}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-[#fcfbf7] px-3 py-1.5 text-[11px] font-medium text-stone-600">
+              {products.length} produk tracked
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-[#fcfbf7] px-3 py-1.5 text-[11px] font-medium text-stone-600">
+              {stats?.lowStockCount ?? 0} stok tipis
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* ── Alerts ── */}
@@ -192,9 +211,9 @@ export default function StockManagementPage() {
 
       {/* Info banner for filtered items */}
       {allProducts.length > products.length && (
-        <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl">
-          <Package className="w-4 h-4 text-gray-400 shrink-0" />
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex items-center gap-3 rounded-2xl border border-stone-200 bg-[#fcfbf7] p-3">
+          <Package className="w-4 h-4 text-stone-400 shrink-0" />
+          <p className="text-xs text-stone-500">
             Item bertipe Jasa dan Menu (tanpa stok) tidak ditampilkan di halaman ini.
             <span className="font-semibold"> {allProducts.length - products.length} item disembunyikan.</span>
           </p>
@@ -202,16 +221,21 @@ export default function StockManagementPage() {
       )}
 
       {/* ── Main Grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-start">
 
         {/* ────── Form Card ────── */}
-        <form onSubmit={handleSubmit} className="lg:col-span-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+        <form onSubmit={handleSubmit} className={`${panelClass} lg:col-span-3 overflow-hidden`}>
 
           {/* Section: Produk & Outlet */}
-          <div className="px-4 md:px-6 pt-4 md:pt-5 pb-4 md:pb-5 border-b border-gray-100 dark:border-gray-700">
-            <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
-              1 · Pilih Produk &amp; Outlet
-            </p>
+          <div className="px-4 md:px-6 pt-4 md:pt-5 pb-4 md:pb-5 border-b border-stone-100">
+            <div className="mb-3">
+              <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider">
+                1 · Pilih Produk &amp; Outlet
+              </p>
+              <p className="mt-1 text-sm font-semibold text-stone-900">
+                Tentukan item dan outlet yang sedang menerima stok
+              </p>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Product */}
@@ -279,8 +303,8 @@ export default function StockManagementPage() {
           </div>
 
           {/* Section: Tanggal */}
-          <div className="px-4 md:px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-            <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">
+          <div className="px-4 md:px-6 py-4 border-b border-stone-100">
+            <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-3">
               2 · Tanggal Pencatatan
             </p>
             <div className="flex items-center gap-2">
@@ -309,10 +333,15 @@ export default function StockManagementPage() {
           </div>
 
           {/* Section: Pergerakan Stok */}
-          <div className="px-4 md:px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-            <p className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4">
-              3 · Pergerakan Stok
-            </p>
+          <div className="px-4 md:px-6 py-4 border-b border-stone-100">
+            <div className="mb-4">
+              <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider">
+                3 · Pergerakan Stok
+              </p>
+              <p className="mt-1 text-sm font-semibold text-stone-900">
+                Gunakan kalkulator cepat untuk barang datang hari ini
+              </p>
+            </div>
 
             {/* Calculator Strip */}
             <div className="flex items-end justify-center gap-2 md:gap-3 flex-wrap">
@@ -376,6 +405,7 @@ export default function StockManagementPage() {
               size="lg"
               fullWidth
               disabled={recordStockMutation.isPending || productsLoading || outletsLoading || akhirNegative}
+              className="!rounded-2xl !border-stone-900 !bg-stone-900 !text-white hover:!bg-stone-800"
             >
               {recordStockMutation.isPending ? 'Menyimpan…' : 'Simpan Pergerakan Stok'}
             </Button>
@@ -386,9 +416,9 @@ export default function StockManagementPage() {
         <div className="lg:col-span-2 space-y-4">
 
           {/* Summary Stats */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+          <div className={`${panelClass} overflow-hidden`}>
             <div className="px-4 md:px-5 pt-4 pb-2">
-              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ringkasan Inventori</p>
+              <p className="text-xs font-bold text-stone-500 uppercase tracking-wider">Ringkasan Inventori</p>
             </div>
             <div className="px-4 md:px-5 pb-4 space-y-2">
               <StatCard icon={<Package className="w-5 h-5" />} label="Total Produk" value={(stats?.totalProducts ?? 0).toLocaleString()} color="gray" />
@@ -401,9 +431,9 @@ export default function StockManagementPage() {
           </div>
 
           {/* How to use */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-2xl p-4">
-            <p className="text-xs font-bold text-blue-800 dark:text-blue-300 mb-2">Cara pakai</p>
-            <ul className="text-[11px] text-blue-700 dark:text-blue-400 space-y-1 leading-relaxed">
+          <div className="rounded-[28px] border border-stone-200 bg-[#f7f5ee] p-4">
+            <p className="text-xs font-bold text-stone-800 mb-2">Cara pakai</p>
+            <ul className="text-[11px] text-stone-600 space-y-1 leading-relaxed">
               <li>• Pilih produk dan outlet</li>
               <li>• Stok Awal otomatis dari catatan terakhir</li>
               <li>• Isi Masuk (barang datang dari supplier)</li>
@@ -416,10 +446,10 @@ export default function StockManagementPage() {
       </div>
 
       {/* ── Penyesuaian Stok ── */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-4 md:px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-          <p className="text-sm font-bold text-gray-900 dark:text-white">Penyesuaian Stok</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Untuk barang rusak, hilang, expired, atau koreksi</p>
+      <div className="rounded-[28px] border border-orange-200 bg-[#fffaf3] shadow-[0_1px_0_rgba(28,25,23,0.04)] overflow-hidden">
+        <div className="px-4 md:px-6 py-4 border-b border-orange-100">
+          <p className="text-sm font-bold text-stone-950">Penyesuaian Stok</p>
+          <p className="text-xs text-stone-500 mt-0.5">Untuk barang rusak, hilang, expired, atau koreksi cepat tanpa pindah halaman.</p>
         </div>
         <div className="px-4 md:px-6 py-4 space-y-3">
           {/* Adj Success/Error */}
@@ -543,6 +573,7 @@ export default function StockManagementPage() {
                 setAdjError(err instanceof Error ? err.message : 'Gagal menyimpan penyesuaian')
               }
             }}
+            className="!rounded-2xl !border-orange-300 !bg-orange-500 !text-white hover:!bg-orange-600"
           >
             Simpan Penyesuaian
           </Button>
@@ -551,10 +582,10 @@ export default function StockManagementPage() {
 
       {/* ── Low Stock Table ── */}
       {lowStock && lowStock.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
-          <div className="px-4 md:px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-            <p className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-1.5"><AlertTriangle className="w-4 h-4 text-yellow-500" /> Stok Hampir Habis</p>
-            <span className="px-2.5 py-0.5 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs font-bold rounded-full">
+        <div className={`${panelClass} overflow-hidden`}>
+          <div className="px-4 md:px-6 py-4 border-b border-stone-100 flex items-center justify-between">
+            <p className="text-sm font-bold text-stone-950 flex items-center gap-1.5"><AlertTriangle className="w-4 h-4 text-yellow-500" /> Stok Hampir Habis</p>
+            <span className="px-2.5 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-full">
               {lowStock.length} produk
             </span>
           </div>

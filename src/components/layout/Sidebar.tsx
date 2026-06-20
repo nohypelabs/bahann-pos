@@ -30,28 +30,31 @@ function SidebarItem({ href, icon, label, badge, isCollapsed }: {
       href={href}
       title={isCollapsed ? label : undefined}
       className={`
-        flex items-center gap-3.5 rounded-xl text-[15px] font-medium
-        transition-colors duration-150 relative
-        ${isCollapsed ? 'justify-center p-3' : 'px-3 py-2.5'}
+        group relative flex items-center gap-3.5 rounded-2xl border text-[14px] font-medium
+        transition-all duration-150
+        ${isCollapsed ? 'justify-center px-2.5 py-3' : 'px-3.5 py-3'}
         ${isActive
-          ? 'text-gray-900 dark:text-white font-bold'
-          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
+          ? 'border-emerald-200 bg-emerald-50 text-emerald-950 shadow-[0_1px_0_rgba(5,150,105,0.08)]'
+          : 'border-transparent text-stone-600 hover:border-stone-200 hover:bg-white hover:text-stone-900'
         }
       `}
     >
-      <span className={`flex-shrink-0 [&>svg]:w-[20px] [&>svg]:h-[20px] ${isActive ? 'text-gray-900 dark:text-white' : 'opacity-80'}`}>{icon}</span>
+      {isActive && !isCollapsed && (
+        <span className="absolute left-1.5 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-emerald-500" />
+      )}
+      <span className={`flex-shrink-0 [&>svg]:w-[20px] [&>svg]:h-[20px] ${isActive ? 'text-emerald-700' : 'opacity-75 group-hover:opacity-100'}`}>{icon}</span>
       {!isCollapsed && (
         <>
           <span className="flex-1 min-w-0 truncate">{label}</span>
           {badge && (
-            <span className="px-2 py-0.5 text-[10px] font-bold bg-red-500 text-white rounded-full flex-shrink-0">
+            <span className="flex-shrink-0 rounded-full bg-stone-900 px-2 py-0.5 text-[10px] font-bold text-white">
               {badge}
             </span>
           )}
         </>
       )}
       {isCollapsed && badge && (
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-stone-900 text-[9px] font-bold text-white">
           {badge}
         </span>
       )}
@@ -89,7 +92,7 @@ function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths 
   if (isCollapsed) {
     return (
       <div className="mb-1">
-        <div className="h-px bg-gray-200 dark:bg-gray-700/60 mx-3 mb-1" />
+        <div className="mx-3 mb-1 h-px bg-stone-200" />
         <div className="space-y-0.5">{children}</div>
       </div>
     )
@@ -98,10 +101,10 @@ function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths 
   return (
     <div className="mb-1">
       <button onClick={toggle} className="w-full flex items-center justify-between px-3 py-1.5 group">
-        <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-400 transition-colors group-hover:text-stone-600">
           {title}
         </span>
-        <span className={`text-gray-300 dark:text-gray-600 text-[9px] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>▼</span>
+        <span className={`text-[9px] text-stone-300 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>▼</span>
       </button>
       <div className={`overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="space-y-0.5 pb-1">{children}</div>
@@ -232,60 +235,98 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
 
       <aside className={`
         w-72 ${isCollapsed ? 'md:w-[68px]' : 'md:w-64'}
-        h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800
+        h-screen bg-[#fcfbf7] border-r border-stone-200
         flex flex-col transition-all duration-300 ease-in-out flex-shrink-0
         fixed md:relative z-50
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
 
-        {/* ── Top bar: close (mobile only) ── */}
-        <div className={`flex items-center border-b border-gray-200 dark:border-gray-800 h-14 flex-shrink-0 ${showCollapsed ? 'justify-center px-3' : 'px-4'}`}>
+        <div className={`flex h-16 flex-shrink-0 items-center border-b border-stone-200 bg-[#f7f5ee] ${showCollapsed ? 'justify-center px-3' : 'justify-between px-4'}`}>
+          <Link href="/dashboard" className={`flex min-w-0 items-center gap-3 ${showCollapsed ? 'justify-center' : ''}`}>
+            <img src="/logo.svg" alt="Laku POS" className="h-9 w-9 rounded-2xl border border-stone-200 bg-white p-1" />
+            {!showCollapsed && (
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-stone-900">Laku POS</p>
+                <p className="truncate text-[11px] uppercase tracking-[0.22em] text-stone-500">
+                  Operasional Harian
+                </p>
+              </div>
+            )}
+          </Link>
           {!showCollapsed && (
             <button onClick={() => setMobileOpen(false)}
-              className="md:hidden p-1.5 rounded-full text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+              className="md:hidden rounded-2xl p-2 text-stone-500 transition-colors hover:bg-white hover:text-stone-900"
+              aria-label="Tutup menu">
               <X className="w-5 h-5" />
             </button>
           )}
         </div>
 
-        {/* ── User profile (X-style) ── */}
         {!showCollapsed && (
-          <div className="px-4 py-4 border-b border-gray-200 dark:border-gray-800">
-            <div className="flex items-center justify-between mb-3">
-              <Link href="/profile" className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 hover:opacity-90 transition-opacity">
+          <div className="mx-3 mt-3 rounded-[24px] border border-stone-200 bg-white p-4 shadow-[0_1px_0_rgba(28,25,23,0.04)]">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <Link href="/profile" className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-stone-900 text-lg font-bold text-white transition-opacity hover:opacity-90">
                 {userInitial}
               </Link>
+              <div className="min-w-0 flex-1">
+                <Link href="/profile" className="block group">
+                  <p className="truncate text-[15px] font-semibold leading-tight text-stone-900 group-hover:underline">{userName}</p>
+                  <p className="truncate text-[13px] text-stone-500">{userEmail}</p>
+                </Link>
+              </div>
               <button onClick={() => setShowLogoutModal(true)} title={t('sidebar.logout')}
-                className="p-1.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                className="rounded-2xl p-2 text-stone-400 transition-colors hover:bg-red-50 hover:text-red-500">
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
-            <Link href="/profile" className="block group">
-              <p className="text-[15px] font-bold text-gray-900 dark:text-gray-100 leading-tight group-hover:underline">{userName}</p>
-              <p className="text-[13px] text-gray-500 dark:text-gray-400">{userEmail}</p>
-            </Link>
-            <div className="flex items-center gap-1.5 mt-2.5">
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${roleBadge.color}`}>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${roleBadge.color}`}>
                 {roleBadge.label}
               </span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${PLAN_BADGE[plan] || PLAN_BADGE.free}`}>
+              <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${PLAN_BADGE[plan] || PLAN_BADGE.free}`}>
                 {PLAN_LABEL[plan] || 'Gratis'}
               </span>
             </div>
           </div>
         )}
 
-        {/* Collapsed: just avatar */}
         {showCollapsed && (
-          <div className="flex flex-col items-center py-3 border-b border-gray-200 dark:border-gray-800">
-            <Link href="/profile" className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm" title={userName}>
+          <div className="flex flex-col items-center py-3 border-b border-stone-200">
+            <Link href="/profile" className="flex h-10 w-10 items-center justify-center rounded-2xl bg-stone-900 text-sm font-bold text-white" title={userName}>
               {userInitial}
             </Link>
           </div>
         )}
 
-        {/* ── Nav ── */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5" role="navigation" aria-label="Menu navigasi">
+        {!showCollapsed && (
+          <div className="mx-3 mt-3 rounded-[24px] border border-stone-200 bg-[#f4f2ea] p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-500">
+              Workflow Inti
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Link href="/pos/sales" className="rounded-2xl border border-stone-200 bg-white px-3 py-3 transition-colors hover:bg-emerald-50 hover:text-emerald-700">
+                <ShoppingCart className="h-4 w-4 text-emerald-600" />
+                <p className="mt-2 text-sm font-semibold text-stone-900">Kasir</p>
+                <p className="mt-1 text-[11px] text-stone-500">Transaksi cepat</p>
+              </Link>
+              <Link href="/warehouse/stock" className="rounded-2xl border border-stone-200 bg-white px-3 py-3 transition-colors hover:bg-amber-50 hover:text-amber-700">
+                <Package className="h-4 w-4 text-amber-600" />
+                <p className="mt-2 text-sm font-semibold text-stone-900">Gudang</p>
+                <p className="mt-1 text-[11px] text-stone-500">Stok harian</p>
+              </Link>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-stone-600">
+                {alertCount} alert stok
+              </span>
+              <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-stone-600">
+                {pendingApprovalsCount} approval
+              </span>
+            </div>
+          </div>
+        )}
+
+        <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5" role="navigation" aria-label="Menu navigasi">
 
           {/* ═══ SUPERADMIN PANEL — distinct section at top ═══ */}
           {isSuperAdmin && (
@@ -363,11 +404,11 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
 
         {/* ── Settings & Support (X-style collapsible) ── */}
         {!showCollapsed && (
-          <div className="border-t border-gray-200 dark:border-gray-800 flex-shrink-0">
+          <div className="border-t border-stone-200 flex-shrink-0">
             <button onClick={() => setSettingsOpen(!settingsOpen)}
-              className="w-full flex items-center justify-between px-4 py-3.5 text-[15px] font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              className="w-full flex items-center justify-between px-4 py-3.5 text-[15px] font-medium text-stone-700 hover:bg-white transition-colors">
               <span>{t('sidebar.settingsHelp')}</span>
-              <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-5 h-5 text-stone-400 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />
             </button>
             <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
               <div className="px-2 pb-2">
@@ -376,8 +417,8 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
                     {/* Pengaturan sub-group */}
                     <button onClick={() => setSubPengaturan(!subPengaturan)}
                       className="w-full flex items-center justify-between px-3 py-2 group">
-                      <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors">{t('sidebar.settings')}</span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-gray-300 dark:text-gray-600 transition-transform duration-200 ${subPengaturan ? 'rotate-180' : ''}`} />
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-400 group-hover:text-stone-600 transition-colors">{t('sidebar.settings')}</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-stone-300 transition-transform duration-200 ${subPengaturan ? 'rotate-180' : ''}`} />
                     </button>
                     <div className={`overflow-hidden transition-all duration-200 ${subPengaturan ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
                       <div className="space-y-0.5 pb-1">
@@ -404,8 +445,8 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
                 {/* Bantuan sub-group */}
                 <button onClick={() => setSubBantuan(!subBantuan)}
                   className="w-full flex items-center justify-between px-3 py-2 group">
-                  <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors">{t('sidebar.helpSection')}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-gray-300 dark:text-gray-600 transition-transform duration-200 ${subBantuan ? 'rotate-180' : ''}`} />
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-400 group-hover:text-stone-600 transition-colors">{t('sidebar.helpSection')}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-stone-300 transition-transform duration-200 ${subBantuan ? 'rotate-180' : ''}`} />
                 </button>
                 <div className={`overflow-hidden transition-all duration-200 ${subBantuan ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'}`}>
                   <div className="space-y-0.5 pb-1">
@@ -428,7 +469,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
 
         {/* Collapsed: settings + support icons */}
         {showCollapsed && (
-          <div className="border-t border-gray-200 dark:border-gray-800 p-2 flex-shrink-0 space-y-1">
+          <div className="border-t border-stone-200 p-2 flex-shrink-0 space-y-1">
             {canManageProducts && (
               <>
                 <SidebarItem href="/products"          icon={<Tag />}          label={t('sidebar.masterData.products')} isCollapsed={true} />
@@ -454,15 +495,15 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         )}
 
         {/* ── Bottom bar: dark mode + lang (X-style) ── */}
-        <div className={`border-t border-gray-200 dark:border-gray-800 flex-shrink-0 ${showCollapsed ? 'p-2 flex flex-col items-center gap-1.5' : 'px-4 py-3 flex items-center justify-end gap-2'}`}>
+        <div className={`border-t border-stone-200 flex-shrink-0 ${showCollapsed ? 'p-2 flex flex-col items-center gap-1.5' : 'px-4 py-3 flex items-center justify-end gap-2'}`}>
           <button onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
             title={language === 'id' ? 'Switch to English' : 'Ganti ke Indonesia'}
-            className="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-xs font-bold">
+            className="p-2 rounded-full text-stone-500 hover:bg-white transition-colors text-xs font-bold">
             {language === 'id' ? 'ID' : 'EN'}
           </button>
           {showCollapsed && (
             <button onClick={() => setShowLogoutModal(true)} title={t('sidebar.logout')}
-              className="p-2 rounded-full text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+              className="p-2 rounded-full text-stone-500 hover:text-red-500 hover:bg-red-50 transition-colors">
               <LogOut className="w-5 h-5" />
             </button>
           )}
