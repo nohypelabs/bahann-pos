@@ -53,7 +53,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname()
   const isPosSales = pathname === '/pos/sales'
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [desktopOpen, setDesktopOpen] = useState(true)
+  const [desktopOpen, setDesktopOpen] = useState(false)
   const routeMeta = getRouteMeta(pathname)
   const quickLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
