@@ -12,7 +12,7 @@ import { printHtmlDocument } from '@/lib/print/printHtmlDocument'
 import { formatCurrency, generateTransactionId } from '@/lib/utils'
 import { offlineDb } from '@/lib/offline/database'
 import { useOffline } from '@/hooks/useOffline'
-import { CloudOff, LayoutGrid, List, RefreshCw, ScanLine, Search, ShoppingCart, Store, WalletCards } from 'lucide-react'
+import { CloudOff, LayoutGrid, List, Package, RefreshCw, ScanLine, Search, ShoppingCart, Store, WalletCards } from 'lucide-react'
 import { ProductListSkeleton, ProductGridSkeleton } from '@/components/ui/Skeletons'
 
 interface CartItem {
@@ -734,7 +734,7 @@ export default function SalesTransactionPage() {
                   ) : filteredProducts.length === 0 ? (
                     <div className="py-8 text-center">
                       <div className="w-16 h-16 mx-auto mb-3 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                        <span className="text-2xl">📦</span>
+                        <Package className="h-7 w-7 text-gray-400 dark:text-gray-500" aria-hidden="true" />
                       </div>
                       <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                         {productSearch ? `"${productSearch}" tidak ditemukan` : 'Tidak ada produk'}
@@ -820,7 +820,7 @@ export default function SalesTransactionPage() {
                     ) : filteredProducts.length === 0 ? (
                       <div className="py-8 text-center">
                         <div className="w-16 h-16 mx-auto mb-3 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                          <span className="text-2xl">📦</span>
+                          <Package className="h-7 w-7 text-gray-400 dark:text-gray-500" aria-hidden="true" />
                         </div>
                         <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                           {productSearch ? `"${productSearch}" tidak ditemukan` : 'Tidak ada produk'}
