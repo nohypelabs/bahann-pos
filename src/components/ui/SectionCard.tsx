@@ -16,7 +16,7 @@ export function SectionCard({ children, className = '', step, stepLabel, title, 
   const hasHeader = step != null || title || action
 
   return (
-    <div className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden ${className}`}>
+    <div className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-[35px] shadow-sm overflow-hidden ${className}`}>
       {hasHeader && (
         <div className="flex items-center justify-between gap-3 px-4 md:px-6 pt-4 md:pt-5 pb-3 md:pb-4 border-b border-gray-100 dark:border-gray-700">
           <div>

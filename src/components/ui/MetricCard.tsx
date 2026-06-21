@@ -62,7 +62,7 @@ export function MetricCard({
     <div
       className={`
         ${styles.bg} ${styles.border}
-        rounded-2xl p-4
+        rounded-[35px] p-4
         flex flex-col gap-1
         transition-all duration-200
         ${className}

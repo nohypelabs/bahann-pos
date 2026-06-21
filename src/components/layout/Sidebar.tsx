@@ -263,7 +263,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         </div>
 
         {!showCollapsed && (
-          <div className="mx-3 mt-3 rounded-[24px] border border-[#ddd8cc] bg-white p-4 shadow-[0_1px_0_rgba(23,32,29,0.04)]">
+          <div className="mx-3 mt-3 rounded-[35px] border border-[#ddd8cc] bg-white p-4 shadow-[0_1px_0_rgba(23,32,29,0.04)]">
             <div className="mb-3 flex items-start justify-between gap-3">
               <Link href="/profile" className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#0f5f56] text-lg font-bold text-white transition-opacity hover:opacity-90">
                 {userInitial}
@@ -299,17 +299,17 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         )}
 
         {!showCollapsed && (
-          <div className="mx-3 mt-3 rounded-[24px] border border-[#ddd8cc] bg-[#f1efe8] p-3">
+          <div className="mx-3 mt-3 rounded-[35px] border border-[#ddd8cc] bg-[#f1efe8] p-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#6f776f]">
               Workflow Inti
             </p>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <Link href="/pos/sales" className="rounded-2xl border border-[#ddd8cc] bg-white px-3 py-3 transition-colors hover:bg-[#e5f3ef] hover:text-[#0f5f56]">
+              <Link href="/pos/sales" className="rounded-[35px] border border-[#ddd8cc] bg-white px-3 py-3 transition-colors hover:bg-[#e5f3ef] hover:text-[#0f5f56]">
                 <ShoppingCart className="h-4 w-4 text-[#0f5f56]" />
                 <p className="mt-2 text-sm font-semibold text-[#17201d]">Kasir</p>
                 <p className="mt-1 text-[11px] text-[#6f776f]">Transaksi cepat</p>
               </Link>
-              <Link href="/warehouse/stock" className="rounded-2xl border border-[#ddd8cc] bg-white px-3 py-3 transition-colors hover:bg-[#fff8ec] hover:text-[#a66f10]">
+              <Link href="/warehouse/stock" className="rounded-[35px] border border-[#ddd8cc] bg-white px-3 py-3 transition-colors hover:bg-[#fff8ec] hover:text-[#a66f10]">
                 <Package className="h-4 w-4 text-[#c98a16]" />
                 <p className="mt-2 text-sm font-semibold text-[#17201d]">Gudang</p>
                 <p className="mt-1 text-[11px] text-[#6f776f]">Stok harian</p>
@@ -515,7 +515,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4"
           onClick={e => e.target === e.currentTarget && setShowLogoutModal(false)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-[#ddd8cc] dark:border-gray-800">
+          <div className="relative bg-white dark:bg-gray-900 rounded-[35px] shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-[#ddd8cc] dark:border-gray-800">
             <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-500">
               <LogOut className="w-7 h-7" />
             </div>

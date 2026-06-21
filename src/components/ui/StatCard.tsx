@@ -22,7 +22,7 @@ const colorMap: Record<StatCardColor, { wrap: string; label: string }> = {
 export function StatCard({ icon, label, value, color = 'gray', sub }: StatCardProps) {
   const { wrap, label: labelClass } = colorMap[color]
   return (
-    <div className={`flex items-center gap-3 p-3 md:p-4 rounded-xl border ${wrap}`}>
+    <div className={`flex items-center gap-3 p-3 md:p-4 rounded-[35px] border ${wrap}`}>
       <div className="shrink-0 [&>svg]:w-5 [&>svg]:h-5 md:[&>svg]:w-6 md:[&>svg]:h-6">{icon}</div>
       <div className="min-w-0 flex-1">
         <p className={`text-[11px] md:text-xs font-medium ${labelClass}`}>{label}</p>

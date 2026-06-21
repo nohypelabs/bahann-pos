@@ -56,7 +56,7 @@ export function Modal({
 
       <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
         <div
-          className={`relative w-full ${sizeClasses[size]} bg-white dark:bg-gray-800 rounded-t-[1.5rem] sm:rounded-[0.75rem] shadow-2xl transform transition-all max-h-[95vh] sm:max-h-[90vh] flex flex-col`}
+          className={`relative w-full ${sizeClasses[size]} bg-white dark:bg-gray-800 rounded-t-[35px] sm:rounded-[35px] shadow-2xl transform transition-all max-h-[95vh] sm:max-h-[90vh] flex flex-col`}
           role="dialog"
           aria-modal="true"
           aria-labelledby={title ? 'modal-title' : undefined}
@@ -86,7 +86,7 @@ export function Modal({
           </div>
 
           {footer && (
-            <div className="card-mobile border-t-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-b-[1.5rem] sm:rounded-b-[0.75rem] flex-shrink-0">
+            <div className="card-mobile border-t-2 border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-b-[35px] flex-shrink-0">
               {footer}
             </div>
           )}

@@ -868,7 +868,7 @@ export default function SalesTransactionPage() {
 
               {/* Qty + Add */}
               {selectedProduct && (
-                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-[24px] shrink-0">
+                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-[35px] shrink-0">
                   {/* Product info row */}
                   <div className="flex items-center gap-2 mb-2.5 min-w-0">
                     <p className="text-xs md:text-sm font-bold text-emerald-950 truncate flex-1">{selectedProduct.name}</p>
@@ -908,7 +908,7 @@ export default function SalesTransactionPage() {
         <div className="hidden md:flex flex-col gap-4 w-[22rem] shrink-0 overflow-hidden">
 
           {/* Payment card */}
-          <div className="shrink-0 rounded-[28px] bg-stone-950 p-4 text-white shadow-[0_20px_45px_-25px_rgba(28,25,23,0.75)]">
+          <div className="shrink-0 rounded-[35px] bg-stone-950 p-4 text-white shadow-[0_20px_45px_-25px_rgba(28,25,23,0.75)]">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-400">Checkout</p>
@@ -919,7 +919,7 @@ export default function SalesTransactionPage() {
               </div>
             </div>
 
-            <div className="mt-4 rounded-[24px] border border-white/10 bg-white/5 p-4">
+            <div className="mt-4 rounded-[35px] border border-white/10 bg-white/5 p-4">
               <p className="text-xs text-stone-300">Total tagihan</p>
               <p className="mt-1 text-3xl font-semibold tracking-tight text-white">
                 {cart.length > 0 ? formatCurrency(cartTotal) : 'Rp 0'}
@@ -1171,7 +1171,7 @@ export default function SalesTransactionPage() {
       {/* ── Modals ── */}
       {showUpgradeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-4 md:p-8 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-[35px] shadow-2xl max-w-md w-full p-4 md:p-8 text-center">
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4"><span className="text-xs md:text-lg md:text-3xl">🚫</span></div>
             <h2 className="text-base md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Batas Transaksi Tercapai</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-2">Paket <span className="font-semibold text-blue-600">Gratis</span> hanya mendukung <span className="font-semibold">100 transaksi per bulan</span>.</p>

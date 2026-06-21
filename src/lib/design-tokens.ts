@@ -94,7 +94,7 @@ export const shadows = {
 export const radius = {
   sm: '8px',
   md: '12px',   // rounded-xl — standard
-  lg: '16px',   // rounded-2xl — cards, modals
+  lg: '35px',   // login-style cards
   full: '9999px',
 } as const
 

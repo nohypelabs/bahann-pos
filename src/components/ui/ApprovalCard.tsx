@@ -42,7 +42,7 @@ export function ApprovalCard({
   return (
     <div
       className={`
-        bg-surface border border-border rounded-2xl p-4
+        bg-surface border border-border rounded-[35px] p-4
         transition-all duration-250 ease-out
         ${dismissing ? 'opacity-0 -translate-y-2' : 'opacity-100 translate-y-0'}
         ${className}
