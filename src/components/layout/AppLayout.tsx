@@ -81,12 +81,6 @@ export function AppLayout({ children }: AppLayoutProps) {
               </button>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <img src="/logo.svg" alt="Laku POS" className="hidden h-7 w-7 rounded-xl sm:block" />
-                  <p className="truncate text-[10px] font-semibold uppercase tracking-[0.24em] text-[#6f776f]">
-                    Bahann POS
-                  </p>
-                </div>
-                <div className="mt-0.5 flex items-center gap-2">
                   <h1 className="truncate text-sm font-semibold text-[#17201d] sm:text-base">
                     {routeMeta.title}
                   </h1>
