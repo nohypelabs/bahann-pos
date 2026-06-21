@@ -16,7 +16,7 @@ describe('Card', () => {
   it('applies elevated variant styles', () => {
     const { container } = render(<Card variant="elevated">Content</Card>)
     const card = container.firstChild as HTMLElement
-    expect(card).toHaveClass('border-2', 'border-gray-300', 'dark:border-gray-600')
+    expect(card).toHaveClass('border', 'border-[#CFC7B9]', 'dark:border-gray-600')
   })
 
   it('applies no padding when padding is none', () => {

@@ -34,27 +34,27 @@ function SidebarItem({ href, icon, label, badge, isCollapsed }: {
         transition-all duration-150
         ${isCollapsed ? 'justify-center px-2.5 py-3' : 'px-3.5 py-3'}
         ${isActive
-          ? 'border-emerald-200 bg-emerald-50 text-emerald-950 shadow-[0_1px_0_rgba(5,150,105,0.08)]'
-          : 'border-transparent text-stone-600 hover:border-stone-200 hover:bg-white hover:text-stone-900'
+          ? 'border-[#b9cbbf] bg-[#e5f3ef] text-[#0b4e48] shadow-[0_1px_0_rgba(15,95,86,0.08)]'
+          : 'border-transparent text-[#5f675f] hover:border-[#ddd8cc] hover:bg-white hover:text-[#17201d]'
         }
       `}
     >
       {isActive && !isCollapsed && (
-        <span className="absolute left-1.5 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-emerald-500" />
+        <span className="absolute left-1.5 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-[#0f5f56]" />
       )}
-      <span className={`flex-shrink-0 [&>svg]:w-[20px] [&>svg]:h-[20px] ${isActive ? 'text-emerald-700' : 'opacity-75 group-hover:opacity-100'}`}>{icon}</span>
+      <span className={`flex-shrink-0 [&>svg]:w-[20px] [&>svg]:h-[20px] ${isActive ? 'text-[#0f5f56]' : 'opacity-75 group-hover:opacity-100'}`}>{icon}</span>
       {!isCollapsed && (
         <>
           <span className="flex-1 min-w-0 truncate">{label}</span>
           {badge && (
-            <span className="flex-shrink-0 rounded-full bg-stone-900 px-2 py-0.5 text-[10px] font-bold text-white">
+            <span className="flex-shrink-0 rounded-full bg-[#17201d] px-2 py-0.5 text-[10px] font-bold text-white">
               {badge}
             </span>
           )}
         </>
       )}
       {isCollapsed && badge && (
-        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-stone-900 text-[9px] font-bold text-white">
+        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#17201d] text-[9px] font-bold text-white">
           {badge}
         </span>
       )}
@@ -92,7 +92,7 @@ function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths 
   if (isCollapsed) {
     return (
       <div className="mb-1">
-        <div className="mx-3 mb-1 h-px bg-stone-200" />
+        <div className="mx-3 mb-1 h-px bg-[#ddd8cc]" />
         <div className="space-y-0.5">{children}</div>
       </div>
     )
@@ -101,10 +101,10 @@ function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths 
   return (
     <div className="mb-1">
       <button onClick={toggle} className="w-full flex items-center justify-between px-3 py-1.5 group">
-        <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-400 transition-colors group-hover:text-stone-600">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8a9188] transition-colors group-hover:text-[#5f675f]">
           {title}
         </span>
-        <span className={`text-[9px] text-stone-300 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>▼</span>
+        <span className={`text-[9px] text-[#a9afa6] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>▼</span>
       </button>
       <div className={`overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="space-y-0.5 pb-1">{children}</div>
@@ -235,19 +235,19 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
 
       <aside className={`
         w-72 ${isCollapsed ? 'md:w-[68px]' : 'md:w-64'}
-        h-screen bg-[#fcfbf7] border-r border-stone-200
+        h-screen bg-[#fbfaf6] border-r border-[#ddd8cc]
         flex flex-col transition-all duration-300 ease-in-out flex-shrink-0
         fixed md:relative z-50
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
 
-        <div className={`flex h-16 flex-shrink-0 items-center border-b border-stone-200 bg-[#f7f5ee] ${showCollapsed ? 'justify-center px-3' : 'justify-between px-4'}`}>
+        <div className={`flex h-16 flex-shrink-0 items-center border-b border-[#ddd8cc] bg-[#f6f5f0] ${showCollapsed ? 'justify-center px-3' : 'justify-between px-4'}`}>
           <Link href="/dashboard" className={`flex min-w-0 items-center gap-3 ${showCollapsed ? 'justify-center' : ''}`}>
-            <img src="/logo.svg" alt="Laku POS" className="h-9 w-9 rounded-2xl border border-stone-200 bg-white p-1" />
+            <img src="/logo.svg" alt="Laku POS" className="h-9 w-9 rounded-2xl border border-[#ddd8cc] bg-white p-1" />
             {!showCollapsed && (
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-stone-900">Laku POS</p>
-                <p className="truncate text-[11px] uppercase tracking-[0.22em] text-stone-500">
+                <p className="truncate text-sm font-semibold text-[#17201d]">Laku POS</p>
+                <p className="truncate text-[11px] uppercase tracking-[0.22em] text-[#6f776f]">
                   Operasional Harian
                 </p>
               </div>
@@ -255,7 +255,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
           </Link>
           {!showCollapsed && (
             <button onClick={() => setMobileOpen(false)}
-              className="md:hidden rounded-2xl p-2 text-stone-500 transition-colors hover:bg-white hover:text-stone-900"
+              className="md:hidden rounded-2xl p-2 text-[#6f776f] transition-colors hover:bg-white hover:text-[#17201d]"
               aria-label="Tutup menu">
               <X className="w-5 h-5" />
             </button>
@@ -263,19 +263,19 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         </div>
 
         {!showCollapsed && (
-          <div className="mx-3 mt-3 rounded-[24px] border border-stone-200 bg-white p-4 shadow-[0_1px_0_rgba(28,25,23,0.04)]">
+          <div className="mx-3 mt-3 rounded-[24px] border border-[#ddd8cc] bg-white p-4 shadow-[0_1px_0_rgba(23,32,29,0.04)]">
             <div className="mb-3 flex items-start justify-between gap-3">
-              <Link href="/profile" className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-stone-900 text-lg font-bold text-white transition-opacity hover:opacity-90">
+              <Link href="/profile" className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#0f5f56] text-lg font-bold text-white transition-opacity hover:opacity-90">
                 {userInitial}
               </Link>
               <div className="min-w-0 flex-1">
                 <Link href="/profile" className="block group">
-                  <p className="truncate text-[15px] font-semibold leading-tight text-stone-900 group-hover:underline">{userName}</p>
-                  <p className="truncate text-[13px] text-stone-500">{userEmail}</p>
+                  <p className="truncate text-[15px] font-semibold leading-tight text-[#17201d] group-hover:underline">{userName}</p>
+                  <p className="truncate text-[13px] text-[#6f776f]">{userEmail}</p>
                 </Link>
               </div>
               <button onClick={() => setShowLogoutModal(true)} title={t('sidebar.logout')}
-                className="rounded-2xl p-2 text-stone-400 transition-colors hover:bg-red-50 hover:text-red-500">
+                className="rounded-2xl p-2 text-[#8a9188] transition-colors hover:bg-red-50 hover:text-red-600">
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
@@ -291,35 +291,35 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         )}
 
         {showCollapsed && (
-          <div className="flex flex-col items-center py-3 border-b border-stone-200">
-            <Link href="/profile" className="flex h-10 w-10 items-center justify-center rounded-2xl bg-stone-900 text-sm font-bold text-white" title={userName}>
+          <div className="flex flex-col items-center py-3 border-b border-[#ddd8cc]">
+            <Link href="/profile" className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0f5f56] text-sm font-bold text-white" title={userName}>
               {userInitial}
             </Link>
           </div>
         )}
 
         {!showCollapsed && (
-          <div className="mx-3 mt-3 rounded-[24px] border border-stone-200 bg-[#f4f2ea] p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-500">
+          <div className="mx-3 mt-3 rounded-[24px] border border-[#ddd8cc] bg-[#f1efe8] p-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#6f776f]">
               Workflow Inti
             </p>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <Link href="/pos/sales" className="rounded-2xl border border-stone-200 bg-white px-3 py-3 transition-colors hover:bg-emerald-50 hover:text-emerald-700">
-                <ShoppingCart className="h-4 w-4 text-emerald-600" />
-                <p className="mt-2 text-sm font-semibold text-stone-900">Kasir</p>
-                <p className="mt-1 text-[11px] text-stone-500">Transaksi cepat</p>
+              <Link href="/pos/sales" className="rounded-2xl border border-[#ddd8cc] bg-white px-3 py-3 transition-colors hover:bg-[#e5f3ef] hover:text-[#0f5f56]">
+                <ShoppingCart className="h-4 w-4 text-[#0f5f56]" />
+                <p className="mt-2 text-sm font-semibold text-[#17201d]">Kasir</p>
+                <p className="mt-1 text-[11px] text-[#6f776f]">Transaksi cepat</p>
               </Link>
-              <Link href="/warehouse/stock" className="rounded-2xl border border-stone-200 bg-white px-3 py-3 transition-colors hover:bg-amber-50 hover:text-amber-700">
-                <Package className="h-4 w-4 text-amber-600" />
-                <p className="mt-2 text-sm font-semibold text-stone-900">Gudang</p>
-                <p className="mt-1 text-[11px] text-stone-500">Stok harian</p>
+              <Link href="/warehouse/stock" className="rounded-2xl border border-[#ddd8cc] bg-white px-3 py-3 transition-colors hover:bg-[#fff8ec] hover:text-[#a66f10]">
+                <Package className="h-4 w-4 text-[#c98a16]" />
+                <p className="mt-2 text-sm font-semibold text-[#17201d]">Gudang</p>
+                <p className="mt-1 text-[11px] text-[#6f776f]">Stok harian</p>
               </Link>
             </div>
             <div className="mt-3 flex flex-wrap gap-1.5">
-              <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-stone-600">
+              <span className="rounded-full border border-[#ddd8cc] bg-white px-2.5 py-1 text-[10px] font-semibold text-[#5f675f]">
                 {alertCount} alert stok
               </span>
-              <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-stone-600">
+              <span className="rounded-full border border-[#ddd8cc] bg-white px-2.5 py-1 text-[10px] font-semibold text-[#5f675f]">
                 {pendingApprovalsCount} approval
               </span>
             </div>
@@ -404,11 +404,11 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
 
         {/* ── Settings & Support (X-style collapsible) ── */}
         {!showCollapsed && (
-          <div className="border-t border-stone-200 flex-shrink-0">
+          <div className="border-t border-[#ddd8cc] flex-shrink-0">
             <button onClick={() => setSettingsOpen(!settingsOpen)}
-              className="w-full flex items-center justify-between px-4 py-3.5 text-[15px] font-medium text-stone-700 hover:bg-white transition-colors">
+              className="w-full flex items-center justify-between px-4 py-3.5 text-[15px] font-medium text-[#2f3a35] hover:bg-white transition-colors">
               <span>{t('sidebar.settingsHelp')}</span>
-              <ChevronDown className={`w-5 h-5 text-stone-400 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-5 h-5 text-[#8a9188] transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />
             </button>
             <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
               <div className="px-2 pb-2">
@@ -417,8 +417,8 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
                     {/* Pengaturan sub-group */}
                     <button onClick={() => setSubPengaturan(!subPengaturan)}
                       className="w-full flex items-center justify-between px-3 py-2 group">
-                      <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-400 group-hover:text-stone-600 transition-colors">{t('sidebar.settings')}</span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-stone-300 transition-transform duration-200 ${subPengaturan ? 'rotate-180' : ''}`} />
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8a9188] group-hover:text-[#5f675f] transition-colors">{t('sidebar.settings')}</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-[#a9afa6] transition-transform duration-200 ${subPengaturan ? 'rotate-180' : ''}`} />
                     </button>
                     <div className={`overflow-hidden transition-all duration-200 ${subPengaturan ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
                       <div className="space-y-0.5 pb-1">
@@ -445,8 +445,8 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
                 {/* Bantuan sub-group */}
                 <button onClick={() => setSubBantuan(!subBantuan)}
                   className="w-full flex items-center justify-between px-3 py-2 group">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-400 group-hover:text-stone-600 transition-colors">{t('sidebar.helpSection')}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-stone-300 transition-transform duration-200 ${subBantuan ? 'rotate-180' : ''}`} />
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8a9188] group-hover:text-[#5f675f] transition-colors">{t('sidebar.helpSection')}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-[#a9afa6] transition-transform duration-200 ${subBantuan ? 'rotate-180' : ''}`} />
                 </button>
                 <div className={`overflow-hidden transition-all duration-200 ${subBantuan ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'}`}>
                   <div className="space-y-0.5 pb-1">
@@ -455,7 +455,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
                     <SidebarItem href="/about"   icon={<Info />}       label={t('sidebar.about')}   isCollapsed={false} />
                     {canInstall && !isInstalled && (
                       <button onClick={install}
-                        className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors">
+                        className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-[#0f5f56] dark:text-green-400 hover:bg-[#e5f3ef] dark:hover:bg-green-900/30 transition-colors">
                         <Download className="w-5 h-5 opacity-80" />
                         <span>{t('sidebar.installApp')}</span>
                       </button>
@@ -469,7 +469,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
 
         {/* Collapsed: settings + support icons */}
         {showCollapsed && (
-          <div className="border-t border-stone-200 p-2 flex-shrink-0 space-y-1">
+          <div className="border-t border-[#ddd8cc] p-2 flex-shrink-0 space-y-1">
             {canManageProducts && (
               <>
                 <SidebarItem href="/products"          icon={<Tag />}          label={t('sidebar.masterData.products')} isCollapsed={true} />
@@ -487,7 +487,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             )}
             {canInstall && !isInstalled && (
               <button onClick={install} title={t('sidebar.installApp')}
-                className="w-full flex justify-center p-3 rounded-xl text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors">
+                className="w-full flex justify-center p-3 rounded-xl text-[#0f5f56] hover:bg-[#e5f3ef] dark:hover:bg-green-900/30 transition-colors">
                 <Download className="w-[18px] h-[18px]" />
               </button>
             )}
@@ -495,15 +495,15 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         )}
 
         {/* ── Bottom bar: dark mode + lang (X-style) ── */}
-        <div className={`border-t border-stone-200 flex-shrink-0 ${showCollapsed ? 'p-2 flex flex-col items-center gap-1.5' : 'px-4 py-3 flex items-center justify-end gap-2'}`}>
+        <div className={`border-t border-[#ddd8cc] flex-shrink-0 ${showCollapsed ? 'p-2 flex flex-col items-center gap-1.5' : 'px-4 py-3 flex items-center justify-end gap-2'}`}>
           <button onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
             title={language === 'id' ? 'Switch to English' : 'Ganti ke Indonesia'}
-            className="p-2 rounded-full text-stone-500 hover:bg-white transition-colors text-xs font-bold">
+            className="p-2 rounded-full text-[#6f776f] hover:bg-white transition-colors text-xs font-bold">
             {language === 'id' ? 'ID' : 'EN'}
           </button>
           {showCollapsed && (
             <button onClick={() => setShowLogoutModal(true)} title={t('sidebar.logout')}
-              className="p-2 rounded-full text-stone-500 hover:text-red-500 hover:bg-red-50 transition-colors">
+              className="p-2 rounded-full text-[#6f776f] hover:text-red-600 hover:bg-red-50 transition-colors">
               <LogOut className="w-5 h-5" />
             </button>
           )}
@@ -515,21 +515,21 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4"
           onClick={e => e.target === e.currentTarget && setShowLogoutModal(false)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-gray-100 dark:border-gray-800">
+          <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-[#ddd8cc] dark:border-gray-800">
             <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-500">
               <LogOut className="w-7 h-7" />
             </div>
             <div className="text-center space-y-1">
-              <h3 className="text-base font-bold text-gray-900 dark:text-gray-100">{t('sidebar.logoutModal.title')}</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('sidebar.logoutModal.description')}</p>
+              <h3 className="text-base font-bold text-[#17201d] dark:text-gray-100">{t('sidebar.logoutModal.title')}</h3>
+              <p className="text-sm text-[#6f776f] dark:text-gray-400">{t('sidebar.logoutModal.description')}</p>
             </div>
             <div className="flex gap-3 w-full">
               <button onClick={() => setShowLogoutModal(false)}
-                className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                className="flex-1 py-2.5 rounded-xl border border-[#ddd8cc] dark:border-gray-700 text-sm font-semibold text-[#2f3a35] dark:text-gray-300 hover:bg-[#f1efe8] dark:hover:bg-gray-800 transition-colors">
                 {t('sidebar.logoutModal.cancel')}
               </button>
               <button onClick={confirmLogout}
-                className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-sm font-semibold text-white transition-colors shadow-sm">
+                className="flex-1 py-2.5 rounded-xl bg-[#B42318] hover:bg-[#981B12] text-sm font-semibold text-white transition-colors shadow-sm">
                 {t('sidebar.logoutModal.confirm')}
               </button>
             </div>

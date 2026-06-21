@@ -14,7 +14,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className={`${fullWidth ? 'w-full' : ''}`}>
         {label && (
-          <label htmlFor={inputId} className="block text-mobile-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor={inputId} className="block text-mobile-sm font-semibold text-[#2F3A35] dark:text-gray-300 mb-2">
             {label}
           </label>
         )}
@@ -25,14 +25,14 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           aria-describedby={errorId}
           className={`
             input-mobile w-full
-            bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-            border-2 border-gray-200 dark:border-gray-600
+            bg-white dark:bg-gray-800 text-[#17201D] dark:text-gray-100
+            border border-[#DDD8CC] dark:border-gray-600
             rounded-[40px]
-            focus:outline-none focus:border-gray-400 dark:focus:border-gray-400
+            focus:outline-none focus:border-[#0F5F56] focus:ring-2 focus:ring-[#8ECFC2]/35 dark:focus:border-gray-400
             transition-all duration-200
             disabled:opacity-50 disabled:cursor-not-allowed
-            placeholder:text-gray-400 dark:placeholder:text-gray-500
-            ${error ? 'border-red-400 focus:border-red-500' : ''}
+            placeholder:text-[#8A9188] dark:placeholder:text-gray-500
+            ${error ? 'border-[#D92D20] focus:border-[#B42318]' : ''}
             ${className}
           `}
           {...props}
@@ -62,7 +62,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className={`${fullWidth ? 'w-full' : ''}`}>
         {label && (
-          <label htmlFor={inputId} className="block text-mobile-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor={inputId} className="block text-mobile-sm font-semibold text-[#2F3A35] dark:text-gray-300 mb-2">
             {label}
           </label>
         )}
@@ -74,15 +74,15 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           aria-describedby={errorId}
           className={`
             input-mobile w-full
-            bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-            border-2 border-gray-200 dark:border-gray-600
+            bg-white dark:bg-gray-800 text-[#17201D] dark:text-gray-100
+            border border-[#DDD8CC] dark:border-gray-600
             rounded-[40px]
-            focus:outline-none focus:border-gray-400 dark:focus:border-gray-400
+            focus:outline-none focus:border-[#0F5F56] focus:ring-2 focus:ring-[#8ECFC2]/35 dark:focus:border-gray-400
             transition-all duration-200
             disabled:opacity-50 disabled:cursor-not-allowed
-            placeholder:text-gray-400 dark:placeholder:text-gray-500
+            placeholder:text-[#8A9188] dark:placeholder:text-gray-500
             resize-none
-            ${error ? 'border-red-400 focus:border-red-500' : ''}
+            ${error ? 'border-[#D92D20] focus:border-[#B42318]' : ''}
             ${className}
           `}
           {...props}
@@ -112,7 +112,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className={`${fullWidth ? 'w-full' : ''}`}>
         {label && (
-          <label htmlFor={inputId} className="block text-mobile-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor={inputId} className="block text-mobile-sm font-semibold text-[#2F3A35] dark:text-gray-300 mb-2">
             {label}
           </label>
         )}
@@ -123,13 +123,13 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           aria-describedby={errorId}
           className={`
             input-mobile w-full
-            bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-            border-2 border-gray-200 dark:border-gray-600
+            bg-white dark:bg-gray-800 text-[#17201D] dark:text-gray-100
+            border border-[#DDD8CC] dark:border-gray-600
             rounded-[40px]
-            focus:outline-none focus:border-gray-400 dark:focus:border-gray-400
+            focus:outline-none focus:border-[#0F5F56] focus:ring-2 focus:ring-[#8ECFC2]/35 dark:focus:border-gray-400
             transition-all duration-200
             disabled:opacity-50 disabled:cursor-not-allowed
-            ${error ? 'border-red-400 focus:border-red-500' : ''}
+            ${error ? 'border-[#D92D20] focus:border-[#B42318]' : ''}
             ${className}
           `}
           {...props}

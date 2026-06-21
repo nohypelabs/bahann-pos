@@ -21,19 +21,19 @@ describe('Button', () => {
   it('applies primary variant styles by default', () => {
     render(<Button>Primary</Button>)
     const button = screen.getByText('Primary')
-    expect(button).toHaveClass('bg-white', 'text-gray-900')
+    expect(button).toHaveClass('bg-[#0F5F56]', 'text-white')
   })
 
   it('applies secondary variant styles', () => {
     render(<Button variant="secondary">Secondary</Button>)
     const button = screen.getByText('Secondary')
-    expect(button).toHaveClass('bg-gray-100', 'text-gray-700')
+    expect(button).toHaveClass('bg-[#F1EFE8]', 'text-[#2F3A35]')
   })
 
   it('applies danger variant styles', () => {
     render(<Button variant="danger">Delete</Button>)
     const button = screen.getByText('Delete')
-    expect(button).toHaveClass('bg-red-500', 'text-white')
+    expect(button).toHaveClass('bg-[#B42318]', 'text-white')
   })
 
   it('disables button when disabled prop is true', () => {

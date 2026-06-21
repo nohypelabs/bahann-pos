@@ -12,8 +12,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       inline-flex items-center justify-center
       font-medium rounded-[40px]
       transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-offset-2
-      disabled:opacity-50 disabled:cursor-not-allowed
+      focus:outline-none focus:ring-2 focus:ring-[#8ECFC2] focus:ring-offset-2 focus:ring-offset-[#F6F5F0]
+      disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none
       ${fullWidth ? 'w-full' : ''}
     `
 
@@ -25,24 +25,25 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles = {
       primary: `
-        bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
-        border-2 border-gray-200 dark:border-gray-600
-        hover:bg-gray-50 dark:hover:bg-gray-600
+        bg-[#0F5F56] text-white
+        border border-[#0B4E48]
+        shadow-[0_1px_0_rgba(15,95,86,0.18)]
+        hover:bg-[#0B4E48]
       `,
       secondary: `
-        bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200
-        border-2 border-gray-300 dark:border-gray-500
-        hover:bg-gray-200 dark:hover:bg-gray-500
+        bg-[#F1EFE8] text-[#2F3A35]
+        border border-[#DDD8CC]
+        hover:bg-[#ECE9DF] hover:text-[#17201D]
       `,
       outline: `
-        bg-transparent text-gray-900 dark:text-gray-100
-        border-2 border-gray-300 dark:border-gray-600
-        hover:bg-white dark:hover:bg-gray-700
+        bg-white text-[#2F3A35]
+        border border-[#DDD8CC]
+        hover:border-[#B9CBBF] hover:bg-[#F8F7F3] hover:text-[#0F5F56]
       `,
       danger: `
-        bg-red-500 text-white
-        border-2 border-red-600
-        hover:bg-red-600
+        bg-[#B42318] text-white
+        border border-[#981B12]
+        hover:bg-[#981B12]
       `,
     }
 

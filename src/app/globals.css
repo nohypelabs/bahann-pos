@@ -8,18 +8,25 @@
 }
 
 :root {
-  /* UIUX-SPEC compliant tokens */
-  --background: #FAFAF9;
-  --foreground: #1C1C1A;
+  /* Cashier-comfort light theme: warm, low-glare, high readability */
+  --background: #F6F5F0;
+  --foreground: #17201D;
 
   /* Brand (navigation, non-critical surfaces only) */
-  --axi-blue: #0B4F6C;
-  --axi-gold: #FBBF24;
+  --axi-blue: #0F5F56;
+  --axi-gold: #C98A16;
 
   /* Surface & Border */
   --surface: #FFFFFF;
-  --border: #E5E3DD;
-  --text-muted: #6B6A64;
+  --surface-soft: #F1EFE8;
+  --surface-muted: #ECE9DF;
+  --border: #DDD8CC;
+  --border-strong: #CFC7B9;
+  --text-muted: #5F675F;
+  --primary: #0F5F56;
+  --primary-hover: #0B4E48;
+  --primary-soft: #E5F3EF;
+  --focus-ring: #8ECFC2;
 
   /* Status colors (meaning-driven, not decorative) */
   --success: #15803D;
@@ -51,8 +58,15 @@ html {
   --color-bg: var(--background);
   --color-fg: var(--foreground);
   --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-muted: var(--surface-muted);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-text-muted: var(--text-muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-focus-ring: var(--focus-ring);
 
   /* Brand */
   --color-axi-blue: var(--axi-blue);

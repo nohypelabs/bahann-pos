@@ -8,19 +8,19 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ children, variant = 'default', padding = 'md', className = '', ...props }, ref) => {
     const baseStyles = `
-      card-mobile bg-white dark:bg-gray-800 rounded-[40px]
+      card-mobile bg-white dark:bg-gray-800 rounded-[24px]
       transition-all duration-200
     `
 
     const variantStyles = {
       default: `
-        border-2 border-gray-200 dark:border-gray-700
+        border border-[#DDD8CC] dark:border-gray-700
       `,
       elevated: `
-        border-2 border-gray-300 dark:border-gray-600
+        border border-[#CFC7B9] dark:border-gray-600 shadow-[0_1px_2px_rgba(23,32,29,0.05)]
       `,
       flat: `
-        border-2 border-gray-200 dark:border-gray-600
+        border border-[#DDD8CC] dark:border-gray-600
       `,
     }
 
@@ -60,7 +60,7 @@ CardHeader.displayName = 'CardHeader'
 export const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadingElement>>(
   ({ children, className = '', ...props }, ref) => {
     return (
-      <h3 ref={ref} className={`text-mobile-base md:text-mobile-xl font-bold text-gray-900 dark:text-gray-100 ${className}`} {...props}>
+      <h3 ref={ref} className={`text-mobile-base md:text-mobile-xl font-bold text-[#17201D] dark:text-gray-100 ${className}`} {...props}>
         {children}
       </h3>
     )

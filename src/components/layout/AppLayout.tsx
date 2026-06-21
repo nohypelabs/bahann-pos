@@ -62,19 +62,19 @@ export function AppLayout({ children }: AppLayoutProps) {
   ]
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f3f1ea]">
+    <div className="flex h-screen overflow-hidden bg-[#f6f5f0]">
       <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} desktopOpen={desktopOpen} />
 
       <main
-        className="flex-1 overflow-y-auto bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.95),_rgba(243,241,234,0.92)_38%,_rgba(236,233,223,0.98)_100%)]"
+        className="flex-1 overflow-y-auto bg-[linear-gradient(180deg,_#fbfaf6_0%,_#f6f5f0_44%,_#eeebe3_100%)]"
         role="main"
       >
-        <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-[#f8f6ef]/95 backdrop-blur-md">
+        <header className="sticky top-0 z-30 border-b border-[#ddd8cc]/90 bg-[#fbfaf6]/95 backdrop-blur-md">
           <div className="flex min-h-16 items-center justify-between gap-3 px-3 sm:px-4 lg:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <button
                 onClick={() => { setMobileOpen(true); setDesktopOpen(!desktopOpen) }}
-                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition-colors hover:bg-stone-100"
+                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-[#ddd8cc] bg-white text-[#5f675f] transition-colors hover:bg-[#f1efe8] hover:text-[#17201d]"
                 aria-label="Toggle menu"
               >
                 <Menu className="h-5 w-5" />
@@ -82,19 +82,19 @@ export function AppLayout({ children }: AppLayoutProps) {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <img src="/logo.svg" alt="Laku POS" className="hidden h-7 w-7 rounded-xl sm:block" />
-                  <p className="truncate text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-500">
+                  <p className="truncate text-[10px] font-semibold uppercase tracking-[0.24em] text-[#6f776f]">
                     Bahann POS
                   </p>
                 </div>
                 <div className="mt-0.5 flex items-center gap-2">
-                  <h1 className="truncate text-sm font-semibold text-stone-900 sm:text-base">
+                  <h1 className="truncate text-sm font-semibold text-[#17201d] sm:text-base">
                     {routeMeta.title}
                   </h1>
-                  <span className="hidden rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[10px] font-semibold text-stone-600 lg:inline-flex">
+                  <span className="hidden rounded-full border border-[#ddd8cc] bg-white px-2.5 py-1 text-[10px] font-semibold text-[#5f675f] lg:inline-flex">
                     {routeMeta.badge}
                   </span>
                 </div>
-                <p className="hidden truncate text-xs text-stone-500 lg:block">
+                <p className="hidden truncate text-xs text-[#6f776f] lg:block">
                   {routeMeta.description}
                 </p>
               </div>
@@ -110,8 +110,8 @@ export function AppLayout({ children }: AppLayoutProps) {
                     href={href}
                     className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition-colors ${
                       isActive
-                        ? 'border-stone-900 bg-stone-900 text-white'
-                        : 'border-stone-200 bg-white text-stone-600 hover:bg-stone-100 hover:text-stone-900'
+                        ? 'border-[#0b4e48] bg-[#0f5f56] text-white'
+                        : 'border-[#ddd8cc] bg-white text-[#5f675f] hover:bg-[#f1efe8] hover:text-[#17201d]'
                     }`}
                   >
                     <Icon className="h-4 w-4" />
@@ -121,7 +121,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               })}
               <Link
                 href="/settings/payments"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition-colors hover:bg-stone-100 hover:text-stone-900"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#ddd8cc] bg-white text-[#5f675f] transition-colors hover:bg-[#f1efe8] hover:text-[#17201d]"
                 aria-label="Buka pengaturan"
               >
                 <Settings className="h-5 w-5" />
@@ -130,7 +130,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
             <Link
               href="/settings/payments"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-stone-200 bg-white text-stone-600 transition-colors hover:bg-stone-100 hover:text-stone-900 lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#ddd8cc] bg-white text-[#5f675f] transition-colors hover:bg-[#f1efe8] hover:text-[#17201d] lg:hidden"
               aria-label="Buka pengaturan"
             >
               <Settings className="h-5 w-5" />

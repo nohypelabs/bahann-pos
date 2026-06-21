@@ -11,26 +11,26 @@ export const colors = {
   // Surfaces
   surface: {
     primary: '#FFFFFF',
-    secondary: '#F8F9FA',
-    tertiary: '#F3F4F6',
-    hover: '#E5E7EB',
+    secondary: '#F6F5F0',
+    tertiary: '#F1EFE8',
+    hover: '#ECE9DF',
   },
 
   // Brand & Accent
   accent: {
-    primary: '#2563EB',
-    primaryHover: '#1D4ED8',
-    primaryLight: '#DBEAFE',
-    secondary: '#EA7317',
-    secondaryHover: '#D97706',
+    primary: '#0F5F56',
+    primaryHover: '#0B4E48',
+    primaryLight: '#E5F3EF',
+    secondary: '#C98A16',
+    secondaryHover: '#A66F10',
   },
 
   // Text
   text: {
-    primary: '#1F2937',
-    secondary: '#374151',
-    tertiary: '#6B7280',
-    muted: '#9CA3AF',
+    primary: '#17201D',
+    secondary: '#2F3A35',
+    tertiary: '#5F675F',
+    muted: '#8A9188',
     white: '#FFFFFF',
   },
 
@@ -51,9 +51,9 @@ export const colors = {
 
   // Borders
   border: {
-    default: '#E5E7EB',
-    strong: '#D1D5DB',
-    focus: '#2563EB',
+    default: '#DDD8CC',
+    strong: '#CFC7B9',
+    focus: '#0F5F56',
   },
 
   // Chart palette (deep saturated, no pastel)
