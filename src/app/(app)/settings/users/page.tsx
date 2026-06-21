@@ -39,7 +39,8 @@ function StyledSelect<T extends string>({ label, value, onChange, options }: {
 
 export default function UsersManagementPage() {
   const { showToast } = useToast()
-  const { data: users, refetch } = trpc.users.list.useQuery()
+  const utils = trpc.useUtils()
+  const { data: users } = trpc.users.list.useQuery()
   const { data: outletsResponse } = trpc.outlets.getAll.useQuery()
   const { data: roles } = trpc.users.getRoles.useQuery()
   const { data: outletGroups } = trpc.users.getOutletGroups.useQuery()
@@ -55,8 +56,8 @@ export default function UsersManagementPage() {
   const [formError, setFormError] = useState('')
 
   const createUserMutation = trpc.users.create.useMutation({
-    onSuccess: () => {
-      refetch()
+    onSuccess: async () => {
+      await utils.users.list.invalidate()
       closeForm()
       showToast('Pengguna ditambahkan', 'success')
     },
@@ -64,8 +65,8 @@ export default function UsersManagementPage() {
   })
 
   const updateRoleMutation = trpc.users.updateRole.useMutation({
-    onSuccess: () => {
-      refetch()
+    onSuccess: async () => {
+      await utils.users.list.invalidate()
       setEditingUser(null)
       showToast('Role diperbarui', 'success')
     },

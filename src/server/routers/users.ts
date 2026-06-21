@@ -30,7 +30,7 @@ export const usersRouter = router({
         )
       `)
       .eq('tenant_id', tenantId)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
 
     if (error) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
