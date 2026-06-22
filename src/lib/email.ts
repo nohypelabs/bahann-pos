@@ -647,13 +647,7 @@ export async function sendVerificationEmail({ to, name, token }: SendVerificatio
  * Generate secure random token for password reset
  */
 export function generateResetToken(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  let token = ''
-  const length = 64 // 64 character token
-
-  for (let i = 0; i < length; i++) {
-    token += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-
-  return token
+  // Use CSPRNG — Math.random() is predictable
+  const { randomBytes } = require('crypto')
+  return randomBytes(32).toString('hex')
 }

@@ -151,13 +151,6 @@ export default function LazyDatePicker({
         <p className="mt-1 text-sm text-red-600">{error}</p>
       )}
 
-      {/* Optimization note */}
-      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
-        <p className="text-xs text-green-800">
-          ✅ <strong>Lazy Loaded:</strong> This date picker is only loaded when needed,
-          reducing initial bundle size.
-        </p>
-      </div>
     </div>
   )
 }
