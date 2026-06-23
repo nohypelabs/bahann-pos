@@ -1,14 +1,11 @@
 /**
  * Rate Limiter for API endpoints
- * Prevents brute force attacks
+ * Redis-backed via Upstash — works in serverless/multi-instance environments.
+ * Falls back to allowing all requests if Redis is unavailable.
  */
 
-interface RateLimitEntry {
-  count: number
-  resetTime: number
-}
-
-const rateLimitStore = new Map<string, RateLimitEntry>()
+import { getRedisClient } from '@/lib/redis-upstash'
+import { logger } from '@/lib/logger'
 
 export interface RateLimitConfig {
   windowMs: number // Time window in milliseconds
@@ -23,90 +20,87 @@ export const RateLimitPresets = {
 }
 
 /**
- * Check if request should be rate limited
+ * Check if request should be rate limited.
+ * Uses Redis INCR + TTL for atomic sliding-window-like counting.
+ * Falls back to allowing if Redis is unavailable (fail-open).
  *
- * @param key - Unique identifier (IP address or user ID)
+ * @param key - Unique identifier (e.g. "login:user@example.com")
  * @param config - Rate limit configuration
  * @returns Object with allowed status and retry info
  */
-export function checkRateLimit(
+export async function checkRateLimit(
   key: string,
   config: RateLimitConfig = RateLimitPresets.API
-): {
+): Promise<{
   allowed: boolean
   remaining: number
   resetTime: number
-} {
-  const now = Date.now()
-  const entry = rateLimitStore.get(key)
-
-  // Clean expired entries periodically
-  if (Math.random() < 0.01) {
-    cleanExpiredEntries()
-  }
-
-  // No existing entry or expired
-  if (!entry || entry.resetTime < now) {
-    rateLimitStore.set(key, {
-      count: 1,
-      resetTime: now + config.windowMs,
-    })
-
+}> {
+  const redis = getRedisClient()
+  if (!redis) {
+    // Redis unavailable — fail open (allow request)
     return {
       allowed: true,
       remaining: config.maxRequests - 1,
-      resetTime: now + config.windowMs,
+      resetTime: Date.now() + config.windowMs,
     }
   }
 
-  // Increment count
-  entry.count++
+  const redisKey = `ratelimit:${key}`
+  const windowSec = Math.ceil(config.windowMs / 1000)
 
-  // Check if limit exceeded
-  if (entry.count > config.maxRequests) {
+  try {
+    // Atomic increment
+    const count = await redis.incr(redisKey)
+
+    // Set expiry on first request in this window
+    if (count === 1) {
+      await redis.expire(redisKey, windowSec)
+    }
+
+    // Get TTL for resetTime calculation
+    const ttl = await redis.ttl(redisKey)
+    const resetTime = Date.now() + (ttl > 0 ? ttl * 1000 : config.windowMs)
+
+    if (count > config.maxRequests) {
+      return {
+        allowed: false,
+        remaining: 0,
+        resetTime,
+      }
+    }
+
     return {
-      allowed: false,
-      remaining: 0,
-      resetTime: entry.resetTime,
+      allowed: true,
+      remaining: config.maxRequests - count,
+      resetTime,
     }
-  }
-
-  return {
-    allowed: true,
-    remaining: config.maxRequests - entry.count,
-    resetTime: entry.resetTime,
-  }
-}
-
-/**
- * Clean expired entries from store
- */
-function cleanExpiredEntries() {
-  const now = Date.now()
-  for (const [key, entry] of rateLimitStore.entries()) {
-    if (entry.resetTime < now) {
-      rateLimitStore.delete(key)
+  } catch (error) {
+    // Redis error — fail open
+    logger.error('Rate limiter Redis error:', error)
+    return {
+      allowed: true,
+      remaining: config.maxRequests - 1,
+      resetTime: Date.now() + config.windowMs,
     }
   }
 }
 
 /**
- * Reset rate limit for specific key
+ * Get remaining attempts for a key
  */
-export function resetRateLimit(key: string): void {
-  rateLimitStore.delete(key)
-}
-
-/**
- * Get remaining attempts
- */
-export function getRemainingAttempts(
+export async function getRemainingAttempts(
   key: string,
   config: RateLimitConfig = RateLimitPresets.API
-): number {
-  const entry = rateLimitStore.get(key)
-  if (!entry || entry.resetTime < Date.now()) {
+): Promise<number> {
+  const redis = getRedisClient()
+  if (!redis) return config.maxRequests
+
+  try {
+    const count = await redis.get<number>(`ratelimit:${key}`)
+    if (!count) return config.maxRequests
+    return Math.max(0, config.maxRequests - count)
+  } catch {
     return config.maxRequests
   }
-  return Math.max(0, config.maxRequests - entry.count)
 }

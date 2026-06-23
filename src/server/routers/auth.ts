@@ -105,7 +105,7 @@ export const authRouter = router({
     .mutation(async ({ input }) => {
       // Rate limit: 5 login attempts per 15 minutes per email
       const rateLimitKey = `login:${input.email}`
-      const rateLimit = checkRateLimit(rateLimitKey, RateLimitPresets.LOGIN)
+      const rateLimit = await checkRateLimit(rateLimitKey, RateLimitPresets.LOGIN)
       if (!rateLimit.allowed) {
         throw new TRPCError({
           code: 'TOO_MANY_REQUESTS',
@@ -319,7 +319,7 @@ export const authRouter = router({
     .mutation(async ({ input }) => {
       const normalizedEmail = input.email.trim().toLowerCase()
       const rateLimitKey = `password-reset:${normalizedEmail}`
-      const rateLimit = checkRateLimit(rateLimitKey, RateLimitPresets.PASSWORD_RESET)
+      const rateLimit = await checkRateLimit(rateLimitKey, RateLimitPresets.PASSWORD_RESET)
 
       if (!rateLimit.allowed) {
         throw new TRPCError({
