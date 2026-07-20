@@ -73,7 +73,6 @@ export const shiftsRouter = router({
           status: 'open',
           expected_cash: null,
           actual_cash: null,
-          cash_difference: null,
           cashier_note: null,
           manager_note: null,
           closed_at: null,
