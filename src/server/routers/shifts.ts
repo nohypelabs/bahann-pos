@@ -44,20 +44,22 @@ export const shiftsRouter = router({
         }
       }
 
-      // Check for existing active shift
-      const { data: existing } = await supabaseAdmin
+      // Check for existing unclosed shift (any status with closed_at = null)
+      // UNIQUE constraint on (cashier_user_id, outlet_id, closed_at) with NULLS NOT DISTINCT
+      // prevents inserting another shift while one is still open
+      const { data: existing, error: checkError } = await supabaseAdmin
         .from('shifts')
-        .select('id')
+        .select('id, status')
         .eq('tenant_id', tenantId)
         .eq('outlet_id', input.outletId)
         .eq('cashier_user_id', ctx.userId)
-        .eq('status', 'open')
-        .single()
+        .is('closed_at', null)
+        .maybeSingle()
 
       if (existing) {
         throw new TRPCError({
           code: 'CONFLICT',
-          message: 'An active shift already exists for this outlet',
+          message: `Gagal buka shift — masih ada shift ${existing.status} yang belum ditutup`,
         })
       }
 
