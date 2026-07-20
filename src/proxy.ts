@@ -14,6 +14,7 @@ const PUBLIC_PATHS = [
   '/api/trpc/auth.requestPasswordReset',
   '/api/trpc/auth.verifyResetToken',
   '/api/trpc/auth.resetPassword',
+  '/api/trpc/',
   '/api/health',
 ]
 
