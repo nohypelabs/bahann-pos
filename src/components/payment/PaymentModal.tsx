@@ -129,6 +129,7 @@ export function PaymentModal({
   }
 
   const processInstantPayment = async (method: PaymentMethod, cashGiven?: number) => {
+    if (loading) return
     setLoading(true)
     setError('')
 

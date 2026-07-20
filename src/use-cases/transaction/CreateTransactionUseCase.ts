@@ -95,30 +95,46 @@ export class CreateTransactionUseCase {
     const transactionId = input.transactionId
       ?? `TRX-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
 
-    const transaction = await this.transactionRepo.create({
-      transactionId,
-      tenantId: input.tenantId,
-      outletId: input.outletId,
-      cashierId: input.cashierId,
-      deviceId: input.deviceId ?? null,
-      shiftId: input.shiftId ?? null,
-      status,
-      subtotal,
-      discountAmount: input.discountAmount,
-      taxAmount,
-      totalAmount,
-      paymentMethod: input.paymentMethod,
-      amountPaid,
-      changeAmount,
-      notes: input.notes ?? null,
-      voidReason: null,
-      voidedBy: null,
-      voidedAt: null,
-      refundReason: null,
-      refundedBy: null,
-      refundedAt: null,
-      refundAmount: null,
-    })
+    let transaction: Transaction
+    try {
+      transaction = await this.transactionRepo.create({
+        transactionId,
+        tenantId: input.tenantId,
+        outletId: input.outletId,
+        cashierId: input.cashierId,
+        deviceId: input.deviceId ?? null,
+        shiftId: input.shiftId ?? null,
+        status,
+        subtotal,
+        discountAmount: input.discountAmount,
+        taxAmount,
+        totalAmount,
+        paymentMethod: input.paymentMethod,
+        amountPaid,
+        changeAmount,
+        notes: input.notes ?? null,
+        voidReason: null,
+        voidedBy: null,
+        voidedAt: null,
+        refundReason: null,
+        refundedBy: null,
+        refundedAt: null,
+        refundAmount: null,
+      })
+    } catch (error: any) {
+      if (input.transactionId && (error?.message?.includes('unique constraint') || error?.message?.includes('idx_transactions_tenant_txn_id') || error?.message?.includes('duplicate key'))) {
+        const existing = await this.transactionRepo.findByTransactionId(input.transactionId)
+        if (existing) {
+          return {
+            success: true,
+            transaction: existing,
+            transactionId: existing.transactionId,
+            replayed: true,
+          }
+        }
+      }
+      throw error
+    }
 
     const items = resolvedItems.map((item) => ({
       tenantId: input.tenantId,
