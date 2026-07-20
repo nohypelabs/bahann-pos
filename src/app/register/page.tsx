@@ -67,6 +67,7 @@ export default function RegisterPage() {
     storeName: '',
     whatsappNumber: '',
   })
+  const [additionalOutlets, setAdditionalOutlets] = useState<string[]>([])
   const [selectedType, setSelectedType] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -78,6 +79,20 @@ export default function RegisterPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  const updateAdditionalOutlet = (index: number, value: string) => {
+    setAdditionalOutlets(current => current.map((outlet, outletIndex) => (
+      outletIndex === index ? value : outlet
+    )))
+  }
+
+  const addAdditionalOutlet = () => {
+    setAdditionalOutlets(current => [...current, ''])
+  }
+
+  const removeAdditionalOutlet = (index: number) => {
+    setAdditionalOutlets(current => current.filter((_, outletIndex) => outletIndex !== index))
   }
 
   const handleNextStep = (e: React.FormEvent) => {
@@ -118,6 +133,7 @@ export default function RegisterPage() {
         password: formData.password,
         name: formData.name,
         storeName: formData.storeName,
+        initialOutletNames: additionalOutlets.map(outlet => outlet.trim()).filter(Boolean),
         whatsappNumber: formData.whatsappNumber,
         businessType: selectedType,
       })
@@ -196,6 +212,46 @@ export default function RegisterPage() {
                   fullWidth
                   required
                 />
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                        {isId ? 'Outlet Tambahan' : 'Additional Outlets'}
+                      </label>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {isId ? 'Opsional. Outlet pertama tetap pakai nama toko di atas.' : 'Optional. The first outlet still uses the store name above.'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addAdditionalOutlet}
+                      className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                    >
+                      + {isId ? 'Tambah outlet' : 'Add outlet'}
+                    </button>
+                  </div>
+
+                  {additionalOutlets.map((outlet, index) => (
+                    <div key={`${index}-${additionalOutlets.length}`} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={outlet}
+                        onChange={e => updateAdditionalOutlet(index, e.target.value)}
+                        placeholder={isId ? `Outlet ${index + 2}` : `Outlet ${index + 2}`}
+                        className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-[40px] focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeAdditionalOutlet(index)}
+                        className="shrink-0 px-3 py-2.5 rounded-[40px] border-2 border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 transition-colors"
+                        aria-label={isId ? 'Hapus outlet tambahan' : 'Remove additional outlet'}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
 
                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -368,7 +424,7 @@ export default function RegisterPage() {
             </p>
             <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
               <li>• {isId ? 'Akun ini adalah akun pemilik warung (admin)' : 'This is a store owner (admin) account'}</li>
-              <li>• {isId ? 'Outlet pertama dibuat otomatis setelah daftar' : 'First outlet created automatically after registration'}</li>
+              <li>• {isId ? 'Outlet pertama dan outlet tambahan bisa dibuat saat daftar' : 'The first outlet and extra outlets can be created during registration'}</li>
               <li>• {isId ? 'Kasir bisa ditambahkan dari menu Pengaturan' : 'Cashiers can be added from Settings'}</li>
             </ul>
           </div>

@@ -35,7 +35,7 @@ export function getRedisClient(): Redis | null {
       const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.REDIS_TOKEN
 
       if (!url || !token) {
-        logger.warn('Upstash Redis credentials not found. Session management will use JWT only.')
+        logger.warn('Upstash Redis credentials not found. Authenticated sessions require Redis.')
         redisAvailable = false
         return null
       }
@@ -83,8 +83,7 @@ export async function createSession(
 ): Promise<void> {
   const redis = getRedisClient()
   if (!redis) {
-    logger.debug('Redis not available, skipping session creation')
-    return
+    throw new Error('Redis session store is unavailable')
   }
 
   try {

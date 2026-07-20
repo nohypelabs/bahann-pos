@@ -13,8 +13,10 @@ export interface RateLimitConfig {
 }
 
 export const RateLimitPresets = {
-  LOGIN: { windowMs: 15 * 60 * 1000, maxRequests: 5 }, // 5 attempts per 15 min
+  REGISTER: { windowMs: 15 * 60 * 1000, maxRequests: 3 }, // 3 attempts per 15 min
+  LOGIN: { windowMs: 1 * 60 * 1000, maxRequests: 5 }, // 5 attempts per 1 min
   PASSWORD_RESET: { windowMs: 15 * 60 * 1000, maxRequests: 3 }, // 3 reset requests per 15 min
+  REFRESH: { windowMs: 5 * 60 * 1000, maxRequests: 20 }, // 20 refresh attempts per 5 min
   API: { windowMs: 60 * 1000, maxRequests: 100 }, // 100 req per minute
   SENSITIVE: { windowMs: 60 * 1000, maxRequests: 10 }, // 10 req per minute
 }

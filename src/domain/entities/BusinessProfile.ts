@@ -8,13 +8,14 @@ export class BusinessProfile {
     public readonly businessType: BusinessType,
     public readonly enabledModules: string[],
     public readonly createdAt: Date,
+    public readonly tenantId?: string,
   ) {}
 
   /**
    * Create a BusinessProfile with defaults based on business type.
    * ID is generated via crypto.randomUUID() — not delegated to DB.
    */
-  static createDefaults(userId: string, businessType: BusinessType): BusinessProfile {
+  static createDefaults(userId: string, businessType: BusinessType, tenantId?: string): BusinessProfile {
     const defaults = BUSINESS_TYPE_DEFAULTS[businessType];
     return new BusinessProfile(
       crypto.randomUUID(),
@@ -22,6 +23,7 @@ export class BusinessProfile {
       businessType,
       [...defaults.modules],
       new Date(),
+      tenantId,
     );
   }
 }

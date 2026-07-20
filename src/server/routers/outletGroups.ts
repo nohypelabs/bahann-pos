@@ -76,7 +76,7 @@ export const outletGroupsRouter = router({
       const { data: outlets, error: outletError } = await supabaseAdmin
         .from('outlets')
         .select('id')
-        .eq('owner_id', tenantId)
+        .eq('tenant_id', tenantId)
         .in('id', input.outletIds)
 
       if (outletError) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: outletError.message })
@@ -166,7 +166,7 @@ export const outletGroupsRouter = router({
         const { data: outlets, error: outletError } = await supabaseAdmin
           .from('outlets')
           .select('id')
-          .eq('owner_id', tenantId)
+          .eq('tenant_id', tenantId)
           .in('id', input.outletIds)
 
         if (outletError) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: outletError.message })
@@ -274,7 +274,7 @@ export const outletGroupsRouter = router({
         .from('outlets')
         .select('id')
         .eq('id', input.outletId)
-        .eq('owner_id', tenantId)
+        .eq('tenant_id', tenantId)
         .single()
 
       if (outletError || !outlet) {

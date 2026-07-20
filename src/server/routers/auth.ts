@@ -14,6 +14,36 @@ import { AppError } from '@/shared/exceptions/AppError'
 import { checkRateLimit, RateLimitPresets } from '@/lib/security/rateLimiter'
 import { logger } from '@/lib/logger'
 import { container } from '@/infra/container'
+import { supabaseAdmin } from '@/infra/supabase/server'
+
+function getRequestIp(req: Request): string {
+  const forwarded = req.headers.get('x-forwarded-for')
+  if (forwarded) {
+    return forwarded.split(',')[0]?.trim() || 'unknown'
+  }
+
+  return req.headers.get('x-real-ip')?.trim() || 'unknown'
+}
+
+async function cleanupFailedRegistration(params: {
+  tenantId: string
+  userId?: string | null
+  outletIds?: string[]
+}) {
+  const { tenantId, userId, outletIds = [] } = params
+
+  if (outletIds.length > 0) {
+    await supabaseAdmin.from('outlets').delete().in('id', outletIds)
+  }
+
+  if (userId) {
+    await supabaseAdmin.from('business_profiles').delete().eq('user_id', userId)
+    await supabaseAdmin.from('user_role_assignments').delete().eq('user_id', userId)
+    await supabaseAdmin.from('users').delete().eq('id', userId)
+  }
+
+  await supabaseAdmin.from('tenants').delete().eq('id', tenantId)
+}
 
 export const authRouter = router({
   /**
@@ -26,69 +56,150 @@ export const authRouter = router({
         password: z.string().min(8),
         name: z.string().min(1),
         storeName: z.string().min(1, 'Nama toko wajib diisi'),
+        initialOutletNames: z.array(z.string().min(1)).optional(),
         whatsappNumber: z.string().min(9, 'Nomor WhatsApp tidak valid').regex(/^[0-9+\-\s()]+$/, 'Format nomor tidak valid'),
         businessType: z.enum(BUSINESS_TYPES as [string, ...string[]]),
       })
     )
-    .mutation(async ({ input }) => {
-      const useCase = new RegisterUserUseCase(container.userRepository())
-      // Public registration always creates an admin (warung owner)
-      const result = await useCase.execute({ ...input, role: 'admin' })
+    .mutation(async ({ input, ctx }) => {
+      const requestIp = getRequestIp(ctx.req)
+      const rateLimit = await checkRateLimit(`register:${requestIp}`, RateLimitPresets.REGISTER)
 
-      // Create refresh token and new short-lived access token
-      const { refreshToken, accessToken } = await createRefreshToken(result.userId)
-
-      // Set httpOnly cookies (access token = 30 min, refresh token = 30 days)
-      await setAuthCookie(accessToken)
-      await setRefreshCookie(refreshToken)
-
-      // Audit log for registration
-      await createAuditLog({
-        userId: result.userId,
-        userEmail: result.email,
-        action: 'REGISTER',
-        entityType: 'auth',
-        metadata: { name: result.name, whatsappNumber: input.whatsappNumber },
-      })
-
-      // Auto-create first outlet for new warung owner
-      const verifyToken = generateResetToken()
-      const regUseCase = container.completeRegistrationUseCase()
-      await regUseCase.execute(result.userId, input.storeName, verifyToken)
-
-      // Create business profile based on selected type
-      const profile = BusinessProfile.createDefaults(
-        result.userId,
-        input.businessType as import('@/domain/catalog/value-objects/business-type').BusinessType,
-      )
-      await container.businessProfileRepo().save(profile)
-
-      // Fire-and-forget emails — don't block registration response
-      sendVerificationEmail({
-        to: result.email,
-        name: result.name,
-        token: verifyToken,
-      }).catch(() => {})
-
-      sendWelcomeEmail({
-        to: result.email,
-        name: result.name,
-        storeName: input.storeName,
-      }).catch(() => {})
-
-      const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL
-      if (adminEmail) {
-        sendNewUserNotification({
-          adminEmail,
-          newUserName: result.name,
-          newUserEmail: result.email,
-          newUserWhatsapp: input.whatsappNumber,
-        }).catch(() => {})
+      if (!rateLimit.allowed) {
+        throw new TRPCError({
+          code: 'TOO_MANY_REQUESTS',
+          message: 'Terlalu banyak percobaan pendaftaran. Coba lagi dalam 15 menit.',
+        })
       }
 
-      return {
-        ...result,
-        token: accessToken,
+      const userId = crypto.randomUUID()
+      let createdUserId: string | null = null
+      let createdOutletIds: string[] = []
+
+      try {
+        const { error: tenantError } = await supabaseAdmin
+          .from('tenants')
+          .insert({
+            id: userId,
+            name: input.storeName,
+            status: 'active',
+            plan: 'free',
+          })
+
+        if (tenantError) {
+          logger.error('Failed to create tenant:', tenantError)
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to create tenant',
+          })
+        }
+
+        const useCase = new RegisterUserUseCase(container.userRepository())
+        const result = await useCase.execute({ ...input, id: userId, role: 'admin' })
+        createdUserId = result.userId
+
+        await supabaseAdmin
+          .from('tenants')
+          .update({ owner_user_id: userId })
+          .eq('id', userId)
+
+        await createAuditLog({
+          userId: result.userId,
+          userEmail: result.email,
+          action: 'REGISTER',
+          entityType: 'auth',
+          metadata: { name: result.name, whatsappNumber: input.whatsappNumber, ipAddress: requestIp },
+        })
+
+        const verifyToken = generateResetToken()
+        const regUseCase = container.completeRegistrationUseCase()
+        const registration = await regUseCase.execute(
+          result.userId,
+          input.storeName,
+          verifyToken,
+          input.initialOutletNames ?? [],
+        )
+        createdOutletIds = registration.outletIds
+
+        const { data: adminRole } = await supabaseAdmin
+          .from('roles')
+          .select('id')
+          .eq('key', 'ADMIN_TENANT')
+          .eq('is_system', true)
+          .single()
+
+        if (adminRole) {
+          await supabaseAdmin
+            .from('user_role_assignments')
+            .insert({
+              user_id: userId,
+              tenant_id: userId,
+              role_id: adminRole.id,
+              scope_type: 'TENANT',
+            })
+        }
+
+        const profile = BusinessProfile.createDefaults(
+          result.userId,
+          input.businessType as import('@/domain/catalog/value-objects/business-type').BusinessType,
+          userId,
+        )
+        await container.businessProfileRepo().save(profile)
+
+        sendVerificationEmail({
+          to: result.email,
+          name: result.name,
+          token: verifyToken,
+        }).catch(() => {})
+
+        sendWelcomeEmail({
+          to: result.email,
+          name: result.name,
+          storeName: input.storeName,
+        }).catch(() => {})
+
+        const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL
+        if (adminEmail) {
+          sendNewUserNotification({
+            adminEmail,
+            newUserName: result.name,
+            newUserEmail: result.email,
+            newUserWhatsapp: input.whatsappNumber,
+          }).catch(() => {})
+        }
+
+        return {
+          ...result,
+          token: null,
+        }
+      } catch (error) {
+        await cleanupFailedRegistration({
+          tenantId: userId,
+          userId: createdUserId,
+          outletIds: createdOutletIds,
+        }).catch((cleanupError) => {
+          logger.error('Failed to cleanup partial registration state', cleanupError)
+        })
+
+        if (error instanceof AppError) {
+          const code =
+            error.statusCode === 400
+              ? 'BAD_REQUEST'
+              : error.statusCode === 401
+                ? 'UNAUTHORIZED'
+                : error.statusCode === 403
+                  ? 'FORBIDDEN'
+                  : error.statusCode === 409
+                    ? 'CONFLICT'
+                    : 'INTERNAL_SERVER_ERROR'
+
+          throw new TRPCError({
+            code,
+            message: error.message,
+          })
+        }
+
+        throw error
       }
     }),
 
@@ -243,7 +354,16 @@ export const authRouter = router({
    * Refresh access token using refresh token
    * This implements token rotation for security
    */
-  refresh: publicProcedure.mutation(async () => {
+  refresh: publicProcedure.mutation(async ({ ctx }) => {
+    const rateLimitKey = `refresh:${getRequestIp(ctx.req)}`
+    const rateLimit = await checkRateLimit(rateLimitKey, RateLimitPresets.REFRESH)
+    if (!rateLimit.allowed) {
+      throw new TRPCError({
+        code: 'TOO_MANY_REQUESTS',
+        message: 'Terlalu banyak permintaan refresh session. Coba lagi sebentar.',
+      })
+    }
+
     const useCase = container.refreshTokenUseCase()
     return await useCase.execute()
   }),
@@ -289,12 +409,13 @@ export const authRouter = router({
         search: z.string().optional(),
       }).optional()
     )
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const page = input?.page || 1
       const limit = input?.limit || 20
       const search = input?.search
+      const tenantId = ctx.session.tenantId
 
-      const result = await container.userRepository().findAll({ page, limit, search })
+      const result = await container.userRepository().findAll({ page, limit, search, tenantId })
 
       return {
         users: result.users,

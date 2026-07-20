@@ -28,5 +28,5 @@ export interface UserRepository {
   updateRegistrationDetails(userId: string, outletId: string, verifyToken: string): Promise<void>
   getSuspensionStatus(userId: string): Promise<{ isSuspended: boolean; outletId: string | null; role: string | null }>
   isOwnerSuspended(outletId: string): Promise<boolean>
-  findAll(params: { page: number; limit: number; search?: string }): Promise<{ users: UserSummary[]; total: number }>
+  findAll(params: { page: number; limit: number; search?: string; tenantId?: string }): Promise<{ users: UserSummary[]; total: number }>
 }

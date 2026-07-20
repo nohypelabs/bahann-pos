@@ -14,8 +14,11 @@ export const businessProfileRouter = router({
    * Get current user's business profile
    */
   getMyProfile: protectedProcedure.query(async ({ ctx }) => {
-    const profile = await profileRepo.findByUserId(ctx.userId);
-    return profile;
+    const tenantId = ctx.session?.tenantId;
+    if (tenantId) {
+      return await profileRepo.findByTenantId(tenantId);
+    }
+    return await profileRepo.findByUserId(ctx.userId);
   }),
 
   /**
@@ -29,8 +32,12 @@ export const businessProfileRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.session?.tenantId;
       // Check if profile already exists
-      const existing = await profileRepo.findByUserId(ctx.userId);
+      const existing = tenantId
+        ? await profileRepo.findByTenantId(tenantId)
+        : await profileRepo.findByUserId(ctx.userId);
+
       if (existing) {
         throw new TRPCError({
           code: 'CONFLICT',
@@ -41,6 +48,7 @@ export const businessProfileRouter = router({
       const profile = BusinessProfile.createDefaults(
         ctx.userId,
         input.businessType as BusinessType,
+        tenantId || undefined,
       );
 
       await profileRepo.save(profile);
@@ -72,7 +80,11 @@ export const businessProfileRouter = router({
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const existing = await profileRepo.findByUserId(ctx.userId);
+      const tenantId = ctx.session?.tenantId;
+      const existing = tenantId
+        ? await profileRepo.findByTenantId(tenantId)
+        : await profileRepo.findByUserId(ctx.userId);
+
       if (!existing) {
         throw new TRPCError({
           code: 'NOT_FOUND',
@@ -83,14 +95,16 @@ export const businessProfileRouter = router({
       const newProfile = BusinessProfile.createDefaults(
         ctx.userId,
         input.businessType as BusinessType,
+        tenantId || undefined,
       );
-      // Preserve the original ID
+      // Preserve the original ID and keep tenantId
       const updated = new BusinessProfile(
         existing.id,
         ctx.userId,
         newProfile.businessType,
         newProfile.enabledModules,
         existing.createdAt,
+        existing.tenantId || tenantId || undefined,
       );
 
       await profileRepo.update(updated);

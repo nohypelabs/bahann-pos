@@ -3,7 +3,7 @@ import { container } from '@/infra/container';
 import { DailyStockInputSchema } from '@/shared/utils/validation';
 import { AppError } from '@/shared/exceptions/AppError';
 import { logger } from '@/lib/logger';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getTenantId } from '@/server/lib/tenant';
 
@@ -12,7 +12,23 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const validated = DailyStockInputSchema.parse(body);
 
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          },
+        },
+      }
+    );
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

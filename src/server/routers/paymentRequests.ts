@@ -6,6 +6,8 @@ import { TRPCError } from '@trpc/server'
 import { AppError } from '@/shared/exceptions/AppError'
 
 const managePayment = () => container.managePaymentUseCase()
+const MAX_PROOF_BASE64_LENGTH = 7_500_000
+const MAX_FILENAME_LENGTH = 255
 
 function toTRPCError(err: unknown): never {
   if (err instanceof AppError) {
@@ -80,8 +82,12 @@ export const paymentRequestsRouter = router({
   uploadProof: protectedProcedure
     .input(z.object({
       requestId: z.string().uuid(),
-      proofBase64: z.string(),
-      fileName: z.string(),
+      proofBase64: z.string().min(32).max(MAX_PROOF_BASE64_LENGTH),
+      fileName: z.string()
+        .trim()
+        .min(1)
+        .max(MAX_FILENAME_LENGTH)
+        .refine((value) => !value.includes('/') && !value.includes('\\'), 'Nama file tidak valid'),
     }))
     .mutation(async ({ input, ctx }) => {
       try {

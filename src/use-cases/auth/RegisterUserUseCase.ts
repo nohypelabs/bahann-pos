@@ -4,6 +4,7 @@ import { User } from '@/domain/entities/User'
 import { AppError } from '@/shared/exceptions/AppError'
 
 export interface RegisterUserInput {
+  id?: string
   email: string
   password: string
   name: string
@@ -23,14 +24,16 @@ export class RegisterUserUseCase {
   constructor(private userRepository: UserRepository) {}
 
   async execute(input: RegisterUserInput): Promise<RegisterUserOutput> {
+    const normalizedEmail = input.email.toLowerCase()
+
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(input.email)) {
+    if (!emailRegex.test(normalizedEmail)) {
       throw new AppError('Invalid email format', 400)
     }
 
     // Check if user already exists
-    const existingUser = await this.userRepository.findByEmail(input.email)
+    const existingUser = await this.userRepository.findByEmail(normalizedEmail)
     if (existingUser) {
       throw new AppError('User with this email already exists', 409)
     }
@@ -45,7 +48,8 @@ export class RegisterUserUseCase {
 
     // Create user
     const user = User.create({
-      email: input.email.toLowerCase(),
+      id: input.id,
+      email: normalizedEmail,
       name: input.name,
       passwordHash,
       outletId: input.outletId,

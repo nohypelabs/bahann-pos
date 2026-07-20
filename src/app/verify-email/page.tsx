@@ -15,7 +15,7 @@ function VerifyEmailContent() {
     onSuccess: (data) => {
       setStatus(data.alreadyVerified ? 'already' : 'success')
       if (!data.alreadyVerified) {
-        setTimeout(() => router.push('/dashboard'), 3000)
+        setTimeout(() => router.push('/login?verified=true'), 3000)
       }
     },
     onError: () => setStatus('error'),
@@ -46,7 +46,7 @@ function VerifyEmailContent() {
         <>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Email Terverifikasi!</h1>
           <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
-            Trial <strong>14 hari Starter</strong> kamu sudah aktif. Kamu akan diarahkan ke dashboard...
+            Trial <strong>14 hari Starter</strong> kamu sudah aktif. Kamu akan diarahkan ke halaman login...
           </p>
           <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-sm text-green-700 dark:text-green-300">
             🎁 Nikmati semua fitur Starter gratis selama 14 hari!
@@ -58,8 +58,8 @@ function VerifyEmailContent() {
         <>
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Sudah Terverifikasi</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Email kamu sudah pernah diverifikasi sebelumnya.</p>
-          <a href="/dashboard" className="inline-block px-6 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-colors">
-            Buka Dashboard →
+          <a href="/login?verified=true" className="inline-block px-6 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-colors">
+            Lanjut Login →
           </a>
         </>
       )}

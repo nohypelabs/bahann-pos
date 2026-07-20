@@ -8,6 +8,7 @@
 import { createHash, randomBytes } from 'crypto'
 import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { signJWT, type JWTPayload } from './jwt'
+import { createSession } from './redis-upstash'
 import { logger } from './logger'
 
 // Configuration
@@ -72,6 +73,14 @@ export async function createRefreshToken(
     if (userError || !user) {
       throw new Error('User not found')
     }
+
+    await createSession(user.id, {
+      email: user.email,
+      name: user.name,
+      outletId: user.outlet_id || undefined,
+      role: user.role || undefined,
+      tenantId: user.tenant_id || undefined,
+    })
 
     // Generate refresh token
     const refreshToken = generateRefreshToken()

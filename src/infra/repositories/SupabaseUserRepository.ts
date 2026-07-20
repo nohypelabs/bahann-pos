@@ -2,7 +2,57 @@ import { UserRepository, UserSummary } from '@/domain/repositories/UserRepositor
 import { User } from '@/domain/entities/User'
 import { supabaseAdmin } from '../supabase/server'
 
+type TenantBillingContext = {
+  plan: string
+  ownerUserId: string | null
+  ownerEmailVerifiedAt: string | null
+}
+
 export class SupabaseUserRepository implements UserRepository {
+  private async getTenantBillingContext(tenantId: string, fallbackPlan = 'free'): Promise<TenantBillingContext> {
+    const { data: tenant } = await supabaseAdmin
+      .from('tenants')
+      .select('owner_user_id, plan')
+      .eq('id', tenantId)
+      .maybeSingle()
+
+    let ownerUserId = tenant?.owner_user_id ?? null
+    let ownerPlan: string | null = null
+    let ownerEmailVerifiedAt: string | null = null
+
+    if (ownerUserId) {
+      const { data: owner } = await supabaseAdmin
+        .from('users')
+        .select('id, plan, email_verified_at')
+        .eq('id', ownerUserId)
+        .maybeSingle()
+
+      ownerPlan = (owner?.plan as string | null) ?? null
+      ownerEmailVerifiedAt = owner?.email_verified_at ?? null
+    }
+
+    if (!ownerUserId) {
+      const { data: owner } = await supabaseAdmin
+        .from('users')
+        .select('id, plan, email_verified_at')
+        .eq('tenant_id', tenantId)
+        .in('role', ['admin', 'owner', 'super_admin'])
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+
+      ownerUserId = owner?.id ?? null
+      ownerPlan = (owner?.plan as string | null) ?? null
+      ownerEmailVerifiedAt = owner?.email_verified_at ?? null
+    }
+
+    return {
+      plan: ownerPlan || (tenant?.plan as string | null) || fallbackPlan || 'free',
+      ownerUserId,
+      ownerEmailVerifiedAt,
+    }
+  }
+
   async save(user: User): Promise<void> {
     const { error } = await supabaseAdmin.from('users').insert({
       id: user.id,
@@ -123,23 +173,22 @@ export class SupabaseUserRepository implements UserRepository {
   async getPlan(userId: string): Promise<string> {
     const { data } = await supabaseAdmin
       .from('users')
-      .select('plan')
+      .select('plan, tenant_id')
       .eq('id', userId)
       .single()
 
-    return (data?.plan as string) || 'free'
+    if (!data) return 'free'
+
+    const userPlan = (data.plan as string) || 'free'
+    if (!data.tenant_id) return userPlan
+
+    const tenantBilling = await this.getTenantBillingContext(data.tenant_id, userPlan)
+    return tenantBilling.plan
   }
 
   async getPlanByTenantId(tenantId: string): Promise<string> {
-    const { data } = await supabaseAdmin
-      .from('users')
-      .select('plan')
-      .eq('tenant_id', tenantId)
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle()
-
-    return (data?.plan as string) || 'free'
+    const tenantBilling = await this.getTenantBillingContext(tenantId)
+    return tenantBilling.plan
   }
 
   async findByVerifyToken(token: string): Promise<{ id: string; email: string; name: string; emailVerifiedAt: string | null; plan: string } | null> {
@@ -221,13 +270,28 @@ export class SupabaseUserRepository implements UserRepository {
   async getEmailVerificationStatus(userId: string): Promise<{ verified: boolean; plan: string }> {
     const { data } = await supabaseAdmin
       .from('users')
-      .select('email_verified_at, plan')
+      .select('email_verified_at, plan, tenant_id')
       .eq('id', userId)
       .single()
 
+    if (!data) {
+      return { verified: false, plan: 'free' }
+    }
+
+    const userPlan = (data.plan as string) || 'free'
+    if (!data.tenant_id) {
+      return {
+        verified: !!data.email_verified_at,
+        plan: userPlan,
+      }
+    }
+
+    const tenantBilling = await this.getTenantBillingContext(data.tenant_id, userPlan)
+    const isTenantMember = !!tenantBilling.ownerUserId && tenantBilling.ownerUserId !== userId
+
     return {
-      verified: !!data?.email_verified_at,
-      plan: (data?.plan as string) || 'free',
+      verified: isTenantMember ? true : !!(tenantBilling.ownerEmailVerifiedAt || data.email_verified_at),
+      plan: tenantBilling.plan,
     }
   }
 
@@ -288,8 +352,8 @@ export class SupabaseUserRepository implements UserRepository {
     return owner?.is_suspended ?? false
   }
 
-  async findAll(params: { page: number; limit: number; search?: string }): Promise<{ users: UserSummary[]; total: number }> {
-    const { page, limit, search } = params
+  async findAll(params: { page: number; limit: number; search?: string; tenantId?: string }): Promise<{ users: UserSummary[]; total: number }> {
+    const { page, limit, search, tenantId } = params
     const offset = (page - 1) * limit
 
     let query = supabaseAdmin
@@ -298,6 +362,9 @@ export class SupabaseUserRepository implements UserRepository {
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
+    if (tenantId) {
+      query = query.eq('tenant_id', tenantId)
+    }
     if (search) {
       query = query.or(`email.ilike.%${search}%,name.ilike.%${search}%`)
     }

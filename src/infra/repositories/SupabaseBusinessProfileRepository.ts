@@ -16,7 +16,30 @@ export class SupabaseBusinessProfileRepository {
     return this.toDomain(data);
   }
 
+  async findByTenantId(tenantId: string): Promise<BusinessProfile | null> {
+    const { data, error } = await supabase
+      .from('business_profiles')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+
+    return this.toDomain(data);
+  }
+
   async save(profile: BusinessProfile): Promise<void> {
+    let tenantId = profile.tenantId;
+    if (!tenantId) {
+      const { data } = await supabase
+        .from('users')
+        .select('tenant_id')
+        .eq('id', profile.userId)
+        .single();
+      tenantId = data?.tenant_id || profile.userId;
+    }
+
     const { error } = await supabase
       .from('business_profiles')
       .upsert(
@@ -26,6 +49,7 @@ export class SupabaseBusinessProfileRepository {
           business_type: profile.businessType,
           enabled_modules: JSON.stringify(profile.enabledModules),
           created_at: profile.createdAt.toISOString(),
+          tenant_id: tenantId,
         },
         { onConflict: 'user_id' },
       );
@@ -52,6 +76,7 @@ export class SupabaseBusinessProfileRepository {
     business_type: string;
     enabled_modules: string | unknown[];
     created_at: string;
+    tenant_id?: string;
   }): BusinessProfile {
     // Handle both string and already-parsed array
     const modules = Array.isArray(row.enabled_modules)
@@ -64,6 +89,7 @@ export class SupabaseBusinessProfileRepository {
       row.business_type as BusinessType,
       modules as string[],
       new Date(row.created_at),
+      row.tenant_id,
     );
   }
 }

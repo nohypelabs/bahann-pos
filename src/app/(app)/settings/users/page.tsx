@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -42,7 +42,6 @@ export default function UsersManagementPage() {
   const utils = trpc.useUtils()
   const { data: users } = trpc.users.list.useQuery()
   const { data: outletsResponse } = trpc.outlets.getAll.useQuery()
-  const { data: roles } = trpc.users.getRoles.useQuery()
   const { data: outletGroups } = trpc.users.getOutletGroups.useQuery()
   const outlets = outletsResponse?.outlets || []
 
@@ -51,15 +50,20 @@ export default function UsersManagementPage() {
   const [form, setForm] = useState({
     name: '', email: '', password: '', whatsappNumber: '',
     roleKey: 'CASHIER' as RoleKey,
-    outletId: '', outletGroupId: '',
+    outletId: '', outletGroupId: '', sendInvite: true,
+  })
+  const [editForm, setEditForm] = useState({
+    roleKey: 'CASHIER' as RoleKey,
+    outletId: '',
+    outletGroupId: '',
   })
   const [formError, setFormError] = useState('')
 
   const createUserMutation = trpc.users.create.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (data) => {
       await utils.users.list.invalidate()
       closeForm()
-      showToast('Pengguna ditambahkan', 'success')
+      showToast(data.inviteSent ? 'Undangan login dikirim' : 'Pengguna ditambahkan', 'success')
     },
     onError: err => setFormError(err.message),
   })
@@ -67,7 +71,7 @@ export default function UsersManagementPage() {
   const updateRoleMutation = trpc.users.updateRole.useMutation({
     onSuccess: async () => {
       await utils.users.list.invalidate()
-      setEditingUser(null)
+      closeEditUser()
       showToast('Role diperbarui', 'success')
     },
     onError: err => showToast(err.message || 'Gagal memperbarui role. Periksa koneksi dan coba lagi.', 'error'),
@@ -75,30 +79,69 @@ export default function UsersManagementPage() {
 
   const closeForm = () => {
     setShowAddUser(false)
-    setForm({ name: '', email: '', password: '', whatsappNumber: '', roleKey: 'CASHIER', outletId: '', outletGroupId: '' })
+    setForm({ name: '', email: '', password: '', whatsappNumber: '', roleKey: 'CASHIER', outletId: '', outletGroupId: '', sendInvite: true })
     setFormError('')
   }
 
+  const closeEditUser = () => {
+    setEditingUser(null)
+    setEditForm({ roleKey: 'CASHIER', outletId: '', outletGroupId: '' })
+  }
+
+  const openEditUser = (user: any) => {
+    const rbacRole = user.rbac_roles?.[0]
+    const legacyRole: RoleKey =
+      user.role === 'admin'
+        ? 'ADMIN_TENANT'
+        : user.role === 'manager'
+          ? 'STORE_MANAGER'
+          : 'CASHIER'
+
+    setEditingUser(user)
+    setEditForm({
+      roleKey: (rbacRole?.role_key || legacyRole) as RoleKey,
+      outletId: rbacRole?.outlet_id || user.outlet_id || '',
+      outletGroupId: rbacRole?.outlet_group_id || '',
+    })
+  }
+
   const selectedRole = ROLES.find(r => r.key === form.roleKey)
+  const selectedEditRole = ROLES.find(r => r.key === editForm.roleKey)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError('')
 
-    if (!form.name || !form.email || !form.password) {
-      setFormError('Nama, email, dan password wajib diisi')
+    if (!form.name || !form.email) {
+      setFormError('Nama dan email wajib diisi')
       return
     }
 
-    if (form.password.length < 8) {
+    if (!form.sendInvite && !form.password) {
+      setFormError('Password wajib diisi jika undangan email dimatikan')
+      return
+    }
+
+    if (!form.sendInvite && form.password.length < 8) {
       setFormError('Password minimal 8 karakter')
+      return
+    }
+
+    if (selectedRole?.scope === 'OUTLET' && !form.outletId) {
+      setFormError('Pilih outlet untuk role ini')
+      return
+    }
+
+    if (selectedRole?.scope === 'OUTLET_GROUP' && !form.outletGroupId) {
+      setFormError('Pilih outlet group untuk role ini')
       return
     }
 
     await createUserMutation.mutateAsync({
       name: form.name,
       email: form.email,
-      password: form.password,
+      password: form.sendInvite ? undefined : form.password,
+      sendInvite: form.sendInvite,
       whatsappNumber: form.whatsappNumber || undefined,
       roleKey: form.roleKey,
       outletId: form.outletId || undefined,
@@ -113,6 +156,27 @@ export default function UsersManagementPage() {
       outletId: outletId || undefined,
       outletGroupId: outletGroupId || undefined,
     })
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingUser || !selectedEditRole) return
+
+    if (selectedEditRole.scope === 'OUTLET' && !editForm.outletId) {
+      showToast('Pilih outlet untuk role ini', 'error')
+      return
+    }
+
+    if (selectedEditRole.scope === 'OUTLET_GROUP' && !editForm.outletGroupId) {
+      showToast('Pilih outlet group untuk role ini', 'error')
+      return
+    }
+
+    await handleUpdateRole(
+      editingUser.id,
+      editForm.roleKey,
+      selectedEditRole.scope === 'OUTLET' ? editForm.outletId : undefined,
+      selectedEditRole.scope === 'OUTLET_GROUP' ? editForm.outletGroupId : undefined,
+    )
   }
 
   const getRoleBadge = (user: any) => {
@@ -135,7 +199,7 @@ export default function UsersManagementPage() {
     switch (rbacRole.scope_type) {
       case 'TENANT': return 'Semua outlet'
       case 'OUTLET': return user.outlet_name || 'Outlet assigned'
-      case 'OUTLET_GROUP': return `Group: ${rbacRole.outlet_group_id || '—'}`
+      case 'OUTLET_GROUP': return `Group: ${rbacRole.outlet_group_name || rbacRole.outlet_group_id || '—'}`
       default: return '—'
     }
   }
@@ -178,7 +242,7 @@ export default function UsersManagementPage() {
                   </td>
                   <td className="px-3 md:px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{getScopeInfo(user)}</td>
                   <td className="px-3 md:px-4 py-3">
-                    <Button size="sm" variant="outline" onClick={() => setEditingUser(user)}>Edit</Button>
+                    <Button size="sm" variant="outline" onClick={() => openEditUser(user)}>Edit</Button>
                   </td>
                 </tr>
               ))}
@@ -215,7 +279,12 @@ export default function UsersManagementPage() {
                       <button
                         key={role.key}
                         type="button"
-                        onClick={() => setForm(f => ({ ...f, roleKey: role.key, outletId: '', outletGroupId: '' }))}
+                        onClick={() => setForm(f => ({
+                          ...f,
+                          roleKey: role.key,
+                          outletId: role.scope === 'OUTLET' ? f.outletId : '',
+                          outletGroupId: role.scope === 'OUTLET_GROUP' ? f.outletGroupId : '',
+                        }))}
                         className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
                           form.roleKey === role.key
                             ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
@@ -283,8 +352,24 @@ export default function UsersManagementPage() {
                       />
                     </div>
                   </div>
-                  <Input type="password" label="Password *" placeholder="Minimal 8 karakter"
-                    value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} fullWidth required />
+                  <label className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50/80 px-3 py-3 dark:border-blue-900/60 dark:bg-blue-900/20">
+                    <input
+                      type="checkbox"
+                      checked={form.sendInvite}
+                      onChange={e => setForm(f => ({ ...f, sendInvite: e.target.checked, password: e.target.checked ? '' : f.password }))}
+                      className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <div>
+                      <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">Kirim undangan email</p>
+                      <p className="mt-1 text-xs text-blue-800/80 dark:text-blue-300/80">
+                        Pengguna akan menerima link untuk atur password sendiri lewat halaman reset password.
+                      </p>
+                    </div>
+                  </label>
+                  {!form.sendInvite && (
+                    <Input type="password" label="Password *" placeholder="Minimal 8 karakter"
+                      value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} fullWidth required />
+                  )}
                 </div>
 
                 <div className="flex gap-2 pt-1">
@@ -304,7 +389,7 @@ export default function UsersManagementPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <SectionCard title={`Edit: ${editingUser.name}`}
-              action={<button onClick={() => setEditingUser(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">✕</button>}
+              action={<button onClick={closeEditUser} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">✕</button>}
             >
               <div className="space-y-4">
                 <div>
@@ -313,12 +398,16 @@ export default function UsersManagementPage() {
                   </p>
                   <div className="grid grid-cols-1 gap-2">
                     {ROLES.map(role => {
-                      const isCurrentRole = editingUser.rbac_roles?.[0]?.role_key === role.key
+                      const isCurrentRole = editForm.roleKey === role.key
                       return (
                         <button
                           key={role.key}
                           type="button"
-                          onClick={() => handleUpdateRole(editingUser.id, role.key, editingUser.outlet_id)}
+                          onClick={() => setEditForm(current => ({
+                            roleKey: role.key,
+                            outletId: role.scope === 'OUTLET' ? current.outletId : '',
+                            outletGroupId: role.scope === 'OUTLET_GROUP' ? current.outletGroupId : '',
+                          }))}
                           className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
                             isCurrentRole
                               ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
@@ -337,8 +426,40 @@ export default function UsersManagementPage() {
                   </div>
                 </div>
 
+                {selectedEditRole?.scope === 'OUTLET' && (
+                  <StyledSelect<string>
+                    label="Outlet *"
+                    value={editForm.outletId}
+                    onChange={value => setEditForm(current => ({ ...current, outletId: value }))}
+                    options={[
+                      { value: '', label: 'Pilih outlet…' },
+                      ...outlets.map(outlet => ({ value: outlet.id, label: outlet.name })),
+                    ]}
+                  />
+                )}
+
+                {selectedEditRole?.scope === 'OUTLET_GROUP' && (
+                  <StyledSelect<string>
+                    label="Outlet Group *"
+                    value={editForm.outletGroupId}
+                    onChange={value => setEditForm(current => ({ ...current, outletGroupId: value }))}
+                    options={[
+                      { value: '', label: 'Pilih outlet group…' },
+                      ...(outletGroups || []).map(group => ({ value: group.id, label: `${group.name} (${group.outlet_ids.length} outlet)` })),
+                    ]}
+                  />
+                )}
+
                 <div className="flex gap-2 pt-2">
-                  <Button variant="outline" onClick={() => setEditingUser(null)} fullWidth>Tutup</Button>
+                  <Button
+                    variant="primary"
+                    onClick={handleSaveEdit}
+                    fullWidth
+                    disabled={updateRoleMutation.isPending}
+                  >
+                    {updateRoleMutation.isPending ? 'Menyimpan…' : 'Simpan Role'}
+                  </Button>
+                  <Button variant="outline" onClick={closeEditUser} fullWidth>Tutup</Button>
                 </div>
               </div>
             </SectionCard>

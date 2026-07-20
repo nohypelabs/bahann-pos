@@ -5,6 +5,21 @@ import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
 import { AppError } from '@/shared/exceptions/AppError'
 
+const optionalTextSetting = (max: number) => z.string().trim().max(max)
+const optionalUrlSetting = (max: number) => z.union([z.literal(''), z.string().trim().url().max(max)])
+const optionalPhoneSetting = (max: number) =>
+  z.string().trim().max(max).regex(/^[0-9+\-\s()]*$/, 'Format nomor tidak valid')
+
+const platformSettingsSchema = z.object({
+  solana_wallet_address: optionalTextSetting(120),
+  solana_rpc_url: optionalUrlSetting(500),
+  bank_name: optionalTextSetting(120),
+  bank_account: z.string().trim().max(64).regex(/^[0-9\s-]*$/, 'Nomor rekening tidak valid'),
+  bank_holder: optionalTextSetting(120),
+  support_wa: optionalPhoneSetting(32),
+  qris_image_url: optionalUrlSetting(1000),
+}).strict()
+
 export const superAdminRouter = router({
   globalStats: superAdminProcedure.query(async () => {
     const platformUseCase = container.platformUseCase()
@@ -79,7 +94,7 @@ export const superAdminRouter = router({
   }),
 
   updateSettings: superAdminProcedure
-    .input(z.record(z.string(), z.string()))
+    .input(platformSettingsSchema)
     .mutation(async ({ input, ctx }) => {
       const platformUseCase = container.platformUseCase()
       await platformUseCase.updateSettings(input, ctx.userId)
@@ -123,7 +138,7 @@ export const superAdminRouter = router({
   listAllUsers: superAdminProcedure
     .input(z.object({
       search: z.string().optional(),
-      role: z.string().optional(),
+      role: z.enum(['admin', 'super_admin', 'user', 'manager', 'owner']).optional(),
       limit: z.number().default(50),
       offset: z.number().default(0),
     }).optional())
@@ -177,7 +192,7 @@ export const superAdminRouter = router({
   updateUserRole: superAdminProcedure
     .input(z.object({
       userId: z.string().uuid(),
-      role: z.string(),
+      role: z.enum(['admin', 'super_admin', 'user', 'manager', 'owner']),
     }))
     .mutation(async ({ input, ctx }) => {
       const { supabaseAdmin } = await import('@/infra/supabase/server')

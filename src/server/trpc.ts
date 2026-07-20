@@ -2,7 +2,7 @@ import { initTRPC, TRPCError } from '@trpc/server'
 import { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
 import superjson from 'superjson'
 import { verifyJWT, JWTPayload } from '@/lib/jwt'
-import { getRedisClient } from '@/lib/redis-upstash'
+import { getSession } from '@/lib/redis-upstash'
 import { parseAuthCookieFromHeader } from '@/lib/cookies'
 import { logger } from '@/lib/logger'
 import { getTenantId, userHasPermission } from '@/server/lib/tenant'
@@ -41,33 +41,29 @@ export async function createContext(opts: FetchCreateContextFnOptions) {
       const decoded = verifyJWT(token)
       userId = decoded.userId
 
-      // Try to get session from Redis (optional)
-      const redis = getRedisClient()
-      if (redis) {
-        try {
-          const sessionData = await redis.get<SessionData>(`session:${userId}`)
-          if (sessionData) {
-            session = sessionData
+      try {
+        const sessionData = await getSession(userId)
+        if (sessionData) {
+          session = {
+            userId: sessionData.userId,
+            email: sessionData.email,
+            name: sessionData.name,
+            role: sessionData.role,
+            outletId: sessionData.outletId,
+            tenantId: sessionData.tenantId,
           }
-        } catch (error) {
-          // Continue without Redis session, JWT is enough
-          logger.debug('Failed to get session from Redis', { error })
+        } else {
+          logger.warn('Access token rejected because Redis session was not found', {
+            userId,
+          })
         }
+      } catch (error) {
+        logger.warn('Failed to validate Redis session for access token', {
+          userId,
+          error,
+        })
       }
 
-      // If no Redis session, create a minimal session from JWT
-      if (!session) {
-        session = {
-          userId: decoded.userId,
-          email: decoded.email,
-          name: decoded.name,
-          role: decoded.role,
-          outletId: decoded.outletId,
-          tenantId: decoded.tenantId,
-        }
-      }
-
-      // Ensure tenantId is populated
       if (session && !session.tenantId) {
         session.tenantId = await getTenantId(userId) ?? undefined
       }

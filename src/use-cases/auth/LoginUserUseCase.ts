@@ -2,7 +2,6 @@ import bcrypt from 'bcryptjs'
 import { UserRepository } from '@/domain/repositories/UserRepository'
 import { AppError } from '@/shared/exceptions/AppError'
 import { signJWT } from '@/lib/jwt'
-import { createSession } from '@/lib/redis-upstash'
 
 export interface LoginUserInput {
   email: string
@@ -37,18 +36,17 @@ export class LoginUserUseCase {
       throw new AppError('Invalid email or password', 401)
     }
 
-    // Create JWT token (7 days expiry)
+    const isSelfRegisteredOwner = user.role === 'admin' && user.tenantId === user.id
+    if (isSelfRegisteredOwner) {
+      const verificationStatus = await this.userRepository.getEmailVerificationStatus(user.id)
+      if (!verificationStatus.verified) {
+        throw new AppError('Email belum diverifikasi. Cek inbox Anda sebelum login.', 403)
+      }
+    }
+
+    // Create JWT token (30 min expiry — use refresh token for renewal)
     const token = signJWT({
       userId: user.id,
-      email: user.email,
-      name: user.name,
-      outletId: user.outletId,
-      role: user.role,
-      tenantId: user.tenantId,
-    })
-
-    // Create session in Redis (7 days TTL)
-    await createSession(user.id, {
       email: user.email,
       name: user.name,
       outletId: user.outletId,

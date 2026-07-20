@@ -8,6 +8,7 @@ import { trpc } from '@/lib/trpc/client'
 import { Search, Crown, Users, Shield, ChevronDown, CheckCircle2, XCircle, Info } from 'lucide-react'
 
 type AlertState = { type: 'success' | 'error' | 'info'; msg: string } | null
+type UserRole = 'admin' | 'super_admin' | 'user' | 'manager' | 'owner'
 
 const ROLES = [
   { value: 'user', label: 'Kasir', icon: '👤', color: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300', desc: 'Transaksi sesuai permission' },
@@ -27,7 +28,7 @@ export default function AdminRolesPage() {
   const router = useRouter()
   const [userRole, setUserRole] = useState('')
   const [search, setSearch] = useState('')
-  const [filterRole, setFilterRole] = useState('')
+  const [filterRole, setFilterRole] = useState<UserRole | ''>('')
   const [alert, setAlert] = useState<AlertState>(null)
   const [changingUserId, setChangingUserId] = useState<string | null>(null)
 
@@ -63,7 +64,7 @@ export default function AdminRolesPage() {
     onError: (err) => flash('error', err.message || 'Gagal update role'),
   })
 
-  const handleRoleChange = (userId: string, newRole: string) => {
+  const handleRoleChange = (userId: string, newRole: UserRole) => {
     updateRoleMutation.mutate({ userId, role: newRole })
   }
 
@@ -119,7 +120,7 @@ export default function AdminRolesPage() {
           <div className="relative">
             <select
               value={filterRole}
-              onChange={e => setFilterRole(e.target.value)}
+              onChange={e => setFilterRole(e.target.value as UserRole | '')}
               className="appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400 dark:focus:border-blue-500"
             >
               <option value="">Semua Role</option>
@@ -185,7 +186,7 @@ export default function AdminRolesPage() {
                             <div className="relative">
                               <select
                                 defaultValue={u.role || 'user'}
-                                onChange={e => handleRoleChange(u.id, e.target.value)}
+                                onChange={e => handleRoleChange(u.id, e.target.value as UserRole)}
                                 className="appearance-none px-2 py-1.5 pr-7 text-xs border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400"
                               >
                                 {ROLES.map(r => <option key={r.value} value={r.value}>{r.icon} {r.label}</option>)}
@@ -239,7 +240,7 @@ export default function AdminRolesPage() {
                     <div className="relative flex-1">
                       <select
                         defaultValue={u.role || 'user'}
-                        onChange={e => handleRoleChange(u.id, e.target.value)}
+                        onChange={e => handleRoleChange(u.id, e.target.value as UserRole)}
                         className="w-full appearance-none px-2 py-1.5 pr-7 text-xs border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400"
                       >
                         {ROLES.map(r => <option key={r.value} value={r.value}>{r.icon} {r.label}</option>)}

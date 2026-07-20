@@ -16,14 +16,18 @@ function LoginContent() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showRegisteredMessage, setShowRegisteredMessage] = useState(false)
+  const [showVerifiedMessage, setShowVerifiedMessage] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
-    // Check if redirected from registration
     if (searchParams.get('registered') === 'true') {
       setShowRegisteredMessage(true)
-      // Hide message after 5 seconds
       setTimeout(() => setShowRegisteredMessage(false), 5000)
+    }
+
+    if (searchParams.get('verified') === 'true') {
+      setShowVerifiedMessage(true)
+      setTimeout(() => setShowVerifiedMessage(false), 5000)
     }
   }, [searchParams])
 
@@ -92,7 +96,15 @@ function LoginContent() {
               {showRegisteredMessage && (
                 <div className="p-3 bg-green-50 border-2 border-green-200 rounded-[35px]">
                   <p className="text-sm font-semibold text-green-600">
-                    ✅ {t('register.success')}
+                    ✅ {t('register.success')} Cek email Anda untuk verifikasi sebelum login.
+                  </p>
+                </div>
+              )}
+
+              {showVerifiedMessage && (
+                <div className="p-3 bg-blue-50 border-2 border-blue-200 rounded-[35px]">
+                  <p className="text-sm font-semibold text-blue-700">
+                    Email berhasil diverifikasi. Silakan login.
                   </p>
                 </div>
               )}

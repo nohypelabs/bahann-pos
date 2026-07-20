@@ -3,6 +3,8 @@ import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure, adminProcedure } from '../trpc'
 import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
+import { supabaseAdmin } from '@/infra/supabase/server'
+import { assertOutletAccessible, getUserOutletIds } from '@/server/lib/tenant'
 
 export const outletsRouter = router({
   getAll: protectedProcedure
@@ -14,24 +16,49 @@ export const outletsRouter = router({
       }).optional()
     )
     .query(async ({ input, ctx }) => {
-      const ownerId = ctx.session.tenantId!
-
-      const uc = container.outletUseCase()
-      const result = await uc.listByOwner(ownerId, {
-        search: input?.search,
-        page: input?.page ?? 1,
-        limit: input?.limit ?? 50,
-      })
-
       const page = input?.page ?? 1
       const limit = input?.limit ?? 50
+      const tenantId = ctx.session.tenantId!
+      const allowedOutletIds = await getUserOutletIds(ctx.userId, tenantId)
+
+      if (allowedOutletIds.length === 0) {
+        return {
+          outlets: [],
+          pagination: {
+            page,
+            limit,
+            total: 0,
+            totalPages: 0,
+          },
+        }
+      }
+
+      const offset = (page - 1) * limit
+      let query = supabaseAdmin
+        .from('outlets')
+        .select('*', { count: 'exact' })
+        .eq('tenant_id', tenantId)
+        .in('id', allowedOutletIds)
+        .order('name', { ascending: true })
+        .range(offset, offset + limit - 1)
+
+      if (input?.search) {
+        query = query.or(`name.ilike.%${input.search}%,address.ilike.%${input.search}%`)
+      }
+
+      const { data, error, count } = await query
+
+      if (error) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      }
+
       return {
-        outlets: result.outlets,
+        outlets: data ?? [],
         pagination: {
           page,
           limit,
-          total: result.total,
-          totalPages: Math.ceil(result.total / limit),
+          total: count ?? 0,
+          totalPages: Math.ceil((count ?? 0) / limit),
         },
       }
     }),
@@ -39,10 +66,11 @@ export const outletsRouter = router({
   getById: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const ownerId = ctx.session.tenantId!
+      const tenantId = ctx.session.tenantId!
+      await assertOutletAccessible(ctx.userId, tenantId, input.id)
       const uc = container.outletUseCase()
       try {
-        return await uc.getById(input.id, ownerId)
+        return await uc.getById(input.id, tenantId)
       } catch {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Outlet tidak ditemukan' })
       }

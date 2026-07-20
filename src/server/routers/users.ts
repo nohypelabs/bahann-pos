@@ -10,7 +10,151 @@ import { createAuditLog } from '@/lib/audit'
 import { supabaseAdmin } from '@/infra/supabase/server'
 import { TRPCError } from '@trpc/server'
 import { sendPlanUpgradeEmail } from '@/lib/email'
+import { getLimits, isUnlimited } from '@/lib/plans'
 import bcrypt from 'bcryptjs'
+
+const roleKeySchema = z.enum(['ADMIN_TENANT', 'AREA_MANAGER', 'STORE_MANAGER', 'CASHIER', 'AUDITOR'])
+const scopeTypeSchema = z.enum(['TENANT', 'OUTLET', 'OUTLET_GROUP'])
+
+type ManagedRoleKey = z.infer<typeof roleKeySchema>
+type RoleScopeType = z.infer<typeof scopeTypeSchema>
+
+function resolveScopeType(roleKey: ManagedRoleKey, scopeType?: RoleScopeType): RoleScopeType {
+  if (scopeType) return scopeType
+
+  switch (roleKey) {
+    case 'ADMIN_TENANT':
+    case 'AUDITOR':
+      return 'TENANT'
+    case 'AREA_MANAGER':
+      return 'OUTLET_GROUP'
+    case 'STORE_MANAGER':
+    case 'CASHIER':
+      return 'OUTLET'
+    default:
+      return 'TENANT'
+  }
+}
+
+async function enforceCashierPlanLimit(
+  tenantId: string,
+  roleKey: ManagedRoleKey,
+  userIdToExclude?: string,
+): Promise<void> {
+  if (roleKey !== 'CASHIER') return
+
+  if (userIdToExclude) {
+    const { data: existingAssignment } = await supabaseAdmin
+      .from('user_role_assignments')
+      .select('role:roles!role_id(key)')
+      .eq('tenant_id', tenantId)
+      .eq('user_id', userIdToExclude)
+      .maybeSingle()
+
+    if ((existingAssignment as any)?.role?.key === 'CASHIER') {
+      return
+    }
+  }
+
+  const { data: tenant } = await supabaseAdmin
+    .from('tenants')
+    .select('owner_user_id, plan')
+    .eq('id', tenantId)
+    .maybeSingle()
+
+  let plan = (tenant?.plan as string) || 'free'
+  if (tenant?.owner_user_id) {
+    const { data: owner } = await supabaseAdmin
+      .from('users')
+      .select('plan')
+      .eq('id', tenant.owner_user_id)
+      .maybeSingle()
+
+    if (owner?.plan) plan = owner.plan as string
+  }
+
+  const limits = getLimits(plan)
+  if (isUnlimited(limits.maxCashiers)) return
+
+  const { data: cashierRole } = await supabaseAdmin
+    .from('roles')
+    .select('id')
+    .eq('key', 'CASHIER')
+    .eq('is_system', true)
+    .is('tenant_id', null)
+    .single()
+
+  if (!cashierRole) return
+
+  const { count } = await supabaseAdmin
+    .from('user_role_assignments')
+    .select('*', { count: 'estimated', head: true })
+    .eq('tenant_id', tenantId)
+    .eq('role_id', cashierRole.id)
+
+  if ((count ?? 0) >= limits.maxCashiers) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: `Plan kamu hanya mendukung ${limits.maxCashiers} kasir. Upgrade untuk menambah lebih banyak.`,
+    })
+  }
+}
+
+async function validateRoleScope(params: {
+  tenantId: string
+  roleKey: ManagedRoleKey
+  scopeType: RoleScopeType
+  outletId?: string
+  outletGroupId?: string
+}): Promise<void> {
+  const { tenantId, roleKey, scopeType, outletId, outletGroupId } = params
+
+  if (roleKey === 'AREA_MANAGER' && scopeType !== 'OUTLET_GROUP') {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Area Manager harus pakai OUTLET_GROUP scope' })
+  }
+
+  if ((roleKey === 'STORE_MANAGER' || roleKey === 'CASHIER') && scopeType !== 'OUTLET') {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Store Manager / Kasir harus pakai OUTLET scope' })
+  }
+
+  if ((roleKey === 'ADMIN_TENANT' || roleKey === 'AUDITOR') && scopeType !== 'TENANT') {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Role ini harus pakai TENANT scope' })
+  }
+
+  if (scopeType === 'OUTLET') {
+    if (!outletId) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Pilih outlet untuk role ini' })
+    }
+
+    const { data: outlet } = await supabaseAdmin
+      .from('outlets')
+      .select('id')
+      .eq('id', outletId)
+      .eq('tenant_id', tenantId)
+      .single()
+
+    if (!outlet) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Outlet tidak ditemukan di tenant ini' })
+    }
+  }
+
+  if (scopeType === 'OUTLET_GROUP') {
+    if (!outletGroupId) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Pilih outlet group untuk role ini' })
+    }
+
+    const { data: outletGroup } = await supabaseAdmin
+      .from('outlet_groups')
+      .select('id')
+      .eq('id', outletGroupId)
+      .eq('tenant_id', tenantId)
+      .single()
+
+    if (!outletGroup) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Outlet group tidak ditemukan di tenant ini' })
+    }
+  }
+}
 
 export const usersRouter = router({
   /**
@@ -42,6 +186,8 @@ export const usersRouter = router({
       .select('id, name')
       .eq('tenant_id', tenantId)
 
+    const outletGroupNameById = new Map((outletGroups || []).map(group => [group.id, group.name]))
+
     return (users || []).map(u => ({
       id: u.id,
       name: u.name,
@@ -58,6 +204,7 @@ export const usersRouter = router({
         scope_type: ura.scope_type,
         outlet_id: ura.outlet_id,
         outlet_group_id: ura.outlet_group_id,
+        outlet_group_name: ura.outlet_group_id ? outletGroupNameById.get(ura.outlet_group_id) || null : null,
       })),
     }))
   }),
@@ -107,46 +254,32 @@ export const usersRouter = router({
       z.object({
         name: z.string().min(1),
         email: z.string().email(),
-        password: z.string().min(8),
+        password: z.string().min(8).optional(),
+        sendInvite: z.boolean().default(false),
         whatsappNumber: z.string().min(9).regex(/^[0-9+\-\s()]+$/).optional(),
-        roleKey: z.enum(['ADMIN_TENANT', 'AREA_MANAGER', 'STORE_MANAGER', 'CASHIER', 'AUDITOR']),
-        scopeType: z.enum(['TENANT', 'OUTLET', 'OUTLET_GROUP']).optional(),
+        roleKey: roleKeySchema,
+        scopeType: scopeTypeSchema.optional(),
         outletId: z.string().uuid().optional(),
         outletGroupId: z.string().uuid().optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
+      const scopeType = resolveScopeType(input.roleKey, input.scopeType)
 
-      // Determine scope type from role if not provided
-      const scopeType = input.scopeType || (() => {
-        switch (input.roleKey) {
-          case 'ADMIN_TENANT':
-          case 'AUDITOR':
-            return 'TENANT'
-          case 'AREA_MANAGER':
-            return 'OUTLET_GROUP'
-          case 'STORE_MANAGER':
-          case 'CASHIER':
-            return 'OUTLET'
-          default:
-            return 'TENANT'
-        }
-      })()
+      if (!input.sendInvite && !input.password) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Password wajib diisi jika undangan email dimatikan' })
+      }
 
-      // Validate scope matches role
-      if (input.roleKey === 'AREA_MANAGER' && scopeType !== 'OUTLET_GROUP') {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Area Manager harus pakai OUTLET_GROUP scope' })
-      }
-      if ((input.roleKey === 'STORE_MANAGER' || input.roleKey === 'CASHIER') && scopeType !== 'OUTLET') {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Store Manager / Kasir harus pakai OUTLET scope' })
-      }
-      if (scopeType === 'OUTLET' && !input.outletId) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Pilih outlet untuk role ini' })
-      }
-      if (scopeType === 'OUTLET_GROUP' && !input.outletGroupId) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Pilih outlet group untuk role ini' })
-      }
+      await validateRoleScope({
+        tenantId,
+        roleKey: input.roleKey,
+        scopeType,
+        outletId: input.outletId,
+        outletGroupId: input.outletGroupId,
+      })
+
+      await enforceCashierPlanLimit(tenantId, input.roleKey)
 
       // Check email uniqueness
       const { data: existingUser } = await supabaseAdmin
@@ -157,20 +290,6 @@ export const usersRouter = router({
 
       if (existingUser) {
         throw new TRPCError({ code: 'CONFLICT', message: 'Email sudah digunakan' })
-      }
-
-      // If OUTLET scope, verify outlet belongs to tenant
-      if (input.outletId) {
-        const { data: outlet } = await supabaseAdmin
-          .from('outlets')
-          .select('id')
-          .eq('id', input.outletId)
-          .eq('tenant_id', tenantId)
-          .single()
-
-        if (!outlet) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Outlet tidak ditemukan di tenant ini' })
-        }
       }
 
       // Get role ID
@@ -186,8 +305,7 @@ export const usersRouter = router({
         throw new TRPCError({ code: 'BAD_REQUEST', message: `Role ${input.roleKey} tidak ditemukan` })
       }
 
-      // Hash password
-      const passwordHash = await bcrypt.hash(input.password, 12)
+      const passwordHash = await bcrypt.hash(input.password || crypto.randomUUID(), 12)
 
       // Create user
       const { data: newUser, error: userError } = await supabaseAdmin
@@ -226,6 +344,10 @@ export const usersRouter = router({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: assignmentError.message })
       }
 
+      if (input.sendInvite) {
+        await container.requestPasswordResetUseCase().execute({ email: newUser.email })
+      }
+
       await createAuditLog({
         userId: ctx.userId,
         userEmail: ctx.session?.email || 'unknown',
@@ -240,11 +362,15 @@ export const usersRouter = router({
             scopeType,
             outletId: input.outletId,
             outletGroupId: input.outletGroupId,
+            sendInvite: input.sendInvite,
           },
         },
       })
 
-      return newUser
+      return {
+        ...newUser,
+        inviteSent: input.sendInvite,
+      }
     }),
 
   /**
@@ -254,8 +380,8 @@ export const usersRouter = router({
     .input(
       z.object({
         userId: z.string().uuid(),
-        roleKey: z.enum(['ADMIN_TENANT', 'AREA_MANAGER', 'STORE_MANAGER', 'CASHIER', 'AUDITOR']),
-        scopeType: z.enum(['TENANT', 'OUTLET', 'OUTLET_GROUP']).optional(),
+        roleKey: roleKeySchema,
+        scopeType: scopeTypeSchema.optional(),
         outletId: z.string().uuid().optional(),
         outletGroupId: z.string().uuid().optional(),
       })
@@ -263,7 +389,29 @@ export const usersRouter = router({
     .mutation(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
 
-      // Get role ID
+      const { data: targetUser } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('id', input.userId)
+        .eq('tenant_id', tenantId)
+        .maybeSingle()
+
+      if (!targetUser) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User tidak ditemukan di tenant ini' })
+      }
+
+      const scopeType = resolveScopeType(input.roleKey, input.scopeType)
+
+      await validateRoleScope({
+        tenantId,
+        roleKey: input.roleKey,
+        scopeType,
+        outletId: input.outletId,
+        outletGroupId: input.outletGroupId,
+      })
+
+      await enforceCashierPlanLimit(tenantId, input.roleKey, input.userId)
+
       const { data: role } = await supabaseAdmin
         .from('roles')
         .select('id')
@@ -275,16 +423,6 @@ export const usersRouter = router({
       if (!role) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: `Role ${input.roleKey} tidak ditemukan` })
       }
-
-      // Determine scope
-      const scopeType = input.scopeType || (() => {
-        switch (input.roleKey) {
-          case 'ADMIN_TENANT': case 'AUDITOR': return 'TENANT'
-          case 'AREA_MANAGER': return 'OUTLET_GROUP'
-          case 'STORE_MANAGER': case 'CASHIER': return 'OUTLET'
-          default: return 'TENANT'
-        }
-      })()
 
       // Delete old assignments
       await supabaseAdmin
@@ -325,7 +463,7 @@ export const usersRouter = router({
         action: 'UPDATE',
         entityType: 'user_role_assignment',
         entityId: input.userId,
-        changes: { roleKey: input.roleKey, scopeType, outletId: input.outletId },
+        changes: { roleKey: input.roleKey, scopeType, outletId: input.outletId, outletGroupId: input.outletGroupId },
       })
 
       return { success: true }
@@ -339,13 +477,18 @@ export const usersRouter = router({
       z.object({
         name: z.string().min(1),
         email: z.string().email(),
-        password: z.string().min(8),
+        password: z.string().min(8).optional(),
+        sendInvite: z.boolean().default(false),
         whatsappNumber: z.string().min(9).regex(/^[0-9+\-\s()]+$/),
         outletId: z.string().uuid(),
       })
     )
     .mutation(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
+
+      if (!input.sendInvite && !input.password) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Password wajib diisi jika undangan email dimatikan' })
+      }
 
       // Check email uniqueness
       const { data: existingUser } = await supabaseAdmin
@@ -358,6 +501,15 @@ export const usersRouter = router({
         throw new TRPCError({ code: 'CONFLICT', message: 'Email sudah digunakan' })
       }
 
+      await validateRoleScope({
+        tenantId,
+        roleKey: 'CASHIER',
+        scopeType: 'OUTLET',
+        outletId: input.outletId,
+      })
+
+      await enforceCashierPlanLimit(tenantId, 'CASHIER')
+
       // Get CASHIER role
       const { data: role } = await supabaseAdmin
         .from('roles')
@@ -367,7 +519,7 @@ export const usersRouter = router({
         .is('tenant_id', null)
         .single()
 
-      const passwordHash = await bcrypt.hash(input.password, 12)
+      const passwordHash = await bcrypt.hash(input.password || crypto.randomUUID(), 12)
 
       const { data: newUser, error: userError } = await supabaseAdmin
         .from('users')
@@ -400,17 +552,24 @@ export const usersRouter = router({
           })
       }
 
+      if (input.sendInvite) {
+        await container.requestPasswordResetUseCase().execute({ email: newUser.email })
+      }
+
       await createAuditLog({
         userId: ctx.userId,
         userEmail: ctx.session?.email || 'unknown',
         action: 'CREATE',
         entityType: 'user',
         entityId: newUser.id,
-        changes: { created: { name: input.name, email: input.email, outletId: input.outletId } },
+        changes: { created: { name: input.name, email: input.email, outletId: input.outletId, sendInvite: input.sendInvite } },
         metadata: { role: 'CASHIER' },
       })
 
-      return newUser
+      return {
+        ...newUser,
+        inviteSent: input.sendInvite,
+      }
     }),
 
   getById: protectedProcedure

@@ -1,3 +1,10 @@
+allowBuilds:
+  '@sentry/cli': true
+  bufferutil: true
+  puppeteer: true
+  sharp: true
+  unrs-resolver: true
+  utf-8-validate: true
 ignoredBuiltDependencies:
   - sharp
   - supabase
