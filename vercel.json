@@ -20,10 +20,6 @@
           "value": "no-store, max-age=0"
         }
       ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": []
     }
   ],
   "redirects": [
