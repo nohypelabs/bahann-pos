@@ -8,6 +8,7 @@ import { router, protectedProcedure, adminProcedure } from '../trpc'
 import { supabaseAdmin } from '@/infra/supabase/server'
 import { assertOutletAccessible, getUserOutletIds } from '@/server/lib/tenant'
 import { TRPCError } from '@trpc/server'
+import { logger } from '@/lib/logger'
 
 export const shiftsRouter = router({
   /**
@@ -18,12 +19,14 @@ export const shiftsRouter = router({
     .input(
       z.object({
         outletId: z.string().uuid(),
-        openingCash: z.number().min(0),
+        openingCash: z.number().min(0).finite(),
         deviceId: z.string().optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
+      logger.info('Opening shift', { userId: ctx.userId, outletId: input.outletId, tenantId, openingCash: input.openingCash })
+
       await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
 
       // Validate device belongs to outlet if provided
@@ -86,9 +89,19 @@ export const shiftsRouter = router({
         .single()
 
       if (error) {
+        logger.error('Shift insert failed', {
+          userId: ctx.userId,
+          outletId: input.outletId,
+          tenantId,
+          supabaseError: error,
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+        })
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: `Failed to open shift: ${error.message}`,
+          message: `Gagal buka shift: ${error.message}`,
         })
       }
 
