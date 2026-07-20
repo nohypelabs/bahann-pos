@@ -41,10 +41,5 @@
       "permanent": true
     }
   ],
-  "rewrites": [
-    {
-      "source": "/api/health",
-      "destination": "/api/health/route"
-    }
-  ]
+  "rewrites": []
 }
