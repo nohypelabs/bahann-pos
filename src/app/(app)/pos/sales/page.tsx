@@ -665,7 +665,7 @@ export default function SalesTransactionPage() {
                 <div className="relative flex-1 min-w-0">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
                   <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Cari produk..." disabled={!selectedOutletId} className="w-full pl-10 pr-8 py-2.5 border border-stone-200 rounded-xl bg-[#fcfbf7] text-sm text-stone-900 focus:border-emerald-500 focus:outline-none disabled:opacity-50" />
-                  {productSearch && <button onClick={() => setProductSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">✕</button>}
+                  {productSearch && <button onClick={() => setProductSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 hover:bg-stone-200 rounded-full w-6 h-6 flex items-center justify-center transition-colors">✕</button>}
                 </div>
                 {categories.length > 0 && (
                   <select
@@ -697,13 +697,13 @@ export default function SalesTransactionPage() {
                 <div className="flex sm:hidden gap-1.5 overflow-x-auto shrink-0 pb-0.5 -mx-0.5 px-0.5">
                   <button
                     onClick={() => setSelectedCategory('')}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors ${selectedCategory === '' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors ${selectedCategory === '' ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
                   >Semua</button>
                   {categories.map(cat => (
                     <button
                       key={cat}
                       onClick={() => setSelectedCategory(cat)}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors ${selectedCategory === cat ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'}`}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-colors ${selectedCategory === cat ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
                     >{cat}</button>
                   ))}
                 </div>
@@ -943,7 +943,7 @@ export default function SalesTransactionPage() {
             </div>
             {/* Promo */}
             <div className="mt-4">
-              <button onClick={() => setIsPromoExpanded(!isPromoExpanded)} className="flex items-center justify-between w-full text-left">
+              <button onClick={() => setIsPromoExpanded(!isPromoExpanded)} className="flex items-center justify-between w-full text-left rounded-xl px-2 -mx-2 py-1 hover:bg-white/5 transition-colors">
                 <span className="text-xs font-semibold text-stone-200">Kode Promo</span>
                 <span className="text-stone-500 text-xs">{isPromoExpanded ? '▲' : '▼'}</span>
               </button>
@@ -1107,7 +1107,7 @@ export default function SalesTransactionPage() {
       {/* ── Cart Drawer ── */}
       {isCartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setIsCartOpen(false)} />
+          <div className="absolute inset-0 bg-black/40 cursor-pointer" onClick={() => setIsCartOpen(false)} />
           <div className="relative w-96 bg-white dark:bg-gray-900 shadow-2xl flex flex-col h-full">
             <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 shrink-0">
               <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">🛒 Keranjang</h2>

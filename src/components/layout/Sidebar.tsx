@@ -100,7 +100,7 @@ function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths 
 
   return (
     <div className="mb-1">
-      <button onClick={toggle} className="w-full flex items-center justify-between px-3 py-1.5 group">
+      <button onClick={toggle} className="w-full flex items-center justify-between px-3 py-1.5 group hover:bg-white/50 rounded-xl transition-colors">
         <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8a9188] transition-colors group-hover:text-[#5f675f]">
           {title}
         </span>
@@ -416,7 +416,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
                   <>
                     {/* Pengaturan sub-group */}
                     <button onClick={() => setSubPengaturan(!subPengaturan)}
-                      className="w-full flex items-center justify-between px-3 py-2 group">
+                      className="w-full flex items-center justify-between px-3 py-2 group hover:bg-white/50 rounded-xl transition-colors">
                       <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8a9188] group-hover:text-[#5f675f] transition-colors">{t('sidebar.settings')}</span>
                       <ChevronDown className={`w-3.5 h-3.5 text-[#a9afa6] transition-transform duration-200 ${subPengaturan ? 'rotate-180' : ''}`} />
                     </button>
@@ -444,7 +444,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
 
                 {/* Bantuan sub-group */}
                 <button onClick={() => setSubBantuan(!subBantuan)}
-                  className="w-full flex items-center justify-between px-3 py-2 group">
+                  className="w-full flex items-center justify-between px-3 py-2 group hover:bg-white/50 rounded-xl transition-colors">
                   <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8a9188] group-hover:text-[#5f675f] transition-colors">{t('sidebar.helpSection')}</span>
                   <ChevronDown className={`w-3.5 h-3.5 text-[#a9afa6] transition-transform duration-200 ${subBantuan ? 'rotate-180' : ''}`} />
                 </button>

@@ -1064,8 +1064,8 @@ export default function LandingPage() {
 
       {/* ── EXIT INTENT MODAL ── */}
       {exitModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={dismissExitModal}>
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 cursor-pointer" onClick={dismissExitModal}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-default" />
           <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-[fadeIn_0.25s_ease-out]" onClick={e => e.stopPropagation()}>
             <button onClick={dismissExitModal} className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-gray-500 dark:text-gray-400 text-lg" aria-label="Close">✕</button>
             <div className="bg-gradient-to-br from-green-600 to-emerald-600 p-6 text-center text-white">
