@@ -16,6 +16,8 @@ export interface UpdateProductInput {
   pricingModel?: string;
   pricingTiers?: Array<{ minQuantity: number; pricePerUnit: number }>;
   durationMinutes?: number;
+  imageUrl?: string | null;
+  image_url?: string | null;
 }
 
 export class UpdateProductUseCase {
@@ -48,6 +50,7 @@ export class UpdateProductUseCase {
       durationMinutes: input.durationMinutes !== undefined
         ? input.durationMinutes || null
         : undefined,
+      imageUrl: input.imageUrl !== undefined ? input.imageUrl : input.image_url !== undefined ? input.image_url : undefined,
     });
   }
 }

@@ -82,6 +82,7 @@ function ProductFormModal({ product, onClose, onSuccess }: { product: Product | 
     stockBehavior: (product as any)?.stock_behavior || 'TRACKED',
     pricingModel: (product as any)?.pricing_model || 'FIXED',
     durationMinutes: (product as any)?.duration_minutes || '' as string | number,
+    imageUrl: (product as any)?.image_url || (product as any)?.imageUrl || '',
   })
   const [pricingTiers, setPricingTiers] = useState<PricingTierData[]>(
     (() => {
@@ -107,6 +108,8 @@ function ProductFormModal({ product, onClose, onSuccess }: { product: Product | 
         itemType: formData.itemType,
         stockBehavior: formData.stockBehavior,
         pricingModel: formData.pricingModel,
+        imageUrl: formData.imageUrl || undefined,
+        image_url: formData.imageUrl || undefined,
       }
 
       if (formData.pricingModel === 'TIERED') {
@@ -165,6 +168,34 @@ function ProductFormModal({ product, onClose, onSuccess }: { product: Product | 
         <Input label="Nama Produk *" type="text" value={formData.name} onChange={f('name')} placeholder="Coca Cola 330ml" fullWidth required />
         <Input label="Kategori" type="text" value={formData.category} onChange={f('category')} placeholder="Minuman" fullWidth />
         <Input label="Harga (Rp)" type="number" step="1" min="0" value={formData.price as number} onChange={f('price')} placeholder="5000" fullWidth />
+
+        {/* Cloudinary Image URL Input */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">
+            URL Gambar Produk (Cloudinary CDN)
+          </label>
+          <Input
+            type="text"
+            value={formData.imageUrl}
+            onChange={f('imageUrl')}
+            placeholder="https://res.cloudinary.com/demo/image/upload/sample.jpg"
+            fullWidth
+          />
+          {formData.imageUrl && (
+            <div className="mt-2 flex items-center gap-3 p-2 bg-stone-50 dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700">
+              <img
+                src={formData.imageUrl}
+                alt="Pratinjau"
+                className="w-12 h-12 rounded-lg object-cover border border-stone-300 dark:border-stone-600 shrink-0"
+                onError={(e) => { (e.target as HTMLElement).style.display = 'none' }}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-stone-700 dark:text-stone-300 truncate">Pratinjau Gambar Cloudinary</p>
+                <p className="text-[10px] text-stone-400 dark:text-stone-500 truncate">{formData.imageUrl}</p>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Stock Behavior */}
         <div>

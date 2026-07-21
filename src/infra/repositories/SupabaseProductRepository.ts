@@ -40,6 +40,8 @@ export class SupabaseProductRepository implements ProductRepository {
       pricingModel: data.pricing_model as PricingModel,
       pricingTiers: data.pricing_tiers ? JSON.parse(data.pricing_tiers as string) : undefined,
       durationMinutes: data.duration_minutes ?? undefined,
+      imageUrl: data.image_url ?? undefined,
+      image_url: data.image_url ?? undefined,
     };
   }
 
@@ -70,6 +72,8 @@ export class SupabaseProductRepository implements ProductRepository {
       pricingModel: row.pricing_model as PricingModel,
       pricingTiers: row.pricing_tiers ? JSON.parse(row.pricing_tiers as string) : undefined,
       durationMinutes: row.duration_minutes ?? undefined,
+      imageUrl: row.image_url ?? undefined,
+      image_url: row.image_url ?? undefined,
     }));
   }
 
@@ -165,6 +169,7 @@ export class SupabaseProductRepository implements ProductRepository {
         pricing_model: data.pricingModel,
         pricing_tiers: data.pricingTiers || null,
         duration_minutes: data.durationMinutes || null,
+        image_url: data.imageUrl ?? data.image_url ?? null,
       })
       .select()
       .single();
@@ -186,6 +191,9 @@ export class SupabaseProductRepository implements ProductRepository {
     if (data.pricingModel !== undefined) updatePayload.pricing_model = data.pricingModel;
     if (data.pricingTiers !== undefined) updatePayload.pricing_tiers = data.pricingTiers || null;
     if (data.durationMinutes !== undefined) updatePayload.duration_minutes = data.durationMinutes || null;
+    if (data.imageUrl !== undefined || data.image_url !== undefined) {
+      updatePayload.image_url = data.imageUrl ?? data.image_url ?? null;
+    }
 
     const { data: result, error } = await supabase
       .from('products')

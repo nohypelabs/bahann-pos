@@ -27,6 +27,8 @@ export interface CreateProductData {
   pricingModel: string;
   pricingTiers?: string | null;
   durationMinutes?: number | null;
+  imageUrl?: string | null;
+  image_url?: string | null;
 }
 
 export interface UpdateProductData {
@@ -40,6 +42,8 @@ export interface UpdateProductData {
   pricingModel?: string;
   pricingTiers?: string | null;
   durationMinutes?: number | null;
+  imageUrl?: string | null;
+  image_url?: string | null;
 }
 
 export interface ProductRow {
@@ -56,6 +60,7 @@ export interface ProductRow {
   pricing_model: string;
   pricing_tiers: unknown;
   duration_minutes: number | null;
+  image_url?: string | null;
   created_at?: string;
   [key: string]: unknown;
 }

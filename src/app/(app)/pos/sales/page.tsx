@@ -12,8 +12,28 @@ import { printHtmlDocument } from '@/lib/print/printHtmlDocument'
 import { formatCurrency, generateTransactionId } from '@/lib/utils'
 import { offlineDb } from '@/lib/offline/database'
 import { useOffline } from '@/hooks/useOffline'
-import { CloudOff, LayoutGrid, List, Package, RefreshCw, ScanLine, Search, ShoppingCart, Store, WalletCards } from 'lucide-react'
+import { Check, CloudOff, LayoutGrid, List, Package, RefreshCw, ScanLine, Search, ShoppingCart, Store, WalletCards } from 'lucide-react'
 import { ProductListSkeleton, ProductGridSkeleton } from '@/components/ui/Skeletons'
+
+const getCategoryGradient = (category?: string | null) => {
+  const gradients = [
+    'from-emerald-500/20 to-teal-500/20 text-emerald-800 dark:text-emerald-300 border-emerald-200/50',
+    'from-amber-500/20 to-orange-500/20 text-amber-800 dark:text-amber-300 border-amber-200/50',
+    'from-indigo-500/20 to-blue-500/20 text-indigo-800 dark:text-indigo-300 border-indigo-200/50',
+    'from-rose-500/20 to-pink-500/20 text-rose-800 dark:text-rose-300 border-rose-200/50',
+    'from-purple-500/20 to-violet-500/20 text-purple-800 dark:text-purple-300 border-purple-200/50',
+  ]
+  if (!category) return gradients[0]
+  let hash = 0
+  for (let i = 0; i < category.length; i++) hash = category.charCodeAt(i) + ((hash << 5) - hash)
+  return gradients[Math.abs(hash) % gradients.length]
+}
+
+const getInitials = (name: string) => {
+  const words = name.trim().split(/\s+/)
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase()
+  return name.substring(0, 2).toUpperCase()
+}
 
 interface CartItem {
   productId: string
@@ -830,37 +850,87 @@ export default function SalesTransactionPage() {
                         </p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3">
                         {filteredProducts.map(product => {
                           const stock = effectiveInventoryList?.find(p => p.id === product.id)?.currentStock ?? 0
                           const isSelected = selectedProductId === product.id
                           const isUntrackedItem = product.stock_behavior === 'UNTRACKED' || product.stock_behavior === 'CONSUMED'
                           const isOutOfStock = !isUntrackedItem && stock === 0
+                          const itemTypeBadge = product.item_type === 'SERVICE' ? 'Jasa' : product.item_type === 'MENU' ? 'Menu' : product.item_type === 'PACKAGE' ? 'Paket' : null
+                          const imageUrl = product.image_url || (product as any).imageUrl
+
                           return (
                             <button key={product.id} onClick={() => !isOutOfStock && handleProductChange(isSelected ? '' : product.id)} disabled={isOutOfStock}
-                              className={`text-left p-3 rounded-xl border-2 transition-all duration-200 ${
-                                isSelected ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/40 shadow-[3px_3px_0px_0px_rgba(37,99,235,0.3)]'
-                                : isOutOfStock ? 'border-gray-200 dark:border-gray-700 opacity-40 cursor-not-allowed bg-white dark:bg-gray-800'
-                                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.08)] active:shadow-none active:translate-x-[1px] active:translate-y-[1px]'
+                              className={`group text-left rounded-2xl border-2 transition-all duration-200 overflow-hidden flex flex-col cursor-pointer ${
+                                isSelected ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 shadow-md ring-2 ring-blue-400/30 scale-[1.01]'
+                                : isOutOfStock ? 'border-stone-200 dark:border-stone-800 opacity-40 cursor-not-allowed bg-stone-50 dark:bg-stone-900'
+                                : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-stone-300 dark:hover:border-stone-700 hover:shadow-md active:scale-[0.99]'
                               }`}>
-                              <p className={`text-sm font-semibold truncate ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>{product.name}</p>
-                              <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{product.sku}</p>
-                              <div className="flex items-center justify-between mt-2">
-                                <span className={`text-sm font-bold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>{formatCurrency(product.price || 0)}</span>
-                                {isUntrackedItem ? (
-                                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500">∞</span>
+                              {/* Product Image / Avatar Container */}
+                              <div className="relative aspect-[4/3] w-full overflow-hidden bg-stone-100 dark:bg-stone-800 shrink-0">
+                                {imageUrl ? (
+                                  <img
+                                    src={imageUrl}
+                                    alt={product.name}
+                                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    loading="lazy"
+                                  />
                                 ) : (
-                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${stock === 0 ? 'bg-red-100 dark:bg-red-900/50 text-red-600' : stock <= 10 ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700' : 'bg-green-100 dark:bg-green-900/50 text-green-700'}`}>{stock === 0 ? 'Habis' : stock}</span>
+                                  <div className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${getCategoryGradient(product.category)} border-b font-extrabold text-base md:text-lg tracking-wider`}>
+                                    {getInitials(product.name)}
+                                  </div>
                                 )}
+
+                                {/* Selection Checkmark Badge */}
+                                {isSelected && (
+                                  <div className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white shadow-md">
+                                    <Check className="h-3.5 w-3.5 stroke-[3]" />
+                                  </div>
+                                )}
+
+                                {/* Stock Badge Overlay */}
+                                <div className="absolute bottom-1.5 left-1.5">
+                                  {isUntrackedItem ? (
+                                    <span className="rounded-full bg-stone-900/80 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-md">∞</span>
+                                  ) : (
+                                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm backdrop-blur-md ${
+                                      stock === 0
+                                        ? 'bg-red-600/90 text-white'
+                                        : stock <= 10
+                                        ? 'bg-amber-500/90 text-white'
+                                        : 'bg-emerald-600/90 text-white'
+                                    }`}>
+                                      {stock === 0 ? 'Habis' : stock}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
-                              {isSelected && <div className="mt-2 text-center"><span className="inline-block w-5 h-5 rounded-full bg-blue-500 text-white text-xs leading-5">✓</span></div>}
+
+                              {/* Info Content */}
+                              <div className="p-2.5 flex flex-col flex-1 justify-between gap-1">
+                                <div>
+                                  <p className={`text-xs md:text-sm font-semibold truncate ${isSelected ? 'text-blue-900 dark:text-blue-200' : 'text-stone-900 dark:text-stone-100'}`}>
+                                    {product.name}
+                                  </p>
+                                  <p className="text-[11px] text-stone-400 dark:text-stone-500 truncate">{product.sku}</p>
+                                </div>
+
+                                <div className="flex items-center justify-between mt-1 pt-1 border-t border-stone-100 dark:border-stone-800">
+                                  <span className={`text-xs md:text-sm font-extrabold ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-stone-900 dark:text-stone-100'}`}>
+                                    {formatCurrency(product.price || 0)}
+                                  </span>
+                                  {itemTypeBadge && (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">
+                                      {itemTypeBadge}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </button>
                           )
                         })}
-                      </div>
-                    )}
                     {selectedOutletId && filteredProducts.length > 0 && (
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-3 text-center">{filteredProducts.length} produk</p>
+                      <p className="text-xs text-stone-400 dark:text-stone-500 mt-3 text-center">{filteredProducts.length} produk</p>
                     )}
                   </div>
                 )}

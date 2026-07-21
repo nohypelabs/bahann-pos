@@ -812,6 +812,7 @@ export interface Database {
           pricing_tiers: Json | null
           duration_minutes: number | null
           tenant_id: string
+          image_url?: string | null
         }
         Insert: {
           id?: string
@@ -831,6 +832,7 @@ export interface Database {
           pricing_tiers: Json | null
           duration_minutes: number | null
           tenant_id: string
+          image_url?: string | null
         }
         Update: {
           id?: string
@@ -850,6 +852,7 @@ export interface Database {
           pricing_tiers?: Json | null
           duration_minutes?: number | null
           tenant_id?: string
+          image_url?: string | null
         }
       }
       promotions: {

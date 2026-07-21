@@ -17,6 +17,8 @@ export interface CreateProductInput {
   pricingModel: string;
   pricingTiers?: Array<{ minQuantity: number; pricePerUnit: number }>;
   durationMinutes?: number;
+  imageUrl?: string | null;
+  image_url?: string | null;
 }
 
 export class CreateProductUseCase {
@@ -42,6 +44,7 @@ export class CreateProductUseCase {
       pricingModel: input.pricingModel,
       pricingTiers: input.pricingTiers ? JSON.stringify(input.pricingTiers) : null,
       durationMinutes: input.durationMinutes || null,
+      imageUrl: input.imageUrl ?? input.image_url ?? null,
     });
   }
 }

@@ -22,6 +22,9 @@ export type Product = {
   pricingTiers?: PricingTier[];
   /** Duration in minutes — only for TIME_BASED model */
   durationMinutes?: number;
+  /** Product image URL (Cloudinary CDN URL) */
+  imageUrl?: string;
+  image_url?: string;
 };
 
 /**
