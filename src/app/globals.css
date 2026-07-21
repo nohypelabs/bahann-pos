@@ -135,6 +135,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+button:not(:disabled) { cursor: pointer; }
+
 /* Mobile-first utility classes */
 .text-mobile-xs { font-size: var(--font-size-xs); }
 .text-mobile-sm { font-size: var(--font-size-sm); }

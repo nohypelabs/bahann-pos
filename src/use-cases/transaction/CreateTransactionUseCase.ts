@@ -203,8 +203,18 @@ export class CreateTransactionUseCase {
     }
 
     await this.transactionRepo.updateToCompleted(transaction.id, amountPaid, changeAmount)
-    await this.recordDailySales(transaction.items, transaction.tenantId, transaction.outletId)
-    await this.deductStock(transaction.items, transaction.outletId, transaction.tenantId)
+
+    try {
+      await this.recordDailySales(transaction.items, transaction.tenantId, transaction.outletId)
+    } catch (error) {
+      logger.error('Failed to record daily sales during finalize:', error)
+    }
+
+    try {
+      await this.deductStock(transaction.items, transaction.outletId, transaction.tenantId)
+    } catch (error) {
+      logger.error('Failed to deduct stock during finalize:', error)
+    }
 
     const finalizedTransaction = await this.transactionRepo.findById(transaction.id)
     if (!finalizedTransaction) {
@@ -277,70 +287,74 @@ export class CreateTransactionUseCase {
     outletId: string,
     tenantId: string,
   ): Promise<void> {
-    const today = new Date().toISOString().split('T')[0]
-    const products = await this.productRepo.getByIds(
-      items.map((item) => item.productId),
-      tenantId,
-    )
-    const productMap = new Map(products.map((product) => [product.id, product]))
-
-    for (const item of items) {
-      const product = productMap.get(item.productId)
-      const stockBehavior = product?.stock_behavior ?? 'TRACKED'
-
-      if (stockBehavior === 'UNTRACKED' || stockBehavior === 'CONSUMED') {
-        continue
-      }
-
-      const todayStock = await this.dailyStockRepo.getByDate(
-        outletId,
-        item.productId,
-        new Date(today),
+    try {
+      const today = new Date().toISOString().split('T')[0]
+      const products = await this.productRepo.getByIds(
+        items.map((item) => item.productId),
+        tenantId,
       )
+      const productMap = new Map(products.map((product) => [product.id, product]))
 
-      if (todayStock) {
-        const newStockOut = todayStock.stockOut + item.quantity
-        const newStockAkhir = todayStock.stockAwal + todayStock.stockIn - newStockOut
+      for (const item of items) {
+        const product = productMap.get(item.productId)
+        const stockBehavior = product?.stock_behavior ?? 'TRACKED'
+
+        if (stockBehavior === 'UNTRACKED' || stockBehavior === 'CONSUMED') {
+          continue
+        }
+
+        const todayStock = await this.dailyStockRepo.getByDate(
+          outletId,
+          item.productId,
+          new Date(today),
+        )
+
+        if (todayStock) {
+          const newStockOut = todayStock.stockOut + item.quantity
+          const newStockAkhir = todayStock.stockAwal + todayStock.stockIn - newStockOut
+
+          try {
+            await this.dailyStockRepo.save({
+              ...todayStock,
+              stockOut: newStockOut,
+              stockAkhir: newStockAkhir,
+            })
+          } catch (error) {
+            logger.error('Failed to update stock:', error)
+          }
+          continue
+        }
+
+        const yesterday = new Date()
+        yesterday.setDate(yesterday.getDate() - 1)
+        const yesterdayStock = await this.dailyStockRepo.getByDate(
+          outletId,
+          item.productId,
+          yesterday,
+        )
+
+        const stockAwal = yesterdayStock?.stockAkhir ?? 0
+        const stockAkhir = stockAwal - item.quantity
 
         try {
           await this.dailyStockRepo.save({
-            ...todayStock,
-            stockOut: newStockOut,
-            stockAkhir: newStockAkhir,
+            id: crypto.randomUUID(),
+            tenantId,
+            productId: item.productId,
+            outletId,
+            stockDate: new Date(today),
+            stockAwal,
+            stockIn: 0,
+            stockOut: item.quantity,
+            stockAkhir,
+            createdAt: new Date(),
           })
         } catch (error) {
-          logger.error('Failed to update stock:', error)
+          logger.error('Failed to save stock:', error)
         }
-        continue
       }
-
-      const yesterday = new Date()
-      yesterday.setDate(yesterday.getDate() - 1)
-      const yesterdayStock = await this.dailyStockRepo.getByDate(
-        outletId,
-        item.productId,
-        yesterday,
-      )
-
-      const stockAwal = yesterdayStock?.stockAkhir ?? 0
-      const stockAkhir = stockAwal - item.quantity
-
-      try {
-        await this.dailyStockRepo.save({
-          id: crypto.randomUUID(),
-          tenantId,
-          productId: item.productId,
-          outletId,
-          stockDate: new Date(today),
-          stockAwal,
-          stockIn: 0,
-          stockOut: item.quantity,
-          stockAkhir,
-          createdAt: new Date(),
-        })
-      } catch (error) {
-        logger.error('Failed to create stock record:', error)
-      }
+    } catch (error) {
+      logger.error('Failed to deduct stock:', error)
     }
   }
 }
