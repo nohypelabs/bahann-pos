@@ -217,6 +217,18 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
   const plan        = planData?.plan || 'free'
   const showCollapsed = isCollapsed && !isMobile
   const isSuperAdmin = userRoleKey === 'OWNER'
+
+  // Superadmin is a platform role, not a selling role. Unless they are
+  // impersonating a tenant, the sidebar shows only the platform surface —
+  // tenant features are reached by impersonating a tenant, which is audited.
+  // Read from the server session rather than localStorage so the answer cannot
+  // drift from what the API would actually allow.
+  const { data: impersonationState } = trpc.impersonation.current.useQuery(undefined, {
+    staleTime: 15_000,
+    retry: false,
+  })
+  const isImpersonating = impersonationState?.impersonating === true
+  const isPlatformView = isSuperAdmin && !isImpersonating
   const canManageProducts = hasAnyPermission(userRole, [PERMISSIONS.PRODUCT_MANAGE, PERMISSIONS.PRODUCT_VIEW])
   const canManageSettings = hasAnyPermission(userRole, [PERMISSIONS.SETTINGS_MANAGE, PERMISSIONS.USER_MANAGE])
   const canViewReports = hasPermission(userRole, PERMISSIONS.REPORT_OUTLET_VIEW)
@@ -281,7 +293,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
               <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${roleBadge.color}`}>
-                {roleBadge.label}
+                {isPlatformView ? t('sidebar.superAdmin') : roleBadge.label}
               </span>
               <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${PLAN_BADGE[plan] || PLAN_BADGE.free}`}>
                 {PLAN_LABEL[plan] || 'Gratis'}
@@ -298,7 +310,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
           </div>
         )}
 
-        {!showCollapsed && (
+        {!showCollapsed && !isPlatformView && (
           <div className="mx-3 mt-3 rounded-[35px] border border-[#ddd8cc] bg-[#f1efe8] p-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#6f776f]">
               Workflow Inti
@@ -359,6 +371,9 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             </>
           )}
 
+          {/* ═══ TENANT SURFACES — a platform superadmin sees only the platform
+              panel; tenant features are reached by impersonating a tenant. ═══ */}
+          {!isPlatformView && (<>
           {/* ═══ SHARED: Dashboard ═══ */}
           <div className={`${showCollapsed ? 'mb-1' : 'mb-2'}`}>
             <SidebarItem href="/dashboard" icon={<LayoutDashboard />} label={t('sidebar.dashboard')} isCollapsed={showCollapsed} />
@@ -399,6 +414,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             <SidebarItem href="/alerts"       icon={<Bell />}           label={t('sidebar.operations.alerts')}       isCollapsed={showCollapsed} badge={alertCount > 0 ? String(alertCount) : undefined} />
             <SidebarItem href="/approvals"    icon={<CheckCircle />}    label="Persetujuan"      isCollapsed={showCollapsed} badge={pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined} />
           </SidebarSection>
+          </>)}
 
         </nav>
 
@@ -412,7 +428,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             </button>
             <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
               <div className="px-2 pb-2">
-                {canManageSettings && (
+                {canManageSettings && !isPlatformView && (
                   <>
                     {/* Pengaturan sub-group */}
                     <button onClick={() => setSubPengaturan(!subPengaturan)}
@@ -470,6 +486,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         {/* Collapsed: settings + support icons */}
         {showCollapsed && (
           <div className="border-t border-[#ddd8cc] p-2 flex-shrink-0 space-y-1">
+            {!isPlatformView && (<>
             {canManageProducts && (
               <>
                 <SidebarItem href="/products"          icon={<Tag />}          label={t('sidebar.masterData.products')} isCollapsed={true} />
@@ -480,11 +497,12 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             <SidebarItem href="/expenses"          icon={<Receipt />}       label={t('sidebar.operations.expenses')} isCollapsed={true} />
             <SidebarItem href="/alerts"            icon={<Bell />}          label={t('sidebar.operations.alerts')} isCollapsed={true} badge={alertCount > 0 ? String(alertCount) : undefined} />
             <SidebarItem href="/approvals"         icon={<CheckCircle />}   label="Persetujuan"     isCollapsed={true} badge={pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined} />
-            <SidebarItem href="/profile"           icon={<User />}         label={t('sidebar.profile')}             isCollapsed={true} />
-            <SidebarItem href="/help"              icon={<HelpCircle />}   label={t('sidebar.help')}                isCollapsed={true} />
             {canManageSettings && (
               <SidebarItem href="/settings/payments" icon={<Settings />}   label={t('sidebar.settings.payment')}  isCollapsed={true} />
             )}
+            </>)}
+            <SidebarItem href="/profile"           icon={<User />}         label={t('sidebar.profile')}             isCollapsed={true} />
+            <SidebarItem href="/help"              icon={<HelpCircle />}   label={t('sidebar.help')}                isCollapsed={true} />
             {canInstall && !isInstalled && (
               <button onClick={install} title={t('sidebar.installApp')}
                 className="w-full flex justify-center p-3 rounded-xl text-[#0f5f56] hover:bg-[#e5f3ef] dark:hover:bg-green-900/30 transition-colors">
