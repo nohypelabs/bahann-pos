@@ -166,7 +166,7 @@ export const usersRouter = router({
     const { data: users, error } = await supabaseAdmin
       .from('users')
       .select(`
-        id, name, email, role, outlet_id, tenant_id, is_active, created_at,
+        id, name, email, role, outlet_id, tenant_id, is_suspended, created_at,
         outlet:outlets!outlet_id(id, name),
         user_role_assignments(
           id, scope_type, outlet_id, outlet_group_id,
@@ -194,7 +194,8 @@ export const usersRouter = router({
       email: u.email,
       role: u.role,
       outlet_id: u.outlet_id,
-      is_active: u.is_active,
+      // `is_active` is not a column; activeness is the inverse of is_suspended.
+      is_active: !u.is_suspended,
       created_at: u.created_at,
       outlet_name: (u.outlet as any)?.name || null,
       rbac_roles: (u.user_role_assignments || []).map((ura: any) => ({

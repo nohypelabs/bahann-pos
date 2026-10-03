@@ -33,7 +33,7 @@ export const impersonationRouter = router({
     .mutation(async ({ input, ctx }) => {
       const requestMeta = extractRequestMetadata(ctx.req.headers)
 
-      const { session, target } = await container.startImpersonationUseCase().execute({
+      const { session, target, superseded } = await container.startImpersonationUseCase().execute({
         impersonatorId: ctx.userId,
         tenantId: input.tenantId,
         reason: input.reason,
@@ -71,6 +71,7 @@ export const impersonationRouter = router({
         targetName: target.userName,
         targetEmail: target.userEmail,
         expiresAt: session.expiresAt,
+        superseded,
       }
     }),
 

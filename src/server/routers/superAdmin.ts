@@ -148,7 +148,7 @@ export const superAdminRouter = router({
       let query = supabaseAdmin
         .from('users')
         .select(`
-          id, name, email, role, outlet_id, is_active, created_at,
+          id, name, email, role, outlet_id, is_suspended, created_at,
           outlet:outlets!outlet_id(id, name, owner_id),
           owner:outlets!outlet_id(owner_id)
         `)
@@ -181,7 +181,8 @@ export const superAdminRouter = router({
       const { count } = await countQuery
 
       return {
-        users: data || [],
+        // `is_active` is not a column; activeness is the inverse of is_suspended.
+        users: (data || []).map((u) => ({ ...u, is_active: !u.is_suspended })),
         total: count || 0,
       }
     }),

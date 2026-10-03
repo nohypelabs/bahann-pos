@@ -375,7 +375,7 @@ export const shiftsRouter = router({
       // Get transactions for this shift
       const { data: transactions } = await supabaseAdmin
         .from('transactions')
-        .select('id, total, payment_method, status, created_at')
+        .select('id, total_amount, payment_method, status, created_at')
         .eq('shift_id', input.shiftId)
         .order('created_at', { ascending: true })
 
