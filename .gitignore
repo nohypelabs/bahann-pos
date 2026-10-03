@@ -52,3 +52,8 @@ next-env.d.ts
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# database backups (may contain secrets and customer data)
+/backups/
+/db-audit/*.backup.gz
+/db-audit/*.storage.zip
