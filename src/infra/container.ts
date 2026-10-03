@@ -17,6 +17,7 @@ import { SupabaseDashboardRepository } from './repositories/SupabaseDashboardRep
 import { SupabasePaymentRequestRepository } from './repositories/SupabasePaymentRequestRepository';
 import { SupabasePlatformRepository } from './repositories/SupabasePlatformRepository';
 import { SupabaseAdminRepository } from './repositories/SupabaseAdminRepository';
+import { SupabaseImpersonationRepository } from './repositories/SupabaseImpersonationRepository';
 import { LibTokenRotator } from './services/LibTokenRotator';
 import { LibAuthCookieManager } from './services/LibAuthCookieManager';
 
@@ -54,6 +55,8 @@ import { GetAccountPlanUseCase } from '@/use-cases/tenant/GetAccountPlanUseCase'
 import { DashboardUseCase } from '@/use-cases/dashboard/DashboardUseCase';
 import { ManagePaymentUseCase } from '@/use-cases/payment/ManagePaymentUseCase';
 import { PlatformUseCase } from '@/use-cases/platform/PlatformUseCase';
+import { StartImpersonationUseCase } from '@/use-cases/platform/StartImpersonationUseCase';
+import { EndImpersonationUseCase, ListImpersonationHistoryUseCase } from '@/use-cases/platform/EndImpersonationUseCase';
 import { ResetAllDataUseCase } from '@/use-cases/admin/ResetAllDataUseCase';
 import { StockService } from '@/domain/services/StockService';
 import { PricingService } from '@/domain/services/PricingService';
@@ -80,6 +83,7 @@ export const container = {
   paymentRequestRepo: () => new SupabasePaymentRequestRepository(),
   platformRepo: () => new SupabasePlatformRepository(),
   adminRepo: () => new SupabaseAdminRepository(),
+  impersonationRepo: () => new SupabaseImpersonationRepository(),
 
   // ── Services ──
   tokenRotator: () => new LibTokenRotator(),
@@ -152,6 +156,11 @@ export const container = {
 
   // ── Platform Use Cases ──
   platformUseCase: () => new PlatformUseCase(container.platformRepo()),
+
+  // ── Impersonation Use Cases ──
+  startImpersonationUseCase: () => new StartImpersonationUseCase(container.impersonationRepo()),
+  endImpersonationUseCase: () => new EndImpersonationUseCase(container.impersonationRepo()),
+  listImpersonationHistoryUseCase: () => new ListImpersonationHistoryUseCase(container.impersonationRepo()),
 
   // ── Admin Use Cases ──
   resetAllDataUseCase: () => new ResetAllDataUseCase(container.adminRepo()),

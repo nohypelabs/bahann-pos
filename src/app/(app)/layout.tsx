@@ -2,6 +2,7 @@
 
 import { AppLayout } from '@/components/layout/AppLayout'
 import { EmailVerificationBanner } from '@/components/layout/EmailVerificationBanner'
+import { ImpersonationBanner } from '@/components/layout/ImpersonationBanner'
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { trpc } from '@/lib/trpc/client'
@@ -46,6 +47,7 @@ export default function AppGroupLayout({
 
   return (
     <AppLayout>
+      <ImpersonationBanner />
       <EmailVerificationBanner />
       {children}
     </AppLayout>

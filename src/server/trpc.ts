@@ -7,6 +7,9 @@ import { logger } from '@/lib/logger'
 import { getTenantId, userHasPermission } from '@/server/lib/tenant'
 import { appErrorToTrpcCode } from '@/server/lib/errors'
 import { AppError } from '@/shared/exceptions/AppError'
+import { parseImpersonationCookieFromHeader } from '@/lib/impersonation/sessionCookie'
+import { runWithRequestContext } from '@/lib/impersonation/requestContext'
+import { container } from '@/infra/container'
 
 /**
  * Session data interface
@@ -18,6 +21,17 @@ export interface SessionData extends JWTPayload {
   role?: string
   outletId?: string
   tenantId?: string
+  /** True while a superadmin is acting as a tenant admin. */
+  impersonating?: boolean
+  /** The superadmin behind the session. Equals userId when not impersonating. */
+  impersonatorId?: string
+  /** Kept so audit entries written when exiting can name the real actor. */
+  impersonatorEmail?: string
+  impersonationId?: string
+  impersonationReason?: string
+  impersonationExpiresAt?: string
+  /** Display name of the impersonated tenant, for the persistent banner. */
+  impersonationTenantName?: string
 }
 
 /**
@@ -57,6 +71,49 @@ export async function createContext(opts: FetchCreateContextFnOptions) {
       // Older tokens may not carry a tenant; fall back to a database lookup.
       if (!session.tenantId) {
         session.tenantId = await getTenantId(decoded.userId) ?? undefined
+      }
+
+      // Superadmin impersonation ("masuk sebagai tenant").
+      //
+      // This is a reversible overlay on top of the JWT: the token keeps the
+      // superadmin as the immutable root identity, so removing the cookie restores
+      // them instantly and the refresh flow needs no special case. Every value
+      // below comes from the database, never from the cookie.
+      if (session.role === 'super_admin') {
+        const impersonationId = parseImpersonationCookieFromHeader(cookieHeader)
+        if (impersonationId) {
+          try {
+            const active = await container.impersonationRepo().findActiveContextById(
+              impersonationId,
+              new Date().toISOString(),
+            )
+
+            // Only the superadmin who opened the session may use it.
+            if (active && active.impersonatorId === session.userId) {
+              session.impersonating = true
+              session.impersonatorId = session.userId
+              session.impersonatorEmail = session.email
+              session.impersonationId = active.id
+              session.impersonationReason = active.reason
+              session.impersonationExpiresAt = active.expiresAt
+              session.impersonationTenantName = active.tenantName
+              session.userId = active.targetUserId
+              session.tenantId = active.tenantId
+              session.outletId = active.targetOutletId ?? undefined
+              session.name = active.targetUserName
+              session.email = active.targetUserEmail
+              // Act as the tenant admin. `superAdminProcedure` re-reads the role
+              // from the database by userId, so it needs its own guard — a
+              // tenant's owner may itself be the platform superadmin.
+              session.role = 'admin'
+              userId = active.targetUserId
+            }
+          } catch (error) {
+            // Never let this lock the superadmin out: fall back to their own
+            // identity and log it.
+            logger.error('Failed to resolve impersonation session', { error, impersonationId })
+          }
+        }
       }
     } catch (error) {
       // Invalid token, continue as unauthenticated
@@ -114,7 +171,26 @@ const mapDomainErrors = t.middleware(async ({ next }) => {
   return result
 })
 
-export const publicProcedure = t.procedure.use(mapDomainErrors)
+/**
+ * Publishes the request's audit context (tenant, real actor, impersonation) to
+ * AsyncLocalStorage, so createAuditLog and getUserOutletIds can use it without
+ * every call site threading it through. Applies to every authenticated request.
+ */
+const withRequestContext = t.middleware(({ ctx, next }) => {
+  const { session } = ctx
+  if (!session?.userId) return next()
+
+  return runWithRequestContext(
+    {
+      tenantId: session.tenantId ?? null,
+      actorUserId: session.impersonatorId ?? session.userId,
+      impersonationId: session.impersonationId ?? null,
+    },
+    () => next(),
+  )
+})
+
+export const publicProcedure = t.procedure.use(mapDomainErrors).use(withRequestContext)
 
 /**
  * Protected procedure - requires authentication
@@ -180,6 +256,16 @@ export const adminProcedure = publicProcedure.use(async ({ ctx, next }) => {
 export const superAdminProcedure = publicProcedure.use(async ({ ctx, next }) => {
   if (!ctx.userId || !ctx.session) {
     throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Login required' })
+  }
+
+  // Platform surfaces stay closed while acting as a tenant. This is not redundant
+  // with the role lookup below: the owner of a tenant can itself be the platform
+  // superadmin, so that lookup would still return 'super_admin' for such a session.
+  if (ctx.session?.impersonating) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Not available while impersonating a tenant. Exit impersonation first.',
+    })
   }
 
   // Read role fresh from DB — not from JWT (JWT role may be stale after promotion)

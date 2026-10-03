@@ -7,6 +7,7 @@
 
 import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { logger } from './logger'
+import { getRequestContext } from './impersonation/requestContext'
 
 export type AuditAction =
   | 'CREATE'
@@ -21,6 +22,8 @@ export type AuditAction =
   | 'EXPORT'
   | 'SUSPEND'
   | 'ACTIVATE'
+  | 'IMPERSONATE_START'
+  | 'IMPERSONATE_END'
 
 export type AuditEntity =
   | 'user'
@@ -39,6 +42,7 @@ export type AuditEntity =
   | 'business_profile'
   | 'user_role_assignment'
   | 'transaction_approval'
+  | 'impersonation'
 
 export interface AuditLogData {
   userId: string
@@ -50,6 +54,12 @@ export interface AuditLogData {
   metadata?: Record<string, any>
   ipAddress?: string
   userAgent?: string
+  /** Real actor, when it differs from userId. Defaults to the request context. */
+  actorUserId?: string
+  /** Links the entry to an impersonation session. Defaults to the request context. */
+  impersonationId?: string | null
+  /** Tenant the action belongs to. Defaults to the request context. */
+  tenantId?: string | null
 }
 
 /**
@@ -59,10 +69,23 @@ export interface AuditLogData {
  * @returns Promise<void>
  */
 export async function createAuditLog(data: AuditLogData): Promise<void> {
+  // tenant_id comes from the request context, because this column is NOT NULL and
+  // was previously left unset — which made every audit insert fail silently and
+  // the audit trail permanently empty. Likewise the real actor comes from the
+  // context, since userId is the impersonated tenant user while impersonating.
+  // audit_logs is immutable, so these values must be right at insert time.
+  const requestContext = getRequestContext()
+  const actorUserId = data.actorUserId ?? requestContext?.actorUserId ?? data.userId
+  const impersonationId = data.impersonationId ?? requestContext?.impersonationId ?? null
+  const tenantId = data.tenantId ?? requestContext?.tenantId ?? null
+
   try {
     const auditEntry = {
       user_id: data.userId,
       user_email: data.userEmail,
+      tenant_id: tenantId,
+      actor_user_id: actorUserId,
+      impersonation_id: impersonationId,
       action: data.action,
       entity_type: data.entityType,
       entity_id: data.entityId || null,
@@ -76,7 +99,7 @@ export async function createAuditLog(data: AuditLogData): Promise<void> {
     const { error } = await supabase.from('audit_logs').insert(auditEntry)
 
     if (error) {
-      logger.error('Failed to create audit log', error, {
+      logger.error('AUDIT WRITE FAILED — the audit trail is incomplete for this action', error, {
         auditData: data,
       })
       // Don't throw - audit logging failure shouldn't break the main operation

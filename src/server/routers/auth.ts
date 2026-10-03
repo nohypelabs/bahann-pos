@@ -6,6 +6,7 @@ import { RegisterUserUseCase } from '@/use-cases/auth/RegisterUserUseCase'
 import { BusinessProfile } from '@/domain/entities/BusinessProfile'
 import { BUSINESS_TYPES } from '@/domain/catalog/value-objects/business-type'
 import { setAuthCookie, deleteAuthCookie, setRefreshCookie, deleteRefreshCookie, getRefreshCookie } from '@/lib/cookies'
+import { deleteImpersonationCookie } from '@/lib/impersonation/sessionCookie'
 import { createAuditLog } from '@/lib/audit'
 import { createRefreshToken, revokeRefreshToken, revokeAllUserTokens } from '@/lib/refreshToken'
 import { generateResetToken, sendNewUserNotification, sendWelcomeEmail, sendVerificationEmail } from '@/lib/email'
@@ -105,6 +106,8 @@ export const authRouter = router({
         await createAuditLog({
           userId: result.userId,
           userEmail: result.email,
+          // Self-registered owners get a tenant whose id is their user id.
+          tenantId: result.userId,
           action: 'REGISTER',
           entityType: 'auth',
           metadata: { name: result.name, whatsappNumber: input.whatsappNumber, ipAddress: requestIp },
@@ -250,6 +253,7 @@ export const authRouter = router({
       createAuditLog({
         userId: result.user.id,
         userEmail: result.user.email,
+        tenantId: result.user.tenantId,
         action: 'LOGIN',
         entityType: 'auth',
         metadata: { name: result.user.name, role: result.user.role },
@@ -268,6 +272,18 @@ export const authRouter = router({
     // Access tokens are short-lived stateless JWTs, so there is no server-side
     // session record to remove here. Revoking the refresh token below is what
     // ends the session persistently — the access token then expires on its own.
+    //
+    // Impersonation is different: it is a session row, so logging out must close
+    // it and drop the overlay cookie. Otherwise the next sign-in from this browser
+    // would silently resume impersonating the same tenant.
+    const realUserId = ctx.session.impersonatorId ?? ctx.userId
+    try {
+      await container.endImpersonationUseCase().endAllFor(realUserId, realUserId, 'logout')
+    } catch (error) {
+      logger.error('Failed to close impersonation session on logout', error)
+    }
+    await deleteImpersonationCookie()
+
     const refreshToken = await getRefreshCookie()
     if (refreshToken) {
       try {

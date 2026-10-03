@@ -48,6 +48,7 @@ export class ResetPasswordUseCase {
     await createAuditLog({
       userId: tokenData.userId,
       userEmail: user?.email || 'unknown',
+      tenantId: user?.tenantId ?? null,
       action: 'PASSWORD_RESET_COMPLETE',
       entityType: 'auth',
       metadata: { name: user?.name },

@@ -3,7 +3,9 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { trpc } from '@/lib/trpc/client'
-import { ArrowLeft, Search, Store, Users, ShoppingCart, Package, Ban, CheckCircle, ChevronDown, ArrowUpRight, Crown, Clock } from 'lucide-react'
+import { ArrowLeft, Search, Store, Users, ShoppingCart, Package, Ban, CheckCircle, ChevronDown, ArrowUpRight, Crown, Clock, LogIn } from 'lucide-react'
+import { ImpersonationStartModal } from '@/components/admin/ImpersonationStartModal'
+import { ImpersonationHistory } from '@/components/admin/ImpersonationHistory'
 
 const PLAN_COLORS: Record<string, string> = {
   free: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
@@ -61,6 +63,7 @@ function TenantsContent() {
   const [search, setSearch] = useState('')
   const [filterPlan, setFilterPlan] = useState('')
   const [filterSuspended, setFilterSuspended] = useState<boolean | undefined>(undefined)
+  const [showImpersonate, setShowImpersonate] = useState(false)
 
   useEffect(() => {
     const user = localStorage.getItem('user')
@@ -159,6 +162,10 @@ function TenantsContent() {
               </div>
               {/* Action buttons */}
               <div className="flex items-center gap-2">
+                <button onClick={() => setShowImpersonate(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-lg bg-amber-500 hover:bg-amber-600 text-white shadow-sm transition-colors">
+                  <LogIn className="w-3.5 h-3.5" /> Masuk sebagai tenant
+                </button>
                 {detailIsFree && (
                   <button onClick={() => { setNewPlan('starter'); setPlanNote(''); setPlanAmount('299000'); setShowPlanModal(true) }}
                     className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm shadow-blue-500/20 transition-all">
@@ -181,6 +188,16 @@ function TenantsContent() {
             </div>
           </div>
         </div>
+
+        {showImpersonate && (
+          <ImpersonationStartModal
+            tenantId={detail.id}
+            tenantName={detail.name}
+            onClose={() => setShowImpersonate(false)}
+          />
+        )}
+
+        <ImpersonationHistory tenantId={detail.id} />
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">

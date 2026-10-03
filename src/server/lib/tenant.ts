@@ -9,6 +9,7 @@
 
 import { supabaseAdmin } from '@/infra/supabase/server'
 import { TRPCError } from '@trpc/server'
+import { getRequestContext } from '@/lib/impersonation/requestContext'
 
 /**
  * Returns the tenant_id for the current user.
@@ -32,11 +33,21 @@ export async function getTenantId(
 /**
  * Returns all outlet IDs a user can access.
  * Uses the DB function get_user_outlet_ids() for RBAC-aware scoping.
+ *
+ * While a superadmin is impersonating a tenant admin, scope is the whole tenant:
+ * acting as the tenant admin means tenant-wide access, and legacy admin accounts
+ * frequently have no user_role_assignments rows, which would otherwise make the
+ * entire application appear empty to the operator.
  */
 export async function getUserOutletIds(
   userId: string,
   tenantId: string,
 ): Promise<string[]> {
+  const requestContext = getRequestContext()
+  if (requestContext?.impersonationId && requestContext.tenantId === tenantId) {
+    return getTenantOutletIds(tenantId)
+  }
+
   const { data, error } = await supabaseAdmin.rpc('get_user_outlet_ids', {
     p_user_id: userId,
     p_tenant_id: tenantId,

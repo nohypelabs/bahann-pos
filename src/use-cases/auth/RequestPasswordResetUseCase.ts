@@ -47,6 +47,7 @@ export class RequestPasswordResetUseCase {
       await createAuditLog({
         userId: user.id,
         userEmail: user.email,
+        tenantId: user.tenantId ?? null,
         action: 'PASSWORD_RESET_REQUEST',
         entityType: 'auth',
         metadata: { name: user.name },
