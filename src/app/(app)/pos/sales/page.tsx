@@ -929,6 +929,8 @@ export default function SalesTransactionPage() {
                             </button>
                           )
                         })}
+                      </div>
+                    )}
                     {selectedOutletId && filteredProducts.length > 0 && (
                       <p className="text-xs text-stone-400 dark:text-stone-500 mt-3 text-center">{filteredProducts.length} produk</p>
                     )}
