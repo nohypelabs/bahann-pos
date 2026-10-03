@@ -1,7 +1,6 @@
 import type {
   DashboardRepository,
   SalesTrendRow,
-  TopProductRow,
 } from '@/domain/repositories/DashboardRepository';
 import { getLimits } from '@/lib/plans';
 
@@ -42,13 +41,13 @@ function fillTrendGaps(rows: SalesTrendRow[], days: number, now: Date): TrendPoi
 export class DashboardUseCase {
   constructor(private readonly repo: DashboardRepository) {}
 
-  async getStats(outletIds: string[], ownerId: string, days?: number) {
+  async getStats(outletIds: string[], tenantId: string, days?: number) {
     const now = new Date()
     const { startTs, endTs } = buildDateRange(days, now)
 
     const [productCount, outletCount, summary, lowStockCount] = await Promise.all([
-      this.repo.getProductCount(ownerId),
-      this.repo.getOutletCount(ownerId),
+      this.repo.getProductCount(tenantId),
+      this.repo.getOutletCount(tenantId),
       outletIds.length > 0
         ? this.repo.getSalesSummary(outletIds, startTs, endTs)
         : Promise.resolve({ totalRevenue: 0, transactionCount: 0, totalItemsSold: 0 }),

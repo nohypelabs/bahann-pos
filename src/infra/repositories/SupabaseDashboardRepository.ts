@@ -194,19 +194,22 @@ export class SupabaseDashboardRepository implements DashboardRepository {
     return flat;
   }
 
-  async getProductCount(ownerId: string): Promise<number> {
+  // Counts are tenant-scoped. Filtering by owner_id was wrong for any tenant
+  // whose owner is a different user row (tenant_id != owner's user id), which
+  // made these cards read 0 on the dashboard.
+  async getProductCount(tenantId: string): Promise<number> {
     const { count } = await supabase
       .from('products')
       .select('*', { count: 'exact', head: true })
-      .eq('owner_id', ownerId);
+      .eq('tenant_id', tenantId);
     return count || 0;
   }
 
-  async getOutletCount(ownerId: string): Promise<number> {
+  async getOutletCount(tenantId: string): Promise<number> {
     const { count } = await supabase
       .from('outlets')
       .select('*', { count: 'exact', head: true })
-      .eq('owner_id', ownerId);
+      .eq('tenant_id', tenantId);
     return count || 0;
   }
 }
