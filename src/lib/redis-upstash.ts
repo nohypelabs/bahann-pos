@@ -35,7 +35,7 @@ export function getRedisClient(): Redis | null {
       const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.REDIS_TOKEN
 
       if (!url || !token) {
-        logger.warn('Upstash Redis credentials not found. Authenticated sessions require Redis.')
+        logger.warn('Redis credentials not configured — dashboard caching is disabled. Authentication is stateless (JWT) and does not require Redis.')
         redisAvailable = false
         return null
       }
@@ -59,7 +59,15 @@ export function getRedisClient(): Redis | null {
 }
 
 /**
- * Session management utilities (compatible with ioredis version)
+ * @deprecated Session storage in Redis was removed.
+ *
+ * Sessions are now stateless JWTs verified locally (see src/server/trpc.ts) with
+ * revocation handled by the refresh_tokens table in Postgres. Everything below is
+ * unused and kept only for reference.
+ *
+ * Do not re-introduce Redis as a session store without reading the post-mortem:
+ * storing the session in both the JWT and Redis meant a dead Redis locked every
+ * user out of the application even though their token was perfectly valid.
  */
 export const SESSION_TTL = 7 * 24 * 60 * 60 // 7 days in seconds
 

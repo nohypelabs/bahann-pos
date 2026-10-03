@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { UserRepository } from '@/domain/repositories/UserRepository'
 import { AppError } from '@/shared/exceptions/AppError'
-import { signJWT } from '@/lib/jwt'
 
 export interface LoginUserInput {
   email: string
@@ -9,7 +8,6 @@ export interface LoginUserInput {
 }
 
 export interface LoginUserOutput {
-  token: string
   user: {
     id: string
     email: string
@@ -44,18 +42,10 @@ export class LoginUserUseCase {
       }
     }
 
-    // Create JWT token (30 min expiry — use refresh token for renewal)
-    const token = signJWT({
-      userId: user.id,
-      email: user.email,
-      name: user.name,
-      outletId: user.outletId,
-      role: user.role,
-      tenantId: user.tenantId,
-    })
-
+    // Access tokens are signed by createRefreshToken() in the auth router — the
+    // single place that issues them — so this use case only verifies credentials
+    // and returns the authenticated user.
     return {
-      token,
       user: {
         id: user.id,
         email: user.email,

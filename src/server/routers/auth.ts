@@ -3,7 +3,6 @@ import { TRPCError } from '@trpc/server'
 import { router, publicProcedure, protectedProcedure, adminProcedure } from '../trpc'
 import { LoginUserUseCase } from '@/use-cases/auth/LoginUserUseCase'
 import { RegisterUserUseCase } from '@/use-cases/auth/RegisterUserUseCase'
-import { LogoutUserUseCase } from '@/use-cases/auth/LogoutUserUseCase'
 import { BusinessProfile } from '@/domain/entities/BusinessProfile'
 import { BUSINESS_TYPES } from '@/domain/catalog/value-objects/business-type'
 import { setAuthCookie, deleteAuthCookie, setRefreshCookie, deleteRefreshCookie, getRefreshCookie } from '@/lib/cookies'
@@ -266,10 +265,9 @@ export const authRouter = router({
    * Logout user (with Audit Logging and Refresh Token Revocation)
    */
   logout: protectedProcedure.mutation(async ({ ctx }) => {
-    const useCase = new LogoutUserUseCase()
-    await useCase.execute({ userId: ctx.userId })
-
-    // Revoke refresh token if exists
+    // Access tokens are short-lived stateless JWTs, so there is no server-side
+    // session record to remove here. Revoking the refresh token below is what
+    // ends the session persistently — the access token then expires on its own.
     const refreshToken = await getRefreshCookie()
     if (refreshToken) {
       try {

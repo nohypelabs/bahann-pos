@@ -2,10 +2,11 @@ import { initTRPC, TRPCError } from '@trpc/server'
 import { FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch'
 import superjson from 'superjson'
 import { verifyJWT, JWTPayload } from '@/lib/jwt'
-import { getSession } from '@/lib/redis-upstash'
 import { parseAuthCookieFromHeader } from '@/lib/cookies'
 import { logger } from '@/lib/logger'
 import { getTenantId, userHasPermission } from '@/server/lib/tenant'
+import { appErrorToTrpcCode } from '@/server/lib/errors'
+import { AppError } from '@/shared/exceptions/AppError'
 
 /**
  * Session data interface
@@ -41,31 +42,21 @@ export async function createContext(opts: FetchCreateContextFnOptions) {
       const decoded = verifyJWT(token)
       userId = decoded.userId
 
-      try {
-        const sessionData = await getSession(userId)
-        if (sessionData) {
-          session = {
-            userId: sessionData.userId,
-            email: sessionData.email,
-            name: sessionData.name,
-            role: sessionData.role,
-            outletId: sessionData.outletId,
-            tenantId: sessionData.tenantId,
-          }
-        } else {
-          logger.warn('Access token rejected because Redis session was not found', {
-            userId,
-          })
-        }
-      } catch (error) {
-        logger.warn('Failed to validate Redis session for access token', {
-          userId,
-          error,
-        })
+      // The signed JWT is the single source of truth for session data.
+      // No external session store is consulted here, so an unreachable cache
+      // or session backend can never lock users out of the application.
+      session = {
+        userId: decoded.userId,
+        email: decoded.email,
+        name: decoded.name,
+        role: decoded.role,
+        outletId: decoded.outletId,
+        tenantId: decoded.tenantId,
       }
 
-      if (session && !session.tenantId) {
-        session.tenantId = await getTenantId(userId) ?? undefined
+      // Older tokens may not carry a tenant; fall back to a database lookup.
+      if (!session.tenantId) {
+        session.tenantId = await getTenantId(decoded.userId) ?? undefined
       }
     } catch (error) {
       // Invalid token, continue as unauthenticated
@@ -96,12 +87,39 @@ const t = initTRPC.context<Context>().create({
  * Export reusable router and procedure helpers
  */
 export const router = t.router
-export const publicProcedure = t.procedure
+
+/**
+ * Translates domain AppError into the matching TRPCError for every procedure.
+ *
+ * Use cases sit outside the tRPC layer and throw AppError, which tRPC would
+ * otherwise report as INTERNAL_SERVER_ERROR (HTTP 500) — so an ordinary "wrong
+ * password" surfaced as a server fault for clients and for Sentry. Mapping it once
+ * here means no individual procedure can forget to do it.
+ *
+ * Anything that is not an AppError passes through untouched, so genuine bugs keep
+ * being reported as internal errors.
+ */
+const mapDomainErrors = t.middleware(async ({ next }) => {
+  const result = await next()
+
+  if (!result.ok && result.error.cause instanceof AppError) {
+    const appError = result.error.cause
+    throw new TRPCError({
+      code: appErrorToTrpcCode(appError.statusCode),
+      message: appError.message,
+      cause: appError,
+    })
+  }
+
+  return result
+})
+
+export const publicProcedure = t.procedure.use(mapDomainErrors)
 
 /**
  * Protected procedure - requires authentication
  */
-export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
+export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
   if (!ctx.userId || !ctx.session) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
@@ -122,7 +140,7 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
  * Admin procedure - requires authentication AND admin-level role
  * Checks via RBAC: OWNER or ADMIN_TENANT role
  */
-export const adminProcedure = t.procedure.use(async ({ ctx, next }) => {
+export const adminProcedure = publicProcedure.use(async ({ ctx, next }) => {
   if (!ctx.userId || !ctx.session) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
@@ -159,7 +177,7 @@ export const adminProcedure = t.procedure.use(async ({ ctx, next }) => {
 /**
  * Super admin procedure - platform operator only
  */
-export const superAdminProcedure = t.procedure.use(async ({ ctx, next }) => {
+export const superAdminProcedure = publicProcedure.use(async ({ ctx, next }) => {
   if (!ctx.userId || !ctx.session) {
     throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Login required' })
   }
@@ -240,7 +258,7 @@ export const requirePermission = (
 /**
  * Outlet-scoped procedure - requires user to have access to the specified outlet
  */
-export const outletScopedProcedure = t.procedure.use(async ({ ctx, next }) => {
+export const outletScopedProcedure = publicProcedure.use(async ({ ctx, next }) => {
   if (!ctx.userId || !ctx.session) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',

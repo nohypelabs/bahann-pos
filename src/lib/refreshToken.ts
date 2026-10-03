@@ -8,12 +8,11 @@
 import { createHash, randomBytes } from 'crypto'
 import { supabaseAdmin as supabase } from '@/infra/supabase/server'
 import { signJWT, type JWTPayload } from './jwt'
-import { createSession } from './redis-upstash'
 import { logger } from './logger'
 
 // Configuration
 const REFRESH_TOKEN_EXPIRY_DAYS = 30
-const ACCESS_TOKEN_EXPIRY = '30m' // 30 minutes (short-lived)
+const ACCESS_TOKEN_EXPIRY = '15m' // Short-lived; matches JWT_EXPIRES_IN
 
 export interface RefreshTokenData {
   id: string
@@ -74,13 +73,9 @@ export async function createRefreshToken(
       throw new Error('User not found')
     }
 
-    await createSession(user.id, {
-      email: user.email,
-      name: user.name,
-      outletId: user.outlet_id || undefined,
-      role: user.role || undefined,
-      tenantId: user.tenant_id || undefined,
-    })
+    // No server-side session record is created: the signed access token below is
+    // the single source of truth, and this row in refresh_tokens is what makes
+    // the session revocable.
 
     // Generate refresh token
     const refreshToken = generateRefreshToken()
