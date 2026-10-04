@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '../trpc'
 import { createAuditLog } from '@/lib/audit'
+import { DomainException } from '@/domain/errors/DomainException'
 import { supabaseAdmin } from '@/infra/supabase/server'
 import {
   getUserOutletIds,
@@ -265,6 +266,13 @@ export const transactionsRouter = router({
 
         if (message.startsWith('Product not found')) {
           throw new TRPCError({ code: 'NOT_FOUND', message })
+        }
+
+        // Rethrow domain rule violations untouched so the global mapDomainErrors
+        // middleware turns them into the right status. Matching on message strings
+        // here is why "Insufficient stock for …" used to surface as a 500.
+        if (error instanceof DomainException) {
+          throw error
         }
 
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message })

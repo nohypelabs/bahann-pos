@@ -8,6 +8,7 @@ import { logger } from '@/lib/logger'
 import { usePWA } from '@/lib/pwa/PWAContext'
 import { hasPermission, hasAnyPermission, PERMISSIONS, LEGACY_ROLE_MAP, getRoleDisplayName } from '@/lib/rbac/permissions'
 import { trpc } from '@/lib/trpc/client'
+import { hasModule } from '@/lib/business/modules'
 import {
   LayoutDashboard, Package, ClipboardList, BarChart3,
   ShoppingCart, History, DollarSign, ArrowLeftRight,
@@ -229,6 +230,13 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
   })
   const isImpersonating = impersonationState?.impersonating === true
   const isPlatformView = isSuperAdmin && !isImpersonating
+
+  // Which optional modules this tenant has, from its business type. The app layout
+  // already fetched the profile, so this is normally served from cache.
+  const { data: businessProfile } = trpc.businessProfile.getMyProfile.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  })
+  const canUseInventory = hasModule(businessProfile?.enabledModules, 'inventory')
   const canManageProducts = hasAnyPermission(userRole, [PERMISSIONS.PRODUCT_MANAGE, PERMISSIONS.PRODUCT_VIEW])
   const canManageSettings = hasAnyPermission(userRole, [PERMISSIONS.SETTINGS_MANAGE, PERMISSIONS.USER_MANAGE])
   const canViewReports = hasPermission(userRole, PERMISSIONS.REPORT_OUTLET_VIEW)
@@ -388,13 +396,15 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             )}
           </SidebarSection>
 
-          {/* ═══ WAREHOUSE — all roles ═══ */}
-          <SidebarSection sectionKey="warehouse" title={t('sidebar.warehouse')} isCollapsed={showCollapsed} activePaths={['/warehouse']}>
-            <SidebarItem href="/warehouse/stock"     icon={<Package />}       label={t('sidebar.warehouse.stock')}     isCollapsed={showCollapsed} />
-            <SidebarItem href="/warehouse/movements" icon={<ArrowDownUp />}   label={t('sidebar.warehouse.movements')} isCollapsed={showCollapsed} />
-            <SidebarItem href="/warehouse/inventory" icon={<ClipboardList />} label={t('sidebar.warehouse.inventory')} isCollapsed={showCollapsed} />
-            <SidebarItem href="/warehouse/reports"   icon={<BarChart3 />}     label={t('sidebar.warehouse.reports')}   isCollapsed={showCollapsed} />
-          </SidebarSection>
+          {/* ═══ WAREHOUSE — only when the business type enables inventory ═══ */}
+          {canUseInventory && (
+            <SidebarSection sectionKey="warehouse" title={t('sidebar.warehouse')} isCollapsed={showCollapsed} activePaths={['/warehouse']}>
+              <SidebarItem href="/warehouse/stock"     icon={<Package />}       label={t('sidebar.warehouse.stock')}     isCollapsed={showCollapsed} />
+              <SidebarItem href="/warehouse/movements" icon={<ArrowDownUp />}   label={t('sidebar.warehouse.movements')} isCollapsed={showCollapsed} />
+              <SidebarItem href="/warehouse/inventory" icon={<ClipboardList />} label={t('sidebar.warehouse.inventory')} isCollapsed={showCollapsed} />
+              <SidebarItem href="/warehouse/reports"   icon={<BarChart3 />}     label={t('sidebar.warehouse.reports')}   isCollapsed={showCollapsed} />
+            </SidebarSection>
+          )}
 
           {/* ═══ MASTER DATA — product.manage or product.view ═══ */}
           {canManageProducts && (
@@ -439,7 +449,10 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
                     <div className={`overflow-hidden transition-all duration-200 ${subPengaturan ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
                       <div className="space-y-0.5 pb-1">
                         {canManageSettings && (
-                          <SidebarItem href="/settings/payments"      icon={<DollarSign />} label={t('sidebar.settings.payment')}      isCollapsed={false} />
+                          <>
+                            <SidebarItem href="/settings/business"      icon={<Store />}      label={t('settings.business.title')}       isCollapsed={false} />
+                            <SidebarItem href="/settings/payments"      icon={<DollarSign />} label={t('sidebar.settings.payment')}      isCollapsed={false} />
+                          </>
                         )}
                         {canManageUsers && (
                           <SidebarItem href="/settings/users"         icon={<Users />}      label={t('sidebar.settings.users')}         isCollapsed={false} />
@@ -498,7 +511,10 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             <SidebarItem href="/alerts"            icon={<Bell />}          label={t('sidebar.operations.alerts')} isCollapsed={true} badge={alertCount > 0 ? String(alertCount) : undefined} />
             <SidebarItem href="/approvals"         icon={<CheckCircle />}   label="Persetujuan"     isCollapsed={true} badge={pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined} />
             {canManageSettings && (
-              <SidebarItem href="/settings/payments" icon={<Settings />}   label={t('sidebar.settings.payment')}  isCollapsed={true} />
+              <>
+                <SidebarItem href="/settings/business" icon={<Store />}      label={t('settings.business.title')}   isCollapsed={true} />
+                <SidebarItem href="/settings/payments" icon={<Settings />}   label={t('sidebar.settings.payment')}  isCollapsed={true} />
+              </>
             )}
             </>)}
             <SidebarItem href="/profile"           icon={<User />}         label={t('sidebar.profile')}             isCollapsed={true} />

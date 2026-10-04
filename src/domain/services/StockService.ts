@@ -29,11 +29,24 @@ export const StockService = {
    * For UNTRACKED items, always returns available=true.
    */
   check(product: Product, currentStock: number | null, requestedQty: number): StockCheckResult {
-    if (product.stockBehavior === StockBehavior.UNTRACKED) {
+    return StockService.checkBehavior(product.stockBehavior, currentStock, requestedQty);
+  },
+
+  /**
+   * Same rule as check(), for callers that hold a persisted row rather than a
+   * Product entity. Keeping both entry points here means the rule that decides
+   * whether a sale may proceed lives in exactly one place.
+   */
+  checkBehavior(
+    stockBehavior: StockBehavior,
+    currentStock: number | null,
+    requestedQty: number,
+  ): StockCheckResult {
+    if (stockBehavior === StockBehavior.UNTRACKED) {
       return { available: true, currentStock: null };
     }
 
-    if (product.stockBehavior === StockBehavior.CONSUMED) {
+    if (stockBehavior === StockBehavior.CONSUMED) {
       // CONSUMED items use recipe-based stock — always available at order time
       // Actual deduction happens at ingredient level
       return { available: true, currentStock: null };
@@ -57,11 +70,20 @@ export const StockService = {
    * - TRACKED + insufficient → success=false, newStockLevel=current
    */
   deduct(product: Product, currentStock: number | null, quantity: number): DeductResult {
-    if (product.stockBehavior === StockBehavior.UNTRACKED) {
+    return StockService.deductBehavior(product.stockBehavior, currentStock, quantity);
+  },
+
+  /** Same rule as deduct(), for callers that hold a persisted row. */
+  deductBehavior(
+    stockBehavior: StockBehavior,
+    currentStock: number | null,
+    quantity: number,
+  ): DeductResult {
+    if (stockBehavior === StockBehavior.UNTRACKED) {
       return { success: true, newStockLevel: null };
     }
 
-    if (product.stockBehavior === StockBehavior.CONSUMED) {
+    if (stockBehavior === StockBehavior.CONSUMED) {
       return { success: true, newStockLevel: null };
     }
 

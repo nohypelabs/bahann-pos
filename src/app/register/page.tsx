@@ -5,58 +5,12 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { trpc } from '@/lib/trpc/client'
+import { BUSINESS_TYPE_OPTIONS } from '@/lib/business/business-type-options'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
-
-const BUSINESS_TYPES = [
-  {
-    type: 'RETAIL' as const,
-    icon: '🏪',
-    titleId: 'Toko & Retail',
-    titleEn: 'Retail & Store',
-    descId: 'Minimarket, toko kelontong, warung sembako',
-    descEn: 'Minimarket, grocery store, general store',
-    modules: ['inventory'],
-    moduleLabelId: 'Manajemen Stok',
-    moduleLabelEn: 'Inventory Management',
-  },
-  {
-    type: 'FNB' as const,
-    icon: '🍜',
-    titleId: 'Kuliner & FnB',
-    titleEn: 'Food & Beverage',
-    descId: 'Warung makan, cafe, resto, nasi goreng, pecel lele',
-    descEn: 'Restaurant, cafe, food stall, street food',
-    modules: ['recipe'],
-    moduleLabelId: 'Manajemen Resep',
-    moduleLabelEn: 'Recipe Management',
-  },
-  {
-    type: 'SERVICE' as const,
-    icon: '✂️',
-    titleId: 'Jasa & Layanan',
-    titleEn: 'Service & Professional',
-    descId: 'Barbershop, car wash, laundry, servis AC',
-    descEn: 'Barbershop, car wash, laundry, repair service',
-    modules: ['appointment'],
-    moduleLabelId: 'Janji Temu',
-    moduleLabelEn: 'Appointment',
-  },
-  {
-    type: 'HYBRID' as const,
-    icon: '🔄',
-    titleId: 'Campuran (Hybrid)',
-    titleEn: 'Hybrid (Mixed)',
-    descId: 'Toko + jasa, retail + kuliner, atau kombinasi lainnya',
-    descEn: 'Store + service, retail + food, or any combination',
-    modules: ['inventory', 'recipe'],
-    moduleLabelId: 'Stok + Resep',
-    moduleLabelEn: 'Inventory + Recipe',
-  },
-]
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { language } = useLanguage()
+  const { t, language } = useLanguage()
   const isId = language === 'id'
   const [step, setStep] = useState<1 | 2>(1)
   const [formData, setFormData] = useState({
@@ -363,7 +317,7 @@ export default function RegisterPage() {
                 </p>
 
                 <div className="grid grid-cols-1 gap-3">
-                  {BUSINESS_TYPES.map((bt) => {
+                  {BUSINESS_TYPE_OPTIONS.map((bt) => {
                     const isSelected = selectedType === bt.type
                     return (
                       <button
@@ -384,10 +338,10 @@ export default function RegisterPage() {
                           <span className="text-2xl">{bt.icon}</span>
                           <div>
                             <h3 className={`text-sm font-bold ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>
-                              {isId ? bt.titleId : bt.titleEn}
+                              {t(`businessType.${bt.key}.title`)}
                             </h3>
                             <p className={`text-xs ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                              {isId ? bt.descId : bt.descEn}
+                              {t(`businessType.${bt.key}.description`)}
                             </p>
                           </div>
                         </div>

@@ -5,57 +5,12 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { BUSINESS_TYPE_OPTIONS } from '@/lib/business/business-type-options'
 
-const BUSINESS_TYPES = [
-  {
-    type: 'RETAIL' as const,
-    icon: '🏪',
-    titleId: 'Toko & Retail',
-    titleEn: 'Retail & Store',
-    descId: 'Minimarket, toko kelontong, warung sembako',
-    descEn: 'Minimarket, grocery store, general store',
-    modules: ['inventory'],
-    moduleLabelId: 'Manajemen Stok',
-    moduleLabelEn: 'Inventory Management',
-  },
-  {
-    type: 'FNB' as const,
-    icon: '🍜',
-    titleId: 'Kuliner & FnB',
-    titleEn: 'Food & Beverage',
-    descId: 'Warung makan, cafe, resto, nasi goreng, pecel lele',
-    descEn: 'Restaurant, cafe, food stall, street food',
-    modules: ['recipe'],
-    moduleLabelId: 'Manajemen Resep',
-    moduleLabelEn: 'Recipe Management',
-  },
-  {
-    type: 'SERVICE' as const,
-    icon: '✂️',
-    titleId: 'Jasa & Layanan',
-    titleEn: 'Service & Professional',
-    descId: 'Barbershop, car wash, laundry, servis AC',
-    descEn: 'Barbershop, car wash, laundry, repair service',
-    modules: ['appointment'],
-    moduleLabelId: 'Janji Temu',
-    moduleLabelEn: 'Appointment',
-  },
-  {
-    type: 'HYBRID' as const,
-    icon: '🔄',
-    titleId: 'Campuran (Hybrid)',
-    titleEn: 'Hybrid (Mixed)',
-    descId: 'Toko + jasa, retail + kuliner, atau kombinasi lainnya',
-    descEn: 'Store + service, retail + food, or any combination',
-    modules: ['inventory', 'recipe'],
-    moduleLabelId: 'Stok + Resep',
-    moduleLabelEn: 'Inventory + Recipe',
-  },
-]
 
 export default function SetupPage() {
   const router = useRouter()
-  const { t, language } = useLanguage()
+  const { t } = useLanguage()
   const utils = trpc.useUtils()
   const [selectedType, setSelectedType] = useState<string | null>(null)
   const [error, setError] = useState('')
@@ -71,7 +26,7 @@ export default function SetupPage() {
 
   const handleSetup = async () => {
     if (!selectedType) {
-      setError('Pilih jenis usaha terlebih dahulu')
+      setError(t('setup.noTypeSelected'))
       return
     }
 
@@ -82,11 +37,9 @@ export default function SetupPage() {
       await utils.businessProfile.getMyProfile.refetch()
       router.replace('/dashboard')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Gagal mengatur bisnis')
+      setError(err instanceof Error ? err.message : t('setup.failed'))
     }
   }
-
-  const isId = language === 'id'
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center p-4">
@@ -97,12 +50,10 @@ export default function SetupPage() {
             <img src="/logo.svg" alt="Laku POS" className="w-16 h-16 rounded-2xl shadow-md" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            {isId ? 'Selamat Datang di Laku POS! 🎉' : 'Welcome to Laku POS! 🎉'}
+            {t('setup.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {isId
-              ? 'Pilih jenis usaha Anda untuk mengkonfigurasi sistem secara otomatis'
-              : 'Select your business type to automatically configure the system'}
+            {t('setup.subtitle')}
           </p>
         </div>
 
@@ -115,7 +66,7 @@ export default function SetupPage() {
 
         {/* Business Type Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          {BUSINESS_TYPES.map((bt) => {
+          {BUSINESS_TYPE_OPTIONS.map((bt) => {
             const isSelected = selectedType === bt.type
             return (
               <button
@@ -139,14 +90,14 @@ export default function SetupPage() {
                   <span className="text-3xl">{bt.icon}</span>
                   <div>
                     <h3 className={`text-lg font-bold ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>
-                      {isId ? bt.titleId : bt.titleEn}
+                      {t(`businessType.${bt.key}.title`)}
                     </h3>
                   </div>
                 </div>
 
                 {/* Description */}
                 <p className={`text-sm mb-3 ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                  {isId ? bt.descId : bt.descEn}
+                  {t(`businessType.${bt.key}.description`)}
                 </p>
 
                 {/* Modules */}
@@ -160,10 +111,7 @@ export default function SetupPage() {
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                       }`}
                     >
-                      {mod === 'inventory' ? (isId ? '📦 Stok' : '📦 Inventory')
-                        : mod === 'recipe' ? (isId ? '🍳 Resep' : '🍳 Recipe')
-                        : mod === 'appointment' ? (isId ? '📅 Janji Temu' : '📅 Appointment')
-                        : mod}
+                      {t(`businessType.module.${mod}`)}
                     </span>
                   ))}
                 </div>
@@ -181,15 +129,11 @@ export default function SetupPage() {
             disabled={!selectedType || setupMutation.isPending}
             className="w-full max-w-sm"
           >
-            {setupMutation.isPending
-              ? (isId ? 'Menyimpan...' : 'Saving...')
-              : (isId ? '🚀 Mulai' : '🚀 Get Started')}
+            {setupMutation.isPending ? t('setup.submitting') : t('setup.submit')}
           </Button>
 
           <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
-            {isId
-              ? 'Anda bisa mengubah jenis usaha kapan saja di Pengaturan'
-              : 'You can change your business type anytime in Settings'}
+            {t('setup.changeHint')}
           </p>
         </div>
       </div>

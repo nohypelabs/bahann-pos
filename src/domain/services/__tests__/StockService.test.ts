@@ -132,4 +132,45 @@ describe('StockService', () => {
       expect(() => StockService.assertCanDeduct(product)).toThrow(/does not track stock/);
     });
   });
+
+  // Callers that already hold a persisted row (the POS transaction path) use these
+  // variants so the deduct decision cannot be reimplemented — and quietly changed —
+  // somewhere else.
+  describe('checkBehavior / deductBehavior', () => {
+    it('should match check() for every stock behavior', () => {
+      for (const behavior of [StockBehavior.TRACKED, StockBehavior.UNTRACKED, StockBehavior.CONSUMED]) {
+        const product = makeProduct({ stockBehavior: behavior });
+
+        for (const [level, qty] of [[10, 5], [3, 5], [null, 0]] as const) {
+          expect(StockService.checkBehavior(behavior, level, qty)).toEqual(
+            StockService.check(product, level, qty),
+          );
+        }
+      }
+    });
+
+    it('should match deduct() for every stock behavior', () => {
+      for (const behavior of [StockBehavior.TRACKED, StockBehavior.UNTRACKED, StockBehavior.CONSUMED]) {
+        const product = makeProduct({ stockBehavior: behavior });
+
+        for (const [level, qty] of [[10, 3], [2, 5], [null, 1]] as const) {
+          expect(StockService.deductBehavior(behavior, level, qty)).toEqual(
+            StockService.deduct(product, level, qty),
+          );
+        }
+      }
+    });
+
+    it('should refuse a tracked deduction that would go negative', () => {
+      expect(StockService.deductBehavior(StockBehavior.TRACKED, 2, 5)).toEqual({
+        success: false,
+        newStockLevel: 2,
+      });
+    });
+
+    it('should allow untracked and consumed lines regardless of level', () => {
+      expect(StockService.deductBehavior(StockBehavior.UNTRACKED, 0, 5).success).toBe(true);
+      expect(StockService.deductBehavior(StockBehavior.CONSUMED, 0, 5).success).toBe(true);
+    });
+  });
 });

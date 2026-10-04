@@ -7,6 +7,7 @@ import { logger } from '@/lib/logger'
 import { getTenantId, userHasPermission } from '@/server/lib/tenant'
 import { appErrorToTrpcCode } from '@/server/lib/errors'
 import { AppError } from '@/shared/exceptions/AppError'
+import { DomainException } from '@/domain/errors/DomainException'
 import { parseImpersonationCookieFromHeader } from '@/lib/impersonation/sessionCookie'
 import { runWithRequestContext } from '@/lib/impersonation/requestContext'
 import { container } from '@/infra/container'
@@ -159,13 +160,28 @@ export const router = t.router
 const mapDomainErrors = t.middleware(async ({ next }) => {
   const result = await next()
 
-  if (!result.ok && result.error.cause instanceof AppError) {
-    const appError = result.error.cause
-    throw new TRPCError({
-      code: appErrorToTrpcCode(appError.statusCode),
-      message: appError.message,
-      cause: appError,
-    })
+  if (!result.ok) {
+    const cause = result.error.cause
+
+    if (cause instanceof AppError) {
+      throw new TRPCError({
+        code: appErrorToTrpcCode(cause.statusCode),
+        message: cause.message,
+        cause,
+      })
+    }
+
+    // Domain rule violations (insufficient stock, invalid item/pricing combinations,
+    // …) carry an HTTP status. Without this they escaped as INTERNAL_SERVER_ERROR, so
+    // the POS showed a generic failure instead of the reason — the same shape as the
+    // login 500 fixed earlier.
+    if (cause instanceof DomainException) {
+      throw new TRPCError({
+        code: appErrorToTrpcCode(cause.statusCode),
+        message: cause.message,
+        cause,
+      })
+    }
   }
 
   return result

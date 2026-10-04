@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { BulkImportModal } from '@/components/products/BulkImportModal'
 import { trpc } from '@/lib/trpc/client'
+import { BUSINESS_TYPE_DEFAULTS } from '@/domain/entities/BusinessProfile'
 import type { Product, SelectChangeEvent } from '@/types'
 import { Package, FolderOpen, CheckCircle, AlertTriangle, Tag, Trash2, Download, Search, Pencil, Plus } from 'lucide-react'
 
@@ -73,13 +74,19 @@ function PricingTierBuilder({ tiers, onChange }: { tiers: PricingTierData[]; onC
 }
 
 // ─── Product Form Modal ───────────────────────────────────────────────────────
-function ProductFormModal({ product, onClose, onSuccess }: { product: Product | null; onClose: () => void; onSuccess: () => void }) {
+function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onClose, onSuccess }: {
+  product: Product | null
+  defaultItemType: string
+  defaultStockBehavior: string
+  onClose: () => void
+  onSuccess: () => void
+}) {
   const [formData, setFormData] = useState({
     sku: product?.sku || '', barcode: product?.barcode || '',
     name: product?.name || '', category: product?.category || '',
     price: product?.price || '' as string | number,
-    itemType: (product as any)?.item_type || 'PRODUCT',
-    stockBehavior: (product as any)?.stock_behavior || 'TRACKED',
+    itemType: (product as any)?.item_type || defaultItemType,
+    stockBehavior: (product as any)?.stock_behavior || defaultStockBehavior,
     pricingModel: (product as any)?.pricing_model || 'FIXED',
     durationMinutes: (product as any)?.duration_minutes || '' as string | number,
     imageUrl: (product as any)?.image_url || (product as any)?.imageUrl || '',
@@ -362,6 +369,14 @@ export default function ProductsPage() {
   const [isBulkImportOpen,     setIsBulkImportOpen]      = useState(false)
   const { showToast } = useToast()
 
+  // A new product starts from the tenant's business type instead of a hardcoded
+  // RETAIL-shaped default, so an FnB tenant does not have to switch every product
+  // away from tracked stock. Cached by the app layout, so it is normally instant.
+  const { data: profile } = trpc.businessProfile.getMyProfile.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  })
+  const typeDefaults = profile ? BUSINESS_TYPE_DEFAULTS[profile.businessType] : undefined
+
   const { data: productsResponse, isLoading, refetch } = trpc.products.getAll.useQuery({
     search: searchTerm || undefined, category: categoryFilter || undefined,
   })
@@ -547,8 +562,10 @@ export default function ProductsPage() {
         )}
       </div>
 
-      {isModalOpen && (
+      {isModalOpen && typeDefaults && (
         <ProductFormModal product={editingProduct}
+          defaultItemType={typeDefaults.defaultItemType}
+          defaultStockBehavior={typeDefaults.defaultStockBehavior}
           onClose={() => { setIsModalOpen(false); setEditingProduct(null) }}
           onSuccess={() => { refetch(); setIsModalOpen(false); setEditingProduct(null) }} />
       )}

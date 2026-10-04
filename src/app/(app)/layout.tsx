@@ -6,6 +6,7 @@ import { ImpersonationBanner } from '@/components/layout/ImpersonationBanner'
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { trpc } from '@/lib/trpc/client'
+import { isRouteEnabled } from '@/lib/business/modules'
 
 /**
  * Routes that only make sense inside a tenant. A platform superadmin reaches
@@ -80,7 +81,15 @@ export default function AppGroupLayout({
 
       if (role === 'super_admin' && isTenantRoute) {
         router.replace('/admin')
+        return
       }
+    }
+
+    // A route owned by a module this business type does not enable (the warehouse
+    // for a service business, say) is not reachable, so a bookmark cannot open a
+    // surface the sidebar no longer offers. Only acts once the profile is known.
+    if (!isSetupPage && profile && !isRouteEnabled(pathname, profile.enabledModules)) {
+      router.replace('/dashboard')
     }
   }, [router, profile, profileLoading, isSetupPage, impersonationState, pathname])
 

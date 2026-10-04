@@ -1,5 +1,6 @@
 import type { Transaction } from '@/domain/entities/Transaction'
 import { DailySale } from '@/domain/entities/DailySale'
+import type { DailyStock } from '@/domain/entities/DailyStock'
 import type { DailySaleRepository } from '@/domain/repositories/DailySaleRepository'
 import type { DailyStockRepository } from '@/domain/repositories/DailyStockRepository'
 import type {
@@ -7,6 +8,9 @@ import type {
   ProductRow,
 } from '@/domain/repositories/ProductRepository'
 import type { TransactionRepository } from '@/domain/repositories/TransactionRepository'
+import { StockService } from '@/domain/services/StockService'
+import { StockBehavior } from '@/domain/catalog/value-objects/stock-behavior'
+import { DomainException, DomainErrorCode } from '@/domain/errors/DomainException'
 import { logger } from '@/lib/logger'
 
 export interface CreateTransactionInput {
@@ -163,8 +167,16 @@ export class CreateTransactionUseCase {
       }
     }
 
+    // Stock before daily sales: a short tracked line voids the sale, and the daily
+    // sales aggregate must not have been written for a sale that no longer exists.
+    try {
+      await this.deductStock(resolvedItems, input.outletId, input.tenantId)
+    } catch (error) {
+      await this.transactionRepo.voidById(transaction.id)
+      throw error
+    }
+
     await this.recordDailySales(resolvedItems, input.tenantId, input.outletId)
-    await this.deductStock(resolvedItems, input.outletId, input.tenantId)
 
     return {
       success: true,
@@ -213,7 +225,12 @@ export class CreateTransactionUseCase {
     try {
       await this.deductStock(transaction.items, transaction.outletId, transaction.tenantId)
     } catch (error) {
-      logger.error('Failed to deduct stock during finalize:', error)
+      // The payment was already captured, so voiding the sale here would be wrong.
+      // Surface it loudly instead: stock and sales now disagree until reconciled.
+      logger.error(
+        'STOCK NOT DEDUCTED for a finalized transaction — stock and sales now disagree and need manual reconciliation',
+        error,
+      )
     }
 
     const finalizedTransaction = await this.transactionRepo.findById(transaction.id)
@@ -282,79 +299,87 @@ export class CreateTransactionUseCase {
     }
   }
 
+  /**
+   * Deduct stock for every tracked line.
+   *
+   * Whether a line may be deducted at all comes from StockService, so a POS sale
+   * cannot drift from the rule the rest of the system documents.
+   *
+   * A level is only enforced when the tenant actually keeps a daily record for the
+   * product — today's row, or yesterday's carried forward. With no record at all,
+   * the product is not being tracked at this outlet, so nothing is deducted and no
+   * row is created. The previous code opened a brand new row at zero and wrote a
+   * negative level, which then failed every later sale of that product.
+   *
+   * Insufficient stock raises DomainException instead of writing a negative level,
+   * and write failures propagate instead of being swallowed: a sale that took money
+   * must not quietly fail to move stock.
+   */
   private async deductStock(
     items: { productId: string; quantity: number }[],
     outletId: string,
     tenantId: string,
   ): Promise<void> {
-    try {
-      const today = new Date().toISOString().split('T')[0]
-      const products = await this.productRepo.getByIds(
-        items.map((item) => item.productId),
-        tenantId,
-      )
-      const productMap = new Map(products.map((product) => [product.id, product]))
+    // stock_date is compared as a UTC calendar day (getByDate uses toISOString), so
+    // the boundaries must be built in UTC. Local midnight is wrong in any timezone
+    // east of UTC — in WIB (UTC+7) it lands on the previous UTC day, the lookups miss
+    // every row, and stock silently stops being deducted.
+    const today = new Date(`${new Date().toISOString().split('T')[0]}T00:00:00.000Z`)
+    const yesterday = new Date(today)
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1)
 
-      for (const item of items) {
-        const product = productMap.get(item.productId)
-        const stockBehavior = product?.stock_behavior ?? 'TRACKED'
+    const products = await this.productRepo.getByIds(
+      items.map((item) => item.productId),
+      tenantId,
+    )
+    const productMap = new Map(products.map((product) => [product.id, product]))
 
-        if (stockBehavior === 'UNTRACKED' || stockBehavior === 'CONSUMED') {
-          continue
-        }
+    // Plan every line before writing any of them, so a multi-line sale cannot be
+    // half-applied when one product turns out to be short.
+    const writes: DailyStock[] = []
 
-        const todayStock = await this.dailyStockRepo.getByDate(
-          outletId,
-          item.productId,
-          new Date(today),
-        )
+    for (const item of items) {
+      const product = productMap.get(item.productId)
+      const stockBehavior = (product?.stock_behavior ?? StockBehavior.TRACKED) as StockBehavior
 
-        if (todayStock) {
-          const newStockOut = todayStock.stockOut + item.quantity
-          const newStockAkhir = todayStock.stockAwal + todayStock.stockIn - newStockOut
-
-          try {
-            await this.dailyStockRepo.save({
-              ...todayStock,
-              stockOut: newStockOut,
-              stockAkhir: newStockAkhir,
-            })
-          } catch (error) {
-            logger.error('Failed to update stock:', error)
-          }
-          continue
-        }
-
-        const yesterday = new Date()
-        yesterday.setDate(yesterday.getDate() - 1)
-        const yesterdayStock = await this.dailyStockRepo.getByDate(
-          outletId,
-          item.productId,
-          yesterday,
-        )
-
-        const stockAwal = yesterdayStock?.stockAkhir ?? 0
-        const stockAkhir = stockAwal - item.quantity
-
-        try {
-          await this.dailyStockRepo.save({
-            id: crypto.randomUUID(),
-            tenantId,
-            productId: item.productId,
-            outletId,
-            stockDate: new Date(today),
-            stockAwal,
-            stockIn: 0,
-            stockOut: item.quantity,
-            stockAkhir,
-            createdAt: new Date(),
-          })
-        } catch (error) {
-          logger.error('Failed to save stock:', error)
-        }
+      if (stockBehavior === StockBehavior.UNTRACKED || stockBehavior === StockBehavior.CONSUMED) {
+        continue
       }
-    } catch (error) {
-      logger.error('Failed to deduct stock:', error)
+
+      const todayStock = await this.dailyStockRepo.getByDate(outletId, item.productId, today)
+      const knownStock =
+        todayStock ?? (await this.dailyStockRepo.getByDate(outletId, item.productId, yesterday))
+
+      if (!knownStock) {
+        continue
+      }
+
+      const result = StockService.deductBehavior(stockBehavior, knownStock.stockAkhir, item.quantity)
+
+      if (!result.success || result.newStockLevel === null) {
+        throw new DomainException(
+          DomainErrorCode.INSUFFICIENT_STOCK,
+          `Insufficient stock for "${product?.name ?? item.productId}": ${knownStock.stockAkhir} available, ${item.quantity} requested`,
+        )
+      }
+
+      writes.push({
+        id: todayStock ? knownStock.id : crypto.randomUUID(),
+        tenantId,
+        productId: item.productId,
+        outletId,
+        stockDate: today,
+        stockAwal: todayStock ? knownStock.stockAwal : knownStock.stockAkhir,
+        stockIn: todayStock ? knownStock.stockIn : 0,
+        stockOut: (todayStock ? knownStock.stockOut : 0) + item.quantity,
+        stockAkhir: result.newStockLevel,
+        createdAt: todayStock ? knownStock.createdAt : new Date(),
+      })
+    }
+
+    for (const write of writes) {
+      await this.dailyStockRepo.save(write)
     }
   }
+
 }

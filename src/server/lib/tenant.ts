@@ -99,6 +99,17 @@ export async function requirePermission(
   permissionKey: string,
   outletId?: string,
 ): Promise<void> {
+  // Same reasoning as getUserOutletIds: an impersonating superadmin holds
+  // tenant-wide authority for the session, and every action they take is recorded
+  // against the real actor. Without this, impersonation silently inherits whatever
+  // RBAC rows the target happens to have — so a tenant admin with no
+  // user_role_assignments (a common legacy state) leaves the platform operator
+  // unable to do anything at all.
+  const requestContext = getRequestContext()
+  if (requestContext?.impersonationId && requestContext.tenantId === tenantId) {
+    return
+  }
+
   const has = await userHasPermission(userId, tenantId, permissionKey, outletId)
   if (!has) {
     throw new TRPCError({
