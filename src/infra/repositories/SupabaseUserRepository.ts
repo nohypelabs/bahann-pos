@@ -228,6 +228,9 @@ export class SupabaseUserRepository implements UserRepository {
     if (error) {
       throw new Error(`Failed to activate trial: ${error.message}`)
     }
+
+    // Keep the tenant's copy in step, as grant_plan does for paid plans.
+    await supabaseAdmin.from('tenants').update({ plan: 'starter' }).eq('owner_user_id', userId)
   }
 
   async activatePlan(userId: string, plan: string): Promise<void> {
