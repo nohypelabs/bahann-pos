@@ -15,7 +15,9 @@ export function EmailVerificationBanner() {
 
   const resend = trpc.auth.resendVerification.useMutation({
     onSuccess: () => showToast('Email verifikasi terkirim! Cek inbox kamu.', 'success'),
-    onError: () => showToast('Gagal mengirim email. Coba lagi beberapa saat.', 'error'),
+    // Show the server's reason; a fixed message hid that the real failure was an
+    // expired session, not email delivery.
+    onError: (err) => showToast(err.message || 'Gagal mengirim email. Coba lagi beberapa saat.', 'error'),
   })
 
   if (isLoading || dismissed || data?.verified) return null

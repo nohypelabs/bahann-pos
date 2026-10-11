@@ -5,6 +5,7 @@ import { httpBatchLink } from '@trpc/client'
 import { useState } from 'react'
 import { trpc } from './client'
 import superjson from 'superjson'
+import { authFetch } from './authFetch'
 
 /**
  * Get base URL for tRPC requests
@@ -38,14 +39,9 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
         httpBatchLink({
           url: `${getBaseUrl()}/api/trpc`,
           transformer: superjson,
-          // Authentication is now handled via httpOnly cookies
-          // Cookies are sent automatically by the browser
-          fetch(url, options) {
-            return fetch(url, {
-              ...options,
-              credentials: 'include', // Ensure cookies are sent
-            })
-          },
+          // httpOnly cookies carry the session; authFetch renews an expired
+          // access token once and replays the request.
+          fetch: authFetch,
         }),
       ],
     })

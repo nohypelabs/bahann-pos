@@ -18,7 +18,14 @@ export class ResendVerificationUseCase {
     const newToken = generateResetToken()
     await this.userRepository.updateVerifyToken(userId, newToken)
 
-    await sendVerificationEmail({ to: user.email, name: user.name ?? 'Pengguna', token: newToken })
+    try {
+      await sendVerificationEmail({ to: user.email, name: user.name ?? 'Pengguna', token: newToken })
+    } catch {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Email verifikasi gagal dikirim. Coba lagi beberapa saat.',
+      })
+    }
     return { success: true }
   }
 }

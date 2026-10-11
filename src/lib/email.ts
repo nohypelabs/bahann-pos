@@ -658,6 +658,8 @@ export async function sendVerificationEmail({ to, name, token }: SendVerificatio
     logger.success('Verification email sent to: ' + to)
   } catch (err) {
     logger.error('Failed to send verification email:', err)
+    // Rethrow so "resend" can tell the user; registration runs it in allSettled.
+    throw err
   }
 }
 

@@ -2,6 +2,7 @@ import { createTRPCClient, httpBatchLink } from '@trpc/client'
 import { createTRPCReact } from '@trpc/react-query'
 import type { AppRouter } from '@/server/routers/_app'
 import superjson from 'superjson'
+import { authFetch } from './authFetch'
 
 /**
  * Get base URL for tRPC requests
@@ -38,14 +39,9 @@ export const vanillaTrpc = createTRPCClient<AppRouter>({
     httpBatchLink({
       url: `${getBaseUrl()}/api/trpc`,
       transformer: superjson,
-      // Cookies are sent automatically by the browser
-      // credentials: 'include' is the default for same-origin requests
-      fetch(url, options) {
-        return fetch(url, {
-          ...options,
-          credentials: 'include', // Ensure cookies are sent
-        })
-      },
+      // httpOnly cookies carry the session; authFetch renews an expired
+      // access token once and replays the request.
+      fetch: authFetch,
     }),
   ],
 })
