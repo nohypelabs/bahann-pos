@@ -98,6 +98,11 @@ export class CreateTransactionUseCase {
       throw new Error('Insufficient payment amount')
     }
 
+    // Refuse a short tracked line before anything is written. POS checkouts are
+    // created pending and finalized after the payment is recorded, and at that
+    // point a stock shortfall can only be logged, not refused.
+    await this.planStockWrites(resolvedItems, input.outletId, input.tenantId)
+
     const transactionId = input.transactionId
       ?? `TRX-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
 
@@ -326,6 +331,21 @@ export class CreateTransactionUseCase {
     outletId: string,
     tenantId: string,
   ): Promise<void> {
+    const writes = await this.planStockWrites(items, outletId, tenantId)
+    for (const write of writes) {
+      await this.dailyStockRepo.save(write)
+    }
+  }
+
+  /**
+   * Computes the stock rows a sale would write, throwing INSUFFICIENT_STOCK when a
+   * tracked line is short. Writes nothing, so it doubles as an availability check.
+   */
+  private async planStockWrites(
+    items: { productId: string; quantity: number }[],
+    outletId: string,
+    tenantId: string,
+  ): Promise<DailyStock[]> {
     // stock_date holds the business (WIB) calendar day, represented as UTC midnight
     // of that day (getByDate reads it back with toISOString). Build "today" the same
     // way: local midnight would land on the previous UTC day, the lookups would miss
@@ -383,9 +403,7 @@ export class CreateTransactionUseCase {
       })
     }
 
-    for (const write of writes) {
-      await this.dailyStockRepo.save(write)
-    }
+    return writes
   }
 
 }
