@@ -66,7 +66,7 @@ tRPC client is at `src/lib/trpc/client.ts`; React provider at `src/lib/trpc/Prov
 
 ### Authentication
 
-- JWT stored in **httpOnly cookie** (`auth-token`); Authorization header accepted as fallback.
+- JWT stored in **httpOnly cookie** (`auth_token`, refresh token in `refresh_token`); Authorization header accepted as fallback.
 - Sessions written to **Redis** (`session:<userId>`, 7-day TTL): `src/lib/redis.ts` (local ioredis) or `src/lib/redis-upstash.ts` (Upstash in production).
 - Route middleware at `src/middleware/auth.ts` (Supabase session helper).
 - Refresh tokens: `src/lib/refreshToken.ts` + DB table via `supabase/migrations/006_refresh_tokens.sql`.
@@ -150,6 +150,6 @@ Full list including optional Sentry/GA vars: `deployment/ENV_VARIABLES.md`.
 
 Supabase migrations live in `supabase/migrations/`. Run via Supabase CLI. When adding new DB columns, use English names (existing mixed-language columns are kept stable to avoid breaking changes).
 
-**Latest migration:** `030_modular_product_types.sql` — adds modular POS support (business_profiles table, 5 new product columns, 4 PostgreSQL enum types).
+**Latest migration:** `050_lock_remaining_definer_functions.sql`. Production applies migrations by hand (`supabase db query --linked -f <file>`) and records each filename in `public._migrations`.
 
-To run migrations: `supabase db push` or `supabase migration up`
+Applying one: `supabase db query --linked --project-ref <ref> -f supabase/migrations/<file>.sql`, then `insert into _migrations (filename) values ('<file>.sql')`. Migrations 045–050 were applied this way, and `_migrations` is the record of what production has.

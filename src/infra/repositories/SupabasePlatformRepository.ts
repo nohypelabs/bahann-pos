@@ -1,5 +1,6 @@
 import { supabaseAdmin as supabase } from '../supabase/server';
 import { TRPCError } from '@trpc/server';
+import { addDays, businessDate, startOfBusinessDay } from '@/lib/business/timezone';
 import type {
   PlatformRepository,
   GlobalStats,
@@ -221,26 +222,24 @@ export class SupabasePlatformRepository implements PlatformRepository {
   }
 
   async getGrowthChart(days: number): Promise<GrowthEntry[]> {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
+    // Bucket signups by WIB business day, like the rest of the app.
+    const startDay = addDays(businessDate(), -days);
+    const startTs = startOfBusinessDay(startDay);
 
     const { data } = await supabase
       .from('users')
       .select('created_at')
       .eq('role', 'admin')
-      .gte('created_at', startDate.toISOString())
+      .gte('created_at', startTs)
       .order('created_at', { ascending: true });
 
     const dailyCounts: Record<string, number> = {};
-    const start = new Date(startDate);
     for (let i = 0; i <= days; i++) {
-      const d = new Date(start);
-      d.setDate(d.getDate() + i);
-      dailyCounts[d.toISOString().split('T')[0]] = 0;
+      dailyCounts[addDays(startDay, i)] = 0;
     }
 
     data?.forEach(u => {
-      const d = new Date(u.created_at!).toISOString().split('T')[0];
+      const d = businessDate(new Date(u.created_at!));
       if (dailyCounts[d] !== undefined) dailyCounts[d]++;
     });
 
@@ -249,7 +248,7 @@ export class SupabasePlatformRepository implements PlatformRepository {
       .from('users')
       .select('*', { count: 'exact', head: true })
       .eq('role', 'admin')
-      .lt('created_at', startDate.toISOString());
+      .lt('created_at', startTs);
     cumulative = beforeCount || 0;
 
     return Object.entries(dailyCounts).map(([date, count]) => {
