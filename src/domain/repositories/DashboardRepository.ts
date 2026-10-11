@@ -4,6 +4,11 @@ export interface SalesSummary {
   totalItemsSold: number;
 }
 
+export interface ExpenseSummary {
+  totalExpenses: number;
+  expenseCount: number;
+}
+
 export interface SalesTrendRow {
   saleDate: string;
   revenue: number;
@@ -47,6 +52,8 @@ export interface RecentTransaction {
 export interface DashboardRepository {
   getSalesSummary(outletIds: string[], startDate: string, endDate: string): Promise<SalesSummary>;
   getSalesTrend(outletIds: string[], startDate: string, endDate: string): Promise<SalesTrendRow[]>;
+  /** Non-voided operational expenses; dates are calendar days (YYYY-MM-DD), inclusive. */
+  getExpenseSummary(outletIds: string[], startDate: string, endDate: string): Promise<ExpenseSummary>;
   getTopProducts(outletIds: string[], startDate: string, endDate: string, limit: number): Promise<TopProductRow[]>;
   getLowStock(outletIds: string[], threshold: number): Promise<LowStockItem[]>;
   getRecentTransactions(outletIds: string[], limit: number, startDate?: string, endDate?: string): Promise<RecentTransaction[]>;

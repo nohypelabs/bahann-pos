@@ -12,7 +12,7 @@ import { ChartSkeleton } from '@/components/ui/Skeletons'
 import { useInventoryAccess } from '@/components/layout/useInventoryAccess'
 import {
   DollarSign, Package, AlertTriangle, Store,
-  ShoppingCart, ClipboardList, Trophy, Receipt,
+  ShoppingCart, ClipboardList, Trophy, Receipt, Wallet, TrendingUp, TrendingDown,
 } from 'lucide-react'
 
 const DashboardRevenueChart = lazy(() => import('@/components/charts/DashboardRevenueChart'))
@@ -93,8 +93,17 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Stats ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         <StatCard label={t('dashboard.totalRevenue')} value={formatCurrency(stats?.totalRevenue || 0)} sub={`${stats?.transactionCount || 0} transaksi`} subColor="green" loading={statsLoading} icon={<DollarSign />} />
+        <StatCard label={t('dashboard.totalExpenses')} value={formatCurrency(stats?.totalExpenses || 0)} sub={`${stats?.expenseCount || 0} ${t('dashboard.expenseEntries')}`} loading={statsLoading} icon={<Wallet />} />
+        <StatCard
+          label={t('dashboard.operatingProfit')}
+          value={formatCurrency(stats?.operatingProfit || 0)}
+          sub={stats?.profitMargin == null ? t('dashboard.profitHint') : `${t('dashboard.profitMargin')} ${stats.profitMargin.toFixed(1)}%`}
+          subColor={(stats?.operatingProfit || 0) < 0 ? 'red' : 'green'}
+          loading={statsLoading}
+          icon={(stats?.operatingProfit || 0) < 0 ? <TrendingDown /> : <TrendingUp />}
+        />
         <StatCard label={t('dashboard.totalProducts')} value={(stats?.totalProducts || 0).toLocaleString()} sub="In inventory" loading={statsLoading} icon={<Package />} />
         <StatCard label={t('dashboard.lowStock')} value={stats?.lowStockCount || 0} sub={(stats?.lowStockCount || 0) > 0 ? t('warehouse.stock.lowStockAlert') : t('warehouse.stock.noLowStock')} subColor={(stats?.lowStockCount || 0) > 0 ? 'red' : 'green'} loading={statsLoading} icon={<AlertTriangle />} />
         <StatCard label={t('dashboard.totalOutlets')} value={stats?.totalOutlets || 0} sub="Active locations" loading={statsLoading} icon={<Store />} />

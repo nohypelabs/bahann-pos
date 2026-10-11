@@ -534,5 +534,11 @@
   "inventory.unavailable.title": "Toko Anda tidak punya stok",
   "inventory.unavailable.message": "Jenis usaha Anda tidak memakai stok, jadi pencatatan stok dan gudang tidak tersedia.",
   "inventory.unavailable.hint": "Juga menjual barang yang stoknya dihitung? Ganti jenis usaha di Pengaturan → Usaha.",
-  "inventory.unavailable.ok": "Mengerti"
+  "inventory.unavailable.ok": "Mengerti",
+
+  "dashboard.totalExpenses": "Pengeluaran",
+  "dashboard.expenseEntries": "catatan",
+  "dashboard.operatingProfit": "Laba Operasional",
+  "dashboard.profitMargin": "Margin",
+  "dashboard.profitHint": "Pendapatan − pengeluaran"
 }

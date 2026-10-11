@@ -45,7 +45,7 @@ export class DashboardUseCase {
     const now = new Date()
     const { startTs, endTs } = buildDateRange(days, now)
 
-    const [productCount, outletCount, summary, lowStockCount] = await Promise.all([
+    const [productCount, outletCount, summary, lowStockCount, expenses] = await Promise.all([
       this.repo.getProductCount(tenantId),
       this.repo.getOutletCount(tenantId),
       outletIds.length > 0
@@ -54,7 +54,14 @@ export class DashboardUseCase {
       outletIds.length > 0
         ? this.repo.getLowStock(outletIds, 10).then(items => items.length)
         : Promise.resolve(0),
+      outletIds.length > 0
+        ? this.repo.getExpenseSummary(outletIds, startTs.slice(0, 10), endTs.slice(0, 10))
+        : Promise.resolve({ totalExpenses: 0, expenseCount: 0 }),
     ])
+
+    // Revenue is gross sales (the top line). Operating profit subtracts operational
+    // expenses; cost of goods is not tracked yet, so this is not net profit.
+    const operatingProfit = summary.totalRevenue - expenses.totalExpenses
 
     return {
       totalProducts: productCount,
@@ -63,6 +70,10 @@ export class DashboardUseCase {
       totalItemsSold: summary.totalItemsSold,
       lowStockCount,
       transactionCount: summary.transactionCount,
+      totalExpenses: expenses.totalExpenses,
+      expenseCount: expenses.expenseCount,
+      operatingProfit,
+      profitMargin: summary.totalRevenue > 0 ? (operatingProfit / summary.totalRevenue) * 100 : null,
     }
   }
 

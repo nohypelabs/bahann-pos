@@ -2,6 +2,7 @@ import { supabaseAdmin as supabase } from '../supabase/server';
 import type {
   DashboardRepository,
   SalesSummary,
+  ExpenseSummary,
   SalesTrendRow,
   TopProductRow,
   LowStockItem,
@@ -9,6 +10,7 @@ import type {
 } from '@/domain/repositories/DashboardRepository';
 
 interface RawSalesSummary { total_revenue: string; transaction_count: string; total_items_sold: string }
+interface RawExpenseSummary { total_expenses: string; expense_count: string }
 interface RawSalesTrend { sale_date: string; revenue: string; items_sold: string }
 interface RawTopProduct { product_id: string; product_name: string; product_sku: string; total_quantity: string; total_revenue: string }
 
@@ -55,6 +57,20 @@ export class SupabaseDashboardRepository implements DashboardRepository {
       totalRevenue: Number(row?.total_revenue) || 0,
       transactionCount: Number(row?.transaction_count) || 0,
       totalItemsSold: Number(row?.total_items_sold) || 0,
+    };
+  }
+
+  async getExpenseSummary(outletIds: string[], startDate: string, endDate: string): Promise<ExpenseSummary> {
+    const { data, error } = await rpc('get_expense_summary', {
+      p_outlet_ids: outletIds,
+      p_start_date: startDate,
+      p_end_date: endDate,
+    });
+    if (error) throw new Error(`Failed to load expense summary: ${(error as Error).message ?? String(error)}`);
+    const row = (data as RawExpenseSummary[] | null)?.[0];
+    return {
+      totalExpenses: Number(row?.total_expenses) || 0,
+      expenseCount: Number(row?.expense_count) || 0,
     };
   }
 

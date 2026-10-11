@@ -534,5 +534,11 @@
   "inventory.unavailable.title": "Your store does not track stock",
   "inventory.unavailable.message": "Your business type does not use stock, so stock recording and the warehouse are not available.",
   "inventory.unavailable.hint": "Sell stock-tracked goods too? Change your business type in Settings → Business.",
-  "inventory.unavailable.ok": "Got it"
+  "inventory.unavailable.ok": "Got it",
+
+  "dashboard.totalExpenses": "Expenses",
+  "dashboard.expenseEntries": "entries",
+  "dashboard.operatingProfit": "Operating Profit",
+  "dashboard.profitMargin": "Margin",
+  "dashboard.profitHint": "Revenue − expenses"
 }
