@@ -16,6 +16,9 @@ const PUBLIC_PATHS = [
   '/api/trpc/auth.resetPassword',
   '/api/trpc/',
   '/api/health',
+  // Vercel Cron sends no session cookie; each cron route checks CRON_SECRET itself.
+  // Without this the cron was redirected to /login and never ran.
+  '/api/cron/',
 ]
 
 function isPublicPath(pathname: string): boolean {

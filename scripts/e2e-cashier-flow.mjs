@@ -149,6 +149,14 @@ async function runFlow(type) {
     assert(c.cookies['auth_token'], 'cookie auth_token tidak diset')
   })) return
 
+  await step(type, 'Trial Starter aktif 14 hari setelah verifikasi', async () => {
+    const plan = await c.q('auth.getPlan')
+    assert(plan.plan === 'starter' && plan.isTrial, `paket ${plan.plan}, trial ${plan.isTrial}`)
+    assert(plan.daysLeft === 14, `sisa ${plan.daysLeft} hari`)
+    assert(!plan.inGrace, 'tertulis masa tenggang')
+    return `berakhir ${plan.periodEndsAt?.slice(0, 10)}`
+  })
+
   await step(type, 'Profil usaha sesuai jenis', async () => {
     const p = await c.q('businessProfile.getMyProfile')
     assert(p?.businessType === type, `businessType=${p?.businessType}`)
