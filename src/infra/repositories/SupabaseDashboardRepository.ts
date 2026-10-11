@@ -9,7 +9,7 @@ import type {
   RecentTransaction,
 } from '@/domain/repositories/DashboardRepository';
 
-interface RawSalesSummary { total_revenue: string; transaction_count: string; total_items_sold: string }
+interface RawSalesSummary { total_revenue: string; transaction_count: string; total_items_sold: string; total_cogs: string; uncosted_lines: string }
 interface RawExpenseSummary { total_expenses: string; expense_count: string }
 interface RawSalesTrend { sale_date: string; revenue: string; items_sold: string }
 interface RawTopProduct { product_id: string; product_name: string; product_sku: string; total_quantity: string; total_revenue: string }
@@ -57,6 +57,8 @@ export class SupabaseDashboardRepository implements DashboardRepository {
       totalRevenue: Number(row?.total_revenue) || 0,
       transactionCount: Number(row?.transaction_count) || 0,
       totalItemsSold: Number(row?.total_items_sold) || 0,
+      totalCogs: Number(row?.total_cogs) || 0,
+      uncostedLines: Number(row?.uncosted_lines) || 0,
     };
   }
 

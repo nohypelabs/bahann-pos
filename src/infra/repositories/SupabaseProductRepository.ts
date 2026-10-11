@@ -162,6 +162,7 @@ export class SupabaseProductRepository implements ProductRepository {
         name: data.name,
         category: data.category || null,
         price: data.price || null,
+        cost_price: data.costPrice ?? null,
         owner_id: data.ownerId,
         tenant_id: data.tenantId,
         item_type: data.itemType,
@@ -186,6 +187,7 @@ export class SupabaseProductRepository implements ProductRepository {
     if (data.name !== undefined) updatePayload.name = data.name;
     if (data.category !== undefined) updatePayload.category = data.category || null;
     if (data.price !== undefined) updatePayload.price = data.price || null;
+    if (data.costPrice !== undefined) updatePayload.cost_price = data.costPrice;
     if (data.itemType !== undefined) updatePayload.item_type = data.itemType;
     if (data.stockBehavior !== undefined) updatePayload.stock_behavior = data.stockBehavior;
     if (data.pricingModel !== undefined) updatePayload.pricing_model = data.pricingModel;

@@ -20,6 +20,7 @@ export interface CreateProductData {
   name: string;
   category?: string | null;
   price?: number | null;
+  costPrice?: number | null;
   ownerId: string;
   tenantId: string;
   itemType: string;
@@ -37,6 +38,7 @@ export interface UpdateProductData {
   name?: string;
   category?: string | null;
   price?: number | null;
+  costPrice?: number | null;
   itemType?: string;
   stockBehavior?: string;
   pricingModel?: string;
@@ -53,6 +55,7 @@ export interface ProductRow {
   name: string;
   category: string | null;
   price: number | null;
+  cost_price?: number | null;
   owner_id: string | null;
   tenant_id: string;
   item_type: string;

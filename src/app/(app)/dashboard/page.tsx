@@ -12,7 +12,7 @@ import { ChartSkeleton } from '@/components/ui/Skeletons'
 import { useInventoryAccess } from '@/components/layout/useInventoryAccess'
 import {
   DollarSign, Package, AlertTriangle, Store,
-  ShoppingCart, ClipboardList, Trophy, Receipt, Wallet, TrendingUp, TrendingDown,
+  ShoppingCart, ClipboardList, Trophy, Receipt, Wallet, TrendingUp, TrendingDown, Coins,
 } from 'lucide-react'
 
 const DashboardRevenueChart = lazy(() => import('@/components/charts/DashboardRevenueChart'))
@@ -92,9 +92,19 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* ── Stats ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+      {/* ── Financial summary: revenue → gross profit → expenses → operating profit ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard label={t('dashboard.totalRevenue')} value={formatCurrency(stats?.totalRevenue || 0)} sub={`${stats?.transactionCount || 0} transaksi`} subColor="green" loading={statsLoading} icon={<DollarSign />} />
+        <StatCard
+          label={t('dashboard.grossProfit')}
+          value={formatCurrency(stats?.grossProfit || 0)}
+          sub={(stats?.uncostedLines || 0) > 0
+            ? t('dashboard.uncostedItems').replace('{count}', String(stats?.uncostedLines))
+            : `${t('dashboard.cogs')} ${formatCurrency(stats?.totalCogs || 0)}`}
+          subColor={(stats?.uncostedLines || 0) > 0 ? 'red' : 'gray'}
+          loading={statsLoading}
+          icon={<Coins />}
+        />
         <StatCard label={t('dashboard.totalExpenses')} value={formatCurrency(stats?.totalExpenses || 0)} sub={`${stats?.expenseCount || 0} ${t('dashboard.expenseEntries')}`} loading={statsLoading} icon={<Wallet />} />
         <StatCard
           label={t('dashboard.operatingProfit')}
@@ -104,6 +114,10 @@ export default function DashboardPage() {
           loading={statsLoading}
           icon={(stats?.operatingProfit || 0) < 0 ? <TrendingDown /> : <TrendingUp />}
         />
+      </div>
+
+      {/* ── Operational stats ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         <StatCard label={t('dashboard.totalProducts')} value={(stats?.totalProducts || 0).toLocaleString()} sub="In inventory" loading={statsLoading} icon={<Package />} />
         <StatCard label={t('dashboard.lowStock')} value={stats?.lowStockCount || 0} sub={(stats?.lowStockCount || 0) > 0 ? t('warehouse.stock.lowStockAlert') : t('warehouse.stock.noLowStock')} subColor={(stats?.lowStockCount || 0) > 0 ? 'red' : 'green'} loading={statsLoading} icon={<AlertTriangle />} />
         <StatCard label={t('dashboard.totalOutlets')} value={stats?.totalOutlets || 0} sub="Active locations" loading={statsLoading} icon={<Store />} />

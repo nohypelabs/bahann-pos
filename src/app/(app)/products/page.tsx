@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { BulkImportModal } from '@/components/products/BulkImportModal'
 import { trpc } from '@/lib/trpc/client'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { BUSINESS_TYPE_DEFAULTS } from '@/domain/entities/BusinessProfile'
 import type { Product, SelectChangeEvent } from '@/types'
 import { Package, FolderOpen, CheckCircle, AlertTriangle, Tag, Trash2, Download, Search, Pencil, Plus } from 'lucide-react'
@@ -85,6 +86,7 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
     sku: product?.sku || '', barcode: product?.barcode || '',
     name: product?.name || '', category: product?.category || '',
     price: product?.price || '' as string | number,
+    costPrice: (product as any)?.cost_price ?? '' as string | number,
     itemType: (product as any)?.item_type || defaultItemType,
     stockBehavior: (product as any)?.stock_behavior || defaultStockBehavior,
     pricingModel: (product as any)?.pricing_model || 'FIXED',
@@ -99,6 +101,7 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
     })()
   )
   const { showToast } = useToast()
+  const { t } = useLanguage()
   const createProduct = trpc.products.create.useMutation()
   const updateProduct = trpc.products.update.useMutation()
   const isPending = createProduct.isPending || updateProduct.isPending
@@ -112,6 +115,8 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
         name: formData.name,
         category: formData.category || undefined,
         price: formData.price ? parseFloat(formData.price.toString()) : undefined,
+        // Empty clears the cost; 0 is a valid cost (e.g. a pure service).
+        costPrice: formData.costPrice === '' ? null : parseFloat(formData.costPrice.toString()),
         itemType: formData.itemType,
         stockBehavior: formData.stockBehavior,
         pricingModel: formData.pricingModel,
@@ -175,6 +180,18 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
         <Input label="Nama Produk *" type="text" value={formData.name} onChange={f('name')} placeholder="Coca Cola 330ml" fullWidth required />
         <Input label="Kategori" type="text" value={formData.category} onChange={f('category')} placeholder="Minuman" fullWidth />
         <Input label="Harga (Rp)" type="number" step="1" min="0" value={formData.price as number} onChange={f('price')} placeholder="5000" fullWidth />
+        <div>
+          <Input label={t('products.costPrice')} type="number" step="1" min="0" value={formData.costPrice as number} onChange={f('costPrice')} placeholder="3500" fullWidth />
+          <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
+            {(() => {
+              const price = Number(formData.price)
+              const cost = Number(formData.costPrice)
+              if (formData.costPrice === '' || !price) return t('products.costPriceHint')
+              const margin = ((price - cost) / price) * 100
+              return `${t('products.margin')}: ${new Intl.NumberFormat('id-ID').format(price - cost)} (${margin.toFixed(1)}%)`
+            })()}
+          </p>
+        </div>
 
         {/* Cloudinary Image URL Input */}
         <div>

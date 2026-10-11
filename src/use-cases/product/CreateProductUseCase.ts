@@ -10,6 +10,7 @@ export interface CreateProductInput {
   name: string;
   category?: string;
   price?: number;
+  costPrice?: number | null;
   ownerId: string;
   tenantId: string;
   itemType: string;
@@ -37,6 +38,7 @@ export class CreateProductUseCase {
       name: input.name,
       category: input.category || null,
       price: input.price || null,
+      costPrice: input.costPrice ?? null,
       ownerId: input.ownerId,
       tenantId: input.tenantId,
       itemType: input.itemType,

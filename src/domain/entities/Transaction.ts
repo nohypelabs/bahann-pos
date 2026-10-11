@@ -11,6 +11,8 @@ export type TransactionItem = {
   quantity: number
   unitPrice: number
   lineTotal: number
+  /** Cost of one unit at the moment of sale (HPP); null when unknown. */
+  unitCost?: number | null
 }
 
 export type Transaction = {

@@ -11,6 +11,7 @@ export interface UpdateProductInput {
   name: string;
   category?: string;
   price?: number;
+  costPrice?: number | null;
   itemType?: string;
   stockBehavior?: string;
   pricingModel?: string;
@@ -41,6 +42,7 @@ export class UpdateProductUseCase {
       name: input.name,
       category: input.category || null,
       price: input.price || null,
+      costPrice: input.costPrice,
       itemType: input.itemType,
       stockBehavior: input.stockBehavior,
       pricingModel: input.pricingModel,

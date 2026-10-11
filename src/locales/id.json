@@ -540,5 +540,12 @@
   "dashboard.expenseEntries": "catatan",
   "dashboard.operatingProfit": "Laba Operasional",
   "dashboard.profitMargin": "Margin",
-  "dashboard.profitHint": "Pendapatan − pengeluaran"
+  "dashboard.profitHint": "Pendapatan − HPP − pengeluaran",
+
+  "products.costPrice": "Harga Modal / HPP (Rp)",
+  "products.costPriceHint": "Opsional. Dipakai untuk menghitung laba kotor di dashboard.",
+  "products.margin": "Margin",
+  "dashboard.grossProfit": "Laba Kotor",
+  "dashboard.cogs": "HPP",
+  "dashboard.uncostedItems": "{count} item terjual tanpa harga modal"
 }

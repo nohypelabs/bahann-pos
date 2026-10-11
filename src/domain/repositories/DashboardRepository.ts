@@ -2,6 +2,10 @@ export interface SalesSummary {
   totalRevenue: number;
   transactionCount: number;
   totalItemsSold: number;
+  /** Cost of goods sold from per-sale cost snapshots. */
+  totalCogs: number;
+  /** Line items sold without a known cost; gross profit excludes their cost. */
+  uncostedLines: number;
 }
 
 export interface ExpenseSummary {

@@ -540,5 +540,12 @@
   "dashboard.expenseEntries": "entries",
   "dashboard.operatingProfit": "Operating Profit",
   "dashboard.profitMargin": "Margin",
-  "dashboard.profitHint": "Revenue − expenses"
+  "dashboard.profitHint": "Revenue − COGS − expenses",
+
+  "products.costPrice": "Cost Price / COGS (Rp)",
+  "products.costPriceHint": "Optional. Used to calculate gross profit on the dashboard.",
+  "products.margin": "Margin",
+  "dashboard.grossProfit": "Gross Profit",
+  "dashboard.cogs": "COGS",
+  "dashboard.uncostedItems": "{count} items sold without a cost price"
 }

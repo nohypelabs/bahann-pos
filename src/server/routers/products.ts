@@ -58,6 +58,7 @@ export const productsRouter = router({
         name: z.string().min(1),
         category: z.string().optional(),
         price: z.number().positive().optional(),
+        costPrice: z.number().nonnegative().nullable().optional(),
         itemType: z.enum(ITEM_TYPES as [string, ...string[]]).default('PRODUCT'),
         stockBehavior: z.enum(STOCK_BEHAVIORS as [string, ...string[]]).default('TRACKED'),
         pricingModel: z.enum(PRICING_MODELS as [string, ...string[]]).default('FIXED'),
@@ -152,6 +153,7 @@ export const productsRouter = router({
         name: z.string().min(1),
         category: z.string().optional(),
         price: z.number().positive().optional(),
+        costPrice: z.number().nonnegative().nullable().optional(),
         itemType: z.enum(ITEM_TYPES as [string, ...string[]]).optional(),
         stockBehavior: z.enum(STOCK_BEHAVIORS as [string, ...string[]]).optional(),
         pricingModel: z.enum(PRICING_MODELS as [string, ...string[]]).optional(),
@@ -182,7 +184,7 @@ export const productsRouter = router({
           entityId: input.id,
           changes: {
             before: oldData,
-            after: { sku: input.sku, barcode: input.barcode, name: input.name, category: input.category, price: input.price },
+            after: { sku: input.sku, barcode: input.barcode, name: input.name, category: input.category, price: input.price, costPrice: input.costPrice },
           },
           metadata: { sku: input.sku, name: input.name },
         })

@@ -49,6 +49,7 @@ type ResolvedTransactionItem = {
   productSku: string
   quantity: number
   unitPrice: number
+  unitCost: number | null
 }
 
 export class CreateTransactionUseCase {
@@ -149,6 +150,7 @@ export class CreateTransactionUseCase {
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       lineTotal: item.quantity * item.unitPrice,
+      unitCost: item.unitCost,
     }))
 
     try {
@@ -263,6 +265,8 @@ export class CreateTransactionUseCase {
         productSku: product.sku,
         quantity: item.quantity,
         unitPrice: this.resolveUnitPrice(product, item.unitPrice),
+        // Snapshot the cost so later cost changes do not rewrite past profit.
+        unitCost: product.cost_price != null ? Number(product.cost_price) : null,
       }
     })
   }

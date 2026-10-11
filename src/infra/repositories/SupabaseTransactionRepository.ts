@@ -137,6 +137,7 @@ export class SupabaseTransactionRepository implements TransactionRepository {
       quantity: item.quantity,
       unit_price: item.unitPrice,
       line_total: item.lineTotal,
+      unit_cost: item.unitCost ?? null,
     }))
 
     const { error } = await supabase

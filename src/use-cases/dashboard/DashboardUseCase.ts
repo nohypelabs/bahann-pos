@@ -50,7 +50,7 @@ export class DashboardUseCase {
       this.repo.getOutletCount(tenantId),
       outletIds.length > 0
         ? this.repo.getSalesSummary(outletIds, startTs, endTs)
-        : Promise.resolve({ totalRevenue: 0, transactionCount: 0, totalItemsSold: 0 }),
+        : Promise.resolve({ totalRevenue: 0, transactionCount: 0, totalItemsSold: 0, totalCogs: 0, uncostedLines: 0 }),
       outletIds.length > 0
         ? this.repo.getLowStock(outletIds, 10).then(items => items.length)
         : Promise.resolve(0),
@@ -59,9 +59,10 @@ export class DashboardUseCase {
         : Promise.resolve({ totalExpenses: 0, expenseCount: 0 }),
     ])
 
-    // Revenue is gross sales (the top line). Operating profit subtracts operational
-    // expenses; cost of goods is not tracked yet, so this is not net profit.
-    const operatingProfit = summary.totalRevenue - expenses.totalExpenses
+    // Revenue is gross sales (the top line). Gross profit subtracts the cost of
+    // goods sold (HPP); operating profit then subtracts operational expenses.
+    const grossProfit = summary.totalRevenue - summary.totalCogs
+    const operatingProfit = grossProfit - expenses.totalExpenses
 
     return {
       totalProducts: productCount,
@@ -70,6 +71,9 @@ export class DashboardUseCase {
       totalItemsSold: summary.totalItemsSold,
       lowStockCount,
       transactionCount: summary.transactionCount,
+      totalCogs: summary.totalCogs,
+      uncostedLines: summary.uncostedLines,
+      grossProfit,
       totalExpenses: expenses.totalExpenses,
       expenseCount: expenses.expenseCount,
       operatingProfit,

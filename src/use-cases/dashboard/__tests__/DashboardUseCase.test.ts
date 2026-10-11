@@ -3,7 +3,7 @@ import type { DashboardRepository } from '@/domain/repositories/DashboardReposit
 
 function makeRepo(overrides: Partial<DashboardRepository> = {}): jest.Mocked<DashboardRepository> {
   return {
-    getSalesSummary: jest.fn().mockResolvedValue({ totalRevenue: 1_000_000, transactionCount: 4, totalItemsSold: 9 }),
+    getSalesSummary: jest.fn().mockResolvedValue({ totalRevenue: 1_000_000, transactionCount: 4, totalItemsSold: 9, totalCogs: 400_000, uncostedLines: 0 }),
     getExpenseSummary: jest.fn().mockResolvedValue({ totalExpenses: 250_000, expenseCount: 2 }),
     getSalesTrend: jest.fn().mockResolvedValue([]),
     getTopProducts: jest.fn().mockResolvedValue([]),
@@ -16,15 +16,27 @@ function makeRepo(overrides: Partial<DashboardRepository> = {}): jest.Mocked<Das
 }
 
 describe('DashboardUseCase.getStats', () => {
-  it('reports revenue as gross sales and operating profit as revenue minus expenses', async () => {
+  it('reports revenue as gross sales, then gross and operating profit', async () => {
     const repo = makeRepo();
     const stats = await new DashboardUseCase(repo).getStats(['outlet-1'], 'tenant-1', 7);
 
     expect(stats.totalRevenue).toBe(1_000_000);
+    expect(stats.totalCogs).toBe(400_000);
+    expect(stats.grossProfit).toBe(600_000);
     expect(stats.totalExpenses).toBe(250_000);
     expect(stats.expenseCount).toBe(2);
-    expect(stats.operatingProfit).toBe(750_000);
-    expect(stats.profitMargin).toBeCloseTo(75);
+    expect(stats.operatingProfit).toBe(350_000);
+    expect(stats.profitMargin).toBeCloseTo(35);
+  });
+
+  it('passes through how many sold items had no cost price', async () => {
+    const repo = makeRepo({
+      getSalesSummary: jest.fn().mockResolvedValue({ totalRevenue: 500_000, transactionCount: 2, totalItemsSold: 3, totalCogs: 0, uncostedLines: 3 }),
+    });
+    const stats = await new DashboardUseCase(repo).getStats(['outlet-1'], 'tenant-1', 7);
+
+    expect(stats.uncostedLines).toBe(3);
+    expect(stats.grossProfit).toBe(500_000);
   });
 
   it('queries expenses by calendar day over the same period as sales', async () => {
@@ -41,7 +53,7 @@ describe('DashboardUseCase.getStats', () => {
 
   it('shows a loss and no margin when expenses exceed zero revenue', async () => {
     const repo = makeRepo({
-      getSalesSummary: jest.fn().mockResolvedValue({ totalRevenue: 0, transactionCount: 0, totalItemsSold: 0 }),
+      getSalesSummary: jest.fn().mockResolvedValue({ totalRevenue: 0, transactionCount: 0, totalItemsSold: 0, totalCogs: 0, uncostedLines: 0 }),
     });
     const stats = await new DashboardUseCase(repo).getStats(['outlet-1'], 'tenant-1', 1);
 
