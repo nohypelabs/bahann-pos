@@ -3,14 +3,18 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Receipt } from 'lucide-react'
+import { Receipt, FileSpreadsheet, FileText } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { trpc } from '@/lib/trpc/client'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import type { TransactionStatus } from '@/types'
+
+// Upper bound for one export request; larger ranges should be narrowed by date.
+const EXPORT_LIMIT = 5000
 
 const STATUS_BADGE: Record<TransactionStatus, string> = {
   completed: 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300',
@@ -57,6 +61,9 @@ function StyledSelect({ label, value, onChange, options }: {
 
 export default function TransactionsPage() {
   const { showToast } = useToast()
+  const { t } = useLanguage()
+  const utils = trpc.useUtils()
+  const [exporting, setExporting] = useState<'csv' | 'pdf' | null>(null)
   const [filters, setFilters] = useState<{
     status?: TransactionStatus; dateFrom?: string; dateTo?: string; outletId?: string
   }>({})
@@ -107,6 +114,57 @@ export default function TransactionsPage() {
     ...(outletsData?.outlets?.map(o => ({ value: o.id, label: o.name })) || []),
   ]
 
+  const handleExport = async (format: 'csv' | 'pdf') => {
+    setExporting(format)
+    try {
+      const result = await utils.transactions.list.fetch({ ...filters, limit: EXPORT_LIMIT, offset: 0 })
+      if (!result.transactions.length) { showToast(t('transactions.export.empty'), 'error'); return }
+
+      const outletName = outletsData?.outlets?.find(o => o.id === filters.outletId)?.name
+      const filterParts = [
+        filters.status && `${t('transactions.export.filter.status')}: ${filters.status}`,
+        outletName && `${t('transactions.export.filter.outlet')}: ${outletName}`,
+        filters.dateFrom && `${t('transactions.export.filter.from')}: ${filters.dateFrom}`,
+        filters.dateTo && `${t('transactions.export.filter.to')}: ${filters.dateTo}`,
+      ].filter(Boolean)
+
+      const labels = {
+        title: t('transactions.export.title'),
+        filterSummary: filterParts.length ? filterParts.join('   ·   ') : t('transactions.export.allTransactions'),
+        generatedAt: t('transactions.export.generatedAt'),
+        totalRevenue: t('transactions.export.totalRevenue'),
+        count: t('transactions.export.count'),
+        columns: {
+          id: t('transactions.export.col.id'),
+          date: t('transactions.export.col.date'),
+          outlet: t('transactions.export.col.outlet'),
+          cashier: t('transactions.export.col.cashier'),
+          items: t('transactions.export.col.items'),
+          subtotal: t('transactions.export.col.subtotal'),
+          discount: t('transactions.export.col.discount'),
+          tax: t('transactions.export.col.tax'),
+          total: t('transactions.export.col.total'),
+          payment: t('transactions.export.col.payment'),
+          status: t('transactions.export.col.status'),
+        },
+      }
+
+      const exporter = await import('@/lib/exporters/transactions-exporter')
+      if (format === 'csv') exporter.exportTransactionsCSV(result.transactions, labels)
+      else await exporter.exportTransactionsPDF(result.transactions, labels)
+
+      if (result.total > result.transactions.length) {
+        showToast(t('transactions.export.truncated').replace('{count}', String(result.transactions.length)), 'warning')
+      } else {
+        showToast(t('transactions.export.success'), 'success')
+      }
+    } catch {
+      showToast(t('transactions.export.failed'), 'error')
+    } finally {
+      setExporting(null)
+    }
+  }
+
   const closeVoid = () => { setShowVoid(false); setVoidReason(''); setSelectedTx(null) }
   const closeRefund = () => { setShowRefund(false); setRefundReason(''); setSelectedTx(null) }
 
@@ -140,10 +198,22 @@ export default function TransactionsPage() {
 
       {/* Table */}
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
-        <div className="px-4 md:px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+        <div className="px-4 md:px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-semibold text-gray-900 dark:text-white">
             Transaksi <span className="text-gray-400 dark:text-gray-500 font-normal">({data?.total || 0})</span>
           </p>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleExport('csv')}
+              disabled={exporting !== null || !data?.total}>
+              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+              {exporting === 'csv' ? t('transactions.export.exporting') : t('transactions.export.csv')}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleExport('pdf')}
+              disabled={exporting !== null || !data?.total}>
+              <FileText className="w-4 h-4 mr-1.5" />
+              {exporting === 'pdf' ? t('transactions.export.exporting') : t('transactions.export.pdf')}
+            </Button>
+          </div>
         </div>
 
         {isLoading ? (
