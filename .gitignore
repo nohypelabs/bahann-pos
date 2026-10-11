@@ -57,3 +57,6 @@ next-env.d.ts
 /backups/
 /db-audit/*.backup.gz
 /db-audit/*.storage.zip
+
+# Supabase CLI local state (linked project, CLI version cache)
+supabase/.temp/
