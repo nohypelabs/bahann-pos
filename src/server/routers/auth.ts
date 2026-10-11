@@ -1,3 +1,4 @@
+import { after } from 'next/server'
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, publicProcedure, protectedProcedure, adminProcedure } from '../trpc'
@@ -148,27 +149,32 @@ export const authRouter = router({
         )
         await container.businessProfileRepo().save(profile)
 
-        sendVerificationEmail({
-          to: result.email,
-          name: result.name,
-          token: verifyToken,
-        }).catch(() => {})
-
-        sendWelcomeEmail({
-          to: result.email,
-          name: result.name,
-          storeName: input.storeName,
-        }).catch(() => {})
-
+        // Send after the response so registration stays fast. `after` keeps the
+        // serverless function alive until delivery finishes; a bare un-awaited
+        // promise gets frozen mid-SMTP-handshake on Vercel.
         const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL
-        if (adminEmail) {
-          sendNewUserNotification({
-            adminEmail,
-            newUserName: result.name,
-            newUserEmail: result.email,
-            newUserWhatsapp: input.whatsappNumber,
-          }).catch(() => {})
-        }
+        after(() =>
+          Promise.allSettled([
+            sendVerificationEmail({
+              to: result.email,
+              name: result.name,
+              token: verifyToken,
+            }),
+            sendWelcomeEmail({
+              to: result.email,
+              name: result.name,
+              storeName: input.storeName,
+            }),
+            adminEmail
+              ? sendNewUserNotification({
+                  adminEmail,
+                  newUserName: result.name,
+                  newUserEmail: result.email,
+                  newUserWhatsapp: input.whatsappNumber,
+                })
+              : Promise.resolve(),
+          ])
+        )
 
         return {
           ...result,

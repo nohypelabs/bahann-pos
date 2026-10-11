@@ -110,7 +110,8 @@ class Logger {
 
     const formatted = this.formatMessage('error', message, errorContext)
 
-    if (this.isDevelopment) {
+    // Server errors also go to stdout in production so they show up in Vercel logs.
+    if (this.isDevelopment || this.isServer) {
       console.error(formatted)
       if (error instanceof Error) {
         console.error(error)
