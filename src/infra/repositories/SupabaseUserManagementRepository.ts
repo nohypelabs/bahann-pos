@@ -36,11 +36,11 @@ export class SupabaseUserManagementRepository implements UserManagementRepositor
   async getPlan(userId: string): Promise<string> {
     const { data } = await supabaseAdmin
       .from('users')
-      .select('plan')
+      .select('effective_plan')
       .eq('id', userId)
       .single();
 
-    return data?.plan ?? 'free';
+    return (data?.effective_plan as string | null) ?? 'free';
   }
 
   async countByRoleAndOutletIds(role: string, outletIds: string[]): Promise<number> {
@@ -94,10 +94,8 @@ export class SupabaseUserManagementRepository implements UserManagementRepositor
   }
 
   async updatePlan(userId: string, plan: string): Promise<void> {
-    const { error } = await supabaseAdmin
-      .from('users')
-      .update({ plan, is_trial: false })
-      .eq('id', userId);
+    // grant_plan sets a 30-day period (or clears it for 'free').
+    const { error } = await supabaseAdmin.rpc('grant_plan', { p_user_id: userId, p_plan: plan });
 
     if (error) throw new Error(error.message);
   }

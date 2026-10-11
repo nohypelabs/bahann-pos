@@ -366,8 +366,9 @@ export const authRouter = router({
    * Get current user's subscription plan
    */
   getPlan: protectedProcedure.query(async ({ ctx }) => {
-    const plan = await container.userRepository().getPlan(ctx.userId)
-    return { plan }
+    // `plan` is the effective plan (free once the period plus grace has passed);
+    // the rest lets the UI warn before and during the grace period.
+    return container.userRepository().getPlanStatus(ctx.userId)
   }),
 
   /**

@@ -66,11 +66,11 @@ async function enforceCashierPlanLimit(
   if (tenant?.owner_user_id) {
     const { data: owner } = await supabaseAdmin
       .from('users')
-      .select('plan')
+      .select('effective_plan')
       .eq('id', tenant.owner_user_id)
       .maybeSingle()
 
-    if (owner?.plan) plan = owner.plan as string
+    if (owner?.effective_plan) plan = owner.effective_plan as string
   }
 
   const limits = getLimits(plan)

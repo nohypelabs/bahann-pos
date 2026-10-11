@@ -2,6 +2,7 @@
 
 import { AppLayout } from '@/components/layout/AppLayout'
 import { EmailVerificationBanner } from '@/components/layout/EmailVerificationBanner'
+import { PlanExpiryBanner } from '@/components/layout/PlanExpiryBanner'
 import { ImpersonationBanner } from '@/components/layout/ImpersonationBanner'
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
@@ -106,6 +107,7 @@ export default function AppGroupLayout({
     <AppLayout>
       <ImpersonationBanner />
       <EmailVerificationBanner />
+      <PlanExpiryBanner />
       {children}
     </AppLayout>
   )

@@ -1,4 +1,5 @@
 import { User } from '../entities/User'
+import type { PlanStatus } from '@/lib/plans'
 
 export interface UserSummary {
   id: string
@@ -23,6 +24,8 @@ export interface UserRepository {
   activateTrial(userId: string): Promise<void>
   insertBillingHistory(data: { userId: string; plan: string; previousPlan: string; amount: number; note: string; isTrial: boolean; changedBy?: string }): Promise<void>
   activatePlan(userId: string, plan: string): Promise<void>
+  /** Effective plan plus its period and grace, for the account's tenant owner. */
+  getPlanStatus(userId: string): Promise<PlanStatus>
   updateVerifyToken(userId: string, token: string): Promise<void>
   getEmailVerificationStatus(userId: string): Promise<{ verified: boolean; plan: string }>
   updateRegistrationDetails(userId: string, outletId: string, verifyToken: string): Promise<void>

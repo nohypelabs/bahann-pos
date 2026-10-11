@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Receipt, FileSpreadsheet, FileText } from 'lucide-react'
+import { Receipt, FileSpreadsheet, FileText, Lock } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { getLimits } from '@/lib/plans'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import type { TransactionStatus } from '@/types'
 
@@ -76,6 +77,8 @@ export default function TransactionsPage() {
   const { data, isLoading, refetch } = trpc.transactions.list.useQuery(filters)
   const { data: outletsData }        = trpc.outlets.getAll.useQuery()
   const { data: permissionsData }    = trpc.users.getMyPermissions.useQuery()
+  const { data: planData }           = trpc.auth.getPlan.useQuery()
+  const canExport = planData ? getLimits(planData.plan).canExport : null
 
   const voidMutation = trpc.transactions.void.useMutation({
     onSuccess: () => { refetch(); setShowVoid(false); setVoidReason(''); setSelectedTx(null) },
@@ -202,18 +205,25 @@ export default function TransactionsPage() {
           <p className="text-sm font-semibold text-gray-900 dark:text-white">
             Transaksi <span className="text-gray-400 dark:text-gray-500 font-normal">({data?.total || 0})</span>
           </p>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => handleExport('csv')}
-              disabled={exporting !== null || !data?.total}>
-              <FileSpreadsheet className="w-4 h-4 mr-1.5" />
-              {exporting === 'csv' ? t('transactions.export.exporting') : t('transactions.export.csv')}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => handleExport('pdf')}
-              disabled={exporting !== null || !data?.total}>
-              <FileText className="w-4 h-4 mr-1.5" />
-              {exporting === 'pdf' ? t('transactions.export.exporting') : t('transactions.export.pdf')}
-            </Button>
-          </div>
+          {canExport === false ? (
+            <a href="/settings/subscriptions"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-300 hover:underline">
+              <Lock className="w-3.5 h-3.5" /> {t('transactions.export.locked')}
+            </a>
+          ) : canExport && (
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => handleExport('csv')}
+                disabled={exporting !== null || !data?.total}>
+                <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+                {exporting === 'csv' ? t('transactions.export.exporting') : t('transactions.export.csv')}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleExport('pdf')}
+                disabled={exporting !== null || !data?.total}>
+                <FileText className="w-4 h-4 mr-1.5" />
+                {exporting === 'pdf' ? t('transactions.export.exporting') : t('transactions.export.pdf')}
+              </Button>
+            </div>
+          )}
         </div>
 
         {isLoading ? (

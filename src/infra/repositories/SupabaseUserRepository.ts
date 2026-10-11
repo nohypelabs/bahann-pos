@@ -1,6 +1,7 @@
 import { UserRepository, UserSummary } from '@/domain/repositories/UserRepository'
 import { User } from '@/domain/entities/User'
 import { supabaseAdmin } from '../supabase/server'
+import { buildPlanStatus, type PlanStatus } from '@/lib/plans'
 
 type TenantBillingContext = {
   plan: string
@@ -23,18 +24,18 @@ export class SupabaseUserRepository implements UserRepository {
     if (ownerUserId) {
       const { data: owner } = await supabaseAdmin
         .from('users')
-        .select('id, plan, email_verified_at')
+        .select('id, effective_plan, email_verified_at')
         .eq('id', ownerUserId)
         .maybeSingle()
 
-      ownerPlan = (owner?.plan as string | null) ?? null
+      ownerPlan = (owner?.effective_plan as string | null) ?? null
       ownerEmailVerifiedAt = owner?.email_verified_at ?? null
     }
 
     if (!ownerUserId) {
       const { data: owner } = await supabaseAdmin
         .from('users')
-        .select('id, plan, email_verified_at')
+        .select('id, effective_plan, email_verified_at')
         .eq('tenant_id', tenantId)
         .in('role', ['admin', 'owner', 'super_admin'])
         .order('created_at', { ascending: true })
@@ -42,7 +43,7 @@ export class SupabaseUserRepository implements UserRepository {
         .maybeSingle()
 
       ownerUserId = owner?.id ?? null
-      ownerPlan = (owner?.plan as string | null) ?? null
+      ownerPlan = (owner?.effective_plan as string | null) ?? null
       ownerEmailVerifiedAt = owner?.email_verified_at ?? null
     }
 
@@ -173,13 +174,13 @@ export class SupabaseUserRepository implements UserRepository {
   async getPlan(userId: string): Promise<string> {
     const { data } = await supabaseAdmin
       .from('users')
-      .select('plan, tenant_id')
+      .select('effective_plan, tenant_id')
       .eq('id', userId)
       .single()
 
     if (!data) return 'free'
 
-    const userPlan = (data.plan as string) || 'free'
+    const userPlan = (data.effective_plan as string) || 'free'
     if (!data.tenant_id) return userPlan
 
     const tenantBilling = await this.getTenantBillingContext(data.tenant_id, userPlan)
@@ -230,14 +231,40 @@ export class SupabaseUserRepository implements UserRepository {
   }
 
   async activatePlan(userId: string, plan: string): Promise<void> {
-    const { error } = await supabaseAdmin
-      .from('users')
-      .update({ plan, is_trial: false })
-      .eq('id', userId)
+    // grant_plan sets a 30-day period, extending a still-valid same plan.
+    const { error } = await supabaseAdmin.rpc('grant_plan', { p_user_id: userId, p_plan: plan })
 
     if (error) {
       throw new Error(`Failed to activate plan: ${error.message}`)
     }
+  }
+
+  async getPlanStatus(userId: string): Promise<PlanStatus> {
+    // The plan comes from the tenant owner, like getPlan.
+    const { data: user } = await supabaseAdmin
+      .from('users')
+      .select('id, tenant_id')
+      .eq('id', userId)
+      .single()
+
+    let ownerId = userId
+    if (user?.tenant_id) {
+      const billing = await this.getTenantBillingContext(user.tenant_id)
+      ownerId = billing.ownerUserId ?? userId
+    }
+
+    const { data } = await supabaseAdmin
+      .from('users')
+      .select('plan, is_trial, effective_plan, plan_period_ends_at')
+      .eq('id', ownerId)
+      .single()
+
+    return buildPlanStatus({
+      storedPlan: (data?.plan as string | null) ?? 'free',
+      effectivePlan: (data?.effective_plan as string | null) ?? 'free',
+      isTrial: !!data?.is_trial,
+      periodEndsAt: (data?.plan_period_ends_at as string | null) ?? null,
+    })
   }
 
   async insertBillingHistory(entry: { userId: string; plan: string; previousPlan: string; amount: number; note: string; isTrial: boolean; changedBy?: string }): Promise<void> {
@@ -270,7 +297,7 @@ export class SupabaseUserRepository implements UserRepository {
   async getEmailVerificationStatus(userId: string): Promise<{ verified: boolean; plan: string }> {
     const { data } = await supabaseAdmin
       .from('users')
-      .select('email_verified_at, plan, tenant_id')
+      .select('email_verified_at, effective_plan, tenant_id')
       .eq('id', userId)
       .single()
 
@@ -278,7 +305,7 @@ export class SupabaseUserRepository implements UserRepository {
       return { verified: false, plan: 'free' }
     }
 
-    const userPlan = (data.plan as string) || 'free'
+    const userPlan = (data.effective_plan as string) || 'free'
     if (!data.tenant_id) {
       return {
         verified: !!data.email_verified_at,

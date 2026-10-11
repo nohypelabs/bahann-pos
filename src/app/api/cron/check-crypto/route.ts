@@ -35,10 +35,8 @@ async function approveRequest(
     .eq('id', userId)
     .single()
 
-  await supabaseAdmin
-    .from('users')
-    .update({ plan, is_trial: false })
-    .eq('id', userId)
+  // grant_plan sets a 30-day period, extending a still-valid same plan.
+  await supabaseAdmin.rpc('grant_plan', { p_user_id: userId, p_plan: plan })
 
   await supabaseAdmin.from('billing_history').insert({
     user_id: userId,

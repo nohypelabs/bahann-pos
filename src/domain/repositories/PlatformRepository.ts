@@ -27,6 +27,10 @@ export interface TenantSummary {
   is_suspended: boolean;
   created_at: string;
   email_verified_at: string | null;
+  /** The plan the tenant may use now; 'free' once the period plus grace passed. */
+  effective_plan: string;
+  /** End of the trial or paid period, before grace. */
+  plan_period_ends_at: string | null;
   outletCount: number;
   userCount: number;
 }

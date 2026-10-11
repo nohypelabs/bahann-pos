@@ -77,7 +77,7 @@ export class SupabasePlatformRepository implements PlatformRepository {
   async listTenants(params: TenantListParams): Promise<{ tenants: TenantSummary[]; total: number }> {
     let query = supabase
       .from('users')
-      .select('id, email, name, plan, is_trial, is_suspended, created_at, email_verified_at', { count: 'exact' })
+      .select('id, email, name, plan, is_trial, is_suspended, created_at, email_verified_at, effective_plan, plan_period_ends_at', { count: 'exact' })
       .eq('role', 'admin')
       .order('created_at', { ascending: false });
 
@@ -123,6 +123,8 @@ export class SupabasePlatformRepository implements PlatformRepository {
       email: t.email,
       name: t.name,
       plan: t.plan,
+      effective_plan: (t.effective_plan as string | null) ?? 'free',
+      plan_period_ends_at: (t.plan_period_ends_at as string | null) ?? null,
       is_trial: t.is_trial,
       is_suspended: t.is_suspended,
       created_at: t.created_at,

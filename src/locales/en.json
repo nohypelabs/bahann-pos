@@ -547,5 +547,13 @@
   "products.margin": "Margin",
   "dashboard.grossProfit": "Gross Profit",
   "dashboard.cogs": "COGS",
-  "dashboard.uncostedItems": "{count} items sold without a cost price"
+  "dashboard.uncostedItems": "{count} items sold without a cost price",
+
+  "plan.expiry.trial": "Trial",
+  "plan.expiry.subscription": "Subscription",
+  "plan.expiry.soon": "Your {plan} {kind} ends on {date}. Renew so your store keeps its features.",
+  "plan.expiry.grace": "Your {plan} {kind} has ended. Access continues until {date}, then your store moves to Free.",
+  "plan.expiry.renew": "Renew now",
+  "plan.expiry.dismiss": "Dismiss",
+  "transactions.export.locked": "Export is available on Starter and above"
 }

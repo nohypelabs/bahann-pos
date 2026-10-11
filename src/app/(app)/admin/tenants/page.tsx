@@ -629,9 +629,17 @@ function TenantsContent() {
                         </div>
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{t.email}</p>
                       </button>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold text-center w-fit ${PLAN_COLORS[t.plan || 'free']}`}>
-                        {(t.plan || 'free').charAt(0).toUpperCase() + (t.plan || 'free').slice(1)}
-                      </span>
+                      <div className="min-w-0">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold text-center w-fit ${PLAN_COLORS[t.plan || 'free']}`}>
+                          {(t.plan || 'free').charAt(0).toUpperCase() + (t.plan || 'free').slice(1)}
+                        </span>
+                        {t.plan_period_ends_at && t.plan !== 'free' && (
+                          <p className={`mt-0.5 text-[10px] ${t.effective_plan === 'free' ? 'text-red-500' : 'text-gray-400'}`}>
+                            {t.effective_plan === 'free' ? 'habis ' : 's/d '}
+                            {new Date(t.plan_period_ends_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', timeZone: 'Asia/Jakarta' })}
+                          </p>
+                        )}
+                      </div>
                       <span className="text-sm text-gray-600 dark:text-gray-400">{t.outletCount}</span>
                       <span className="text-sm text-gray-600 dark:text-gray-400">{t.userCount}</span>
                       <span className={`text-xs font-medium ${t.is_suspended ? 'text-red-500' : 'text-emerald-500'}`}>

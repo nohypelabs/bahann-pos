@@ -494,6 +494,10 @@ export async function sendPlanUpgradeEmail({ to, name, oldPlan, newPlan }: SendP
 }
 
 export interface SendTrialExpiredEmailParams {
+  /** The plan that lapsed; defaults to the Starter trial. */
+  plan?: string
+  /** false for a lapsed paid subscription. */
+  isTrial?: boolean
   to: string
   name: string
 }
@@ -501,11 +505,13 @@ export interface SendTrialExpiredEmailParams {
 /**
  * Sent when a user's 14-day trial expires and plan is downgraded to Free
  */
-export async function sendTrialExpiredEmail({ to, name }: SendTrialExpiredEmailParams) {
+export async function sendTrialExpiredEmail({ to, name, plan = 'starter', isTrial = true }: SendTrialExpiredEmailParams) {
+  const planName = plan.charAt(0).toUpperCase() + plan.slice(1)
+  const what = isTrial ? `Trial 14 hari plan <strong>${planName}</strong>` : `Langganan plan <strong>${planName}</strong>`
   try {
     await sendMail({
       to,
-      subject: '⏰ Trial Laku POS kamu sudah berakhir',
+      subject: isTrial ? '⏰ Trial Laku POS kamu sudah berakhir' : '⏰ Langganan Laku POS kamu sudah berakhir',
       html: `
 <!DOCTYPE html>
 <html>
@@ -522,7 +528,7 @@ export async function sendTrialExpiredEmail({ to, name }: SendTrialExpiredEmailP
           <tr>
             <td style="background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);padding:40px;text-align:center;">
               <h1 style="margin:0;color:white;font-size:36px;font-weight:bold;letter-spacing:-1px;">Laku POS</h1>
-              <p style="margin:10px 0 0 0;color:rgba(255,255,255,0.9);font-size:16px;">Trial Period Berakhir</p>
+              <p style="margin:10px 0 0 0;color:rgba(255,255,255,0.9);font-size:16px;">${isTrial ? 'Trial Period Berakhir' : 'Langganan Berakhir'}</p>
             </td>
           </tr>
 
@@ -530,7 +536,7 @@ export async function sendTrialExpiredEmail({ to, name }: SendTrialExpiredEmailP
             <td style="padding:40px;">
               <h2 style="margin:0 0 8px 0;color:#1a202c;font-size:24px;">Halo, ${name} 👋</h2>
               <p style="margin:0 0 24px 0;color:#4a5568;font-size:16px;line-height:1.6;">
-                Trial 14 hari plan <strong>Starter</strong> kamu sudah berakhir. Akun kamu sekarang kembali ke plan <strong>Free</strong>.
+                ${what} kamu sudah berakhir. Akun kamu sekarang kembali ke plan <strong>Free</strong>.
               </p>
 
               <div style="background-color:#fef2f2;border:2px solid #fecaca;border-radius:12px;padding:24px;margin:0 0 28px 0;">

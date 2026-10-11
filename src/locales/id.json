@@ -547,5 +547,13 @@
   "products.margin": "Margin",
   "dashboard.grossProfit": "Laba Kotor",
   "dashboard.cogs": "HPP",
-  "dashboard.uncostedItems": "{count} item terjual tanpa harga modal"
+  "dashboard.uncostedItems": "{count} item terjual tanpa harga modal",
+
+  "plan.expiry.trial": "trial",
+  "plan.expiry.subscription": "langganan",
+  "plan.expiry.soon": "Masa {kind} {plan} kamu berakhir {date}. Perpanjang supaya fitur toko tetap aktif.",
+  "plan.expiry.grace": "Masa {kind} {plan} kamu sudah berakhir. Akses tetap jalan sampai {date}, setelah itu toko turun ke paket Free.",
+  "plan.expiry.renew": "Perpanjang",
+  "plan.expiry.dismiss": "Tutup",
+  "transactions.export.locked": "Export tersedia mulai paket Starter"
 }
