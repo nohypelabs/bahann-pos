@@ -204,12 +204,41 @@ async function runFlow(type) {
     return `${r.transactionNumber}, kembalian ${rp(tx.change_amount)}`
   })
 
+  const bankAccount = { bankName: 'BCA', accountNumber: `${{ RETAIL: '111', FNB: '222', SERVICE: '333' }[type]}${RUN}`, accountHolder: `E2E ${type}` }
+
+  await step(type, 'Pengaturan pembayaran toko baru masih kosong (tidak bocor dari toko lain)', async () => {
+    const settings = await c.q('payments.getSettings')
+    assert(!settings.bankTransfer.accountNumber, `rekening sudah terisi: ${settings.bankTransfer.accountNumber}`)
+    assert(!settings.qris.imageBase64, 'QRIS sudah terisi')
+    const methods = await c.q('payments.getActiveMethods')
+    const codes = methods.map((m) => m.code)
+    assert(!codes.includes('bank_transfer') && !codes.includes('qris_static'), `metode belum diatur ikut tampil: ${codes.join(',')}`)
+    assert(codes.includes('cash'), 'tunai tidak tampil')
+  })
+
+  await step(type, 'Checkout transfer ditolak sebelum rekening diatur', async () => {
+    try {
+      await c.call('payments.startCheckout', {
+        outletId: ctx.outlet.id, shiftId: ctx.shift.id, method: 'bank_transfer', items: [{ productId: p2.id, quantity: 1 }],
+      })
+    } catch (e) { assert(/belum diatur/i.test(e.message), e.message); return e.message }
+    throw new Error('checkout transfer diterima tanpa rekening toko')
+  })
+
+  await step(type, `Atur rekening transfer toko (${bankAccount.bankName} ${bankAccount.accountNumber})`, async () => {
+    await c.call('payments.updateBankTransfer', bankAccount)
+    const settings = await c.q('payments.getSettings')
+    assert(settings.bankTransfer.accountNumber === bankAccount.accountNumber, `tersimpan ${settings.bankTransfer.accountNumber}`)
+  })
+
   await step(type, `Transaksi transfer bank (1× ${p2.name}) lalu konfirmasi bayar`, async () => {
     const r = await c.call('payments.startCheckout', {
       outletId: ctx.outlet.id, shiftId: ctx.shift.id, method: 'bank_transfer',
       items: [{ productId: p2.id, quantity: 1 }],
     })
     assert(r.status === 'pending', `status awal ${r.status}`)
+    assert(r.displayDetails?.accountNumber === bankAccount.accountNumber,
+      `rekening di checkout ${r.displayDetails?.accountNumber}, harusnya milik toko ini ${bankAccount.accountNumber}`)
     await c.call('payments.confirmCheckout', { paymentId: r.paymentId })
     const [tx] = sql(`select status from transactions where id='${r.transactionId}'`)
     assert(tx.status === 'completed', `status setelah konfirmasi ${tx.status}`)

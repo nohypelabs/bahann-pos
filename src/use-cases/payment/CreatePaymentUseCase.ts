@@ -22,18 +22,19 @@ interface QRISInput {
 export class CreatePaymentUseCase {
   constructor(private readonly paymentRepo: PaymentMethodRepository) {}
 
-  async updateBankTransfer(input: BankTransferInput): Promise<{ success: boolean }> {
+  async updateBankTransfer(tenantId: string, input: BankTransferInput): Promise<{ success: boolean }> {
     const accountDetails = {
       bankName: input.bankName,
       accountNumber: input.accountNumber,
       accountHolder: input.accountHolder,
     }
-    await this.paymentRepo.updateByCode('bank_transfer', accountDetails, input.isActive ?? true)
+    await this.paymentRepo.saveForTenant(tenantId, 'bank_transfer', accountDetails, input.isActive ?? true)
     return { success: true }
   }
 
-  async updateEWallet(input: EWalletInput): Promise<{ success: boolean }> {
-    await this.paymentRepo.updateByCode(
+  async updateEWallet(tenantId: string, input: EWalletInput): Promise<{ success: boolean }> {
+    await this.paymentRepo.saveForTenant(
+      tenantId,
       'ewallet_manual',
       { phone: input.phone },
       input.isActive ?? true,
@@ -41,7 +42,7 @@ export class CreatePaymentUseCase {
     return { success: true }
   }
 
-  async updateQRIS(input: QRISInput): Promise<{ success: boolean }> {
+  async updateQRIS(tenantId: string, input: QRISInput): Promise<{ success: boolean }> {
     const qrisImage = normalizeImageUpload(input.imageBase64, {
       label: 'Gambar QRIS',
       maxBytes: 2 * 1024 * 1024,
@@ -51,7 +52,7 @@ export class CreatePaymentUseCase {
       imageBase64: qrisImage.dataUrl,
       merchantName: input.merchantName ?? 'Laku POS',
     }
-    await this.paymentRepo.updateByCode('qris_static', accountDetails, input.isActive ?? true)
+    await this.paymentRepo.saveForTenant(tenantId, 'qris_static', accountDetails, input.isActive ?? true)
     return { success: true }
   }
 }

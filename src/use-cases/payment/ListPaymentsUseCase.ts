@@ -39,8 +39,8 @@ export interface PaymentSettings {
 export class ListPaymentsUseCase {
   constructor(private readonly paymentRepo: PaymentMethodRepository) {}
 
-  async getSettings(): Promise<PaymentSettings> {
-    const methods = await this.paymentRepo.findByCodes([
+  async getSettings(tenantId: string): Promise<PaymentSettings> {
+    const methods = await this.paymentRepo.findForTenant(tenantId, [
       'bank_transfer',
       'ewallet_manual',
       'qris_static',

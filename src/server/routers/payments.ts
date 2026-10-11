@@ -38,6 +38,10 @@ function methodToTransactionPaymentMethod(method: CheckoutMethod) {
   return 'ewallet'
 }
 
+/** Methods that pay into the store's own account and need its settings first. */
+const TENANT_CONFIGURED_METHODS = new Set<CheckoutMethod>(['qris', 'bank_transfer', 'ewallet'])
+const TENANT_CONFIGURED_CODES = new Set(['qris_static', 'bank_transfer', 'ewallet_manual'])
+
 function isInstantMethod(method: CheckoutMethod) {
   return method === 'cash' || method === 'debit' || method === 'credit'
 }
@@ -73,7 +77,6 @@ export const paymentsRouter = router({
     const { data, error } = await supabaseAdmin
       .from('payment_methods')
       .select('id, code, name, type, is_active, requires_confirmation, icon, instructions, display_order, tenant_id')
-      .eq('is_active', true)
       .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
       .order('display_order', { ascending: true })
 
@@ -81,7 +84,16 @@ export const paymentsRouter = router({
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
     }
 
-    return (data ?? []).map((method) => ({
+    // One entry per method: the store's own row overrides the template, and
+    // account-based methods only appear once the store has configured them.
+    const rows = data ?? []
+    const methods = rows
+      .filter((m) => m.tenant_id === null)
+      .map((template) => rows.find((m) => m.tenant_id === tenantId && m.code === template.code) ?? template)
+      .filter((m) => m.is_active)
+      .filter((m) => !TENANT_CONFIGURED_CODES.has(m.code) || m.tenant_id === tenantId)
+
+    return methods.map((method) => ({
       id: method.id,
       code: method.code,
       name: method.name,
@@ -141,21 +153,31 @@ export const paymentsRouter = router({
       }
 
       const methodCode = methodToCode(input.method)
-      const { data: paymentMethod, error: paymentMethodError } = await supabaseAdmin
+      const { data: candidates, error: paymentMethodError } = await supabaseAdmin
         .from('payment_methods')
-        .select('id, code, name, account_details, tenant_id')
+        .select('id, code, name, account_details, tenant_id, is_active')
         .eq('code', methodCode)
-        .eq('is_active', true)
         .or(`tenant_id.eq.${tenantId},tenant_id.is.null`)
-        .order('tenant_id', { ascending: false, nullsFirst: false })
-        .limit(1)
-        .maybeSingle()
 
       if (paymentMethodError) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: paymentMethodError.message })
       }
 
-      if (!paymentMethod && input.method !== 'cash') {
+      // The store's own row always wins. Methods that pay into an account (QRIS,
+      // transfer, e-wallet) must use it: the platform template holds no account,
+      // and falling back to anything shared would send money to the wrong store.
+      const ownMethod = candidates?.find((m) => m.tenant_id === tenantId)
+      const template = candidates?.find((m) => m.tenant_id === null)
+      const paymentMethod = TENANT_CONFIGURED_METHODS.has(input.method) ? ownMethod : ownMethod ?? template
+
+      if (TENANT_CONFIGURED_METHODS.has(input.method) && !ownMethod) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Metode ${template?.name ?? input.method} belum diatur untuk toko ini. Atur di Settings → Pembayaran.`,
+        })
+      }
+
+      if (input.method !== 'cash' && (!paymentMethod || !paymentMethod.is_active)) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Payment method is not active' })
       }
 
@@ -382,10 +404,10 @@ export const paymentsRouter = router({
       return { success: true }
     }),
 
-  getSettings: protectedProcedure.query(async () => {
+  getSettings: protectedProcedure.query(async ({ ctx }) => {
     const useCase = container.listPaymentsUseCase()
     try {
-      return await useCase.getSettings()
+      return await useCase.getSettings(ctx.session.tenantId!)
     } catch (error) {
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
@@ -401,10 +423,10 @@ export const paymentsRouter = router({
       accountHolder: z.string().min(1),
       isActive: z.boolean().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const useCase = container.createPaymentUseCase()
       try {
-        return await useCase.updateBankTransfer(input)
+        return await useCase.updateBankTransfer(ctx.session.tenantId!, input)
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -418,10 +440,10 @@ export const paymentsRouter = router({
       phone: z.string().min(1),
       isActive: z.boolean().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const useCase = container.createPaymentUseCase()
       try {
-        return await useCase.updateEWallet(input)
+        return await useCase.updateEWallet(ctx.session.tenantId!, input)
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -436,10 +458,10 @@ export const paymentsRouter = router({
       merchantName: z.string().optional(),
       isActive: z.boolean().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const useCase = container.createPaymentUseCase()
       try {
-        return await useCase.updateQRIS(input)
+        return await useCase.updateQRIS(ctx.session.tenantId!, input)
       } catch (error) {
         if (error instanceof AppError) {
           throw new TRPCError({
