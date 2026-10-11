@@ -47,6 +47,7 @@ export const expensesRouter = router({
       const { data, error } = await supabaseAdmin
         .from('operational_expenses')
         .insert({
+          tenant_id: tenantId,
           outlet_id: input.outletId,
           user_id: ctx.userId,
           category: input.category,

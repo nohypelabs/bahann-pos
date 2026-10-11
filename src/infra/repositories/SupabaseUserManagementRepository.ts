@@ -2,6 +2,7 @@ import {
   UserManagementRepository, UserRecord, BillingRecord,
 } from '@/domain/repositories/UserManagementRepository';
 import { supabaseAdmin } from '../supabase/server';
+import { getOutletTenantId } from './outletTenant';
 
 export class SupabaseUserManagementRepository implements UserManagementRepository {
   async findByOutletIds(outletIds: string[], ownerId: string): Promise<UserRecord[]> {
@@ -143,6 +144,7 @@ export class SupabaseUserManagementRepository implements UserManagementRepositor
     const { data: newUser, error } = await supabaseAdmin
       .from('users')
       .insert({
+        tenant_id: await getOutletTenantId(data.outletId),
         email: data.email.toLowerCase(),
         name: data.name,
         password_hash: data.passwordHash,

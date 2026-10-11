@@ -1,4 +1,5 @@
 import { supabaseAdmin as supabase } from '../supabase/server';
+import { getOutletTenantId } from './outletTenant';
 import {
   type StockMovementRepository,
   type StockMovement,
@@ -17,6 +18,7 @@ export class SupabaseStockMovementRepository implements StockMovementRepository 
     reason?: string | null;
   }): Promise<void> {
     const { error } = await supabase.from('stock_movements').insert({
+      tenant_id: await getOutletTenantId(movement.outlet_id),
       product_id: movement.product_id,
       outlet_id: movement.outlet_id,
       user_id: movement.user_id,

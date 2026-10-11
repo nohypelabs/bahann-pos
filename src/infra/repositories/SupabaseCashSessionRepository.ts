@@ -3,6 +3,7 @@ import {
   Transaction, CloseSessionData, SalesSummary, CashSessionFilters,
 } from '@/domain/repositories/CashSessionRepository';
 import { supabaseAdmin } from '../supabase/server';
+import { getOutletTenantId } from './outletTenant';
 
 export class SupabaseCashSessionRepository implements CashSessionRepository {
   async findOpenByOutletId(outletId: string): Promise<CashSessionWithJoins | null> {
@@ -20,6 +21,7 @@ export class SupabaseCashSessionRepository implements CashSessionRepository {
     const { data: session, error } = await supabaseAdmin
       .from('cash_sessions')
       .insert({
+        tenant_id: await getOutletTenantId(data.outletId),
         outlet_id: data.outletId,
         opened_by: data.openedBy,
         opened_at: new Date().toISOString(),
