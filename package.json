@@ -13,6 +13,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
+    "test:flow": "node scripts/e2e-cashier-flow.mjs",
     "analyze": "ANALYZE=true next build",
     "migrate": "node scripts/migrate.js",
     "gen:types": "npx supabase gen types typescript --project-id skdgytedoilnlflyjvbc --schema public > src/infra/database.types.ts",

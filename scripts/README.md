@@ -62,3 +62,33 @@ npm install marked puppeteer --save-dev
 # Reduce image sizes in markdown
 # Or compress PDF using online tools
 ```
+
+---
+
+# 🧪 E2E Cashier Flow
+
+`scripts/e2e-cashier-flow.mjs` runs the daily cashier flow against a deployed
+environment, one throwaway tenant per business type: register → verify email →
+login → products with HPP → stock (retail) → open shift → cash and bank-transfer
+checkout → oversell refusal → expense → today's transaction filter → dashboard
+profit → void with PIN approval (stock restored) → close shift. Each step is
+asserted, and the command exits non-zero if any step fails.
+
+It writes real data to the target's database. Run it only where test tenants are
+acceptable, and clean up afterwards.
+
+```bash
+# from the repo root, with the Supabase CLI logged in
+E2E_EMAIL=you@gmail.com SUPABASE_PROJECT_REF=<ref> pnpm test:flow RETAIL FNB SERVICE
+```
+
+- Tenants are named `E2E Toko <TYPE>` and use plus-addresses (`you+e2e-retail-<run>@…`),
+  so their verification emails land in your inbox.
+- Registration is rate limited (3 per 15 minutes per IP). To run again sooner, reuse
+  the tenants: run `scripts/e2e-reset-tenants.sql`, then add `E2E_REUSE_RUN=<run id>`.
+- Remove the tenants completely with `scripts/e2e-delete-tenants.sql`:
+
+```bash
+supabase db query --linked --project-ref <ref> -f scripts/e2e-delete-tenants.sql
+```
+
