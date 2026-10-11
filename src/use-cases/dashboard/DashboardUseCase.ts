@@ -3,15 +3,20 @@ import type {
   SalesTrendRow,
 } from '@/domain/repositories/DashboardRepository';
 import { getLimits } from '@/lib/plans';
+import { addDays, businessDate, endOfBusinessDay, startOfBusinessDay } from '@/lib/business/timezone';
 
-interface DateRange { startTs: string; endTs: string }
+interface DateRange { startTs: string; endTs: string; startDate: string; endDate: string }
 
+/** The last `days` business (WIB) days up to today; 0/undefined means all time. */
 function buildDateRange(days: number | undefined, now: Date): DateRange {
-  const endTs = `${now.toISOString().split('T')[0]}T23:59:59Z`
-  if (days === undefined || days === 0) return { startTs: '2000-01-01T00:00:00Z', endTs }
-  const start = new Date(now)
-  start.setDate(start.getDate() - (days - 1))
-  return { startTs: `${start.toISOString().split('T')[0]}T00:00:00Z`, endTs }
+  const endDate = businessDate(now)
+  const startDate = days === undefined || days === 0 ? '2000-01-01' : addDays(endDate, -(days - 1))
+  return {
+    startTs: startOfBusinessDay(startDate),
+    endTs: endOfBusinessDay(endDate),
+    startDate,
+    endDate,
+  }
 }
 
 interface TrendPoint { date: string; revenue: number; itemsSold: number }
@@ -19,12 +24,9 @@ interface TrendPoint { date: string; revenue: number; itemsSold: number }
 function fillTrendGaps(rows: SalesTrendRow[], days: number, now: Date): TrendPoint[] {
   const trendMap: Record<string, TrendPoint> = {}
   if (days > 0) {
-    const start = new Date(now)
-    start.setDate(start.getDate() - (days - 1))
-    for (let i = 0; i < days; i++) {
-      const d = new Date(start)
-      d.setDate(d.getDate() + i)
-      const ds = d.toISOString().split('T')[0]
+    const today = businessDate(now)
+    for (let i = days - 1; i >= 0; i--) {
+      const ds = addDays(today, -i)
       trendMap[ds] = { date: ds, revenue: 0, itemsSold: 0 }
     }
   }
@@ -43,7 +45,7 @@ export class DashboardUseCase {
 
   async getStats(outletIds: string[], tenantId: string, days?: number) {
     const now = new Date()
-    const { startTs, endTs } = buildDateRange(days, now)
+    const { startTs, endTs, startDate, endDate } = buildDateRange(days, now)
 
     const [productCount, outletCount, summary, lowStockCount, expenses] = await Promise.all([
       this.repo.getProductCount(tenantId),
@@ -55,7 +57,7 @@ export class DashboardUseCase {
         ? this.repo.getLowStock(outletIds, 10).then(items => items.length)
         : Promise.resolve(0),
       outletIds.length > 0
-        ? this.repo.getExpenseSummary(outletIds, startTs.slice(0, 10), endTs.slice(0, 10))
+        ? this.repo.getExpenseSummary(outletIds, startDate, endDate)
         : Promise.resolve({ totalExpenses: 0, expenseCount: 0 }),
     ])
 

@@ -39,15 +39,15 @@ describe('DashboardUseCase.getStats', () => {
     expect(stats.grossProfit).toBe(500_000);
   });
 
-  it('queries expenses by calendar day over the same period as sales', async () => {
+  it('queries sales and expenses over the same WIB business days', async () => {
     const repo = makeRepo();
     await new DashboardUseCase(repo).getStats(['outlet-1'], 'tenant-1', 7);
 
     const [, salesStart, salesEnd] = repo.getSalesSummary.mock.calls[0];
     const [outletIds, expenseStart, expenseEnd] = repo.getExpenseSummary.mock.calls[0];
     expect(outletIds).toEqual(['outlet-1']);
-    expect(expenseStart).toBe(salesStart.slice(0, 10));
-    expect(expenseEnd).toBe(salesEnd.slice(0, 10));
+    expect(salesStart).toBe(`${expenseStart}T00:00:00+07:00`);
+    expect(salesEnd).toBe(`${expenseEnd}T23:59:59.999+07:00`);
     expect(expenseStart).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 

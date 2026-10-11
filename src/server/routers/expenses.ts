@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '../trpc'
 import { getTenantOutletIds } from '@/server/lib/tenant'
 import { supabaseAdmin } from '@/infra/supabase/server'
+import { businessDate } from '@/lib/business/timezone'
 
 const EXPENSE_CATEGORIES = [
   { value: 'listrik', label: 'Listrik', icon: '⚡' },
@@ -54,7 +55,7 @@ export const expensesRouter = router({
           description: input.description,
           amount: input.amount,
           receipt_url: input.receiptUrl || null,
-          expense_date: input.expenseDate || new Date().toISOString().split('T')[0],
+          expense_date: input.expenseDate || businessDate(),
         })
         .select()
         .single()
@@ -132,7 +133,7 @@ export const expensesRouter = router({
     )
     .query(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
-      const targetDate = input.date || new Date().toISOString().split('T')[0]
+      const targetDate = input.date || businessDate()
 
       let outletIds: string[]
       if (input.outletId) {

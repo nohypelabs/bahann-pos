@@ -5,6 +5,7 @@ import { getUserOutletIds, getTenantOutletIds } from '@/server/lib/tenant'
 import { getLimits } from '@/lib/plans'
 import { getRedisClient } from '@/lib/redis-upstash'
 import { container } from '@/infra/container'
+import { businessDate } from '@/lib/business/timezone'
 
 const DASHBOARD_CACHE_TTL = 120 // 2 minutes
 
@@ -110,7 +111,7 @@ export const dashboardRouter = router({
     )
     .query(async ({ input, ctx }) => {
       const threshold = input?.threshold || 10
-      const today = new Date().toISOString().split('T')[0]
+      const today = businessDate()
       const tenantId = ctx.session.tenantId!
       const useCase = container.dashboardUseCase()
       const cacheKey = dashKey('low', tenantId, input?.outletId, `${threshold}:${today}`)

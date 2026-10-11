@@ -12,6 +12,7 @@ import { StockService } from '@/domain/services/StockService'
 import { StockBehavior } from '@/domain/catalog/value-objects/stock-behavior'
 import { DomainException, DomainErrorCode } from '@/domain/errors/DomainException'
 import { logger } from '@/lib/logger'
+import { businessDate } from '@/lib/business/timezone'
 
 export interface CreateTransactionInput {
   tenantId: string
@@ -291,7 +292,8 @@ export class CreateTransactionUseCase {
           tenantId,
           productId: item.productId,
           outletId,
-          saleDate: new Date(),
+          // Business (WIB) day as UTC midnight, matching how sale_date is read back.
+          saleDate: new Date(`${businessDate()}T00:00:00.000Z`),
           quantitySold: item.quantity,
           revenue: item.quantity * item.unitPrice,
           createdAt: new Date(),
@@ -324,11 +326,11 @@ export class CreateTransactionUseCase {
     outletId: string,
     tenantId: string,
   ): Promise<void> {
-    // stock_date is compared as a UTC calendar day (getByDate uses toISOString), so
-    // the boundaries must be built in UTC. Local midnight is wrong in any timezone
-    // east of UTC — in WIB (UTC+7) it lands on the previous UTC day, the lookups miss
-    // every row, and stock silently stops being deducted.
-    const today = new Date(`${new Date().toISOString().split('T')[0]}T00:00:00.000Z`)
+    // stock_date holds the business (WIB) calendar day, represented as UTC midnight
+    // of that day (getByDate reads it back with toISOString). Build "today" the same
+    // way: local midnight would land on the previous UTC day, the lookups would miss
+    // every row, and stock would silently stop being deducted.
+    const today = new Date(`${businessDate()}T00:00:00.000Z`)
     const yesterday = new Date(today)
     yesterday.setUTCDate(yesterday.getUTCDate() - 1)
 

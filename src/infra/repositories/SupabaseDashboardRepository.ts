@@ -1,4 +1,5 @@
 import { supabaseAdmin as supabase } from '../supabase/server';
+import { businessDate } from '@/lib/business/timezone';
 import type {
   DashboardRepository,
   SalesSummary,
@@ -108,7 +109,7 @@ export class SupabaseDashboardRepository implements DashboardRepository {
   }
 
   async getLowStock(outletIds: string[], threshold: number): Promise<LowStockItem[]> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = businessDate();
 
     const { data } = await supabase
       .from('daily_stock')

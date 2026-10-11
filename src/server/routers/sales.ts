@@ -4,6 +4,7 @@ import { RecordDailySaleUseCase } from '@/use-cases/sale/RecordDailySaleUseCase'
 import { SupabaseDailySaleRepository } from '@/infra/repositories/SupabaseDailySaleRepository'
 import { assertOutletAccessible } from '@/server/lib/tenant'
 import { TRPCError } from '@trpc/server'
+import { businessDate } from '@/lib/business/timezone'
 
 const salesRepository = new SupabaseDailySaleRepository()
 
@@ -64,7 +65,7 @@ export const salesRouter = router({
       const tenantId = ctx.session.tenantId!
       await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
 
-      const saleDate = new Date(input.timestamp ?? Date.now()).toISOString().split('T')[0]
+      const saleDate = businessDate(new Date(input.timestamp ?? Date.now()))
       const useCase = new RecordDailySaleUseCase(salesRepository)
 
       for (const item of input.items) {

@@ -8,6 +8,7 @@ import { StatCard } from '@/components/ui/StatCard'
 import { Button } from '@/components/ui/Button'
 import { trpc } from '@/lib/trpc/client'
 import { formatCurrency } from '@/lib/utils'
+import { businessDate } from '@/lib/business/timezone'
 import {
   Plus, Minus, Receipt, TrendingDown, Tag, X, Upload,
   CheckCircle2, XCircle, Info, Camera, Trash2, ChevronDown,
@@ -43,7 +44,7 @@ export default function ExpensesPage() {
   const [category, setCategory] = useState('')
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
-  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0])
+  const [expenseDate, setExpenseDate] = useState(businessDate())
   const [receiptUrl, setReceiptUrl] = useState('')
   const [showForm, setShowForm] = useState(true)
   const [alert, setAlert] = useState<AlertState>(null)
@@ -302,7 +303,7 @@ export default function ExpensesPage() {
 
       {/* Today's Expenses List */}
       {selectedOutlet && (
-        <SectionCard title={`Pengeluaran ${expenseDate === new Date().toISOString().split('T')[0] ? 'Hari Ini' : expenseDate}`}>
+        <SectionCard title={`Pengeluaran ${expenseDate === businessDate() ? 'Hari Ini' : expenseDate}`}>
           {summaryLoading ? (
             <div className="space-y-2">
               {[1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />)}

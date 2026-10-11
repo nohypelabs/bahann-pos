@@ -15,6 +15,7 @@ import {
   assertOutletAccessible,
 } from '@/server/lib/tenant'
 import { container } from '@/infra/container'
+import { toRangeEnd, toRangeStart } from '@/lib/business/timezone'
 
 const PLAN_LIMITS: Record<string, number> = {
   free: 100,
@@ -356,8 +357,8 @@ export const transactionsRouter = router({
         return await useCase.list(tenantOutlets, {
           outletId: input.outletId,
           status: input.status,
-          dateFrom: input.dateFrom,
-          dateTo: input.dateTo,
+          dateFrom: input.dateFrom ? toRangeStart(input.dateFrom) : undefined,
+          dateTo: input.dateTo ? toRangeEnd(input.dateTo) : undefined,
           limit: input.limit,
           offset: input.offset,
         })
@@ -388,7 +389,7 @@ export const transactionsRouter = router({
       const useCase = container.listTransactionsUseCase()
 
       try {
-        return await useCase.getSummary(tenantOutlets, input.outletId, input.dateFrom, input.dateTo)
+        return await useCase.getSummary(tenantOutlets, input.outletId, toRangeStart(input.dateFrom), toRangeEnd(input.dateTo))
       } catch (error) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',

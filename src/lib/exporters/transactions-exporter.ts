@@ -4,6 +4,7 @@
  */
 
 import { formatCurrency } from '@/lib/utils'
+import { businessDate } from '@/lib/business/timezone'
 
 export interface ExportTransaction {
   transactionId: string
@@ -56,7 +57,7 @@ function itemsSummary(tx: ExportTransaction): string {
 }
 
 function fileStamp(): string {
-  return new Date().toISOString().slice(0, 10)
+  return businessDate()
 }
 
 function download(blob: Blob, filename: string) {

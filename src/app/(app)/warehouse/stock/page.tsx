@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/Button'
 import { trpc } from '@/lib/trpc/client'
 import { Package, Store, ShoppingCart, AlertTriangle, CheckCircle2, XCircle, CalendarClock } from 'lucide-react'
+import { businessDate } from '@/lib/business/timezone'
 
 // ─── Stepper ────────────────────────────────────────────────────────────────
 function Stepper({
@@ -76,7 +77,7 @@ function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label:
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 export default function StockManagementPage() {
-  const today = new Date().toISOString().split('T')[0]
+  const today = businessDate()
 
   const [formData, setFormData] = useState({
     productId: '',
