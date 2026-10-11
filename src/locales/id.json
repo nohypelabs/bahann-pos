@@ -529,5 +529,10 @@
   "transactions.export.filter.status": "Status",
   "transactions.export.filter.outlet": "Outlet",
   "transactions.export.filter.from": "Dari",
-  "transactions.export.filter.to": "Sampai"
+  "transactions.export.filter.to": "Sampai",
+
+  "inventory.unavailable.title": "Toko Anda tidak punya stok",
+  "inventory.unavailable.message": "Jenis usaha Anda tidak memakai stok, jadi pencatatan stok dan gudang tidak tersedia.",
+  "inventory.unavailable.hint": "Juga menjual barang yang stoknya dihitung? Ganti jenis usaha di Pengaturan → Usaha.",
+  "inventory.unavailable.ok": "Mengerti"
 }

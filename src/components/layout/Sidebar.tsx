@@ -9,6 +9,7 @@ import { usePWA } from '@/lib/pwa/PWAContext'
 import { hasPermission, hasAnyPermission, PERMISSIONS, LEGACY_ROLE_MAP, getRoleDisplayName } from '@/lib/rbac/permissions'
 import { trpc } from '@/lib/trpc/client'
 import { hasModule } from '@/lib/business/modules'
+import { useInventoryAccess } from './useInventoryAccess'
 import {
   LayoutDashboard, Package, ClipboardList, BarChart3,
   ShoppingCart, History, DollarSign, ArrowLeftRight,
@@ -237,6 +238,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
     staleTime: 5 * 60 * 1000,
   })
   const canUseInventory = hasModule(businessProfile?.enabledModules, 'inventory')
+  const inventoryAccess = useInventoryAccess()
   const canManageProducts = hasAnyPermission(userRole, [PERMISSIONS.PRODUCT_MANAGE, PERMISSIONS.PRODUCT_VIEW])
   const canManageSettings = hasAnyPermission(userRole, [PERMISSIONS.SETTINGS_MANAGE, PERMISSIONS.USER_MANAGE])
   const canViewReports = hasPermission(userRole, PERMISSIONS.REPORT_OUTLET_VIEW)
@@ -329,7 +331,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
                 <p className="mt-2 text-sm font-semibold text-[#17201d]">Kasir</p>
                 <p className="mt-1 text-[11px] text-[#6f776f]">Transaksi cepat</p>
               </Link>
-              <Link href="/warehouse/stock" className="rounded-[35px] border border-[#ddd8cc] bg-white px-3 py-3 transition-colors hover:bg-[#fff8ec] hover:text-[#a66f10]">
+              <Link href="/warehouse/stock" onClick={inventoryAccess.guard} className="rounded-[35px] border border-[#ddd8cc] bg-white px-3 py-3 transition-colors hover:bg-[#fff8ec] hover:text-[#a66f10]">
                 <Package className="h-4 w-4 text-[#c98a16]" />
                 <p className="mt-2 text-sm font-semibold text-[#17201d]">Gudang</p>
                 <p className="mt-1 text-[11px] text-[#6f776f]">Stok harian</p>
@@ -570,6 +572,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
           </div>
         </div>
       )}
+      {inventoryAccess.modal}
     </>
   )
 }

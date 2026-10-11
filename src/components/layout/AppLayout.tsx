@@ -7,6 +7,7 @@ import { LayoutDashboard, Menu, Receipt, Settings, Warehouse } from 'lucide-reac
 import { Sidebar } from './Sidebar'
 import { OfflineIndicator } from '@/components/OfflineIndicator'
 import { MobileScanFab } from './MobileScanFab'
+import { useInventoryAccess } from './useInventoryAccess'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -55,6 +56,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [desktopOpen, setDesktopOpen] = useState(false)
   const routeMeta = getRouteMeta(pathname)
+  const inventoryAccess = useInventoryAccess()
   const quickLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/pos/sales', label: 'Kasir', icon: Receipt },
@@ -64,6 +66,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="flex h-screen overflow-hidden bg-[#f6f5f0]">
       <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} desktopOpen={desktopOpen} />
+      {inventoryAccess.modal}
 
       <main
         className="flex-1 overflow-y-auto bg-[linear-gradient(180deg,_#fbfaf6_0%,_#f6f5f0_44%,_#eeebe3_100%)]"
@@ -102,6 +105,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <Link
                     key={href}
                     href={href}
+                    onClick={href.startsWith('/warehouse') ? inventoryAccess.guard : undefined}
                     className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition-colors ${
                       isActive
                         ? 'border-[#0b4e48] bg-[#0f5f56] text-white'

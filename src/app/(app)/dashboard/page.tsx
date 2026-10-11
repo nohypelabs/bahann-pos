@@ -9,6 +9,7 @@ import { trpc } from '@/lib/trpc/client'
 import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { ChartSkeleton } from '@/components/ui/Skeletons'
+import { useInventoryAccess } from '@/components/layout/useInventoryAccess'
 import {
   DollarSign, Package, AlertTriangle, Store,
   ShoppingCart, ClipboardList, Trophy, Receipt,
@@ -49,6 +50,7 @@ function StatCard({
 // ─── Page ──────────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const router = useRouter()
+  const inventoryAccess = useInventoryAccess()
   const { t } = useLanguage()
   const [selectedOutletId, setSelectedOutletId] = useState<string>('')
   const [dateRange, setDateRange] = useState<1 | 7 | 14 | 30 | 0>(7)
@@ -126,7 +128,7 @@ export default function DashboardPage() {
       <div>
         <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">Quick Actions</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-          <Button variant="secondary" size="lg" fullWidth onClick={() => router.push('/warehouse/stock')}>
+          <Button variant="secondary" size="lg" fullWidth onClick={() => inventoryAccess.guard() && router.push('/warehouse/stock')}>
             <Package className="w-4 h-4 mr-1.5" /> Record Stock
           </Button>
           <Button variant="primary" size="lg" fullWidth onClick={() => router.push('/pos/sales')}>
@@ -228,6 +230,7 @@ export default function DashboardPage() {
         </SectionCard>
 
       </div>
+      {inventoryAccess.modal}
     </div>
   )
 }
