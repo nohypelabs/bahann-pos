@@ -1,23 +1,58 @@
-import { Resend } from 'resend'
+import { randomBytes } from 'crypto'
+import nodemailer, { type Transporter } from 'nodemailer'
 import { PLAN_LIMITS, isUnlimited } from '@/lib/plans'
 import { logger } from '@/lib/logger'
 
-// Initialize Resend lazily to avoid build-time errors
-let resendInstance: Resend | null = null
+// Any SMTP provider works (Gmail with an App Password, Brevo, ...).
+// Created lazily to avoid build-time errors when SMTP env vars are absent.
+let transporter: Transporter | null = null
 
-function getResend(): Resend {
-  if (!resendInstance) {
-    const apiKey = process.env.RESEND_API_KEY
-    if (!apiKey) {
-      throw new Error('RESEND_API_KEY environment variable is not set')
+function getTransporter(): Transporter {
+  if (!transporter) {
+    const host = process.env.SMTP_HOST
+    const user = process.env.SMTP_USER
+    const pass = process.env.SMTP_PASS
+    if (!host || !user || !pass) {
+      throw new Error('SMTP_HOST, SMTP_USER and SMTP_PASS environment variables must be set')
     }
-    resendInstance = new Resend(apiKey)
+    const port = Number(process.env.SMTP_PORT || 465)
+    transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+    })
   }
-  return resendInstance
+  return transporter
 }
 
-const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev'
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'
+const FROM_EMAIL = process.env.FROM_EMAIL || process.env.SMTP_USER || ''
+
+function normalizeAppUrl(url: string): string {
+  const trimmed = url.trim().replace(/\/+$/, '')
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+}
+
+const APP_URL = normalizeAppUrl(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001')
+
+interface SendMailParams {
+  to: string
+  subject: string
+  html: string
+}
+
+/**
+ * Send an email via SMTP. Throws when the server rejects the message,
+ * so callers' catch blocks see real delivery failures.
+ */
+async function sendMail({ to, subject, html }: SendMailParams): Promise<{ id: string }> {
+  const info = await getTransporter().sendMail({ from: FROM_EMAIL, to, subject, html })
+  const rejected = info.rejected ?? []
+  if (rejected.length > 0) {
+    throw new Error('SMTP server rejected recipient: ' + rejected.join(', '))
+  }
+  return { id: info.messageId }
+}
 
 export interface SendPasswordResetEmailParams {
   to: string
@@ -36,9 +71,7 @@ export async function sendPasswordResetEmail({
   const resetLink = `${APP_URL}/reset-password?token=${resetToken}`
 
   try {
-    const resend = getResend()
-    const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
+    const { id } = await sendMail({
       to,
       subject: 'Reset Password - Laku POS',
       html: `
@@ -134,13 +167,8 @@ export async function sendPasswordResetEmail({
       `,
     })
 
-    if (error) {
-      logger.error('Failed to send password reset email:', error)
-      throw new Error('Failed to send email')
-    }
-
-    logger.success('Password reset email sent: to=' + to + ', id=' + data?.id)
-    return { success: true, id: data?.id }
+    logger.success('Password reset email sent: to=' + to + ', id=' + id)
+    return { success: true, id }
   } catch (error) {
     logger.error('Error sending password reset email:', error)
     throw error
@@ -164,9 +192,7 @@ export async function sendNewUserNotification({
   const usersUrl = `${APP_URL}/settings/users`
 
   try {
-    const resend = getResend()
-    await resend.emails.send({
-      from: FROM_EMAIL,
+    await sendMail({
       to: adminEmail,
       subject: `🆕 Pendaftar Baru: ${newUserName}`,
       html: `
@@ -214,9 +240,7 @@ export async function sendWelcomeEmail({ to, name, storeName }: SendWelcomeEmail
   const dashboardUrl = `${APP_URL}/dashboard`
 
   try {
-    const resend = getResend()
-    await resend.emails.send({
-      from: FROM_EMAIL,
+    await sendMail({
       to,
       subject: `Selamat datang di Laku POS, ${name}! 🎉`,
       html: `
@@ -365,9 +389,7 @@ export async function sendPlanUpgradeEmail({ to, name, oldPlan, newPlan }: SendP
   const emoji = isUpgrade ? '🎉' : '📋'
 
   try {
-    const resend = getResend()
-    await resend.emails.send({
-      from: FROM_EMAIL,
+    await sendMail({
       to,
       subject: `${emoji} Plan Laku POS kamu ${action} ke ${newLabel}`,
       html: `
@@ -481,9 +503,7 @@ export interface SendTrialExpiredEmailParams {
  */
 export async function sendTrialExpiredEmail({ to, name }: SendTrialExpiredEmailParams) {
   try {
-    const resend = getResend()
-    await resend.emails.send({
-      from: FROM_EMAIL,
+    await sendMail({
       to,
       subject: '⏰ Trial Laku POS kamu sudah berakhir',
       html: `
@@ -573,9 +593,7 @@ export async function sendVerificationEmail({ to, name, token }: SendVerificatio
   const verifyUrl = `${APP_URL}/verify-email?token=${token}`
 
   try {
-    const resend = getResend()
-    await resend.emails.send({
-      from: FROM_EMAIL,
+    await sendMail({
       to,
       subject: '✉️ Verifikasi email kamu — Laku POS',
       html: `
@@ -648,6 +666,5 @@ export async function sendVerificationEmail({ to, name, token }: SendVerificatio
  */
 export function generateResetToken(): string {
   // Use CSPRNG — Math.random() is predictable
-  const { randomBytes } = require('crypto')
   return randomBytes(32).toString('hex')
 }
