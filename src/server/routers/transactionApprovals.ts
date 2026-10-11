@@ -12,6 +12,7 @@ import { router, protectedProcedure } from '../trpc'
 import { getUserOutletIds, requirePermission } from '@/server/lib/tenant'
 import { supabaseAdmin } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
+import { container } from '@/infra/container'
 
 const approvalActionSchema = z.enum(['void', 'refund'])
 
@@ -266,7 +267,16 @@ export const transactionApprovalsRouter = router({
 
       // If approved, update the transaction status
       if (approval.action_type === 'void') {
-        const { error: txUpdateError } = await supabaseAdmin
+        // Read the status first: only a completed sale deducted stock, and the
+        // conditional update below guarantees stock is restored at most once.
+        const { data: tx } = await supabaseAdmin
+          .from('transactions')
+          .select('status')
+          .eq('id', approval.transaction_id)
+          .eq('tenant_id', tenantId)
+          .single()
+
+        const { data: voided, error: txUpdateError } = await supabaseAdmin
           .from('transactions')
           .update({
             status: 'voided',
@@ -275,9 +285,16 @@ export const transactionApprovalsRouter = router({
             voided_at: new Date().toISOString(),
           })
           .eq('id', approval.transaction_id)
+          .eq('tenant_id', tenantId)
+          .eq('status', tx?.status ?? '')
+          .select('id')
 
         if (txUpdateError) {
           throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: txUpdateError.message })
+        }
+
+        if (tx?.status === 'completed' && voided?.length) {
+          await container.createTransactionUseCase().restoreStockForVoidedSale(approval.transaction_id, tenantId)
         }
       } else if (approval.action_type === 'refund') {
         const { error: txUpdateError } = await supabaseAdmin

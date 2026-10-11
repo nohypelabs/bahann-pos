@@ -311,6 +311,57 @@ export class CreateTransactionUseCase {
   }
 
   /**
+   * Puts a voided sale's tracked items back into today's stock.
+   *
+   * Only call for a sale that was completed (pending sales never deducted). Lines
+   * whose product has no stock record are skipped, mirroring deductStock.
+   */
+  async restoreStockForVoidedSale(transactionId: string, tenantId: string): Promise<void> {
+    const transaction = await this.transactionRepo.findById(transactionId)
+    if (!transaction || transaction.tenantId !== tenantId) {
+      throw new Error('Transaction not found')
+    }
+
+    const today = new Date(`${businessDate()}T00:00:00.000Z`)
+    const yesterday = new Date(today)
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1)
+
+    const products = await this.productRepo.getByIds(
+      transaction.items.map((item) => item.productId),
+      tenantId,
+    )
+    const productMap = new Map(products.map((product) => [product.id, product]))
+
+    for (const item of transaction.items) {
+      const stockBehavior = (productMap.get(item.productId)?.stock_behavior ?? StockBehavior.TRACKED) as StockBehavior
+      if (stockBehavior !== StockBehavior.TRACKED) continue
+
+      const todayStock = await this.dailyStockRepo.getByDate(transaction.outletId, item.productId, today)
+      const knownStock =
+        todayStock ?? (await this.dailyStockRepo.getByDate(transaction.outletId, item.productId, yesterday))
+      if (!knownStock) continue
+
+      // Undo today's outflow first; anything beyond it (a sale from an earlier
+      // day) comes back as stock in.
+      const priorOut = todayStock ? knownStock.stockOut : 0
+      const backFromOut = Math.min(priorOut, item.quantity)
+
+      await this.dailyStockRepo.save({
+        id: todayStock ? knownStock.id : crypto.randomUUID(),
+        tenantId,
+        productId: item.productId,
+        outletId: transaction.outletId,
+        stockDate: today,
+        stockAwal: todayStock ? knownStock.stockAwal : knownStock.stockAkhir,
+        stockIn: (todayStock ? knownStock.stockIn : 0) + (item.quantity - backFromOut),
+        stockOut: priorOut - backFromOut,
+        stockAkhir: knownStock.stockAkhir + item.quantity,
+        createdAt: todayStock ? knownStock.createdAt : new Date(),
+      })
+    }
+  }
+
+  /**
    * Deduct stock for every tracked line.
    *
    * Whether a line may be deducted at all comes from StockService, so a POS sale

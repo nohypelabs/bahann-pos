@@ -12,6 +12,10 @@ function makeUseCase({ stockAkhir = 18, products = [product()] } = {}) {
     createItems: jest.fn().mockResolvedValue(undefined),
     voidById: jest.fn(),
     findByTransactionId: jest.fn(),
+    findById: jest.fn().mockResolvedValue({
+      id: 'tx-1', tenantId: 'tenant-1', outletId: 'outlet-1', status: 'completed',
+      items: [{ productId: 'prod-1', quantity: 2 }],
+    }),
   };
   const dailyStockRepo = {
     getByDate: jest.fn().mockResolvedValue({
@@ -69,5 +73,31 @@ describe('CreateTransactionUseCase stock check', () => {
     await useCase.execute({ ...baseInput, status: 'pending', amountPaid: 0, items: [{ productId: 'prod-1', quantity: 500 }] });
 
     expect(dailyStockRepo.getByDate).not.toHaveBeenCalled();
+  });
+});
+
+describe('CreateTransactionUseCase.restoreStockForVoidedSale', () => {
+  it("returns a voided sale's quantity to today's stock by undoing the outflow", async () => {
+    const { useCase, dailyStockRepo } = makeUseCase({ stockAkhir: 18 });
+
+    await useCase.restoreStockForVoidedSale('tx-1', 'tenant-1');
+
+    expect(dailyStockRepo.save).toHaveBeenCalledWith(expect.objectContaining({
+      id: 'stock-1', stockAwal: 20, stockIn: 0, stockOut: 0, stockAkhir: 20,
+    }));
+  });
+
+  it('skips untracked items', async () => {
+    const { useCase, dailyStockRepo } = makeUseCase({ products: [product({ stock_behavior: 'UNTRACKED' })] });
+
+    await useCase.restoreStockForVoidedSale('tx-1', 'tenant-1');
+
+    expect(dailyStockRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('refuses a transaction from another tenant', async () => {
+    const { useCase } = makeUseCase();
+
+    await expect(useCase.restoreStockForVoidedSale('tx-1', 'tenant-2')).rejects.toThrow('Transaction not found');
   });
 });
