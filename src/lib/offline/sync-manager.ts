@@ -19,6 +19,7 @@ function toTransactionCreateInput(transaction: OfflineTransaction) {
   return {
     transactionId: transaction.transactionId,
     outletId: transaction.outletId,
+    shiftId: transaction.shiftId,
     items: transaction.items.map((item) => ({
       productId: item.productId,
       productName: item.productName,
@@ -30,6 +31,8 @@ function toTransactionCreateInput(transaction: OfflineTransaction) {
     amountPaid: transaction.amountPaid,
     discountAmount: transaction.discount,
     notes: transaction.notes,
+    // Already paid at the counter: recorded at its own time, never refused for stock.
+    offline: { occurredAt: new Date(transaction.timestamp).toISOString() },
   }
 }
 
@@ -193,7 +196,7 @@ export class SyncManager {
 
         // Mark as synced
         await offlineDb.transactions.update(transaction.id!, {
-          synced: true,
+          synced: 1,
           syncError: undefined,
           syncAttempts: transaction.syncAttempts + 1,
         })

@@ -27,6 +27,9 @@ export interface PlateLookup {
 }
 
 export interface OpenServiceOrderInput {
+  /** Client-generated id (offline notes). */
+  id?: string
+  openedAt?: string
   outletId: string
   plate: string
   /** Used only when the plate is new. */
@@ -55,11 +58,11 @@ export class WorkshopUseCase {
   async createCustomer(
     tenantId: string,
     userId: string,
-    input: { name: string; phone?: string | null; notes?: string | null; enrollAsMember?: boolean },
+    input: { id?: string; name: string; phone?: string | null; notes?: string | null; enrollAsMember?: boolean },
   ): Promise<Customer> {
     const customer = await this.repo.createCustomer(
       tenantId,
-      { name: input.name.trim(), phone: normalizePhone(input.phone), notes: clean(input.notes) },
+      { id: input.id, name: input.name.trim(), phone: normalizePhone(input.phone), notes: clean(input.notes) },
       userId,
     )
     return input.enrollAsMember ? this.repo.enrollMember(tenantId, customer.id) : customer
@@ -164,6 +167,8 @@ export class WorkshopUseCase {
     }
 
     return this.repo.createServiceOrder(tenantId, {
+      id: input.id,
+      openedAt: input.openedAt,
       outletId: input.outletId,
       vehicleId: vehicle.id,
       customerId: input.customerId ?? vehicle.customerId,

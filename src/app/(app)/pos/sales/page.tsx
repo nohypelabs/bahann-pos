@@ -460,6 +460,7 @@ export default function SalesTransactionPage() {
           transactionId: stableTransactionId,
           outletId: selectedOutletId,
           userId: getUserId(),
+          shiftId: activeShift?.id,
           items: cart.map(item => ({
             productId: item.productId,
             productName: item.productName,
@@ -478,7 +479,7 @@ export default function SalesTransactionPage() {
           promotionId: appliedPromo?.promoId,
           promotionName: appliedPromo?.promoName,
           timestamp: Date.now(),
-          synced: false,
+          synced: 0,
           syncAttempts: 0,
         })
 

@@ -15,6 +15,8 @@ export interface OfflineTransaction {
   transactionId: string
   outletId: string
   userId: string
+  /** The cashier shift open when the sale was made, so it counts in that shift's cash. */
+  shiftId?: string
   items: Array<{
     productId: string
     productName: string
@@ -33,7 +35,12 @@ export interface OfflineTransaction {
   promotionId?: string
   promotionName?: string
   timestamp: number
-  synced: boolean
+  /**
+   * 0 = waiting, 1 = sent. A number, not a boolean: IndexedDB cannot index
+   * booleans, so a boolean flag made every "not yet sent" query come back empty
+   * and offline sales were never sent.
+   */
+  synced: 0 | 1
   syncError?: string
   syncAttempts: number
 }
@@ -73,6 +80,104 @@ export interface SyncQueueItem {
   priority: 'high' | 'normal' | 'low'
 }
 
+// ─── Workshop cashier station (offline mode) ────────────────────────────────
+
+export interface WsProduct {
+  id: string
+  name: string
+  sku: string
+  barcode: string | null
+  category: string | null
+  price: number
+  itemType: string
+  stockBehavior: string
+}
+
+export interface WsStock {
+  productId: string
+  outletId: string
+  stock: number
+}
+
+export interface WsCustomer {
+  id: string
+  name: string
+  phone: string | null
+  isMember: boolean
+  memberCode: string | null
+}
+
+export interface WsVehicle {
+  id: string
+  plateNumber: string
+  brand: string | null
+  model: string | null
+  customerId: string | null
+}
+
+export interface WsMechanic {
+  id: string
+  name: string
+}
+
+export interface WsOutlet {
+  id: string
+  name: string
+  address: string
+}
+
+export interface WsShift {
+  id: string
+  outletId: string
+  deviceId: string | null
+}
+
+/** A service note as the station shows it (same shape as the server's ServiceOrder). */
+export interface WsNote {
+  id: string
+  outletId: string
+  status: 'open' | 'paid' | 'cancelled'
+  vehicle: { id: string | null; plateNumber: string; brand: string | null; model: string | null; customerId: string | null }
+  customer: { id: string; name: string; phone: string | null; isMember: boolean; memberCode: string | null } | null
+  mechanic: { id: string; name: string } | null
+  complaint: string | null
+  odometerKm: number | null
+  openedAt: string
+  items: {
+    productId: string
+    productName: string
+    productSku: string
+    itemType: string
+    quantity: number
+    unitPrice: number | null
+    listPrice: number
+  }[]
+  /** Set when paid on this station and not yet confirmed by the server. */
+  paid?: { transactionNumber: string; total: number; amountPaid: number; change: number; at: string }
+  cancelReason?: string
+}
+
+/** One operation waiting to be sent, or refused by the server and kept for review. */
+export interface WsOutboxItem {
+  seq?: number
+  opId: string
+  kind: string
+  noteId: string | null
+  /** The OfflineOp as sent to workshop.offline.push. */
+  op: unknown
+  /** Who recorded it; only that user's session sends it. */
+  owner: string
+  status: 'pending' | 'done' | 'failed'
+  error?: string
+  attempts: number
+  createdAt: number
+}
+
+export interface WsMeta {
+  key: string
+  value: unknown
+}
+
 /**
  * Main Offline Database
  */
@@ -82,6 +187,16 @@ class OfflineDatabase extends Dexie {
   products!: Table<OfflineProduct, string>
   outlets!: Table<OfflineOutlet, string>
   syncQueue!: Table<SyncQueueItem, number>
+  wsProducts!: Table<WsProduct, string>
+  wsStock!: Table<WsStock, [string, string]>
+  wsCustomers!: Table<WsCustomer, string>
+  wsVehicles!: Table<WsVehicle, string>
+  wsMechanics!: Table<WsMechanic, string>
+  wsOutlets!: Table<WsOutlet, string>
+  wsShifts!: Table<WsShift, string>
+  wsNotes!: Table<WsNote, string>
+  wsOutbox!: Table<WsOutboxItem, number>
+  wsMeta!: Table<WsMeta, string>
 
   constructor() {
     super('LakuPOSOfflineDB')
@@ -93,6 +208,24 @@ class OfflineDatabase extends Dexie {
       outlets: 'id, lastSync',
       syncQueue: '++id, type, endpoint, timestamp, attempts, priority'
     })
+
+    // v2: the workshop station tables, and `synced` as 0/1 (see OfflineTransaction).
+    this.version(2).stores({
+      wsProducts: 'id, sku, barcode',
+      wsStock: '[productId+outletId]',
+      wsCustomers: 'id',
+      wsVehicles: 'id, plateNumber, customerId',
+      wsMechanics: 'id',
+      wsOutlets: 'id',
+      wsShifts: 'id, outletId',
+      wsNotes: 'id, outletId, status',
+      wsOutbox: '++seq, opId, noteId, status, owner',
+      wsMeta: 'key',
+    }).upgrade((tx) =>
+      tx.table('transactions').toCollection().modify((t: { synced: unknown }) => {
+        t.synced = t.synced ? 1 : 0
+      }),
+    )
   }
 
   /**
@@ -106,7 +239,7 @@ class OfflineDatabase extends Dexie {
     await this.transactions
       .where('timestamp')
       .below(thirtyDaysAgo)
-      .filter(item => item.synced === true)
+      .filter(item => item.synced === 1)
       .delete()
 
     // Delete old products (> 7 days not synced)

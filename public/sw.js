@@ -1,7 +1,7 @@
 // LakuPOS Service Worker
 // Caching strategies for offline POS support
 
-const CACHE_NAME = 'lakupos-v1'
+const CACHE_NAME = 'lakupos-v2'
 const STATIC_CACHE = 'lakupos-static-v1'
 const DYNAMIC_CACHE = 'lakupos-dynamic-v1'
 const API_CACHE = 'lakupos-api-v1'
@@ -51,6 +51,10 @@ self.addEventListener('fetch', (event) => {
 
   // Skip chrome-extension and other non-http
   if (!url.protocol.startsWith('http')) return
+
+  // The workshop station keeps its own offline copy in IndexedDB; caching these
+  // large responses again here would only waste storage.
+  if (url.pathname.startsWith('/api/trpc/') && url.pathname.includes('workshop.offline')) return
 
   // tRPC queries: Network-first with cache fallback
   if (url.pathname.startsWith('/api/trpc/')) {
@@ -103,6 +107,12 @@ async function networkFirst(request, cacheName) {
   } catch {
     const cached = await caches.match(request)
     if (cached) return cached
+
+    // A page opened with a different query (/pos/notes?note=…) is the same page.
+    if (request.mode === 'navigate') {
+      const page = await caches.match(request, { ignoreSearch: true })
+      if (page) return page
+    }
 
     // For HTML requests, return offline page
     if (request.headers.get('accept')?.includes('text/html')) {

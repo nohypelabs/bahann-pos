@@ -157,6 +157,12 @@ export const transactionsRouter = router({
         amountPaid: z.number().nonnegative().optional(),
         discountAmount: z.number().nonnegative().default(0),
         notes: z.string().optional(),
+        /**
+         * A sale made while offline, sent now by the sync manager: it keeps its own
+         * time and is not refused for a stock shortfall or the plan limit — the
+         * customer already paid.
+         */
+        offline: z.object({ occurredAt: z.string().datetime() }).optional(),
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -181,7 +187,7 @@ export const transactionsRouter = router({
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Shift does not belong to this outlet' })
         }
 
-        if (shift.status !== 'open') {
+        if (shift.status !== 'open' && !input.offline) {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Shift is not open' })
         }
 
@@ -194,7 +200,7 @@ export const transactionsRouter = router({
       const limit = PLAN_LIMITS[plan] ?? 100
 
       let currentMonthCount = 0
-      if (limit !== Infinity) {
+      if (limit !== Infinity && !input.offline) {
         const listUseCase = container.listTransactionsUseCase()
         const planUsage = await listUseCase.getPlanUsage(input.outletId, plan, PLAN_LIMITS)
         currentMonthCount = planUsage.count
@@ -221,8 +227,10 @@ export const transactionsRouter = router({
           amountPaid: input.amountPaid,
           discountAmount: input.discountAmount,
           notes: input.notes,
-          planLimit: limit === Infinity ? null : limit,
+          planLimit: limit === Infinity || input.offline ? null : limit,
           currentMonthCount,
+          occurredAt: input.offline ? new Date(input.offline.occurredAt) : undefined,
+          allowShortStock: !!input.offline,
         })
 
         if (!result.replayed) {

@@ -22,12 +22,14 @@ export function PWAProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker
-          .register('/sw.js')
-          .then((reg) => logger.success('SW registered', { scope: reg.scope }))
-          .catch((err) => logger.error('SW registration failed', err))
-      })
+      const register = () => navigator.serviceWorker
+        .register('/sw.js')
+        .then((reg) => logger.success('SW registered', { scope: reg.scope }))
+        .catch((err) => logger.error('SW registration failed', err))
+      // The effect usually runs after the load event has fired; waiting for it
+      // then would never register the worker, and pages would not work offline.
+      if (document.readyState === 'complete') void register()
+      else window.addEventListener('load', () => void register(), { once: true })
     }
 
     const handlePrompt = (e: Event) => {

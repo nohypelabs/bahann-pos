@@ -100,7 +100,7 @@ function toTransactionItem(row: TransactionItemRow): TransactionItem {
 }
 
 export class SupabaseTransactionRepository implements TransactionRepository {
-  async create(transaction: Omit<Transaction, 'id' | 'createdAt'>): Promise<Transaction> {
+  async create(transaction: Omit<Transaction, 'id' | 'createdAt'> & { createdAt?: Date }): Promise<Transaction> {
     const { data, error } = await supabase
       .from('transactions')
       .insert({
@@ -119,6 +119,7 @@ export class SupabaseTransactionRepository implements TransactionRepository {
         amount_paid: transaction.amountPaid,
         change_amount: transaction.changeAmount,
         notes: transaction.notes,
+        ...(transaction.createdAt ? { created_at: transaction.createdAt.toISOString() } : {}),
       })
       .select()
       .single()

@@ -148,7 +148,7 @@ export class SupabaseWorkshopRepository implements WorkshopRepository {
   async createCustomer(tenantId: string, input: CustomerInput, createdBy: string): Promise<Customer> {
     const { data, error } = await supabase
       .from('customers')
-      .insert({ tenant_id: tenantId, name: input.name, phone: input.phone, notes: input.notes, created_by: createdBy })
+      .insert({ ...(input.id ? { id: input.id } : {}), tenant_id: tenantId, name: input.name, phone: input.phone, notes: input.notes, created_by: createdBy })
       .select('*')
       .single()
     if (error) fail('create customer', error)
@@ -325,6 +325,8 @@ export class SupabaseWorkshopRepository implements WorkshopRepository {
     const { data, error } = await supabase
       .from('service_orders')
       .insert({
+        ...(input.id ? { id: input.id } : {}),
+        ...(input.openedAt ? { opened_at: input.openedAt } : {}),
         tenant_id: tenantId,
         outlet_id: input.outletId,
         vehicle_id: input.vehicleId,

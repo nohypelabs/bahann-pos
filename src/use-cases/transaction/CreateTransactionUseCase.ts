@@ -40,6 +40,13 @@ export interface CreateTransactionInput {
   notes?: string
   planLimit: number | null
   currentMonthCount: number
+  /** A sale made offline: when it happened. */
+  occurredAt?: Date
+  /**
+   * A sale made offline was already paid, so a stock shortfall cannot refuse it:
+   * the line takes what is left (down to 0) and the shortfall is logged.
+   */
+  allowShortStock?: boolean
 }
 
 export interface CreateTransactionResult {
@@ -106,7 +113,7 @@ export class CreateTransactionUseCase {
     // Refuse a short tracked line before anything is written. POS checkouts are
     // created pending and finalized after the payment is recorded, and at that
     // point a stock shortfall can only be logged, not refused.
-    await this.planStockWrites(resolvedItems, input.outletId, input.tenantId)
+    await this.planStockWrites(resolvedItems, input.outletId, input.tenantId, input.allowShortStock)
 
     const transactionId = input.transactionId
       ?? `TRX-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
@@ -136,6 +143,7 @@ export class CreateTransactionUseCase {
         refundedBy: null,
         refundedAt: null,
         refundAmount: null,
+        createdAt: input.occurredAt,
       })
     } catch (error: any) {
       if (input.transactionId && (error?.message?.includes('unique constraint') || error?.message?.includes('idx_transactions_tenant_txn_id') || error?.message?.includes('duplicate key'))) {
@@ -183,7 +191,7 @@ export class CreateTransactionUseCase {
     // Stock before daily sales: a short tracked line voids the sale, and the daily
     // sales aggregate must not have been written for a sale that no longer exists.
     try {
-      await this.deductStock(resolvedItems, input.outletId, input.tenantId)
+      await this.deductStock(resolvedItems, input.outletId, input.tenantId, input.allowShortStock)
     } catch (error) {
       await this.transactionRepo.voidById(transaction.id)
       throw error
@@ -203,6 +211,7 @@ export class CreateTransactionUseCase {
     tenantId: string
     transactionId: string
     amountPaid?: number
+    allowShortStock?: boolean
   }): Promise<Transaction> {
     const transaction = await this.transactionRepo.findById(input.transactionId)
     if (!transaction) {
@@ -236,7 +245,7 @@ export class CreateTransactionUseCase {
     }
 
     try {
-      await this.deductStock(transaction.items, transaction.outletId, transaction.tenantId)
+      await this.deductStock(transaction.items, transaction.outletId, transaction.tenantId, input.allowShortStock)
     } catch (error) {
       // The payment was already captured, so voiding the sale here would be wrong.
       // Surface it loudly instead: stock and sales now disagree until reconciled.
@@ -407,8 +416,9 @@ export class CreateTransactionUseCase {
     items: { productId: string; quantity: number }[],
     outletId: string,
     tenantId: string,
+    allowShortStock = false,
   ): Promise<void> {
-    const writes = await this.planStockWrites(items, outletId, tenantId)
+    const writes = await this.planStockWrites(items, outletId, tenantId, allowShortStock)
     for (const write of writes) {
       await this.dailyStockRepo.save(write)
     }
@@ -422,6 +432,7 @@ export class CreateTransactionUseCase {
     items: { productId: string; quantity: number }[],
     outletId: string,
     tenantId: string,
+    allowShortStock = false,
   ): Promise<DailyStock[]> {
     // stock_date holds the business (WIB) calendar day, represented as UTC midnight
     // of that day (getByDate reads it back with toISOString). Build "today" the same
@@ -457,7 +468,17 @@ export class CreateTransactionUseCase {
         continue
       }
 
-      const result = StockService.deductBehavior(stockBehavior, knownStock.stockAkhir, item.quantity)
+      let result = StockService.deductBehavior(stockBehavior, knownStock.stockAkhir, item.quantity)
+      let quantityOut = item.quantity
+
+      if ((!result.success || result.newStockLevel === null) && allowShortStock) {
+        // An offline sale that was already paid: take what is left and report the gap.
+        quantityOut = Math.max(0, knownStock.stockAkhir)
+        result = { ...result, success: true, newStockLevel: 0 }
+        logger.warn(
+          `Offline sale oversold "${product?.name ?? item.productId}": ${knownStock.stockAkhir} in stock, ${item.quantity} sold`,
+        )
+      }
 
       if (!result.success || result.newStockLevel === null) {
         throw new DomainException(
@@ -474,7 +495,7 @@ export class CreateTransactionUseCase {
         stockDate: today,
         stockAwal: todayStock ? knownStock.stockAwal : knownStock.stockAkhir,
         stockIn: todayStock ? knownStock.stockIn : 0,
-        stockOut: (todayStock ? knownStock.stockOut : 0) + item.quantity,
+        stockOut: (todayStock ? knownStock.stockOut : 0) + quantityOut,
         stockAkhir: result.newStockLevel,
         createdAt: todayStock ? knownStock.createdAt : new Date(),
       })

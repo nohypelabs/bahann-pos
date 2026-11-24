@@ -1,12 +1,12 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
-import { router, protectedProcedure as baseProtected, adminProcedure as baseAdmin } from '../trpc'
+import { router } from '../trpc'
 import { container } from '@/infra/container'
-import { SupabaseBusinessProfileRepository } from '@/infra/repositories/SupabaseBusinessProfileRepository'
 import { createAuditLog } from '@/lib/audit'
-import { DomainException } from '@/domain/errors/DomainException'
+import { run, workshopAdminProcedure, workshopProcedure } from '@/server/lib/workshopProcedures'
 import { assertOutletAccessible, getUserOutletIds } from '@/server/lib/tenant'
 import { cancelPendingNoteCheckouts } from '@/server/lib/workshopSale'
+import { workshopOfflineRouter } from './workshopOffline'
 
 /**
  * Workshop (bengkel) module: customers and members, vehicles, mechanics, open
@@ -14,31 +14,8 @@ import { cancelPendingNoteCheckouts } from '@/server/lib/workshopSale'
  * as the message, so the client can show DOMAIN_ERROR_MESSAGES_ID/EN[code].
  */
 
-/** Only tenants that switched on the workshop module (Settings → Business) may use it. */
-async function assertWorkshopEnabled(tenantId: string | undefined) {
-  const profile = tenantId ? await new SupabaseBusinessProfileRepository().findByTenantId(tenantId) : null
-  if (!profile?.enabledModules.includes('workshop')) {
-    throw new TRPCError({ code: 'FORBIDDEN', message: 'WORKSHOP_MODULE_DISABLED' })
-  }
-}
-
-const protectedProcedure = baseProtected.use(async ({ ctx, next }) => {
-  await assertWorkshopEnabled(ctx.session.tenantId)
-  return next()
-})
-const adminProcedure = baseAdmin.use(async ({ ctx, next }) => {
-  await assertWorkshopEnabled(ctx.session?.tenantId)
-  return next()
-})
-
-async function run<T>(fn: () => Promise<T>): Promise<T> {
-  try {
-    return await fn()
-  } catch (err) {
-    if (err instanceof DomainException) throw new TRPCError({ code: 'BAD_REQUEST', message: err.code, cause: err })
-    throw err
-  }
-}
+const protectedProcedure = workshopProcedure
+const adminProcedure = workshopAdminProcedure
 
 const uc = () => container.workshopUseCase()
 const id = z.string().uuid()
@@ -280,6 +257,7 @@ const loyaltyRouter = router({
 })
 
 export const workshopRouter = router({
+  offline: workshopOfflineRouter,
   customers: customersRouter,
   vehicles: vehiclesRouter,
   mechanics: mechanicsRouter,

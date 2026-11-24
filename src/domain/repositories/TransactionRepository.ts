@@ -29,7 +29,8 @@ export interface TransactionSummary {
 }
 
 export interface TransactionRepository {
-  create(transaction: Omit<Transaction, 'id' | 'createdAt'>): Promise<Transaction>
+  /** createdAt is set only for a sale made offline and recorded later. */
+  create(transaction: Omit<Transaction, 'id' | 'createdAt'> & { createdAt?: Date }): Promise<Transaction>
   createItems(items: Omit<TransactionItem, 'id'>[]): Promise<void>
   findById(id: string): Promise<TransactionWithRelations | null>
   findByTransactionId(transactionId: string): Promise<TransactionWithRelations | null>

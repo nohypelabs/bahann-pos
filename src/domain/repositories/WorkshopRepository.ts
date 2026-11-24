@@ -11,6 +11,8 @@ import type {
 } from '../entities/Workshop'
 
 export interface CustomerInput {
+  /** Set by an offline client, so a replayed create finds the same row. */
+  id?: string
   name: string
   phone: string | null
   notes: string | null
@@ -24,6 +26,10 @@ export interface VehicleInput {
 }
 
 export interface ServiceOrderInput {
+  /** Set by an offline client, so a replayed open finds the same note. */
+  id?: string
+  /** When the note was opened on an offline client. */
+  openedAt?: string
   outletId: string
   vehicleId: string
   customerId: string | null

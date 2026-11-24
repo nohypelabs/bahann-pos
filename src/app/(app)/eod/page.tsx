@@ -7,6 +7,9 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { StatCard } from '@/components/ui/StatCard'
 import { trpc } from '@/lib/trpc/client'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { offlineDb } from '@/lib/offline/database'
+import { unsentOfflineWork } from '@/lib/offline/unsent'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { Clock, Banknote, User, CheckCircle, Sunrise, Moon, CheckCircle2, XCircle, Info, Hourglass } from 'lucide-react'
 
@@ -20,6 +23,7 @@ const statusLabels: Record<string, { label: string; color: string }> = {
 }
 
 export default function EODPage() {
+  const { t } = useLanguage()
   const [selectedOutlet, setSelectedOutlet] = useState('')
   const [openingCash, setOpeningCash]       = useState(0)
   const [closingCash, setClosingCash]       = useState(0)
@@ -51,8 +55,15 @@ export default function EODPage() {
 
   const handleCloseDay = async () => {
     if (!activeShift) return
+    // Sales taken offline belong to this shift's cash: send them before it closes.
+    const waiting = await unsentOfflineWork()
+    if (waiting > 0) {
+      flash('error', t('eod.offlineWaiting').replace('{n}', String(waiting)))
+      return
+    }
     try {
       await submitMutation.mutateAsync({ shiftId: activeShift.id, actualCash: closingCash, cashierNote: notes })
+      await offlineDb.wsShifts.delete(activeShift.id).catch(() => undefined)
       flash('success', 'Penutupan shift diajukan')
     } catch (err) {
       flash('error', err instanceof Error ? err.message : 'Gagal menutup shift. Periksa koneksi dan coba lagi.')

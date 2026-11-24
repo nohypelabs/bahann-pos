@@ -38,6 +38,7 @@ export type AuditEntity =
   | 'stock_alert'
   | 'tenant'
   | 'payment'
+  | 'offline_sync'
   | 'payment_request'
   | 'business_profile'
   | 'user_role_assignment'
