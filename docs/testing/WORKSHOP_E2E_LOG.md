@@ -20,6 +20,33 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-25 · Fixing the findings from phases 1–6
+
+The owner asked for every finding logged so far to be fixed. Each fix and how it was verified:
+
+| # | Finding | Fix | Verified by |
+|---|---|---|---|
+| F1 | `daily_sales` kept only the first sale of a product per day (insert hit `UNIQUE (product_id, outlet_id, sale_date)`) | Migration `056_daily_sales_accumulate.sql`: `add_daily_sale` adds to the day's row atomically, never below 0; voids subtract on the day of the sale; existing rows recomputed from transactions | Prod copy: before 14 units, after 30 = completed sales; +2 +3 → 9, void −2 → 7, clamps at 0; idempotent; `authenticated` cannot execute. Applied to production. After the suite: today's `daily_sales` equals completed transactions for all 4 products (BUSI 6/6, JASA-GANTI-OLI 3/3, JASA-SRV-RINGAN 6/6, OLI 6/6, revenue equal). Unit tests for sale and void |
+| F2 | "Buat barcode kosong" also gave services a barcode | Without a selection, only non-service items are passed to `assign_missing_barcodes`; a selection still gets what was picked | New spec `06-bulk-barcodes`: part got `2000000000077`, service stayed empty; both test products deleted afterwards |
+| F3 | Receipt preview rendered inline and unstyled (styled-jsx scoping never applied, dev and prod) | `PrintPreviewModal` rewritten with Tailwind as a real dialog; receipt CSS moved to `src/components/print/receipt.css` (global, all rules under `receipt-*`, `text-*` scoped to `.receipt-container`, no global `@page`/`body` rules) | `01-walk-in` asserts the dialog has a white background and `.receipt-container` has a max width; production CSS bundle contains the receipt rules |
+| F4 | `/pos/sales` (and Catat Stok, Riwayat, Produk) loaded only the first 50 products | `products.getAll({ all: true })` pages through the catalogue 1000 rows at a time; the POS draws at most 120 cards with a hint to search or scan for the rest | Unit test: 2300 products loaded in 3 requests; Chrome: POS lists all 6 test products, Catat Stok offers all products, Riwayat loads, no console errors |
+| F5 | Receipt showed "Bayar" = total and no change | `PaymentModal` passes the cash handed over and the change to `onSuccess`; POS and service-note receipts use them | `01-walk-in` pays Rp150.000 for Rp110.000: receipt shows Bayar Rp150.000, Kembalian Rp40.000 |
+| F6 | `gen:types` pointed at the old Supabase project | Points at `weizdahzmwgsqzdossdq`; `src/infra/database.types.ts` regenerated (now includes the workshop and product-code tables) | `tsc` passes with the new types |
+| F7 | Unused `Search` import on the products page | Removed | eslint |
+
+Suite after the fixes (local app → production DB): **6 passed in 1.8 min.**
+
+- walk-in: plate `E2EWV1UAYI`, note `32e55609-d546-46c3-9756-e1b0381aca48`, paid Rp110.000, spark plugs 16 → 14
+- guard: `E2EGV1UOTK`, cancelled
+- member: note `9cfd309f-d6e3-412c-9735-b5ce636a44bb`, stamps 4 → 5 / 10
+- voucher: `VCR-8EE32E0A`, paid Rp55.000
+- labels: passed
+- bulk barcodes: part `2000000000077`, service none
+
+Unit tests 140 passed, 2 skipped; production build passed.
+
+---
+
 ## 2026-11-25 · Phase 6: automated browser suite (`pnpm test:e2e:workshop`)
 
 Environment: local app → production DB (`next dev -p 3123` started by Playwright), system Chromium

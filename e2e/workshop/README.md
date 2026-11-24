@@ -19,11 +19,12 @@ The global setup logs in once (login is rate-limited), refuses any account that 
 
 | Spec | Flow |
 |---|---|
-| `01-walk-in` | New plate, walk-in customer, agreed labour price, spark plugs ×2, cash; paid total, agreed price and stock deduction checked through the API |
+| `01-walk-in` | New plate, walk-in customer, agreed labour price, spark plugs ×2, Rp150.000 cash for Rp110.000; receipt dialog shows paid amount and change; paid total, agreed price and stock deduction checked through the API |
 | `02-open-note-guard` | A plate with an unpaid note cannot get a second one; jump to it and cancel it with a reason |
 | `03-member-stamps` | Member plate `B1234UJI`: a paid visit adds a stamp; a full card issues a voucher |
 | `04-voucher` | A manually issued free-service voucher removes the labour from the bill and is used up |
 | `05-labels` | Select products, print A4 labels (print call intercepted), custom sheet with decimal commas and the "does not fit" guard |
+| `06-bulk-barcodes` | "Buat barcode kosong" gives a temporary part a barcode and leaves a temporary service without one; both are deleted afterwards |
 
 The tests change real data on that tenant: each run adds paid notes, one or two new plates
 (`E2E…`), stamps and stock movements. Parts run down over time (2 spark plugs and 2 oil per

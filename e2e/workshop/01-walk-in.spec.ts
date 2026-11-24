@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { addItem, api, evidence, freshPlate, ITEMS, itemRow, openNoteViaDialog, payCash, requireStock, rupiah, t } from './helpers'
+import { addItem, api, evidence, freshPlate, ITEMS, itemRow, openNoteViaDialog, payCash, receiptDialog, requireStock, rupiah, t } from './helpers'
 
 test('walk-in customer on a new motor: open a note, agree a price, pay cash', async ({ page }) => {
   const a = api(page)
@@ -23,8 +23,15 @@ test('walk-in customer on a new motor: open a note, agree a price, pay cash', as
   await expect(itemRow(page, ITEMS.sparkPlug.name).getByText('2', { exact: true })).toBeVisible()
   await expect(page.getByText(rupiah(110_000)).first()).toBeVisible()
 
-  await payCash(page)
-  await expect(page.getByText(plate).last()).toBeVisible() // receipt preview carries the plate
+  // Rp150.000 handed over for Rp110.000: the receipt shows what was paid and the change.
+  await payCash(page, 150_000)
+  const receipt = receiptDialog(page)
+  await expect(receipt.getByText(plate)).toBeVisible()
+  await expect(receipt.locator('.receipt-row', { hasText: /^\s*Bayar:/ })).toContainText(rupiah(150_000))
+  await expect(receipt.locator('.receipt-row', { hasText: 'Kembalian:' })).toContainText(rupiah(40_000))
+  // The preview is a real dialog with the receipt stylesheet applied (it used to render unstyled, inline).
+  expect(await receipt.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(255, 255, 255)')
+  expect(await receipt.locator('.receipt-container').evaluate((el) => getComputedStyle(el).maxWidth)).not.toBe('none')
 
   await expect.poll(async () => (await a.note(noteId)).status).toBe('paid')
   const note = await a.note(noteId)

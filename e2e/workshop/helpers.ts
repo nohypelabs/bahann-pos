@@ -115,10 +115,15 @@ export const itemRow = (page: Page, name: string) =>
     .filter({ has: page.getByRole('button', { name: '+', exact: true }) })
     .last()
 
-/** Pays the open note in cash with the exact amount and waits for the receipt. */
-export async function payCash(page: Page) {
+/** Pays the open note in cash (the exact amount unless `given` is set) and waits for the receipt. */
+export async function payCash(page: Page, given?: number) {
   await page.getByRole('button', { name: t('workshop.note.pay'), exact: true }).click()
   await page.getByRole('button', { name: /^Cash/ }).click()
-  await page.getByRole('button', { name: 'Uang Pas' }).click()
+  if (given) await page.getByPlaceholder('0', { exact: true }).fill(String(given))
+  else await page.getByRole('button', { name: 'Uang Pas' }).click()
   await page.getByRole('button', { name: /^Konfirmasi/ }).click()
+  await expect(receiptDialog(page)).toBeVisible()
 }
+
+/** The receipt preview that opens after a payment. */
+export const receiptDialog = (page: Page) => page.getByRole('dialog', { name: 'Preview Struk' })
