@@ -20,6 +20,48 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-25 · Phase 6: automated browser suite (`pnpm test:e2e:workshop`)
+
+Environment: local app → production DB (`next dev -p 3123` started by Playwright), system Chromium
+(`PLAYWRIGHT_CHROMIUM_PATH=/usr/bin/chromium`), service workers blocked, test tenant as admin. How to run:
+[`e2e/workshop/README.md`](../../e2e/workshop/README.md).
+
+| # | Spec | What it checks | Result |
+|---|---|---|---|
+| 6.1 | `01-walk-in` | New plate, walk-in, labour agreed at Rp60.000 instead of Rp50.000, 2 spark plugs, cash with exact amount; paid total Rp110.000, agreed price stored, spark-plug stock −2, plate has no owner and no open note | ✅ |
+| 6.2 | `02-open-note-guard` | Plate with an unpaid note (opened through the API): the dialog warns, "Buka nota" is disabled, "Buka nota itu" jumps to it; cancel needs a reason; status `cancelled` | ✅ |
+| 6.3 | `03-member-stamps` | Member B1234UJI pays a visit: stamp card 2 → 3 of 10, vouchers unchanged (a full card would add one); member list shows M0001 | ✅ |
+| 6.4 | `04-voucher` | Free-service voucher (max Rp50.000) issued through the API, picked on the note: bill Rp105.000 → Rp55.000, paid total Rp55.000, voucher no longer usable | ✅ |
+| 6.5 | `05-labels` | 2 products selected on the products page → label page; 25 + 1 copies = 26 labels on 2 sheets; print intercepted: `@page size: A4`, 21 + 5 labels, 26 barcode SVGs; custom width "52,5" kept; 70 mm × 4 columns blocks printing | ✅ |
+
+Final run: **5 passed in 1.6 min.** Evidence printed by the run:
+
+- walk-in and guard: fresh `E2EW…`/`E2EG…` plates (one each per run)
+- member: note `dc7460e4-97e7-4ee1-b97a-7a094aeb5ff4`, stamps 2 → 3 / 10, vouchers 1 → 1
+- voucher: note `a739b74a-d50a-41fc-8842-82105ba3874b`, voucher `VCR-C64888E8`, paid Rp55.000
+
+Getting there:
+
+1. First run: all 5 failed to launch. Playwright 1.56.1 wants Chromium build 1194, the cache had 1243. Fixed by
+   allowing a system Chromium through `PLAYWRIGHT_CHROMIUM_PATH` (no download).
+2. Second run: every page bounced to `/dashboard`. The app layout requires the `user` entry the login page keeps
+   in localStorage; an API login only sets cookies, so the layout sent the browser to `/login` and the proxy sent
+   it on to `/dashboard`. The global setup now writes that entry into the saved storage state. 4 of 5 passed.
+3. `05-labels` selectors were ambiguous (product names repeat in the preview; "Kolom" also matched "Jarak antar
+   kolom"). Fixed in the spec, then the full suite passed.
+
+Finding outside the workshop module (not fixed): while the suite ran, the server logged
+`Failed to insert daily_sales: duplicate key … daily_sales_product_id_outlet_id_sale_date_key` for every second
+sale of the same product on the same day. `CreateTransactionUseCase.recordDailySales` inserts one row per sale,
+but the table allows one row per product, outlet and day; the error is caught and logged, the sale itself
+succeeds. Nothing in the app reads `daily_sales` (only the admin tenant delete touches it), so no number on screen
+is wrong. The table is incomplete and the logs are noisy.
+
+Not covered by the suite yet: void/refund of a workshop sale (PIN approval, stamp and voucher reversal), non-cash
+payments, and the stamp-card settings page. These were tested by hand in phases 3 and 4.
+
+---
+
 ## 2026-11-24 · Phase 5: generated SKUs and barcodes, A4 sticker labels
 
 ### Migration 055 on a production copy

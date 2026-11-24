@@ -60,3 +60,8 @@ next-env.d.ts
 
 # Supabase CLI local state (linked project, CLI version cache)
 supabase/.temp/
+
+# Playwright
+/e2e/.auth/
+/test-results/
+/playwright-report/

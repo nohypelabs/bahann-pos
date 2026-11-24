@@ -159,3 +159,6 @@ Applying one: `supabase db query --linked --project-ref <ref> -f supabase/migrat
 Every end-to-end run (browser flows, API-driven flows, DB checks after a flow) is written up in
 `docs/testing/WORKSHOP_E2E_LOG.md`: environment, steps, expected vs actual, evidence (transaction numbers, ids),
 bugs found and their fix commits. Record failures too. The workshop test tenant and how to rerun are described there.
+
+Browser suite for the workshop flows: `pnpm test:e2e:workshop` (`playwright.workshop.config.ts`, specs in
+`e2e/workshop/`, setup and env vars in `e2e/workshop/README.md`). It changes data on the workshop test tenant only.
