@@ -153,3 +153,9 @@ Supabase migrations live in `supabase/migrations/`. Run via Supabase CLI. When a
 **Latest migration:** `054_workshop_module.sql` (workshop module: members, vehicles, mechanics, service notes, stamp card; see `docs/BENGKEL_MODULE.md`). Production applies migrations by hand (`supabase db query --linked -f <file>`) and records each filename in `public._migrations`.
 
 Applying one: `supabase db query --linked --project-ref <ref> -f supabase/migrations/<file>.sql`, then `insert into _migrations (filename) values ('<file>.sql')`. Migrations 045–054 were applied this way, and `_migrations` is the record of what production has.
+
+### Testing and the E2E log
+
+Every end-to-end run (browser flows, API-driven flows, DB checks after a flow) is written up in
+`docs/testing/WORKSHOP_E2E_LOG.md`: environment, steps, expected vs actual, evidence (transaction numbers, ids),
+bugs found and their fix commits. Record failures too. The workshop test tenant and how to rerun are described there.
