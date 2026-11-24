@@ -20,6 +20,26 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-25 · Offline mode against production
+
+Environment: production `https://lakupos.vercel.app`, `WORKSHOP_E2E_BASE_URL=https://lakupos.vercel.app pnpm test:e2e:workshop`,
+system Chromium. Migration 057 applied before deploying.
+
+**Run 1, commit `804107d`: 9 passed, 1 failed.** `01-walk-in` failed on the receipt check: the dialog's computed
+background was `""` (element detached). After an online payment the background sync removed the paid note from the
+open list, the editor switched views and remounted the receipt preview, so it flickered and the old element went away.
+Fixed in `6fcc5a3`: the receipt is the same fragment child in both views, so React keeps it. Verified locally with
+`--repeat-each=3` on specs 01, 03 and 04 (9/9).
+
+**Run 2, commit `6fcc5a3`: 10 passed in 1.0 min**, including `09-offline-reload` with the production service worker.
+
+- walk-in `E2EWV4DPSQ`, note `54fb5f9c-25ed-4727-84c7-8ed28936c2c8`, paid Rp110.000, spark plugs 20 → 18
+- offline note `c46ff4fb-1988-4ace-8122-ad702140b806`, receipt `TRX-MWV4EJKW-Q3VX9` = transaction number, spark plugs 18 → 17
+- push replay `E2E-OFF-1795550497776`, transaction `879325b8-dfe2-4db5-96b4-28d024f8a4c7`
+- offline reload `E2ERV4EQF2` (cancelled afterwards); quick-cashier offline sale `TRX-MWV4ETHT-03XBK`
+
+---
+
 ## 2026-11-25 · Offline mode (local app → production DB)
 
 Design: [../OFFLINE_MODE.md](../OFFLINE_MODE.md). Migration `057_offline_ops.sql` tested on a production copy
