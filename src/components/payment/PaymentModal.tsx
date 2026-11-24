@@ -38,7 +38,11 @@ type PaymentResult = {
   bankAccountId?: string
   displayDetails?: Record<string, unknown> | null
   expiresAt?: Date
+  loyalty?: LoyaltyOutcome | null
 }
+
+/** Stamp-card result of a workshop sale (see src/server/lib/workshopSale.ts). */
+export type LoyaltyOutcome = { awarded: boolean; balance?: number; required?: number; vouchers?: string[] }
 
 interface PaymentModalProps {
   transactionId: string
@@ -51,12 +55,18 @@ interface PaymentModalProps {
   notes?: string
   customerName?: string
   customerPhone?: string
+  /** Paying a workshop service note: the server takes items, prices and discount from the note. */
+  serviceOrderId?: string
+  voucherCode?: string
+  /** Called when the cashier leaves without paying a checkout that was already started. */
+  onAbandonPending?: (paymentId: string) => void
   isOpen: boolean
   onClose: () => void
   onSuccess: (
     paymentId: string,
     paymentMethod: PaymentMethod,
     transaction?: { id: string; number: string },
+    loyalty?: LoyaltyOutcome | null,
   ) => void
   onError?: (error: string) => void
 }
@@ -78,6 +88,9 @@ export function PaymentModal({
   notes,
   customerName,
   customerPhone,
+  serviceOrderId,
+  voucherCode,
+  onAbandonPending,
   isOpen,
   onClose,
   onSuccess,
@@ -110,6 +123,8 @@ export function PaymentModal({
       notes,
       customerName,
       customerPhone,
+      serviceOrderId,
+      voucherCode,
     })
   }
 
@@ -144,7 +159,7 @@ export function PaymentModal({
         onSuccess(result.paymentId, method, {
           id: result.transactionId,
           number: result.transactionNumber,
-        })
+        }, result.loyalty)
         onClose()
       }, 1000)
     } catch (err: unknown) {
@@ -217,7 +232,7 @@ export function PaymentModal({
     setError('')
 
     try {
-      await confirmCheckout.mutateAsync({
+      const confirmed = await confirmCheckout.mutateAsync({
         paymentId: paymentResult.paymentId,
       })
 
@@ -227,7 +242,7 @@ export function PaymentModal({
         onSuccess(paymentResult.paymentId, selectedMethod, {
           id: paymentResult.transactionId,
           number: paymentResult.transactionNumber,
-        })
+        }, confirmed.loyalty)
         onClose()
       }, 1500)
     } catch (err: unknown) {
@@ -240,6 +255,9 @@ export function PaymentModal({
   }
 
   const handleCancel = () => {
+    if (paymentResult && paymentResult.status !== 'paid' && step !== 'completed') {
+      onAbandonPending?.(paymentResult.paymentId)
+    }
     setStep('method')
     setSelectedMethod('cash')
     setPaymentResult(null)

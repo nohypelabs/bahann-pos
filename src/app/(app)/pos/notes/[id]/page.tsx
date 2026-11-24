@@ -15,6 +15,12 @@ import { trpc } from '@/lib/trpc/client'
 import { formatCurrency } from '@/lib/utils'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { workshopErrorMessage } from '@/lib/workshop/errors'
+import { PaymentModal, type LoyaltyOutcome } from '@/components/payment/PaymentModal'
+import { PrintPreviewModal } from '@/components/print/PrintPreviewModal'
+import type { ReceiptData } from '@/components/print/PrintReceipt'
+import { generateTransactionId } from '@/lib/utils'
+import { voucherDiscount } from '@/domain/workshop/rules'
+import type { VoucherReward } from '@/domain/entities/Workshop'
 
 export default function ServiceNotePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -29,6 +35,16 @@ export default function ServiceNotePage({ params }: { params: Promise<{ id: stri
   const setItem = trpc.workshop.notes.setItem.useMutation()
   const update = trpc.workshop.notes.update.useMutation()
   const cancel = trpc.workshop.notes.cancel.useMutation()
+  const abandonCheckout = trpc.workshop.notes.abandonCheckout.useMutation()
+
+  const outletId = note.data?.outletId ?? ''
+  const { data: activeShift } = trpc.shifts.getActive.useQuery({ outletId }, { enabled: !!outletId })
+  const { data: outletsResponse } = trpc.outlets.getAll.useQuery()
+  const { data: profile } = trpc.auth.getProfile.useQuery()
+  const [payOpen, setPayOpen] = useState(false)
+  const [txRef, setTxRef] = useState('')
+  const [voucherCode, setVoucherCode] = useState('')
+  const [receipt, setReceipt] = useState<ReceiptData | null>(null)
 
   const [search, setSearch] = useState('')
   const [term, setTerm] = useState('')
@@ -133,6 +149,55 @@ export default function ServiceNotePage({ params }: { params: Promise<{ id: stri
 
   const priceOf = (i: (typeof n.items)[number]) => i.unitPrice ?? i.listPrice
   const subtotal = n.items.reduce((s, i) => s + priceOf(i) * i.quantity, 0)
+
+  // The server recomputes the discount from the voucher; this preview uses the same rule.
+  const voucher = n.vouchers.find((v) => v.code === voucherCode) ?? null
+  let discount = 0
+  let voucherProblem = ''
+  if (voucher) {
+    try {
+      discount = voucherDiscount(voucher.reward, n.items.map((i) => ({ itemType: i.itemType, unitPrice: priceOf(i), quantity: i.quantity })))
+    } catch (err) {
+      voucherProblem = workshopErrorMessage(err instanceof Error ? new Error((err as { code?: string }).code ?? err.message) : err, language)
+    }
+  }
+  const total = subtotal - discount
+  const canPay = isOpen && n.items.length > 0 && !!activeShift && !voucherProblem
+
+  const describeReward = (r: VoucherReward) =>
+    r.type === 'free_service'
+      ? t('workshop.voucher.freeService') + (r.maxValue ? ` (maks ${formatCurrency(r.maxValue)})` : '')
+      : r.type === 'fixed' ? `-${formatCurrency(r.amount)}` : `-${r.percent}%`
+
+  const startPay = () => { setTxRef(generateTransactionId()); setPayOpen(true) }
+
+  const onPaid = async (_paymentId: string, method: string, tx?: { id: string; number: string }, loyalty?: LoyaltyOutcome | null) => {
+    const now = new Date()
+    const outlet = outletsResponse?.outlets.find((o) => o.id === n.outletId)
+    setReceipt({
+      transactionId: tx?.number ?? txRef,
+      date: now.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }),
+      time: now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      cashier: profile?.name ?? '',
+      outlet: { name: outlet?.name ?? 'Laku POS', address: outlet?.address ?? '', phone: profile?.whatsappNumber ?? '', email: profile?.email ?? '' },
+      items: n.items.map((i) => ({ name: i.productName, sku: i.productSku, quantity: i.quantity, unitPrice: priceOf(i), total: priceOf(i) * i.quantity })),
+      subtotal, tax: 0, discount, total,
+      payment: { method, amount: total, change: 0 },
+      workshop: {
+        plate: n.vehicle.plateNumber,
+        vehicle: [n.vehicle.brand, n.vehicle.model].filter(Boolean).join(' ') || undefined,
+        mechanic: n.mechanic?.name,
+        odometerKm: n.odometerKm,
+        member: n.customer?.isMember ? { name: n.customer.name, code: n.customer.memberCode } : undefined,
+        voucherUsed: voucher ? { code: voucher.code, discount } : undefined,
+        stamps: loyalty?.required ? { balance: loyalty.balance ?? 0, required: loyalty.required } : undefined,
+        newVouchers: loyalty?.vouchers?.length ? loyalty.vouchers : undefined,
+      },
+    })
+    setVoucherCode('')
+    await Promise.all([refresh(), utils.workshop.vehicles.lookup.invalidate()])
+    if (loyalty?.vouchers?.length) showToast(t('workshop.note.voucherEarned').replace('{code}', loyalty.vouchers.join(', ')), 'success')
+  }
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -288,15 +353,60 @@ export default function ServiceNotePage({ params }: { params: Promise<{ id: stri
         <div className="sticky bottom-0 z-30 -mx-4 md:mx-0 rounded-none md:rounded-2xl border-t md:border border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs text-gray-500">{t('workshop.note.subtotal')}</p>
-              <p className="text-xl font-extrabold">{formatCurrency(subtotal)}</p>
+              <p className="text-xs text-gray-500">{discount > 0 ? `${formatCurrency(subtotal)} − ${formatCurrency(discount)}` : t('workshop.note.subtotal')}</p>
+              <p className="text-xl font-extrabold">{formatCurrency(total)}</p>
             </div>
+            {n.vouchers.length > 0 && (
+              <div className="flex-1 max-w-xs">
+                <select
+                  value={voucherCode}
+                  onChange={(e) => setVoucherCode(e.target.value)}
+                  aria-label={t('workshop.note.useVoucher')}
+                  className="w-full px-3 py-2 rounded-xl border border-teal-300 bg-teal-50 dark:bg-teal-900/20 text-sm"
+                >
+                  <option value="">{t('workshop.note.noVoucher')}</option>
+                  {n.vouchers.map((v) => <option key={v.id} value={v.code}>{v.code} · {describeReward(v.reward)}</option>)}
+                </select>
+                {voucherProblem && <p className="mt-1 text-xs text-red-600">{voucherProblem}</p>}
+              </div>
+            )}
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setCancelOpen(true)}>{t('workshop.note.cancel')}</Button>
-              <Button disabled title={t('workshop.note.payComingSoon')}>{t('workshop.note.pay')}</Button>
+              <Button onClick={startPay} disabled={!canPay} title={!activeShift ? t('workshop.note.needShift') : undefined}>
+                {t('workshop.note.pay')}
+              </Button>
             </div>
           </div>
         </div>
+      )}
+
+      {isOpen && !activeShift && n.items.length > 0 && (
+        <p className="text-sm text-amber-700">{t('workshop.note.needShift')}</p>
+      )}
+
+      {payOpen && (
+        <PaymentModal
+          isOpen={payOpen}
+          onClose={() => setPayOpen(false)}
+          transactionId={txRef}
+          outletId={n.outletId}
+          shiftId={activeShift?.id ?? ''}
+          deviceId={activeShift?.device_id ?? undefined}
+          amount={total}
+          items={n.items.map((i) => ({ productId: i.productId, productName: i.productName, productSku: i.productSku, quantity: i.quantity, unitPrice: priceOf(i) }))}
+          discountAmount={discount}
+          serviceOrderId={n.id}
+          voucherCode={voucher?.code}
+          customerName={n.customer?.name}
+          customerPhone={n.customer?.phone ?? undefined}
+          onAbandonPending={(paymentId) => abandonCheckout.mutate({ id: n.id, paymentId })}
+          onSuccess={onPaid}
+          onError={(message) => showToast(workshopErrorMessage(new Error(message), language), 'error')}
+        />
+      )}
+
+      {receipt && (
+        <PrintPreviewModal isOpen onClose={() => { setReceipt(null); router.push('/pos/notes') }} receiptData={receipt} />
       )}
 
       {scannerOpen && <BarcodeScanner onScan={onScan} onClose={() => setScannerOpen(false)} />}

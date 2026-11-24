@@ -12,6 +12,7 @@ import { router, protectedProcedure } from '../trpc'
 import { getUserOutletIds, requirePermission } from '@/server/lib/tenant'
 import { supabaseAdmin } from '@/infra/supabase/server'
 import { createAuditLog } from '@/lib/audit'
+import { reverseWorkshopSale } from '@/server/lib/workshopSale'
 import { container } from '@/infra/container'
 
 const approvalActionSchema = z.enum(['void', 'refund'])
@@ -295,6 +296,7 @@ export const transactionApprovalsRouter = router({
 
         if (tx?.status === 'completed' && voided?.length) {
           await container.createTransactionUseCase().restoreStockForVoidedSale(approval.transaction_id, tenantId)
+          await reverseWorkshopSale(tenantId, approval.transaction_id, 'void')
         }
       } else if (approval.action_type === 'refund') {
         const { error: txUpdateError } = await supabaseAdmin
@@ -312,6 +314,7 @@ export const transactionApprovalsRouter = router({
         if (txUpdateError) {
           throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: txUpdateError.message })
         }
+        await reverseWorkshopSale(tenantId, approval.transaction_id, 'refund')
       }
 
       await createAuditLog({

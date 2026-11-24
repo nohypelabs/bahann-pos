@@ -616,7 +616,6 @@
   "workshop.note.saved": "Data servis disimpan",
   "workshop.note.subtotal": "Subtotal",
   "workshop.note.pay": "Bayar",
-  "workshop.note.payComingSoon": "Pembayaran nota segera tersedia",
   "workshop.note.cancel": "Batalkan nota",
   "workshop.note.cancelTitle": "Batalkan nota?",
   "workshop.note.cancelBody": "Nota yang dibatalkan tidak bisa dibuka lagi. Stok tidak berubah karena belum dibayar.",
@@ -631,5 +630,10 @@
   "workshop.settings.noMechanics": "Belum ada mekanik.",
   "workshop.settings.mechanicAdded": "Mekanik ditambahkan",
   "workshop.settings.deactivate": "Nonaktifkan",
-  "workshop.settings.activate": "Aktifkan"
+  "workshop.settings.activate": "Aktifkan",
+  "workshop.voucher.freeService": "1x jasa servis gratis",
+  "workshop.note.useVoucher": "Pakai voucher",
+  "workshop.note.noVoucher": "Tanpa voucher",
+  "workshop.note.needShift": "Buka shift kasir dulu di halaman Penjualan sebelum menerima pembayaran.",
+  "workshop.note.voucherEarned": "Kartu servis penuh! Voucher baru: {code}"
 }

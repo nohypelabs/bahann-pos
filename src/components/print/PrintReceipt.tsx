@@ -32,6 +32,19 @@ export interface ReceiptData {
     change: number
   }
   notes?: string
+  /** Workshop service note details, printed when the sale paid a note. */
+  workshop?: ReceiptWorkshop
+}
+
+export interface ReceiptWorkshop {
+  plate: string
+  vehicle?: string
+  mechanic?: string
+  odometerKm?: number | null
+  member?: { name: string; code: string | null }
+  voucherUsed?: { code: string; discount: number }
+  stamps?: { balance: number; required: number }
+  newVouchers?: string[]
 }
 
 interface PrintReceiptProps {
@@ -80,6 +93,28 @@ export const PrintReceipt = forwardRef<HTMLDivElement, PrintReceiptProps>(
 
           <div className="receipt-divider"></div>
 
+          {data.workshop && (
+            <>
+              <div className="receipt-row">
+                <span className="receipt-label">Nopol:</span>
+                <span className="receipt-value">{data.workshop.plate}{data.workshop.vehicle ? ` · ${data.workshop.vehicle}` : ''}</span>
+              </div>
+              {data.workshop.mechanic && (
+                <div className="receipt-row">
+                  <span className="receipt-label">Mekanik:</span>
+                  <span className="receipt-value">{data.workshop.mechanic}</span>
+                </div>
+              )}
+              {data.workshop.odometerKm != null && (
+                <div className="receipt-row">
+                  <span className="receipt-label">Kilometer:</span>
+                  <span className="receipt-value">{data.workshop.odometerKm.toLocaleString('id-ID')}</span>
+                </div>
+              )}
+              <div className="receipt-divider"></div>
+            </>
+          )}
+
           {/* Items */}
           <div className="receipt-items">
             <table className="receipt-items-table">
@@ -120,19 +155,19 @@ export const PrintReceipt = forwardRef<HTMLDivElement, PrintReceiptProps>(
               <span className="receipt-value">{formatCurrency(data.subtotal)}</span>
             </div>
 
-            {data.discount && data.discount > 0 && (
+            {(data.discount ?? 0) > 0 && (
               <div className="receipt-row">
                 <span className="receipt-label">Diskon:</span>
                 <span className="receipt-value receipt-discount">
-                  -{formatCurrency(data.discount)}
+                  -{formatCurrency(data.discount ?? 0)}
                 </span>
               </div>
             )}
 
-            {data.tax && data.tax > 0 && (
+            {(data.tax ?? 0) > 0 && (
               <div className="receipt-row">
                 <span className="receipt-label">PPN (10%):</span>
-                <span className="receipt-value">{formatCurrency(data.tax)}</span>
+                <span className="receipt-value">{formatCurrency(data.tax ?? 0)}</span>
               </div>
             )}
 
@@ -167,6 +202,24 @@ export const PrintReceipt = forwardRef<HTMLDivElement, PrintReceiptProps>(
               </div>
             )}
           </div>
+
+          {data.workshop?.member && (
+            <>
+              <div className="receipt-divider"></div>
+              <div className="receipt-notes">
+                <p>Member {data.workshop.member.code ?? ''} · {data.workshop.member.name}</p>
+                {data.workshop.voucherUsed && (
+                  <p>Voucher {data.workshop.voucherUsed.code}: -{formatCurrency(data.workshop.voucherUsed.discount)}</p>
+                )}
+                {data.workshop.stamps && (
+                  <p>Kartu servis: {data.workshop.stamps.balance} dari {data.workshop.stamps.required}</p>
+                )}
+                {data.workshop.newVouchers?.map((code) => (
+                  <p key={code}><strong>Selamat! Voucher servis gratis: {code}</strong></p>
+                ))}
+              </div>
+            </>
+          )}
 
           {/* Notes */}
           {data.notes && (

@@ -101,3 +101,19 @@ describe('CreateTransactionUseCase.restoreStockForVoidedSale', () => {
     await expect(useCase.restoreStockForVoidedSale('tx-1', 'tenant-2')).rejects.toThrow('Transaction not found');
   });
 });
+
+describe('CreateTransactionUseCase prices', () => {
+  const labour = product({ id: 'svc-1', sku: 'JASA', name: 'Jasa Servis', price: 50000, stock_behavior: 'UNTRACKED' });
+
+  it('charges the list price even when the client sends another price', async () => {
+    const { useCase, transactionRepo } = makeUseCase({ products: [labour] });
+    await useCase.execute({ ...baseInput, status: 'pending', amountPaid: 0, items: [{ productId: 'svc-1', quantity: 1, unitPrice: 1 }] });
+    expect(transactionRepo.create).toHaveBeenCalledWith(expect.objectContaining({ subtotal: 50000 }));
+  });
+
+  it('charges the price agreed on a service note', async () => {
+    const { useCase, transactionRepo } = makeUseCase({ products: [labour] });
+    await useCase.execute({ ...baseInput, status: 'pending', amountPaid: 0, items: [{ productId: 'svc-1', quantity: 1, agreedUnitPrice: 45000 }] });
+    expect(transactionRepo.create).toHaveBeenCalledWith(expect.objectContaining({ subtotal: 45000 }));
+  });
+});

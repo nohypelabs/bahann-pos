@@ -616,7 +616,6 @@
   "workshop.note.saved": "Service details saved",
   "workshop.note.subtotal": "Subtotal",
   "workshop.note.pay": "Pay",
-  "workshop.note.payComingSoon": "Paying a note is coming soon",
   "workshop.note.cancel": "Cancel note",
   "workshop.note.cancelTitle": "Cancel this note?",
   "workshop.note.cancelBody": "A cancelled note cannot be reopened. Stock is unchanged because nothing was paid.",
@@ -631,5 +630,10 @@
   "workshop.settings.noMechanics": "No mechanics yet.",
   "workshop.settings.mechanicAdded": "Mechanic added",
   "workshop.settings.deactivate": "Deactivate",
-  "workshop.settings.activate": "Activate"
+  "workshop.settings.activate": "Activate",
+  "workshop.voucher.freeService": "1 free service",
+  "workshop.note.useVoucher": "Use a voucher",
+  "workshop.note.noVoucher": "No voucher",
+  "workshop.note.needShift": "Open a cashier shift on the Sales page before taking payment.",
+  "workshop.note.voucherEarned": "Stamp card full! New voucher: {code}"
 }

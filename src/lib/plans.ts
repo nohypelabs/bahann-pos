@@ -22,6 +22,20 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
   custom:       { maxOutlets: UNLIMITED, maxCashiers: UNLIMITED, canExport: true, canInstallPWA: true },
 }
 
+/**
+ * Sales a plan may record per outlet per month. One table for every caller: a copy
+ * that misses a plan silently caps it at 100 (unknown plans fall back to free).
+ */
+export const MONTHLY_TRANSACTION_LIMITS: Record<PlanId, number> = {
+  free: 100,
+  warung: Infinity,
+  starter: Infinity,
+  professional: Infinity,
+  business: Infinity,
+  enterprise: Infinity,
+  custom: Infinity,
+}
+
 /** The plan for contract clients: not sold on the website, granted by a super admin. */
 export const CONTRACT_PLAN: PlanId = 'custom'
 

@@ -6,6 +6,8 @@ import { AppError } from '@/shared/exceptions/AppError'
 import { supabaseAdmin } from '@/infra/supabase/server'
 import { assertOutletAccessible, requirePermission } from '@/server/lib/tenant'
 import { createAuditLog } from '@/lib/audit'
+import { MONTHLY_TRANSACTION_LIMITS } from '@/lib/plans'
+import { attachSaleToNote, completeWorkshopSale, prepareNoteCheckout, releaseVoucher, type NoteCheckout } from '@/server/lib/workshopSale'
 
 type CheckoutMethod = 'cash' | 'qris' | 'bank_transfer' | 'ewallet' | 'debit' | 'credit'
 
@@ -119,11 +121,17 @@ export const paymentsRouter = router({
       notes: z.string().optional(),
       customerName: z.string().optional(),
       customerPhone: z.string().optional(),
+      /** Paying a workshop service note: items, prices and discount then come from the note. */
+      serviceOrderId: z.string().uuid().optional(),
+      voucherCode: z.string().max(40).optional(),
     }))
     .mutation(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
       await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
       await requirePermission(ctx.userId, tenantId, 'pos.transaction.create', input.outletId)
+      if (input.voucherCode && !input.serviceOrderId) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Vouchers are redeemed on service notes' })
+      }
 
       const { data: shift, error: shiftError } = await supabaseAdmin
         .from('shifts')
@@ -195,35 +203,40 @@ export const paymentsRouter = router({
       }
 
       const plan = await container.getAccountPlanUseCase().execute(ctx.userId)
-      const planLimits: Record<string, number> = {
-        free: 100,
-        warung: Infinity,
-        starter: Infinity,
-        professional: Infinity,
-        business: Infinity,
-        enterprise: Infinity,
-      }
+      const planLimits: Record<string, number> = MONTHLY_TRANSACTION_LIMITS
       const limit = planLimits[plan] ?? 100
       const planUsage = limit === Infinity
         ? { count: 0 }
         : await container.listTransactionsUseCase().getPlanUsage(input.outletId, plan, planLimits)
 
-      const transactionResult = await container.createTransactionUseCase().execute({
-        tenantId,
-        transactionId: input.transactionId,
-        outletId: input.outletId,
-        cashierId: ctx.userId,
-        deviceId: input.deviceId,
-        shiftId: input.shiftId,
-        status: 'pending',
-        items: input.items,
-        paymentMethod: methodToTransactionPaymentMethod(input.method),
-        amountPaid: 0,
-        discountAmount: input.discountAmount,
-        notes: input.notes,
-        planLimit: limit === Infinity ? null : limit,
-        currentMonthCount: planUsage.count,
-      })
+      const note: NoteCheckout | null = input.serviceOrderId
+        ? await prepareNoteCheckout(tenantId, input.outletId, input.serviceOrderId, input.voucherCode)
+        : null
+
+      let transactionResult: Awaited<ReturnType<ReturnType<typeof container.createTransactionUseCase>['execute']>>
+      try {
+        transactionResult = await container.createTransactionUseCase().execute({
+          tenantId,
+          transactionId: input.transactionId,
+          outletId: input.outletId,
+          cashierId: ctx.userId,
+          deviceId: input.deviceId,
+          shiftId: input.shiftId,
+          status: 'pending',
+          items: note ? note.items : input.items,
+          paymentMethod: methodToTransactionPaymentMethod(input.method),
+          amountPaid: 0,
+          discountAmount: note ? (note.voucher?.discount ?? 0) : input.discountAmount,
+          notes: note?.voucher ? `Voucher ${note.voucher.code}${input.notes ? ` | ${input.notes}` : ''}` : input.notes,
+          planLimit: limit === Infinity ? null : limit,
+          currentMonthCount: planUsage.count,
+        })
+        if (note) await attachSaleToNote(tenantId, transactionResult.transaction.id, note)
+      } catch (err) {
+        // The sale was not recorded, so a voucher claimed for it goes back to the member.
+        if (note?.voucher) await releaseVoucher(note.voucher.id)
+        throw err
+      }
 
       const paymentId = crypto.randomUUID()
       const instant = isInstantMethod(input.method)
@@ -279,6 +292,7 @@ export const paymentsRouter = router({
           metadata: { method: input.method },
         })
       }
+      const loyalty = instant ? await completeWorkshopSale(tenantId, transactionResult.transaction.id) : null
 
       await createAuditLog({
         userId: ctx.userId,
@@ -306,6 +320,7 @@ export const paymentsRouter = router({
         bankAccountId: input.method === 'bank_transfer' ? paymentMethod?.id : undefined,
         displayDetails: displayDetailsForMethod(input.method, accountDetails),
         expiresAt: expiresAt ? new Date(expiresAt) : undefined,
+        loyalty,
       }
     }),
 
@@ -329,7 +344,7 @@ export const paymentsRouter = router({
       }
 
       if (payment.status === 'paid') {
-        return { success: true }
+        return { success: true, loyalty: null }
       }
 
       if (payment.status === 'expired' || (payment.expired_at && new Date(payment.expired_at).getTime() < Date.now())) {
@@ -390,6 +405,7 @@ export const paymentsRouter = router({
         transactionId: transaction.id,
         amountPaid: payment.amount,
       })
+      const loyalty = await completeWorkshopSale(tenantId, transaction.id)
 
       await createAuditLog({
         userId: ctx.userId,
@@ -401,7 +417,7 @@ export const paymentsRouter = router({
         metadata: { transactionId: transaction.id },
       })
 
-      return { success: true }
+      return { success: true, loyalty }
     }),
 
   getSettings: protectedProcedure.query(async ({ ctx }) => {

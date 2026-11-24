@@ -28,6 +28,12 @@ export interface CreateTransactionInput {
     productSku?: string
     quantity: number
     unitPrice?: number
+    /**
+     * A price agreed for this job on a workshop service note, which wins over the
+     * product's list price. Only server code that read it from the note may set it;
+     * checkout input schemas must never accept it from the client.
+     */
+    agreedUnitPrice?: number
   }[]
   paymentMethod: 'cash' | 'card' | 'transfer' | 'ewallet'
   amountPaid?: number
@@ -270,7 +276,7 @@ export class CreateTransactionUseCase {
         productName: product.name,
         productSku: product.sku,
         quantity: item.quantity,
-        unitPrice: this.resolveUnitPrice(product, item.unitPrice),
+        unitPrice: item.agreedUnitPrice ?? this.resolveUnitPrice(product, item.unitPrice),
         // Snapshot the cost so later cost changes do not rewrite past profit.
         unitCost: product.cost_price != null ? Number(product.cost_price) : null,
       }

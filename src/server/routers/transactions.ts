@@ -16,16 +16,9 @@ import {
 } from '@/server/lib/tenant'
 import { container } from '@/infra/container'
 import { toRangeEnd, toRangeStart } from '@/lib/business/timezone'
+import { MONTHLY_TRANSACTION_LIMITS } from '@/lib/plans'
 
-const PLAN_LIMITS: Record<string, number> = {
-  free: 100,
-  warung: Infinity,
-  starter: Infinity,
-  professional: Infinity,
-  business: Infinity,
-  enterprise: Infinity,
-  custom: Infinity,
-}
+const PLAN_LIMITS: Record<string, number> = MONTHLY_TRANSACTION_LIMITS
 
 const transactionItemInput = z.object({
   productId: z.string().uuid(),

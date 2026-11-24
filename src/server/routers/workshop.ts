@@ -6,6 +6,7 @@ import { SupabaseBusinessProfileRepository } from '@/infra/repositories/Supabase
 import { createAuditLog } from '@/lib/audit'
 import { DomainException } from '@/domain/errors/DomainException'
 import { assertOutletAccessible, getUserOutletIds } from '@/server/lib/tenant'
+import { cancelPendingNoteCheckouts } from '@/server/lib/workshopSale'
 
 /**
  * Workshop (bengkel) module: customers and members, vehicles, mechanics, open
@@ -213,6 +214,16 @@ const notesRouter = router({
           items: note.items.map((i) => ({ sku: i.productSku, quantity: i.quantity })),
         },
       })
+      return { success: true }
+    }),
+
+  /** The cashier left a note's payment screen without paying: cancel that checkout and give back its voucher. */
+  abandonCheckout: protectedProcedure
+    .input(z.object({ id, paymentId: id }))
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.session.tenantId!
+      await noteInAccessibleOutlet(ctx.userId, tenantId, input.id)
+      await cancelPendingNoteCheckouts(tenantId, input.id, input.paymentId)
       return { success: true }
     }),
 
