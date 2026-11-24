@@ -72,15 +72,22 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
     return () => clearTimeout(timer)
   }, [search])
 
+  // A note paid online leaves the open list on the next sync, possibly while its
+  // receipt is on screen. The receipt is the fragment's second child in both views
+  // below, so React keeps the same dialog instead of remounting it.
+  const receiptModal = receipt && (
+    <PrintPreviewModal isOpen onClose={() => { setReceipt(null); onBack() }} receiptData={receipt} />
+  )
+
   if (!n) {
-    // A note paid online leaves the open list on the next sync, possibly while its
-    // receipt is still on screen: keep the receipt.
     return (
-      <div className="space-y-3">
-        <button onClick={onBack} className="inline-flex items-center gap-1 text-sm text-[#0F5F56]"><ArrowLeft className="w-4 h-4" /> {t('workshop.notes.title')}</button>
-        {!receipt && <p className="text-sm text-gray-500">{t('workshop.offline.noteGone')}</p>}
-        {receipt && <PrintPreviewModal isOpen onClose={() => { setReceipt(null); onBack() }} receiptData={receipt} />}
-      </div>
+      <>
+        <div className="space-y-3">
+          <button onClick={onBack} className="inline-flex items-center gap-1 text-sm text-[#0F5F56]"><ArrowLeft className="w-4 h-4" /> {t('workshop.notes.title')}</button>
+          {!receipt && <p className="text-sm text-gray-500">{t('workshop.offline.noteGone')}</p>}
+        </div>
+        {receiptModal}
+      </>
     )
   }
 
@@ -233,6 +240,7 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
   }
 
   return (
+    <>
     <div className="space-y-4 md:space-y-6">
       <button onClick={onBack} className="inline-flex items-center gap-1 text-sm text-[#0F5F56]">
         <ArrowLeft className="w-4 h-4" /> {t('workshop.notes.title')}
@@ -454,10 +462,6 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
         <OfflineCashModal amount={subtotal} onConfirm={payOffline} onClose={() => setOfflinePayOpen(false)} />
       )}
 
-      {receipt && (
-        <PrintPreviewModal isOpen onClose={() => { setReceipt(null); onBack() }} receiptData={receipt} />
-      )}
-
       {scannerOpen && <BarcodeScanner onScan={(c) => void onScan(c)} onClose={() => setScannerOpen(false)} />}
 
       <Modal isOpen={cancelOpen} onClose={() => setCancelOpen(false)} title={t('workshop.note.cancelTitle')} size="sm">
@@ -471,6 +475,7 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
         </div>
       </Modal>
     </div>
+    {receiptModal}
+    </>
   )
 }
-
