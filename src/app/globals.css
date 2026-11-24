@@ -147,7 +147,7 @@ button:not(:disabled) { cursor: pointer; }
 .text-mobile-3xl { font-size: var(--font-size-3xl); }
 
 .card-mobile {
-  padding: var(--card-padding-mobile);
+  padding: var(--card-padding);
   border-radius: var(--card-radius);
 }
 
