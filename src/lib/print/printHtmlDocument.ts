@@ -1,6 +1,8 @@
 interface PrintHtmlDocumentOptions {
   title: string
   bodyHtml: string
+  /** Page CSS; defaults to an 80 mm receipt roll. Label sheets pass an A4 @page. */
+  pageStyle?: string
 }
 
 const PRINT_PAGE_STYLE = `
@@ -8,7 +10,7 @@ const PRINT_PAGE_STYLE = `
   body { margin: 0; padding: 0; background: white; }
 `
 
-export async function printHtmlDocument({ title, bodyHtml }: PrintHtmlDocumentOptions): Promise<boolean> {
+export async function printHtmlDocument({ title, bodyHtml, pageStyle = PRINT_PAGE_STYLE }: PrintHtmlDocumentOptions): Promise<boolean> {
   if (typeof window === 'undefined' || typeof document === 'undefined' || !bodyHtml.trim()) {
     return false
   }
@@ -41,7 +43,7 @@ export async function printHtmlDocument({ title, bodyHtml }: PrintHtmlDocumentOp
   <meta charset="utf-8" />
   <title>${escapeHtml(title)}</title>
   ${collectPrintableHead()}
-  <style>${PRINT_PAGE_STYLE}</style>
+  <style>${pageStyle}</style>
 </head>
 <body>
   ${bodyHtml}

@@ -8,6 +8,8 @@ import { DomainException } from '@/domain/errors/DomainException'
 import { ITEM_TYPES } from '@/domain/catalog/value-objects/item-type'
 import { STOCK_BEHAVIORS } from '@/domain/catalog/value-objects/stock-behavior'
 import { PRICING_MODELS } from '@/domain/catalog/value-objects/pricing-model'
+import { supabaseAdmin } from '@/infra/supabase/server'
+import { formatSku, internalBarcode, skuPrefix } from '@/domain/catalog/productCodes'
 
 export const productsRouter = router({
   getAll: protectedProcedure
@@ -319,5 +321,63 @@ export const productsRouter = router({
         skippedCount: skippedProducts.length,
         skippedNames: skippedProducts.map((p) => p.name),
       }
+    }),
+
+  /**
+   * A fresh SKU (category prefix + running number) or in-store EAN-13 barcode
+   * for the product form. Numbers come from a per-tenant counter, so two people
+   * never get the same one; a number taken by a hand-typed code is skipped.
+   */
+  generateCode: adminProcedure
+    .input(z.object({ kind: z.enum(['sku', 'barcode']), category: z.string().max(100).optional() }))
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.session!.tenantId!
+      for (let attempt = 0; attempt < 10; attempt++) {
+        const { data, error } = await supabaseAdmin.rpc('next_product_codes', { p_tenant_id: tenantId, p_kind: input.kind, p_count: 1 })
+        if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+        const n = Number((data as number[])[0])
+        const code = input.kind === 'sku' ? formatSku(skuPrefix(input.category), n) : internalBarcode(n)
+        const { count } = await supabaseAdmin
+          .from('products').select('id', { count: 'exact', head: true })
+          .eq('tenant_id', tenantId).eq(input.kind, code)
+        if (!count) return { code }
+      }
+      throw new TRPCError({ code: 'CONFLICT', message: 'No free code after 10 attempts' })
+    }),
+
+  /** Gives products without a barcode an in-store EAN-13, in one database transaction. */
+  assignMissingBarcodes: adminProcedure
+    .input(z.object({ productIds: z.array(z.string().uuid()).max(5000).optional() }).optional())
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.session!.tenantId!
+      const { data, error } = await supabaseAdmin.rpc('assign_missing_barcodes', {
+        p_tenant_id: tenantId,
+        p_product_ids: input?.productIds ?? null,
+      })
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      const assigned = (data ?? []) as { product_id: string; barcode: string }[]
+
+      await createAuditLog({
+        userId: ctx.userId!,
+        userEmail: ctx.session!.email || 'unknown',
+        action: 'UPDATE',
+        entityType: 'product',
+        entityId: 'bulk',
+        metadata: { action: 'assign_missing_barcodes', count: assigned.length },
+      })
+      return { count: assigned.length, assigned }
+    }),
+
+  /** Name, codes and price of the given products, for printing labels. */
+  getForLabels: protectedProcedure
+    .input(z.object({ ids: z.array(z.string().uuid()).min(1).max(1000) }))
+    .query(async ({ input, ctx }) => {
+      const { data, error } = await supabaseAdmin
+        .from('products')
+        .select('id, name, sku, barcode, price')
+        .eq('tenant_id', ctx.session.tenantId!)
+        .in('id', input.ids)
+      if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      return (data ?? []).map((p) => ({ id: p.id as string, name: p.name as string, sku: p.sku as string, barcode: (p.barcode as string | null) ?? null, price: Number(p.price ?? 0) }))
     }),
 })

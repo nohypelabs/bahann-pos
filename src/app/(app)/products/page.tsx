@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -13,7 +14,8 @@ import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { BUSINESS_TYPE_DEFAULTS } from '@/domain/entities/BusinessProfile'
 import type { Product, SelectChangeEvent } from '@/types'
-import { Package, FolderOpen, CheckCircle, AlertTriangle, Tag, Trash2, Download, Search, Pencil, Plus } from 'lucide-react'
+import { Package, FolderOpen, CheckCircle, AlertTriangle, Tag, Trash2, Download, Search, Pencil, Plus, Barcode, Printer } from 'lucide-react'
+import { LABEL_SELECTION_KEY } from '@/lib/labels/sheets'
 
 const fmtCurrency = (amount: number | null) =>
   amount ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount) : '—'
@@ -104,7 +106,18 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
   const { t } = useLanguage()
   const createProduct = trpc.products.create.useMutation()
   const updateProduct = trpc.products.update.useMutation()
+  const generateCode = trpc.products.generateCode.useMutation()
   const isPending = createProduct.isPending || updateProduct.isPending
+
+  // Fills SKU or barcode with a generated code (category prefix / in-store EAN-13).
+  const autoFill = async (kind: 'sku' | 'barcode') => {
+    try {
+      const { code } = await generateCode.mutateAsync({ kind, category: formData.category || undefined })
+      setFormData((prev) => ({ ...prev, [kind]: code }))
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('products.codes.failed'), 'error')
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -175,8 +188,14 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
           </select>
         </div>
 
-        <Input label="SKU *" type="text" value={formData.sku} onChange={f('sku')} placeholder="PROD-001" fullWidth required />
-        <Input label="Barcode" type="text" value={formData.barcode as string} onChange={f('barcode')} placeholder="8991234567890" fullWidth />
+        <div className="flex items-end gap-2">
+          <div className="flex-1"><Input label="SKU *" type="text" value={formData.sku} onChange={f('sku')} placeholder="PROD-001" fullWidth required /></div>
+          <Button type="button" variant="secondary" size="sm" onClick={() => autoFill('sku')} disabled={generateCode.isPending}>{t('products.codes.auto')}</Button>
+        </div>
+        <div className="flex items-end gap-2">
+          <div className="flex-1"><Input label="Barcode" type="text" value={formData.barcode as string} onChange={f('barcode')} placeholder="8991234567890" fullWidth /></div>
+          <Button type="button" variant="secondary" size="sm" onClick={() => autoFill('barcode')} disabled={generateCode.isPending}>{t('products.codes.auto')}</Button>
+        </div>
         <Input label="Nama Produk *" type="text" value={formData.name} onChange={f('name')} placeholder="Coca Cola 330ml" fullWidth required />
         <Input label="Kategori" type="text" value={formData.category} onChange={f('category')} placeholder="Minuman" fullWidth />
         <Input label="Harga (Rp)" type="number" step="1" min="0" value={formData.price as number} onChange={f('price')} placeholder="5000" fullWidth />
@@ -385,6 +404,25 @@ export default function ProductsPage() {
   const [isBatchDeleteOpen,    setIsBatchDeleteOpen]     = useState(false)
   const [isBulkImportOpen,     setIsBulkImportOpen]      = useState(false)
   const { showToast } = useToast()
+  const { t } = useLanguage()
+  const router = useRouter()
+  const assignBarcodes = trpc.products.assignMissingBarcodes.useMutation()
+
+  /** Generated barcodes for the selected products, or for every product without one. */
+  const handleAssignBarcodes = async (onlySelected: boolean) => {
+    try {
+      const { count } = await assignBarcodes.mutateAsync(onlySelected ? { productIds: [...selectedProducts] } : undefined)
+      showToast(t('products.codes.assigned').replace('{n}', String(count)), count ? 'success' : 'info')
+      refetch()
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('products.codes.failed'), 'error')
+    }
+  }
+
+  const handlePrintLabels = () => {
+    try { sessionStorage.setItem(LABEL_SELECTION_KEY, JSON.stringify([...selectedProducts])) } catch {}
+    router.push('/products/labels')
+  }
 
   // A new product starts from the tenant's business type instead of a hardcoded
   // RETAIL-shaped default, so an FnB tenant does not have to switch every product
@@ -456,6 +494,8 @@ export default function ProductsPage() {
           </p>
           <div className="flex flex-wrap gap-2">
             <Button variant="primary" size="sm" onClick={handleBatchCategory}><Tag className="w-4 h-4 mr-1" /> Update Kategori</Button>
+            <Button variant="secondary" size="sm" onClick={() => handleAssignBarcodes(true)} disabled={assignBarcodes.isPending}><Barcode className="w-4 h-4 mr-1" /> {t('products.codes.assignSelected')}</Button>
+            <Button variant="secondary" size="sm" onClick={handlePrintLabels}><Printer className="w-4 h-4 mr-1" /> {t('products.labels.print')}</Button>
             <Button variant="danger" size="sm" onClick={handleBatchDelete}><Trash2 className="w-4 h-4 mr-1" /> Hapus</Button>
             <Button variant="outline" size="sm" onClick={clearSelection}>✕ Batal</Button>
           </div>
@@ -481,6 +521,7 @@ export default function ProductsPage() {
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">▾</span>
         </div>
         <Button variant="secondary" size="md" onClick={() => setIsBulkImportOpen(true)}><Download className="w-4 h-4 mr-1" /> Import Excel</Button>
+        <Button variant="secondary" size="md" onClick={() => handleAssignBarcodes(false)} disabled={assignBarcodes.isPending} title={t('products.codes.assignAllHint')}><Barcode className="w-4 h-4 mr-1" /> {t('products.codes.assignAll')}</Button>
         <Button variant="primary" size="md" onClick={handleAddNew}><Plus className="w-4 h-4 mr-1" /> Tambah</Button>
       </div>
 

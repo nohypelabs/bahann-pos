@@ -20,6 +20,50 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-24 · Phase 5: generated SKUs and barcodes, A4 sticker labels
+
+### Migration 055 on a production copy
+
+Environment: prod copy (Postgres), dump taken through the session pooler; container and dump deleted afterwards.
+
+| # | Check | Expected | Actual | Result |
+|---|---|---|---|---|
+| 5.1 | Apply `055_product_codes.sql` twice | Both runs succeed (idempotent) | exit 0 both times | ✅ |
+| 5.2 | `internal_ean13(1)`, `(9999999999)` | Valid EAN-13 starting with 20 | `2000000000015`, `2099999999998` | ✅ |
+| 5.3 | SQL and TypeScript give the same codes | `internal_ean13` = `internalBarcode()` for 1, 2, 12345 | Identical | ✅ |
+| 5.4 | `assign_missing_barcodes` with number 1 already taken by another product | Number 1 skipped; 4 products without a barcode get 2–5 | `…022`, `…039`, `…046`, `…053`; 0 left without a barcode | ✅ |
+| 5.5 | Run it again | Nothing to assign | 0 rows | ✅ |
+| 5.6 | Give a second product an existing barcode | Refused by `products_tenant_barcode_key` | duplicate key error | ✅ |
+| 5.7 | `next_product_codes(tenant, 'sku', 3)` | 1, 2, 3 | 1, 2, 3 | ✅ |
+
+Applied to production afterwards (with the owner's approval): `_migrations` latest is `055_product_codes.sql`,
+index present, the three functions are not executable by `authenticated`.
+
+### UI, local app → production DB
+
+Environment: local app → production DB, Chrome at desktop width, test tenant as admin, service worker unregistered.
+
+| # | Scenario | Expected | Actual | Result |
+|---|---|---|---|---|
+| 5.8 | New product, category "Oli", "Otomatis" next to SKU and barcode | SKU from the category prefix, in-store EAN-13 | `OLI-00001`, `2000000000015`; product saved | ✅ |
+| 5.9 | "Buat barcode kosong" on the products page | The 5 older products get barcodes, the one just made is skipped | Toast "5 produk diberi barcode baru"; DB `…022`–`…060`, counter at 6 | ✅ |
+| 5.10 | Select all → "Cetak label" | Label page lists the 6 products with their barcodes; preview of the first sheet | As expected; selection survives a reload | ✅ |
+| 5.11 | 25 copies of one item, then print (print dialog stubbed in the page) | 30 labels on 2 A4 pages (21 + 9), `@page { size: A4; margin: 0 }`, 30 barcode SVGs, no guide lines | As expected | ✅ |
+| 5.12 | Custom size: width "52,5", 4 columns, skip 5 | Decimal comma accepted; first label at row 2, column 2 (52,5 mm; 37,5 mm) | As expected | ✅ (after fix) |
+| 5.13 | Custom width 70 mm × 4 columns | "Tidak muat di kertas A4", print disabled, no preview | As expected | ✅ |
+| 5.14 | Console on the label page | No hydration or runtime errors | None | ✅ |
+| 5.15 | Barcodes decode: the page's JsBarcode settings rendered in Node and scaled to the smallest preset (38,1 mm at 300 dpi), read with `zbarimg` | EAN-13 and CODE128 read back exactly | `2000000000015`, `2000000000060`, `OLI-00001` | ✅ |
+
+Bug found and fixed: in the custom-size fields a decimal comma was dropped on each keystroke ("52,5" became 525).
+The fields now keep the typed text and parse it separately; columns and rows are whole numbers.
+
+Not tested: a physical print on sticker paper and a handheld scanner (no hardware yet). Test this on site with the
+"garis bantu" option on plain paper first.
+
+Unit tests: `productCodes.test.ts` (6) and `sheets.test.ts` (4); full suite 136 passed, 2 skipped.
+
+---
+
 ## 2026-11-24 · Production smoke test after deploying phase 4
 
 Environment: production, commit `780d62c`, Vercel deploy `success`, production build passed locally first.

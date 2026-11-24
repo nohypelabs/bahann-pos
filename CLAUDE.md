@@ -150,9 +150,9 @@ Full list including optional Sentry/GA vars: `deployment/ENV_VARIABLES.md`.
 
 Supabase migrations live in `supabase/migrations/`. Run via Supabase CLI. When adding new DB columns, use English names (existing mixed-language columns are kept stable to avoid breaking changes).
 
-**Latest migration:** `054_workshop_module.sql` (workshop module: members, vehicles, mechanics, service notes, stamp card; see `docs/BENGKEL_MODULE.md`). Production applies migrations by hand (`supabase db query --linked -f <file>`) and records each filename in `public._migrations`.
+**Latest migration:** `055_product_codes.sql` (per-tenant SKU/barcode counters, in-store EAN-13 barcodes, unique barcode per tenant). Before it, `054_workshop_module.sql` added the workshop module (see `docs/BENGKEL_MODULE.md`). Production applies migrations by hand (`supabase db query --linked -f <file>`) and records each filename in `public._migrations`.
 
-Applying one: `supabase db query --linked --project-ref <ref> -f supabase/migrations/<file>.sql`, then `insert into _migrations (filename) values ('<file>.sql')`. Migrations 045–054 were applied this way, and `_migrations` is the record of what production has.
+Applying one: `supabase db query --linked --project-ref <ref> -f supabase/migrations/<file>.sql`, then `insert into _migrations (filename) values ('<file>.sql')`. Migrations 045–055 were applied this way, and `_migrations` is the record of what production has.
 
 ### Testing and the E2E log
 
