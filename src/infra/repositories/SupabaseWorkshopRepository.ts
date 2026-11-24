@@ -84,6 +84,7 @@ const ORDER_SELECT = `
   vehicle:vehicles!vehicle_id(*),
   customer:customers!customer_id(*),
   mechanic:mechanics!mechanic_id(*),
+  sale:transactions!transaction_id(total_amount),
   items:service_order_items(id, product_id, quantity, unit_price, created_at, product:products(name, sku, price, item_type))
 `
 
@@ -114,6 +115,7 @@ function toServiceOrder(r: Row): ServiceOrder {
     complaint: (r.complaint as string | null) ?? null,
     odometerKm: (r.odometer_km as number | null) ?? null,
     transactionId: (r.transaction_id as string | null) ?? null,
+    paidTotal: r.sale ? Number((r.sale as Row).total_amount) : null,
     openedAt: r.opened_at as string,
     closedAt: (r.closed_at as string | null) ?? null,
     cancelReason: (r.cancel_reason as string | null) ?? null,

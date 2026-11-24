@@ -21,6 +21,12 @@ const ROUTE_META = [
     badge: 'Bengkel',
   },
   {
+    match: (pathname: string) => pathname.startsWith('/members'),
+    title: 'Member & Pelanggan',
+    description: 'Kartu servis, voucher, motor, dan riwayat servis tiap pelanggan.',
+    badge: 'Bengkel',
+  },
+  {
     match: (pathname: string) => pathname.startsWith('/pos'),
     title: 'Kasir Cepat',
     description: 'Cari barang, scan SKU, lalu checkout tanpa langkah tambahan yang tidak perlu.',

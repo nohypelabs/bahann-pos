@@ -18,7 +18,7 @@ import {
   User, HelpCircle, Info,
   LogOut, Download, X,
   Settings, ChevronDown, Crown,
-  Receipt, ArrowDownUp, CheckCircle, Wrench,
+  Receipt, ArrowDownUp, CheckCircle, Wrench, IdCard,
 } from 'lucide-react'
 
 function SidebarItem({ href, icon, label, badge, isCollapsed }: {
@@ -395,7 +395,10 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
           <SidebarSection sectionKey="pos" title={t('sidebar.pos')} isCollapsed={showCollapsed} activePaths={['/pos']}>
             <SidebarItem href="/pos/sales"   icon={<ShoppingCart />} label={t('sidebar.pos.sales')}   isCollapsed={showCollapsed} />
             {canUseWorkshop && (
-              <SidebarItem href="/pos/notes" icon={<Wrench />} label={t('sidebar.pos.notes')} isCollapsed={showCollapsed} />
+              <>
+                <SidebarItem href="/pos/notes" icon={<Wrench />} label={t('sidebar.pos.notes')} isCollapsed={showCollapsed} />
+                <SidebarItem href="/members"   icon={<IdCard />} label={t('sidebar.pos.members')} isCollapsed={showCollapsed} />
+              </>
             )}
             <SidebarItem href="/pos/history" icon={<History />}      label={t('sidebar.pos.history')} isCollapsed={showCollapsed} />
             {canViewReports && (

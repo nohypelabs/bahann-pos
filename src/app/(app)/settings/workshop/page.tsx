@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/Toast'
 import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { workshopErrorMessage } from '@/lib/workshop/errors'
+import { StampProgramSettings } from '@/components/workshop/StampProgramSettings'
 
 export default function WorkshopSettingsPage() {
   const { t, language } = useLanguage()
@@ -41,6 +42,8 @@ export default function WorkshopSettingsPage() {
   return (
     <div className="space-y-4 md:space-y-6">
       <PageHeader title={t('workshop.settings.title')} subtitle={t('workshop.settings.subtitle')} />
+
+      <StampProgramSettings />
 
       <SectionCard title={t('workshop.settings.mechanics')}>
         <form className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2 items-end mb-4" onSubmit={(e) => { e.preventDefault(); add() }}>

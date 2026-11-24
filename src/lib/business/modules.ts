@@ -11,7 +11,7 @@
  */
 const MODULE_ROUTE_PREFIXES: Record<string, string[]> = {
   inventory: ['/warehouse'],
-  workshop: ['/pos/notes', '/settings/workshop'],
+  workshop: ['/pos/notes', '/members', '/settings/workshop'],
 };
 
 /**

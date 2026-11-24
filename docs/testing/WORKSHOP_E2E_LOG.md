@@ -20,6 +20,28 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-24 · Phase 4: stamp-card settings and member pages
+
+Environment: local app → production DB, Chrome at desktop width, test tenant as admin.
+
+| # | Scenario | Expected | Actual | Result |
+|---|---|---|---|---|
+| 4.1 | Settings → Bengkel loads the saved stamp program | 10 stamps, free service capped Rp50.000, 90 days, summary sentence | As expected | ✅ |
+| 4.2 | Change stamps to 8, save, reload; then back to 10 | Value persists across reload; summary follows the form | 8 after reload, summary "Setelah 8 stempel"; restored to 10 | ✅ |
+| 4.3 | `/members` list | Andi M0001 and Budi Santoso M0002 with phones; "Member" in the sidebar | As expected | ✅ |
+| 4.4 | Budi's member page | M0002 since 24 Nov 2026, stamp card 0/10, voucher SRV-91EDA8F0 usable until 22 Feb 2027, admin buttons | As expected | ✅ |
+| 4.5 | Service history of F4321AB | Ten paid notes newest first, paid totals from the sales (first one Rp140.000), km, mechanic, items, complaint; the voided voucher sale not listed | As expected | ✅ |
+| 4.6 | Issue a manual voucher | Fixed Rp20.000, 30 days → listed as usable | `VCR-205279B8`, "-Rp 20.000 · bisa dipakai · berlaku s/d 24 Des 2026" | ✅ |
+| 4.7 | Void that voucher | Reason required; status "dibatalkan"; no void button afterwards | As expected | ✅ |
+| 4.8 | New customer, not a member | Page shows "Jadikan member", no voucher section or stamp card | As expected ("Citra (pelanggan uji)") | ✅ |
+| 4.9 | Enrol from the member page | Next member code, stamp card and vouchers appear | M0003, card 0/10 | ✅ |
+| 4.10 | Add a motor | `b 777 cit` stored as B777CIT, Honda Vario, listed under the customer | As expected | ✅ |
+
+Changed while testing: service history now shows the amount actually paid (from the sale) instead of recomputing
+from current list prices; `/members` got its own top-bar title.
+
+---
+
 ## 2026-11-24 · Production smoke test after deploying phases 2–3
 
 Environment: production `https://lakupos.vercel.app`, commit `5404935`, Vercel deploy `success`.

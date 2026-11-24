@@ -58,6 +58,8 @@ export interface ServiceOrder {
   complaint: string | null
   odometerKm: number | null
   transactionId: string | null
+  /** What the customer paid (after any voucher), once the note is paid. */
+  paidTotal: number | null
   openedAt: string
   closedAt: string | null
   cancelReason: string | null
