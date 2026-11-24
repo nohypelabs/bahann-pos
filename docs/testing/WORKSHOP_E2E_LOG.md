@@ -20,6 +20,19 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-24 · Production smoke test after deploying phases 2–3
+
+Environment: production `https://lakupos.vercel.app`, commit `5404935`, Vercel deploy `success`.
+
+| # | Check | Expected | Actual | Result |
+|---|---|---|---|---|
+| P.1 | `/`, `/login` | 200 | 200 | ✅ |
+| P.2 | `/pos/notes`, `/settings/workshop` without a session | redirect to login | 307 | ✅ |
+| P.3 | `scripts/workshop-test-tenant.mjs` against production | login, plan `custom` with no end date, workshop module on, stamp program saved, plate lookup B1234UJI → Andi, 0/10, no duplicate rows | as expected | ✅ |
+| P.4 | Production build output: receipt preview styles | `.modal-overlay` gets its styled-jsx class | the CSS rule `.modal-overlay.jsx-fd57750d3ab24db9` exists but the element renders with `className:"modal-overlay"` only, so the preview is not an overlay in production either (also on the quick-cashier page) | ❌ open, must fix before go-live |
+
+---
+
 ## 2026-11-24 · Phase 3: paying service notes, stamp card, vouchers
 
 Environment: local app → production DB (commit `19a5700`). Driven in Chrome and, for repeated sales, through the
