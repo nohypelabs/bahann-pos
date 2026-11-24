@@ -19,7 +19,7 @@ test('a paid member visit earns a stamp, and a full card turns into a voucher', 
   await expect(page.getByText(rupiah(ITEMS.oilChange.price + ITEMS.oil.price)).first()).toBeVisible()
 
   await payCash(page)
-  await expect.poll(async () => (await a.note(noteId)).status).toBe('paid')
+  await expect.poll(() => a.noteStatus(noteId)).toBe('paid')
 
   const after = await a.lookup(MEMBER_PLATE)
   const filled = card.balance + 1 >= card.required

@@ -19,7 +19,7 @@ test('a motor with an unpaid note cannot get a second one; the open note can be 
   await expect(dialog.getByRole('button', { name: t('workshop.newNote.open'), exact: true })).toBeDisabled()
 
   await dialog.getByRole('button', { name: t('workshop.newNote.openExisting') }).click()
-  await page.waitForURL(`**/pos/notes/${noteId}`)
+  await page.waitForURL(`**/pos/notes?note=${noteId}`)
 
   await page.getByRole('button', { name: t('workshop.note.cancel') }).click()
   const cancel = page.getByRole('dialog')
@@ -27,7 +27,7 @@ test('a motor with an unpaid note cannot get a second one; the open note can be 
   await cancel.getByLabel(t('workshop.note.cancelReason')).fill('Pelanggan batal (uji E2E)')
   await cancel.getByRole('button', { name: t('workshop.note.cancelConfirm') }).click()
 
-  await expect.poll(async () => (await a.note(noteId)).status).toBe('cancelled')
+  await expect.poll(() => a.noteStatus(noteId)).toBe('cancelled')
   expect((await a.lookup(plate)).openServiceOrderId).toBeNull()
   evidence('guard', { plate, noteId, status: 'cancelled' })
 })

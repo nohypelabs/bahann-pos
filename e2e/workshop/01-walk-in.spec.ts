@@ -33,7 +33,7 @@ test('walk-in customer on a new motor: open a note, agree a price, pay cash', as
   expect(await receipt.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(255, 255, 255)')
   expect(await receipt.locator('.receipt-container').evaluate((el) => getComputedStyle(el).maxWidth)).not.toBe('none')
 
-  await expect.poll(async () => (await a.note(noteId)).status).toBe('paid')
+  await expect.poll(() => a.noteStatus(noteId)).toBe('paid')
   const note = await a.note(noteId)
   expect(note.paidTotal).toBe(110_000)
   expect(note.items.find((i) => i.productSku === ITEMS.lightService.sku)?.unitPrice).toBe(60_000)

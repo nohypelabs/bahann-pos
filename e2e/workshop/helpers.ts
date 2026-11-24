@@ -55,6 +55,8 @@ export function api(page: Page) {
     m,
     lookup: (plate: string) => q<Lookup>('workshop.vehicles.lookup', { plate }),
     note: (id: string) => q<Note>('workshop.notes.get', { id }),
+    /** A note's status on the server; 'missing' until the station has sent it. */
+    noteStatus: (id: string) => q<Note>('workshop.notes.get', { id }).then((n) => n.status, () => 'missing' as const),
     outletId: async () => (await q<{ outlets: { id: string }[] }>('outlets.getAll')).outlets[0].id,
     productId: async (sku: string) => {
       const res = await q<{ products: { id: string; sku: string }[] }>('products.getAll', { search: sku, limit: 5 })
@@ -87,7 +89,9 @@ export async function requireStock(page: Page, sku: string, needed: number) {
 
 /** Opens a note from the notes list through the "Nota baru" dialog; returns the note id. */
 export async function openNoteViaDialog(page: Page, plate: string, opts: { brand?: string; model?: string; odometer?: string; complaint?: string } = {}) {
-  await page.goto('/pos/notes')
+  // Already on the list (e.g. offline, where a navigation would fail): stay.
+  const here = new URL(page.url())
+  if (here.pathname !== '/pos/notes' || here.searchParams.has('note')) await page.goto('/pos/notes')
   await page.getByRole('button', { name: t('workshop.notes.new') }).click()
   const dialog = page.getByRole('dialog')
   await dialog.getByLabel(t('workshop.plate')).fill(plate)
@@ -97,8 +101,8 @@ export async function openNoteViaDialog(page: Page, plate: string, opts: { brand
   if (opts.odometer) await dialog.getByLabel(t('workshop.odometer')).fill(opts.odometer)
   if (opts.complaint) await dialog.getByLabel(t('workshop.complaint')).fill(opts.complaint)
   await dialog.getByRole('button', { name: t('workshop.newNote.open'), exact: true }).click()
-  await page.waitForURL(/\/pos\/notes\/[0-9a-f-]{36}$/)
-  return page.url().split('/').pop()!
+  await page.waitForURL(/\/pos\/notes\?note=[0-9a-f-]{36}$/)
+  return new URL(page.url()).searchParams.get('note')!
 }
 
 /** Adds an item to the open note through the search box. */

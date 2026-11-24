@@ -25,6 +25,10 @@ The global setup logs in once (login is rate-limited), refuses any account that 
 | `04-voucher` | A manually issued free-service voucher removes the labour from the bill and is used up |
 | `05-labels` | Select products, print A4 labels (print call intercepted), custom sheet with decimal commas and the "does not fit" guard |
 | `06-bulk-barcodes` | "Buat barcode kosong" gives a temporary part a barcode and leaves a temporary service without one; both are deleted afterwards |
+| `07-offline` | Internet off: open a note, add items, cash payment and receipt on the station; back online it syncs (paid total, receipt number = transaction number, stock) |
+| `08-offline-push` | API: a replayed push batch changes nothing twice; a refused operation stays refused |
+| `09-offline-reload` | Service worker on: reload while offline (note and list) keeps the unsent note; it syncs afterwards |
+| `10-pos-offline` | Quick cashier: an offline sale is kept in IndexedDB and reaches the server when back online |
 
 The tests change real data on that tenant: each run adds paid notes, one or two new plates
 (`E2E…`), stamps and stock movements. Parts run down over time (2 spark plugs and 2 oil per

@@ -20,6 +20,42 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-25 · Offline mode (local app → production DB)
+
+Design: [../OFFLINE_MODE.md](../OFFLINE_MODE.md). Migration `057_offline_ops.sql` tested on a production copy
+first (applied twice; first claim `true`, second claim while processing `false`, replay after done returns the stored
+result, a claim older than 2 minutes is taken over; `current_stock_levels` gives spark plugs 12 = the latest
+`daily_stock`; `authenticated` cannot execute either function), then applied to production.
+
+| # | Spec | What it checks | Result |
+|---|---|---|---|
+| 7.1 | `07-offline` | `context.setOffline(true)`: open a note for a new plate, add oil change + spark plug from the cached catalogue, pay cash Rp50.000 for Rp40.000 on the station's cash screen; receipt shows Kembalian Rp10.000 and "Dicatat offline"; list shows Lunas + Belum terkirim. Back online: all sent, note paid Rp40.000, the sale's transaction number = the receipt number printed offline, amount paid 50.000 / change 10.000, spark plugs −1 | ✅ |
+| 7.2 | `08-offline-push` | API: open + set item + pay cash in one push → done ×3; the same batch again → done ×3 with the same result, one sale, stock −1 once; an op on a missing note → failed `SERVICE_ORDER_NOT_FOUND`, and again on replay | ✅ |
+| 7.3 | `09-offline-reload` | Service worker allowed: offline, open a note, reload on `?note=…` and on the list; both load from cache with the unsent note; back online it reaches the server | ✅ |
+| 7.4 | `10-pos-offline` | Quick cashier: sell offline, the sale waits in IndexedDB (`synced = 0` index count > 0), back online it appears completed on the server, linked to the shift | ✅ |
+| 7.5 | `01`–`06` | Online flows through the new station UI | ✅ |
+
+Final local run of all ten specs: **10 passed in 1.6 min** (after topping up the test tenant through `stock.record`:
+spark plugs 4 → 34, oil 6 → 26). Evidence from it: walk-in `E2EWV3VHUE` paid Rp110.000; offline note
+`411e70d4-963d-4cf3-84a7-d7f3b34c9266` receipt `TRX-MWV3WLVB-GOFGY`; push replay `E2E-OFF-1795549663755`; quick-cashier
+offline sale `TRX-MWV3X4JC-5MYNO`. Unit tests: 146 passed, 2 skipped; production build passed.
+
+Evidence: offline note `60b2e31b-16ee-4001-8011-11ded56af95d`, receipt `TRX-MWV3M7QO-XVNN0`, spark plugs 6 → 5;
+push replay note `57e94405-8748-437c-b162-f1df5403a325`, number `E2E-OFF-1795549178939`; reload note
+`3c5aa66d-607f-4d96-b11a-0c8c9d5fd6e6` (cancelled afterwards); quick-cashier sale `TRX-MWV3PAXR-YVDQD` (completed,
+has shift).
+
+Bugs found and fixed while building it:
+
+1. After an online payment the background sync removed the paid note from the open list while its receipt was on
+   screen, so the receipt vanished (specs 03 and 04 failed). The editor now keeps the receipt.
+2. Quick-cashier offline sales were never sent: `synced` was a boolean, which IndexedDB does not index (pre-existing).
+3. The service worker usually never registered: its `load` listener was added after `load` (pre-existing).
+4. Offline quick-cashier sales were sent without their shift, and dropped after five stock refusals (pre-existing).
+5. The helper navigated with `page.goto` while offline (test bug); it now stays on the list.
+
+---
+
 ## 2026-11-25 · Full suite against production after deploying the fixes
 
 Environment: production `https://lakupos.vercel.app`, commit `8c92104`, Vercel deploy `success`;

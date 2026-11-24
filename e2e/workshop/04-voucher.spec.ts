@@ -26,7 +26,7 @@ test('a free-service voucher takes the labour off the bill and is used up', asyn
   await expect(page.getByText(rupiah(55_000)).first()).toBeVisible()
 
   await payCash(page)
-  await expect.poll(async () => (await a.note(noteId)).status).toBe('paid')
+  await expect.poll(() => a.noteStatus(noteId)).toBe('paid')
   expect((await a.note(noteId)).paidTotal).toBe(55_000)
   expect((await a.lookup(MEMBER_PLATE)).vouchers.some((v) => v.id === issued!.id)).toBe(false)
   evidence('voucher', { noteId, voucher: issued!.code, paidTotal: 55_000 })

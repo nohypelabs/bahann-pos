@@ -113,7 +113,7 @@ Laku POS supports multiple business types (Retail, FnB, Service, Hybrid) with fl
 
 - **Zod v4** for all validation — schemas in `src/shared/schemas/`.
 - **Recharts** charts lazy-loaded via wrapper components in `src/components/charts/`.
-- **PWA / Offline**: service worker at `public/sw.js`; offline DB via Dexie in `src/lib/offline/`; `SyncManager` auto-syncs every 30 seconds when online.
+- **PWA / Offline**: service worker at `public/sw.js`; offline DB via Dexie in `src/lib/offline/`; `SyncManager` auto-syncs quick-cashier sales every 30 seconds when online. The workshop station (`/pos/notes`) is local-first: cached data + an outbox of operations sent to `workshop.offline.push` (idempotent per op id). See `docs/OFFLINE_MODE.md`.
 - **Payment**: `src/lib/payment/` — supports `cash`, `qris` (static QRIS), `bank_transfer`, `debit`, `credit_card`; QRIS generation via `qris-generator.ts`.
 - **Exports**: CSV and PDF generators in `src/lib/exporters/`.
 - **Rate limiting**: `src/lib/security/rateLimiter.ts` — presets `LOGIN` (5/15 min), `API` (100/min), `SENSITIVE` (10/min).
@@ -150,9 +150,9 @@ Full list including optional Sentry/GA vars: `deployment/ENV_VARIABLES.md`.
 
 Supabase migrations live in `supabase/migrations/`. Run via Supabase CLI. When adding new DB columns, use English names (existing mixed-language columns are kept stable to avoid breaking changes).
 
-**Latest migration:** `056_daily_sales_accumulate.sql` (`add_daily_sale`: one `daily_sales` row per product, outlet and day, added to on each sale and reduced on void). Before it, `055_product_codes.sql` (SKU/barcode counters) and `054_workshop_module.sql` (workshop module, see `docs/BENGKEL_MODULE.md`). Production applies migrations by hand (`supabase db query --linked -f <file>`) and records each filename in `public._migrations`.
+**Latest migration:** `057_offline_ops.sql` (`offline_ops` idempotency for the workshop station's offline operations, `claim_offline_op`, `current_stock_levels`; see `docs/OFFLINE_MODE.md`). Before it, `056_daily_sales_accumulate.sql`, `055_product_codes.sql` and `054_workshop_module.sql` (workshop module, see `docs/BENGKEL_MODULE.md`). Production applies migrations by hand (`supabase db query --linked -f <file>`) and records each filename in `public._migrations`.
 
-Applying one: `supabase db query --linked --project-ref <ref> -f supabase/migrations/<file>.sql`, then `insert into _migrations (filename) values ('<file>.sql')`. Migrations 045–056 were applied this way, and `_migrations` is the record of what production has.
+Applying one: `supabase db query --linked --project-ref <ref> -f supabase/migrations/<file>.sql`, then `insert into _migrations (filename) values ('<file>.sql')`. Migrations 045–057 were applied this way, and `_migrations` is the record of what production has.
 
 ### Testing and the E2E log
 
