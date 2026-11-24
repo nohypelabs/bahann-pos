@@ -84,11 +84,13 @@ const ORDER_SELECT = `
   vehicle:vehicles!vehicle_id(*),
   customer:customers!customer_id(*),
   mechanic:mechanics!mechanic_id(*),
-  items:service_order_items(id, product_id, quantity, unit_price, product:products(name, sku, price, item_type))
+  items:service_order_items(id, product_id, quantity, unit_price, created_at, product:products(name, sku, price, item_type))
 `
 
 function toServiceOrder(r: Row): ServiceOrder {
-  const items = ((r.items as Row[] | null) ?? []).map((i): ServiceOrderItem => {
+  // Lines in the order they were added, so editing one does not move it.
+  const rows = [...((r.items as Row[] | null) ?? [])].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)))
+  const items = rows.map((i): ServiceOrderItem => {
     const p = (i.product as Row | null) ?? {}
     return {
       id: i.id as string,

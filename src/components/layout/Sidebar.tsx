@@ -18,7 +18,7 @@ import {
   User, HelpCircle, Info,
   LogOut, Download, X,
   Settings, ChevronDown, Crown,
-  Receipt, ArrowDownUp, CheckCircle,
+  Receipt, ArrowDownUp, CheckCircle, Wrench,
 } from 'lucide-react'
 
 function SidebarItem({ href, icon, label, badge, isCollapsed }: {
@@ -238,6 +238,8 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
     staleTime: 5 * 60 * 1000,
   })
   const canUseInventory = hasModule(businessProfile?.enabledModules, 'inventory')
+  // Optional module: hidden until the profile says it is on, never shown while loading.
+  const canUseWorkshop = hasModule(businessProfile?.enabledModules ?? [], 'workshop')
   const inventoryAccess = useInventoryAccess()
   const canManageProducts = hasAnyPermission(userRole, [PERMISSIONS.PRODUCT_MANAGE, PERMISSIONS.PRODUCT_VIEW])
   const canManageSettings = hasAnyPermission(userRole, [PERMISSIONS.SETTINGS_MANAGE, PERMISSIONS.USER_MANAGE])
@@ -392,6 +394,9 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
           {/* ═══ POS ═══ */}
           <SidebarSection sectionKey="pos" title={t('sidebar.pos')} isCollapsed={showCollapsed} activePaths={['/pos']}>
             <SidebarItem href="/pos/sales"   icon={<ShoppingCart />} label={t('sidebar.pos.sales')}   isCollapsed={showCollapsed} />
+            {canUseWorkshop && (
+              <SidebarItem href="/pos/notes" icon={<Wrench />} label={t('sidebar.pos.notes')} isCollapsed={showCollapsed} />
+            )}
             <SidebarItem href="/pos/history" icon={<History />}      label={t('sidebar.pos.history')} isCollapsed={showCollapsed} />
             {canViewReports && (
               <SidebarItem href="/pos/revenue" icon={<DollarSign />} label={t('sidebar.pos.revenue')} isCollapsed={showCollapsed} />
@@ -454,6 +459,9 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
                           <>
                             <SidebarItem href="/settings/business"      icon={<Store />}      label={t('settings.business.title')}       isCollapsed={false} />
                             <SidebarItem href="/settings/payments"      icon={<DollarSign />} label={t('sidebar.settings.payment')}      isCollapsed={false} />
+                            {canUseWorkshop && (
+                              <SidebarItem href="/settings/workshop"    icon={<Wrench />}     label={t('sidebar.settings.workshop')}     isCollapsed={false} />
+                            )}
                           </>
                         )}
                         {canManageUsers && (

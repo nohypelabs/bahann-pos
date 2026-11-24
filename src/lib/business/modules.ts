@@ -11,7 +11,15 @@
  */
 const MODULE_ROUTE_PREFIXES: Record<string, string[]> = {
   inventory: ['/warehouse'],
+  workshop: ['/pos/notes', '/settings/workshop'],
 };
+
+/**
+ * Modules a tenant switches on itself, independent of its business type. They
+ * survive a business-type change, which otherwise resets modules to the defaults.
+ */
+export const OPTIONAL_MODULES = ['workshop'] as const;
+export type OptionalModule = (typeof OPTIONAL_MODULES)[number];
 
 /** The route prefixes a module owns, for sidebar grouping and redirects. */
 export function routesForModule(moduleKey: string): string[] {

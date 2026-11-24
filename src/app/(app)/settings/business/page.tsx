@@ -33,6 +33,15 @@ export default function BusinessSettingsPage() {
     onError: (err) => showToast(err.message, 'error'),
   })
 
+  const moduleMutation = trpc.businessProfile.setOptionalModule.useMutation({
+    onSuccess: async (_data, vars) => {
+      await utils.businessProfile.getMyProfile.invalidate()
+      showToast(t(vars.enabled ? 'settings.business.workshopOn' : 'settings.business.workshopOff'), 'success')
+    },
+    onError: (err) => showToast(err.message, 'error'),
+  })
+  const workshopOn = profile?.enabledModules.includes('workshop') ?? false
+
   const currentType = profile?.businessType ?? null
   const pending = selected && selected !== currentType ? selected : null
 
@@ -115,6 +124,23 @@ export default function BusinessSettingsPage() {
             </div>
           </div>
         )}
+      </SectionCard>
+
+      <SectionCard title={t('settings.business.optionalModules')}>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">🔧 {t('settings.business.workshopTitle')}</h3>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('settings.business.workshopBody')}</p>
+          </div>
+          <Button
+            variant={workshopOn ? 'outline' : 'primary'}
+            size="sm"
+            disabled={!profile || moduleMutation.isPending}
+            onClick={() => moduleMutation.mutate({ module: 'workshop', enabled: !workshopOn })}
+          >
+            {workshopOn ? t('settings.business.turnOff') : t('settings.business.turnOn')}
+          </Button>
+        </div>
       </SectionCard>
     </div>
   )

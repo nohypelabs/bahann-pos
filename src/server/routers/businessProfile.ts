@@ -7,6 +7,7 @@ import { BusinessType, BUSINESS_TYPES } from '@/domain/catalog/value-objects/bus
 import { StockBehavior } from '@/domain/catalog/value-objects/stock-behavior';
 import { AppError } from '@/shared/exceptions/AppError';
 import { createAuditLog } from '@/lib/audit';
+import { OPTIONAL_MODULES } from '@/lib/business/modules';
 
 const profileRepo = new SupabaseBusinessProfileRepository();
 
@@ -124,12 +125,14 @@ export const businessProfileRouter = router({
         input.businessType as BusinessType,
         tenantId || undefined,
       );
-      // Preserve the original ID and keep tenantId
+      // Preserve the original ID and keep tenantId. Optional modules the tenant
+      // switched on (e.g. workshop) are kept; the rest follow the new type.
+      const keptOptional = existing.enabledModules.filter((m) => (OPTIONAL_MODULES as readonly string[]).includes(m));
       const updated = new BusinessProfile(
         existing.id,
         ctx.userId,
         newProfile.businessType,
-        newProfile.enabledModules,
+        [...new Set([...newProfile.enabledModules, ...keptOptional])],
         existing.createdAt,
         existing.tenantId || tenantId || undefined,
       );
@@ -147,6 +150,41 @@ export const businessProfileRouter = router({
           after: { businessType: updated.businessType },
         },
         metadata: { action: 'update_business_type' },
+      });
+
+      return updated;
+    }),
+
+  /**
+   * Switch an optional module (e.g. the workshop module) on or off for the tenant.
+   * Turning one off hides its screens; its data stays.
+   */
+  setOptionalModule: adminProcedure
+    .input(z.object({ module: z.enum(OPTIONAL_MODULES), enabled: z.boolean() }))
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.session?.tenantId;
+      const existing = tenantId
+        ? await profileRepo.findByTenantId(tenantId)
+        : await profileRepo.findByUserId(ctx.userId!);
+      if (!existing) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Business profile not found. Complete the setup first.' });
+      }
+
+      const modules = existing.enabledModules.filter((m) => m !== input.module);
+      if (input.enabled) modules.push(input.module);
+      const updated = new BusinessProfile(
+        existing.id, existing.userId, existing.businessType, modules, existing.createdAt, existing.tenantId,
+      );
+      await profileRepo.update(updated);
+
+      await createAuditLog({
+        userId: ctx.userId!,
+        userEmail: ctx.session?.email || 'unknown',
+        action: 'UPDATE',
+        entityType: 'business_profile',
+        entityId: existing.id,
+        changes: { before: { enabledModules: existing.enabledModules }, after: { enabledModules: modules } },
+        metadata: { action: input.enabled ? 'enable_module' : 'disable_module', module: input.module },
       });
 
       return updated;

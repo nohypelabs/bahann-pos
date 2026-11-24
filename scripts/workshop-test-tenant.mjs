@@ -85,6 +85,8 @@ log(`paket ${plan.plan} (tanpa masa habis: periodEndsAt=${plan.periodEndsAt})`)
 
 const profile = await c.q('businessProfile.getMyProfile')
 if (profile?.businessType !== 'HYBRID') throw new Error(`businessType=${profile?.businessType}`)
+await c.call('businessProfile.setOptionalModule', { module: 'workshop', enabled: true })
+log('modul bengkel aktif')
 const outlet = (await c.q('outlets.getAll')).outlets[0]
 log(`outlet ${outlet.name}`)
 

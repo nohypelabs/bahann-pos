@@ -15,6 +15,12 @@ interface AppLayoutProps {
 
 const ROUTE_META = [
   {
+    match: (pathname: string) => pathname.startsWith('/pos/notes'),
+    title: 'Nota Servis',
+    description: 'Nota per motor: isi jasa dan sparepart sambil dikerjakan, bayar saat motor diambil.',
+    badge: 'Bengkel',
+  },
+  {
     match: (pathname: string) => pathname.startsWith('/pos'),
     title: 'Kasir Cepat',
     description: 'Cari barang, scan SKU, lalu checkout tanpa langkah tambahan yang tidak perlu.',

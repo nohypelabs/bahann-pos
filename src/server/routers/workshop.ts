@@ -1,7 +1,8 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
-import { router, protectedProcedure, adminProcedure } from '../trpc'
+import { router, protectedProcedure as baseProtected, adminProcedure as baseAdmin } from '../trpc'
 import { container } from '@/infra/container'
+import { SupabaseBusinessProfileRepository } from '@/infra/repositories/SupabaseBusinessProfileRepository'
 import { createAuditLog } from '@/lib/audit'
 import { DomainException } from '@/domain/errors/DomainException'
 import { assertOutletAccessible, getUserOutletIds } from '@/server/lib/tenant'
@@ -11,6 +12,23 @@ import { assertOutletAccessible, getUserOutletIds } from '@/server/lib/tenant'
  * service notes, and the stamp card. Domain errors are returned with their code
  * as the message, so the client can show DOMAIN_ERROR_MESSAGES_ID/EN[code].
  */
+
+/** Only tenants that switched on the workshop module (Settings → Business) may use it. */
+async function assertWorkshopEnabled(tenantId: string | undefined) {
+  const profile = tenantId ? await new SupabaseBusinessProfileRepository().findByTenantId(tenantId) : null
+  if (!profile?.enabledModules.includes('workshop')) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'WORKSHOP_MODULE_DISABLED' })
+  }
+}
+
+const protectedProcedure = baseProtected.use(async ({ ctx, next }) => {
+  await assertWorkshopEnabled(ctx.session.tenantId)
+  return next()
+})
+const adminProcedure = baseAdmin.use(async ({ ctx, next }) => {
+  await assertWorkshopEnabled(ctx.session?.tenantId)
+  return next()
+})
 
 async function run<T>(fn: () => Promise<T>): Promise<T> {
   try {
