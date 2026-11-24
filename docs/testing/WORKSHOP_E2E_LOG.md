@@ -45,6 +45,9 @@ Runs: spec 11 passed first time (tag `IMP5VQDM`, 43 s); full suite after the row
 (tag `IMP61BY7`). Unit tests 167 passed, 2 skipped; production build passed. The client's own Excel file has not been
 received yet.
 
+Production after deploying `2ef4398`/`8a61ca4`: full suite **11 passed in 1.8 min** on `https://lakupos.vercel.app`;
+the import spec (tag `IMP68SNZ`) imported 940 rows in 23 s with the same counts; 0 leftover products afterwards.
+
 ---
 
 ## 2026-11-25 · Offline mode against production
