@@ -20,6 +20,18 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-24 · Production smoke test after deploying phase 4
+
+Environment: production, commit `780d62c`, Vercel deploy `success`, production build passed locally first.
+
+| # | Check | Expected | Actual | Result |
+|---|---|---|---|---|
+| P4.1 | `/` | 200 | 200 | ✅ |
+| P4.2 | `/members`, `/settings/workshop` without a session | redirect to login | 307 | ✅ |
+| P4.3 | `scripts/workshop-test-tenant.mjs` against production | login, plan `custom`, module on, stamp program, plate lookup | all ✅ | ✅ |
+
+---
+
 ## 2026-11-24 · Phase 4: stamp-card settings and member pages
 
 Environment: local app → production DB, Chrome at desktop width, test tenant as admin.
