@@ -29,6 +29,7 @@ The global setup logs in once (login is rate-limited), refuses any account that 
 | `08-offline-push` | API: a replayed push batch changes nothing twice; a refused operation stays refused |
 | `09-offline-reload` | Service worker on: reload while offline (note and list) keeps the unsent note; it syncs afterwards |
 | `10-pos-offline` | Quick cashier: an offline sale is kept in IndexedDB and reaches the server when back online |
+| `11-catalog-import` | Shop-style Excel (title rows, own column names, 940 rows + 4 broken): preview, import with initial stock, re-import to skip and to update; products deleted afterwards |
 
 The tests change real data on that tenant: each run adds paid notes, one or two new plates
 (`E2E…`), stamps and stock movements. Parts run down over time (2 spark plugs and 2 oil per

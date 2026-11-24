@@ -20,6 +20,33 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-25 · Excel catalogue import (local app → production DB)
+
+Rebuilt for the ±900-SKU import promised to Mr Bengkel (contract Pasal 2: harga jual, harga modal, barcode, stok
+awal). The old import read only SKU/name/category/price, upserted existing SKUs (wiping a barcode with an empty cell,
+turning services into goods) while reporting them as "skipped", dropped 100 rows when one failed, and stopped at 500.
+
+New: `src/lib/products/catalogImport.ts` (parsing, unit tested), `src/server/lib/catalogImport.ts` +
+`products.importCatalog` (batches of 200), `BulkImportModal`. Existing SKUs are skipped or updated (only filled
+cells; never stock), SKU-less rows match an existing product by exact name, missing SKUs are generated, a barcode
+used by another product is refused, initial stock goes to the chosen outlet (daily_stock + stock-in movement).
+`products.bulkCreate` and `ProductRepository.bulkUpsert` were removed.
+
+| # | Check | Result |
+|---|---|---|
+| 8.1 | Spec `11-catalog-import`: shop-style file (title rows, header on row 3 named "Kode Barang / Nama Barang / Jenis / Kategori / Harga Beli / Harga Jual / Barcode / Qty"), 900 parts + 40 SKU-less services + 4 broken rows | Preview: header on row 3, 940 ready, 4 with problems (no name, price "dua ribu", barcode "8,99123E+12", SKU twice), 40 generated SKUs ✅ |
+| 8.2 | Import (skip mode) | created 940, failed 0, initial stock recorded 810 (rows with Qty > 0); a sample part has price 15.007, cost 10.007, its 13-digit barcode, TRACKED, stock 7; the 40 services are UNTRACKED with `JAS-00001`-style SKUs ✅ |
+| 8.3 | Same file again (skip) | created 0, skipped 940, stock unchanged (7) ✅ |
+| 8.4 | Prices +500 (update) | updated 940, price 15.507, cost unchanged, stock unchanged ✅ |
+| 8.5 | Clean-up | 0 products with the run tag, 0 orphan daily_stock or stock movements; the test tenant back to 6 products ✅ |
+| 8.6 | Visual check of the dialog | Found row numbers one lower than Excel (blank rows were dropped while reading); fixed by keeping blank rows and the sheet's first row; screenshot shows header row 3, data rows 4–6 ✅ |
+
+Runs: spec 11 passed first time (tag `IMP5VQDM`, 43 s); full suite after the row-number fix **11 passed in 2.5 min**
+(tag `IMP61BY7`). Unit tests 167 passed, 2 skipped; production build passed. The client's own Excel file has not been
+received yet.
+
+---
+
 ## 2026-11-25 · Offline mode against production
 
 Environment: production `https://lakupos.vercel.app`, `WORKSHOP_E2E_BASE_URL=https://lakupos.vercel.app pnpm test:e2e:workshop`,
