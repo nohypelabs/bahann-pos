@@ -1,5 +1,4 @@
 import type { Transaction } from '@/domain/entities/Transaction'
-import { DailySale } from '@/domain/entities/DailySale'
 import type { DailyStock } from '@/domain/entities/DailyStock'
 import type { DailySaleRepository } from '@/domain/repositories/DailySaleRepository'
 import type { DailyStockRepository } from '@/domain/repositories/DailyStockRepository'
@@ -296,22 +295,43 @@ export class CreateTransactionUseCase {
     tenantId: string,
     outletId: string,
   ): Promise<void> {
+    // Business (WIB) day as UTC midnight, matching how sale_date is read back.
+    const saleDate = new Date(`${businessDate()}T00:00:00.000Z`)
     for (const item of items) {
       try {
-        const sale: DailySale = {
-          id: crypto.randomUUID(),
+        await this.dailySaleRepo.addToDay({
           tenantId,
           productId: item.productId,
           outletId,
-          // Business (WIB) day as UTC midnight, matching how sale_date is read back.
-          saleDate: new Date(`${businessDate()}T00:00:00.000Z`),
+          saleDate,
           quantitySold: item.quantity,
           revenue: item.quantity * item.unitPrice,
-          createdAt: new Date(),
-        }
-        await this.dailySaleRepo.save(sale)
+        })
       } catch (error) {
-        logger.error('Failed to insert daily_sales:', error)
+        logger.error('Failed to record daily_sales:', error)
+      }
+    }
+  }
+
+  /** Takes a voided sale back out of the daily sales of the day it was made. */
+  async reverseDailySalesForVoidedSale(transactionId: string, tenantId: string): Promise<void> {
+    const transaction = await this.transactionRepo.findById(transactionId)
+    if (!transaction || transaction.tenantId !== tenantId) {
+      throw new Error('Transaction not found')
+    }
+    const saleDate = new Date(`${businessDate(transaction.createdAt)}T00:00:00.000Z`)
+    for (const item of transaction.items) {
+      try {
+        await this.dailySaleRepo.addToDay({
+          tenantId,
+          productId: item.productId,
+          outletId: transaction.outletId,
+          saleDate,
+          quantitySold: -item.quantity,
+          revenue: -item.quantity * item.unitPrice,
+        })
+      } catch (error) {
+        logger.error('Failed to reverse daily_sales:', error)
       }
     }
   }

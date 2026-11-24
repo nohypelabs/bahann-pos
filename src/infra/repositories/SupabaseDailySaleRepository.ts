@@ -21,6 +21,18 @@ export class SupabaseDailySaleRepository implements DailySaleRepository {
     if (error) throw new Error(`Supabase insert error: ${error.message}`);
   }
 
+  async addToDay(sale: Pick<DailySale, 'tenantId' | 'productId' | 'outletId' | 'saleDate' | 'quantitySold' | 'revenue'>): Promise<void> {
+    const { error } = await supabase.rpc('add_daily_sale', {
+      p_tenant_id: sale.tenantId,
+      p_product_id: sale.productId,
+      p_outlet_id: sale.outletId,
+      p_sale_date: sale.saleDate.toISOString().split('T')[0],
+      p_quantity: sale.quantitySold,
+      p_revenue: sale.revenue,
+    });
+    if (error) throw new Error(`Supabase add_daily_sale error: ${error.message}`);
+  }
+
   async getByDateRange(outletId: string, start: Date, end: Date): Promise<DailySale[]> {
     const { data, error } = await supabase
       .from('daily_sales')

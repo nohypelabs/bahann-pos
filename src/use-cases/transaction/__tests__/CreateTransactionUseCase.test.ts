@@ -14,7 +14,8 @@ function makeUseCase({ stockAkhir = 18, products = [product()] } = {}) {
     findByTransactionId: jest.fn(),
     findById: jest.fn().mockResolvedValue({
       id: 'tx-1', tenantId: 'tenant-1', outletId: 'outlet-1', status: 'completed',
-      items: [{ productId: 'prod-1', quantity: 2 }],
+      items: [{ productId: 'prod-1', quantity: 2, unitPrice: 5000 }],
+      createdAt: new Date('2026-11-24T20:00:00.000Z'), // 25 Nov in WIB
     }),
   };
   const dailyStockRepo = {
@@ -24,11 +25,11 @@ function makeUseCase({ stockAkhir = 18, products = [product()] } = {}) {
     save: jest.fn(),
   };
   const productRepo = { getByIds: jest.fn().mockResolvedValue(products) };
-  const dailySaleRepo = { save: jest.fn() };
+  const dailySaleRepo = { save: jest.fn(), addToDay: jest.fn().mockResolvedValue(undefined) };
   const useCase = new CreateTransactionUseCase(
     transactionRepo as never, dailySaleRepo as never, dailyStockRepo as never, productRepo as never,
   );
-  return { useCase, transactionRepo, dailyStockRepo };
+  return { useCase, transactionRepo, dailyStockRepo, dailySaleRepo };
 }
 
 const baseInput = {
@@ -73,6 +74,30 @@ describe('CreateTransactionUseCase stock check', () => {
     await useCase.execute({ ...baseInput, status: 'pending', amountPaid: 0, items: [{ productId: 'prod-1', quantity: 500 }] });
 
     expect(dailyStockRepo.getByDate).not.toHaveBeenCalled();
+  });
+});
+
+describe('CreateTransactionUseCase daily sales', () => {
+  it("adds a completed sale to the product's row for the day instead of inserting a new one", async () => {
+    const { useCase, dailySaleRepo } = makeUseCase();
+
+    await useCase.execute({ ...baseInput, amountPaid: 10000, items: [{ productId: 'prod-1', quantity: 2 }] });
+
+    expect(dailySaleRepo.save).not.toHaveBeenCalled();
+    expect(dailySaleRepo.addToDay).toHaveBeenCalledWith(
+      expect.objectContaining({ tenantId: 'tenant-1', productId: 'prod-1', outletId: 'outlet-1', quantitySold: 2, revenue: 10000 }),
+    );
+  });
+
+  it('takes a voided sale out of the day it was made, in WIB', async () => {
+    const { useCase, dailySaleRepo } = makeUseCase();
+
+    await useCase.reverseDailySalesForVoidedSale('tx-1', 'tenant-1');
+
+    expect(dailySaleRepo.addToDay).toHaveBeenCalledWith({
+      tenantId: 'tenant-1', productId: 'prod-1', outletId: 'outlet-1',
+      saleDate: new Date('2026-11-25T00:00:00.000Z'), quantitySold: -2, revenue: -10000,
+    });
   });
 });
 

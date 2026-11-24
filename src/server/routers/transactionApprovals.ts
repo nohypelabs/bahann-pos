@@ -296,6 +296,7 @@ export const transactionApprovalsRouter = router({
 
         if (tx?.status === 'completed' && voided?.length) {
           await container.createTransactionUseCase().restoreStockForVoidedSale(approval.transaction_id, tenantId)
+          await container.createTransactionUseCase().reverseDailySalesForVoidedSale(approval.transaction_id, tenantId)
           await reverseWorkshopSale(tenantId, approval.transaction_id, 'void')
         }
       } else if (approval.action_type === 'refund') {
