@@ -20,6 +20,23 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-25 · Full suite against production after deploying the fixes
+
+Environment: production `https://lakupos.vercel.app`, commit `8c92104`, Vercel deploy `success`;
+`WORKSHOP_E2E_BASE_URL=https://lakupos.vercel.app pnpm test:e2e:workshop`, system Chromium.
+
+**6 passed in 1.1 min.** The receipt preview is styled on the production build too (F3 was first seen there),
+and the receipt shows Bayar Rp150.000 / Kembalian Rp40.000.
+
+- walk-in: plate `E2EWV250KZ`, note `c497e34b-4412-4c6f-9c68-b00812a0299c`, paid Rp110.000, spark plugs 14 → 12
+- guard: `E2EGV25DTU`, cancelled
+- member: note `2eb1fad0-b63c-477f-8194-166e3f4615a1`, stamps 6 → 7 / 10
+- voucher: `VCR-A34938A0`, paid Rp55.000
+- labels: passed
+- bulk barcodes: part `2000000000084`, service none
+
+---
+
 ## 2026-11-25 · Fixing the findings from phases 1–6
 
 The owner asked for every finding logged so far to be fixed. Each fix and how it was verified:
