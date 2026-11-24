@@ -43,6 +43,12 @@ export type AuditEntity =
   | 'user_role_assignment'
   | 'transaction_approval'
   | 'impersonation'
+  | 'customer'
+  | 'vehicle'
+  | 'mechanic'
+  | 'service_order'
+  | 'loyalty_program'
+  | 'voucher'
 
 export interface AuditLogData {
   userId: string

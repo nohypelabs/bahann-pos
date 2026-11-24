@@ -18,6 +18,7 @@ import { SupabasePaymentRequestRepository } from './repositories/SupabasePayment
 import { SupabasePlatformRepository } from './repositories/SupabasePlatformRepository';
 import { SupabaseAdminRepository } from './repositories/SupabaseAdminRepository';
 import { SupabaseImpersonationRepository } from './repositories/SupabaseImpersonationRepository';
+import { SupabaseWorkshopRepository } from './repositories/SupabaseWorkshopRepository';
 import { LibTokenRotator } from './services/LibTokenRotator';
 import { LibAuthCookieManager } from './services/LibAuthCookieManager';
 
@@ -58,6 +59,7 @@ import { PlatformUseCase } from '@/use-cases/platform/PlatformUseCase';
 import { StartImpersonationUseCase } from '@/use-cases/platform/StartImpersonationUseCase';
 import { EndImpersonationUseCase, ListImpersonationHistoryUseCase } from '@/use-cases/platform/EndImpersonationUseCase';
 import { ResetAllDataUseCase } from '@/use-cases/admin/ResetAllDataUseCase';
+import { WorkshopUseCase } from '@/use-cases/workshop/WorkshopUseCase';
 import { StockService } from '@/domain/services/StockService';
 import { PricingService } from '@/domain/services/PricingService';
 
@@ -71,6 +73,7 @@ export const container = {
   passwordResetTokenRepo: () => new SupabasePasswordResetTokenRepository(),
   transactionRepo: () => new SupabaseTransactionRepository(),
   paymentMethodRepo: () => new SupabasePaymentMethodRepository(),
+  workshopRepo: () => new SupabaseWorkshopRepository(),
   outletRepo: () => new SupabaseOutletRepository(),
   promotionRepo: () => new SupabasePromotionRepository(),
   cashSessionRepo: () => new SupabaseCashSessionRepository(),
@@ -126,6 +129,7 @@ export const container = {
   // ── Payment Use Cases ──
   createPaymentUseCase: () => new CreatePaymentUseCase(container.paymentMethodRepo()),
   listPaymentsUseCase: () => new ListPaymentsUseCase(container.paymentMethodRepo()),
+  workshopUseCase: () => new WorkshopUseCase(container.workshopRepo()),
 
   // ── Outlet Use Cases ──
   outletUseCase: () => new OutletUseCase(container.outletRepo()),
