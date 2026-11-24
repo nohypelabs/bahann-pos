@@ -17,7 +17,7 @@
     "test:flow": "node scripts/e2e-cashier-flow.mjs",
     "analyze": "ANALYZE=true next build",
     "migrate": "node scripts/migrate.js",
-    "gen:types": "npx supabase gen types typescript --project-id skdgytedoilnlflyjvbc --schema public > src/infra/database.types.ts",
+    "gen:types": "supabase gen types typescript --project-id weizdahzmwgsqzdossdq --schema public > src/infra/database.types.ts",
     "gen:icons": "node scripts/generate-icons.js"
   },
   "dependencies": {
