@@ -5,7 +5,6 @@ import {
   type CreateProductData,
   type UpdateProductData,
   type ProductRow,
-  type BulkResult,
 } from '@/domain/repositories/ProductRepository';
 import { Product } from '@/domain/entities/Product';
 import type { ItemType } from '@/domain/catalog/value-objects/item-type';
@@ -215,43 +214,6 @@ export class SupabaseProductRepository implements ProductRepository {
       .eq('id', id);
 
     if (error) throw new Error(`Failed to delete product: ${error.message}`);
-  }
-
-  async bulkUpsert(products: CreateProductData[]): Promise<BulkResult> {
-    const rows = products.map((p) => ({
-      sku: p.sku,
-      barcode: p.barcode || null,
-      name: p.name,
-      category: p.category || null,
-      price: p.price || null,
-      owner_id: p.ownerId,
-      tenant_id: p.tenantId,
-      item_type: p.itemType,
-      stock_behavior: p.stockBehavior,
-      pricing_model: p.pricingModel,
-      pricing_tiers: p.pricingTiers || null,
-      duration_minutes: p.durationMinutes || null,
-    }));
-
-    const CHUNK = 100;
-    let inserted = 0;
-    const skipped: string[] = [];
-
-    for (let i = 0; i < rows.length; i += CHUNK) {
-      const chunk = rows.slice(i, i + CHUNK);
-      const { data, error } = await supabase
-        .from('products')
-        .upsert(chunk, { onConflict: 'sku,owner_id', ignoreDuplicates: false })
-        .select('id');
-
-      if (error) {
-        chunk.forEach((r) => skipped.push(r.sku));
-      } else {
-        inserted += data?.length ?? 0;
-      }
-    }
-
-    return { inserted, skipped };
   }
 
   async getCategories(tenantId?: string): Promise<string[]> {

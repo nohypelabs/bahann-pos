@@ -10,6 +10,7 @@ import { STOCK_BEHAVIORS } from '@/domain/catalog/value-objects/stock-behavior'
 import { PRICING_MODELS } from '@/domain/catalog/value-objects/pricing-model'
 import { supabaseAdmin } from '@/infra/supabase/server'
 import { formatSku, internalBarcode, skuPrefix } from '@/domain/catalog/productCodes'
+import { catalogImportInput, importCatalog } from '@/server/lib/catalogImport'
 
 export const productsRouter = router({
   getAll: protectedProcedure
@@ -102,48 +103,34 @@ export const productsRouter = router({
       }
     }),
 
-  bulkCreate: adminProcedure
-    .input(
-      z.object({
-        products: z.array(
-          z.object({
-            sku: z.string().min(1),
-            barcode: z.string().optional(),
-            name: z.string().min(1),
-            category: z.string().optional(),
-            price: z.number().positive().optional(),
-          })
-        ).min(1).max(500),
-      })
-    )
+  /**
+   * Imports a batch of catalogue rows checked on the products page. See
+   * src/server/lib/catalogImport.ts for what happens to existing SKUs, missing
+   * SKUs, taken barcodes and initial stock.
+   */
+  importCatalog: adminProcedure
+    .input(catalogImportInput)
     .mutation(async ({ input, ctx }) => {
-      const productRepo = container.productRepo()
-      const rows = input.products.map((p) => ({
-        sku: p.sku,
-        barcode: p.barcode || null,
-        name: p.name,
-        category: p.category || null,
-        price: p.price || null,
-        ownerId: ctx.userId,
-        tenantId: ctx.session.tenantId!,
-        itemType: 'PRODUCT',
-        stockBehavior: 'TRACKED',
-        pricingModel: 'FIXED',
-      }))
-
-      const { inserted, skipped } = await productRepo.bulkUpsert(rows)
+      const tenantId = ctx.session!.tenantId!
+      const result = await importCatalog({ userId: ctx.userId!, tenantId }, input)
 
       await createAuditLog({
-        userId: ctx.userId,
+        userId: ctx.userId!,
         userEmail: ctx.session?.email || 'unknown',
         action: 'CREATE',
         entityType: 'product',
         entityId: 'bulk',
-        changes: { bulk_import: { count: inserted, skipped: skipped.length } },
-        metadata: { inserted, skipped: skipped.length },
+        changes: { catalog_import: { created: result.created.length, updated: result.updated.length } },
+        metadata: {
+          created: result.created.length,
+          updated: result.updated.length,
+          skipped: result.skipped.length,
+          failed: result.failed.length,
+          stocked: result.stocked,
+          existing: input.existing,
+        },
       })
-
-      return { inserted, skipped }
+      return result
     }),
 
   update: adminProcedure

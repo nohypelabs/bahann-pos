@@ -9,11 +9,6 @@ export interface ProductFilters {
   tenantId?: string;
 }
 
-export interface BulkResult {
-  inserted: number;
-  skipped: string[];
-}
-
 export interface CreateProductData {
   sku: string;
   barcode?: string | null;
@@ -76,7 +71,6 @@ export interface ProductRepository {
   create(data: CreateProductData): Promise<ProductRow>;
   update(id: string, data: UpdateProductData): Promise<ProductRow>;
   delete(id: string): Promise<void>;
-  bulkUpsert(products: CreateProductData[]): Promise<BulkResult>;
   getCategories(tenantId?: string): Promise<string[]>;
   batchUpdateCategory(productIds: string[], category: string | null): Promise<number>;
   batchDelete(productIds: string[]): Promise<void>;

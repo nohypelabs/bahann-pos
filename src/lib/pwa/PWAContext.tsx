@@ -24,7 +24,7 @@ export function PWAProvider({ children }: { children: ReactNode }) {
     if ('serviceWorker' in navigator) {
       const register = () => navigator.serviceWorker
         .register('/sw.js')
-        .then((reg) => logger.success('SW registered', { scope: reg.scope }))
+        .then((reg) => logger.success('SW registered', { scope: reg?.scope }))
         .catch((err) => logger.error('SW registration failed', err))
       // The effect usually runs after the load event has fired; waiting for it
       // then would never register the worker, and pages would not work offline.
