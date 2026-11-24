@@ -14,7 +14,7 @@ import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { BUSINESS_TYPE_DEFAULTS } from '@/domain/entities/BusinessProfile'
 import type { Product, SelectChangeEvent } from '@/types'
-import { Package, FolderOpen, CheckCircle, AlertTriangle, Tag, Trash2, Download, Search, Pencil, Plus, Barcode, Printer } from 'lucide-react'
+import { Package, FolderOpen, CheckCircle, AlertTriangle, Tag, Trash2, Download, Pencil, Plus, Barcode, Printer } from 'lucide-react'
 import { LABEL_SELECTION_KEY } from '@/lib/labels/sheets'
 
 const fmtCurrency = (amount: number | null) =>
@@ -433,7 +433,7 @@ export default function ProductsPage() {
   const typeDefaults = profile ? BUSINESS_TYPE_DEFAULTS[profile.businessType] : undefined
 
   const { data: productsResponse, isLoading, refetch } = trpc.products.getAll.useQuery({
-    search: searchTerm || undefined, category: categoryFilter || undefined,
+    search: searchTerm || undefined, category: categoryFilter || undefined, all: true,
   })
   const { data: categories } = trpc.products.getCategories.useQuery()
 

@@ -15,7 +15,7 @@ import { trpc } from '@/lib/trpc/client'
 import { formatCurrency } from '@/lib/utils'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { workshopErrorMessage } from '@/lib/workshop/errors'
-import { PaymentModal, type LoyaltyOutcome } from '@/components/payment/PaymentModal'
+import { PaymentModal, type LoyaltyOutcome, type PaidTransaction } from '@/components/payment/PaymentModal'
 import { PrintPreviewModal } from '@/components/print/PrintPreviewModal'
 import type { ReceiptData } from '@/components/print/PrintReceipt'
 import { generateTransactionId } from '@/lib/utils'
@@ -171,7 +171,7 @@ export default function ServiceNotePage({ params }: { params: Promise<{ id: stri
 
   const startPay = () => { setTxRef(generateTransactionId()); setPayOpen(true) }
 
-  const onPaid = async (_paymentId: string, method: string, tx?: { id: string; number: string }, loyalty?: LoyaltyOutcome | null) => {
+  const onPaid = async (_paymentId: string, method: string, tx?: PaidTransaction, loyalty?: LoyaltyOutcome | null) => {
     const now = new Date()
     const outlet = outletsResponse?.outlets.find((o) => o.id === n.outletId)
     setReceipt({
@@ -182,7 +182,7 @@ export default function ServiceNotePage({ params }: { params: Promise<{ id: stri
       outlet: { name: outlet?.name ?? 'Laku POS', address: outlet?.address ?? '', phone: profile?.whatsappNumber ?? '', email: profile?.email ?? '' },
       items: n.items.map((i) => ({ name: i.productName, sku: i.productSku, quantity: i.quantity, unitPrice: priceOf(i), total: priceOf(i) * i.quantity })),
       subtotal, tax: 0, discount, total,
-      payment: { method, amount: total, change: 0 },
+      payment: { method, amount: tx?.amountPaid ?? total, change: tx?.change ?? 0 },
       workshop: {
         plate: n.vehicle.plateNumber,
         vehicle: [n.vehicle.brand, n.vehicle.model].filter(Boolean).join(' ') || undefined,

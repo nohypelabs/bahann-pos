@@ -100,7 +100,7 @@ export default function StockManagementPage() {
   const [adjSuccess, setAdjSuccess] = useState(false)
   const [adjError, setAdjError] = useState('')
 
-  const { data: productsResponse, isLoading: productsLoading } = trpc.products.getAll.useQuery()
+  const { data: productsResponse, isLoading: productsLoading } = trpc.products.getAll.useQuery({ all: true })
   const { data: outletsResponse, isLoading: outletsLoading } = trpc.outlets.getAll.useQuery()
 
   const allProducts = productsResponse?.products || []

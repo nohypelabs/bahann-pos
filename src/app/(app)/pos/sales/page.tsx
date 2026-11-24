@@ -8,12 +8,17 @@ import { PrintPreviewModal } from '@/components/print/PrintPreviewModal'
 import { PrintReceipt, ReceiptData } from '@/components/print/PrintReceipt'
 import { BarcodeScanner } from '@/components/barcode/BarcodeScanner'
 import { PaymentModal } from '@/components/payment'
+import type { PaidTransaction } from '@/components/payment/PaymentModal'
 import { printHtmlDocument } from '@/lib/print/printHtmlDocument'
 import { formatCurrency, generateTransactionId } from '@/lib/utils'
 import { offlineDb } from '@/lib/offline/database'
 import { useOffline } from '@/hooks/useOffline'
 import { Check, CloudOff, LayoutGrid, List, Package, RefreshCw, ScanLine, Search, ShoppingCart, Store, WalletCards } from 'lucide-react'
 import { ProductListSkeleton, ProductGridSkeleton } from '@/components/ui/Skeletons'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
+
+/** Product cards drawn at once; the rest are reached by searching or scanning. */
+const MAX_VISIBLE_PRODUCTS = 120
 
 const getCategoryGradient = (category?: string | null) => {
   const gradients = [
@@ -50,6 +55,7 @@ type CachedInventoryItem = {
 }
 
 export default function SalesTransactionPage() {
+  const { t } = useLanguage()
   const [selectedProductId, setSelectedProductId] = useState('')
   const [selectedOutletId, setSelectedOutletId] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -137,7 +143,7 @@ export default function SalesTransactionPage() {
     }
   }
 
-  const { data: productsResponse, isLoading: productsLoading } = trpc.products.getAll.useQuery()
+  const { data: productsResponse, isLoading: productsLoading } = trpc.products.getAll.useQuery({ all: true })
   const { data: outletsResponse, isLoading: outletsLoading } = trpc.outlets.getAll.useQuery()
 
   // Cache products and outlets to localStorage for offline use
@@ -251,6 +257,11 @@ export default function SalesTransactionPage() {
     const matchesCategory = !selectedCategory || p.category === selectedCategory
     return matchesSearch && matchesCategory
   }) || []
+
+  // A large catalogue (a workshop's ~900 parts) stays searchable and scannable in
+  // full; only the cards drawn at once are capped.
+  const visibleProducts = filteredProducts.slice(0, MAX_VISIBLE_PRODUCTS)
+  const hiddenCount = filteredProducts.length - visibleProducts.length
 
   // Get unique categories from products
   const categories = [...new Set(products?.map(p => p.category).filter((c): c is string => !!c))].sort()
@@ -406,7 +417,7 @@ export default function SalesTransactionPage() {
     const transactionId = generateTransactionId()
     setPendingTransactionId(transactionId)
     if (isOffline) {
-      await handlePaymentSuccess('offline-cash', 'cash', { id: transactionId, number: transactionId })
+      await handlePaymentSuccess('offline-cash', 'cash', { id: transactionId, number: transactionId, amountPaid: cartTotal, change: 0 })
       return
     }
     setIsPaymentModalOpen(true)
@@ -415,7 +426,7 @@ export default function SalesTransactionPage() {
   const handlePaymentSuccess = async (
     paymentId: string,
     paymentMethod: string,
-    transaction?: { id: string; number: string },
+    transaction?: PaidTransaction,
   ) => {
     try {
       setIsPaymentModalOpen(false)
@@ -498,7 +509,7 @@ export default function SalesTransactionPage() {
         },
         items: cart.map(item => ({ name: item.productName, sku: item.productSku, quantity: item.quantity, unitPrice: item.unitPrice, total: item.total })),
         subtotal: cartSubtotal, tax: 0, discount: discountAmount, total: cartTotal,
-        payment: { method: paymentMethod, amount: cartTotal, change: 0 },
+        payment: { method: paymentMethod, amount: transaction?.amountPaid ?? cartTotal, change: transaction?.change ?? 0 },
         notes: appliedPromo ? `Promo: ${appliedPromo.promoName} • Terima kasih telah berbelanja di ${selectedOutlet?.name || 'Laku POS'}!` : `Terima kasih telah berbelanja di ${selectedOutlet?.name || 'Laku POS'}`,
       }
       setReceiptData(receipt)
@@ -763,7 +774,7 @@ export default function SalesTransactionPage() {
                         {productSearch ? 'Coba kata kunci lain' : 'Tambahkan produk terlebih dahulu'}
                       </p>
                     </div>
-                  ) : filteredProducts.map(product => {
+                  ) : visibleProducts.map(product => {
                     const stock = effectiveInventoryList?.find(p => p.id === product.id)?.currentStock ?? 0
                     const isSelected = selectedProductId === product.id
                     const isUntrackedItem = product.stock_behavior === 'UNTRACKED' || product.stock_behavior === 'CONSUMED'
@@ -827,6 +838,7 @@ export default function SalesTransactionPage() {
                 {selectedOutletId && filteredProducts.length > 0 && (
                   <div className="px-3 py-1 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 shrink-0">
                     <p className="text-xs text-gray-400 dark:text-gray-500">{filteredProducts.length} produk{productSearch && ` · "${productSearch}"`}</p>
+                    {hiddenCount > 0 && <p className="text-xs text-amber-700 dark:text-amber-400">{t('pos.moreProducts').replace('{shown}', String(visibleProducts.length)).replace('{n}', String(hiddenCount))}</p>}
                   </div>
                 )}
                   </>
@@ -851,7 +863,7 @@ export default function SalesTransactionPage() {
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {filteredProducts.map(product => {
+                        {visibleProducts.map(product => {
                           const stock = effectiveInventoryList?.find(p => p.id === product.id)?.currentStock ?? 0
                           const isSelected = selectedProductId === product.id
                           const isUntrackedItem = product.stock_behavior === 'UNTRACKED' || product.stock_behavior === 'CONSUMED'
@@ -933,6 +945,9 @@ export default function SalesTransactionPage() {
                     )}
                     {selectedOutletId && filteredProducts.length > 0 && (
                       <p className="text-xs text-stone-400 dark:text-stone-500 mt-3 text-center">{filteredProducts.length} produk</p>
+                    )}
+                    {selectedOutletId && hiddenCount > 0 && (
+                      <p className="text-xs text-amber-700 dark:text-amber-400 mt-1 text-center">{t('pos.moreProducts').replace('{shown}', String(visibleProducts.length)).replace('{n}', String(hiddenCount))}</p>
                     )}
                   </div>
                 )}

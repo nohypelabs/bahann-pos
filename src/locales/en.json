@@ -687,7 +687,7 @@
   "products.codes.auto": "Generate",
   "products.codes.failed": "Could not generate a code",
   "products.codes.assignAll": "Fill missing barcodes",
-  "products.codes.assignAllHint": "Give every product without a barcode an in-store EAN-13 (starting with 20)",
+  "products.codes.assignAllHint": "Give every item without a barcode an in-store EAN-13 (starting with 20), except services",
   "products.codes.assignSelected": "Generate barcodes",
   "products.codes.assigned": "{n} product(s) got a new barcode",
   "products.labels.title": "Print barcode labels",
@@ -717,5 +717,6 @@
   "products.labels.summary": "{labels} labels · {sheets} A4 sheet(s)",
   "products.labels.printerHint": "In the print dialog choose A4, scale 100% (not \"fit to page\") and margins None. Test on plain paper with guide lines first, then hold it against a sticker sheet to check alignment.",
   "products.labels.preview": "First sheet preview",
-  "products.labels.printFailed": "Could not open the print dialog"
+  "products.labels.printFailed": "Could not open the print dialog",
+  "pos.moreProducts": "Showing the first {shown} products, {n} more: type a name/SKU or scan a barcode"
 }

@@ -21,23 +21,23 @@ export const productsRouter = router({
         stockBehavior: z.enum(STOCK_BEHAVIORS as [string, ...string[]]).optional(),
         page: z.number().min(1).default(1),
         limit: z.number().min(1).max(100).default(50),
+        /** The whole matching catalogue instead of one page (ignores page and limit). */
+        all: z.boolean().optional(),
       }).optional()
     )
     .query(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
 
       const useCase = container.listProductsUseCase()
-      return useCase.execute({
-        filters: {
-          search: input?.search,
-          category: input?.category,
-          itemType: input?.itemType,
-          stockBehavior: input?.stockBehavior,
-          tenantId,
-        },
-        page: input?.page,
-        limit: input?.limit,
-      })
+      const filters = {
+        search: input?.search,
+        category: input?.category,
+        itemType: input?.itemType,
+        stockBehavior: input?.stockBehavior,
+        tenantId,
+      }
+      if (input?.all) return useCase.executeAll(filters)
+      return useCase.execute({ filters, page: input?.page, limit: input?.limit })
     }),
 
   getById: protectedProcedure
@@ -345,14 +345,31 @@ export const productsRouter = router({
       throw new TRPCError({ code: 'CONFLICT', message: 'No free code after 10 attempts' })
     }),
 
-  /** Gives products without a barcode an in-store EAN-13, in one database transaction. */
+  /**
+   * Gives products without a barcode an in-store EAN-13, in one database
+   * transaction. Without a selection it covers every item except services, which
+   * are never scanned; selected products get one whatever their type.
+   */
   assignMissingBarcodes: adminProcedure
     .input(z.object({ productIds: z.array(z.string().uuid()).max(5000).optional() }).optional())
     .mutation(async ({ input, ctx }) => {
       const tenantId = ctx.session!.tenantId!
+      let productIds = input?.productIds
+      if (!productIds) {
+        const { data: rows, error: listError } = await supabaseAdmin
+          .from('products')
+          .select('id')
+          .eq('tenant_id', tenantId)
+          .neq('item_type', 'SERVICE')
+          .or('barcode.is.null,barcode.eq.')
+          .limit(5000)
+        if (listError) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: listError.message })
+        productIds = (rows ?? []).map((r) => r.id as string)
+        if (productIds.length === 0) return { count: 0, assigned: [] }
+      }
       const { data, error } = await supabaseAdmin.rpc('assign_missing_barcodes', {
         p_tenant_id: tenantId,
-        p_product_ids: input?.productIds ?? null,
+        p_product_ids: productIds,
       })
       if (error) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
       const assigned = (data ?? []) as { product_id: string; barcode: string }[]

@@ -42,7 +42,7 @@ export default function SalesHistoryPage() {
   const canExport                = getLimits(planData?.plan ?? 'free').canExport
   const { data: outletsResponse } = trpc.outlets.getAll.useQuery()
   const outlets                  = outletsResponse?.outlets || []
-  const { data: productsResponse } = trpc.products.getAll.useQuery()
+  const { data: productsResponse } = trpc.products.getAll.useQuery({ all: true })
   const products                 = productsResponse?.products || []
 
   const { data: salesTrend }         = trpc.dashboard.getSalesTrend.useQuery({ outletId: selectedOutletId || undefined, days: dateRange })

@@ -40,23 +40,38 @@ export function PrintPreviewModal({ isOpen, onClose, receiptData }: PrintPreview
 
   if (!isOpen) return null
 
+  // Tailwind rather than styled-jsx: the styled-jsx scoping was never applied, so
+  // the preview used to render inline in the page instead of as a dialog.
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2 className="modal-title">Preview Struk</h2>
-          <button className="modal-close" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-5 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="print-preview-title"
+        className="flex max-h-[90vh] w-full max-w-[500px] flex-col rounded-3xl border-[3px] border-gray-200 bg-white shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b-2 border-gray-200 px-6 pb-4 pt-6">
+          <h2 id="print-preview-title" className="m-0 text-2xl font-bold text-gray-900">Preview Struk</h2>
+          <button
+            onClick={onClose}
+            aria-label="Tutup"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-gray-300 bg-gray-100 text-2xl text-gray-500 transition hover:bg-gray-200"
+          >
             ✕
           </button>
         </div>
 
-        <div className="modal-body">
-          <div className="receipt-preview-wrapper">
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="receipt-preview-wrapper rounded-2xl border-2 border-gray-200 bg-gray-50 p-5 shadow-inner">
             <PrintReceipt ref={componentRef} data={receiptData} />
           </div>
         </div>
 
-        <div className="modal-footer">
+        <div className="flex justify-end gap-3 border-t-2 border-gray-200 px-6 pb-6 pt-4">
           <Button variant="secondary" onClick={onClose}>
             Batal
           </Button>
@@ -65,116 +80,6 @@ export function PrintPreviewModal({ isOpen, onClose, receiptData }: PrintPreview
           </Button>
         </div>
       </div>
-
-      <style jsx>{`
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.6);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 99999;
-          padding: 20px;
-          backdrop-filter: blur(4px);
-        }
-
-        .modal-container {
-          background: white;
-          border-radius: 24px;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-          max-width: 500px;
-          width: 100%;
-          max-height: 90vh;
-          display: flex;
-          flex-direction: column;
-          border: 3px solid #e5e7eb;
-        }
-
-        .modal-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 24px 24px 16px;
-          border-bottom: 2px solid #e5e7eb;
-        }
-
-        .modal-title {
-          font-size: 24px;
-          font-weight: bold;
-          color: #111827;
-          margin: 0;
-        }
-
-        .modal-close {
-          background: #f3f4f6;
-          border: 2px solid #d1d5db;
-          border-radius: 12px;
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 24px;
-          color: #6b7280;
-          cursor: pointer;
-          transition: all 0.2s;
-          box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
-        }
-
-        .modal-close:hover {
-          background: #e5e7eb;
-          transform: translate(-1px, -1px);
-          box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.15);
-        }
-
-        .modal-close:active {
-          transform: translate(1px, 1px);
-          box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
-        }
-
-        .modal-body {
-          flex: 1;
-          overflow-y: auto;
-          padding: 24px;
-        }
-
-        .receipt-preview-wrapper {
-          background: #f9fafb;
-          border-radius: 16px;
-          padding: 20px;
-          border: 2px solid #e5e7eb;
-          box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-        }
-
-        .modal-footer {
-          padding: 16px 24px 24px;
-          display: flex;
-          gap: 12px;
-          justify-content: flex-end;
-          border-top: 2px solid #e5e7eb;
-        }
-
-        /* Scrollbar styling */
-        .modal-body::-webkit-scrollbar {
-          width: 8px;
-        }
-
-        .modal-body::-webkit-scrollbar-track {
-          background: #f3f4f6;
-          border-radius: 4px;
-        }
-
-        .modal-body::-webkit-scrollbar-thumb {
-          background: #d1d5db;
-          border-radius: 4px;
-        }
-
-        .modal-body::-webkit-scrollbar-thumb:hover {
-          background: #9ca3af;
-        }
-
-      `}</style>
     </div>
   )
 }

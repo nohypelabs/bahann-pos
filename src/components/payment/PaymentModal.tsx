@@ -44,6 +44,15 @@ type PaymentResult = {
 /** Stamp-card result of a workshop sale (see src/server/lib/workshopSale.ts). */
 export type LoyaltyOutcome = { awarded: boolean; balance?: number; required?: number; vouchers?: string[] }
 
+/** What the receipt needs about a finished payment. */
+export interface PaidTransaction {
+  id: string
+  number: string
+  /** Cash handed over (the total for non-cash methods). */
+  amountPaid: number
+  change: number
+}
+
 interface PaymentModalProps {
   transactionId: string
   outletId: string
@@ -65,7 +74,7 @@ interface PaymentModalProps {
   onSuccess: (
     paymentId: string,
     paymentMethod: PaymentMethod,
-    transaction?: { id: string; number: string },
+    transaction?: PaidTransaction,
     loyalty?: LoyaltyOutcome | null,
   ) => void
   onError?: (error: string) => void
@@ -149,7 +158,8 @@ export function PaymentModal({
     setError('')
 
     try {
-      const result = await startPayment(method, cashGiven ?? amount)
+      const amountPaid = cashGiven ?? amount
+      const result = await startPayment(method, amountPaid)
 
       setPaymentResult(result)
       setStep('completed')
@@ -159,6 +169,8 @@ export function PaymentModal({
         onSuccess(result.paymentId, method, {
           id: result.transactionId,
           number: result.transactionNumber,
+          amountPaid,
+          change: Math.max(0, amountPaid - amount),
         }, result.loyalty)
         onClose()
       }, 1000)
@@ -242,6 +254,8 @@ export function PaymentModal({
         onSuccess(paymentResult.paymentId, selectedMethod, {
           id: paymentResult.transactionId,
           number: paymentResult.transactionNumber,
+          amountPaid: amount,
+          change: 0,
         }, confirmed.loyalty)
         onClose()
       }, 1500)

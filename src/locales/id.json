@@ -687,7 +687,7 @@
   "products.codes.auto": "Otomatis",
   "products.codes.failed": "Gagal membuat kode",
   "products.codes.assignAll": "Buat barcode kosong",
-  "products.codes.assignAllHint": "Buat barcode toko (EAN-13 diawali 20) untuk semua produk yang belum punya barcode",
+  "products.codes.assignAllHint": "Buat barcode toko (EAN-13 diawali 20) untuk semua barang yang belum punya barcode, kecuali jasa",
   "products.codes.assignSelected": "Buat barcode",
   "products.codes.assigned": "{n} produk diberi barcode baru",
   "products.labels.title": "Cetak Label Barcode",
@@ -717,5 +717,6 @@
   "products.labels.summary": "{labels} label · {sheets} lembar A4",
   "products.labels.printerHint": "Di dialog cetak: pilih kertas A4, skala 100% (bukan \"fit to page\"), margin None. Uji dulu di kertas biasa dengan garis bantu, lalu tempel ke kertas stiker untuk mengecek posisi.",
   "products.labels.preview": "Pratinjau lembar pertama",
-  "products.labels.printFailed": "Gagal membuka dialog cetak"
+  "products.labels.printFailed": "Gagal membuka dialog cetak",
+  "pos.moreProducts": "Menampilkan {shown} produk pertama, {n} lainnya: ketik nama/SKU atau scan barcode"
 }
