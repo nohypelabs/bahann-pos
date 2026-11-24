@@ -13,6 +13,7 @@ const PLAN_DISPLAY: Record<string, { label: string; badge: string }> = {
   professional: { label: 'Pro',       badge: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300' },
   business:     { label: 'Business',  badge: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300' },
   enterprise:   { label: 'Enterprise',badge: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300' },
+  custom:       { label: 'Kontrak',   badge: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300' },
 }
 
 export type UpgradeFeature = 'outlets' | 'cashiers' | 'export' | 'pwa'

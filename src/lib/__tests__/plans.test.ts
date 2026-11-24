@@ -1,4 +1,4 @@
-import { buildPlanStatus, PLAN_GRACE_DAYS } from '@/lib/plans';
+import { buildPlanStatus, CONTRACT_PLAN, getLimits, isUnlimited, PLAN_GRACE_DAYS } from '@/lib/plans';
 
 const now = new Date('2026-10-20T00:00:00Z');
 const days = (n: number) => new Date(now.getTime() + n * 86_400_000).toISOString();
@@ -24,5 +24,19 @@ describe('buildPlanStatus', () => {
   it('has no period for free accounts', () => {
     const s = buildPlanStatus({ storedPlan: 'free', effectivePlan: 'free', isTrial: false, periodEndsAt: null, now });
     expect(s).toMatchObject({ daysLeft: null, accessEndsAt: null, inGrace: false });
+  });
+});
+
+describe('contract plan', () => {
+  it('is not limited by outlets, cashiers or export', () => {
+    const limits = getLimits(CONTRACT_PLAN);
+    expect(isUnlimited(limits.maxOutlets)).toBe(true);
+    expect(isUnlimited(limits.maxCashiers)).toBe(true);
+    expect(limits.canExport).toBe(true);
+  });
+
+  it('has no period, so it never shows an end date or grace', () => {
+    const s = buildPlanStatus({ storedPlan: CONTRACT_PLAN, effectivePlan: CONTRACT_PLAN, isTrial: false, periodEndsAt: null, now });
+    expect(s).toMatchObject({ plan: CONTRACT_PLAN, daysLeft: null, accessEndsAt: null, inGrace: false });
   });
 });

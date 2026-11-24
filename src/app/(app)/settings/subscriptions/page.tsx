@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { trpc } from '@/lib/trpc/client'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { CONTRACT_PLAN } from '@/lib/plans'
 import { Gift, CreditCard, ClipboardList, CheckCircle, Check, Upload, Clock, XCircle, Image, ChevronDown, Copy, Wallet, ExternalLink, PartyPopper } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 
@@ -755,11 +757,45 @@ function SuperAdminView() {
   )
 }
 
+// ─── Contract client view ─────────────────────────────────────────────────────
+// Contract clients are not offered the website plans: their terms live in a signed agreement.
+function ContractPlanView() {
+  const { t } = useLanguage()
+  const { data: paymentConfig } = trpc.paymentRequests.paymentConfig.useQuery()
+  const waNumber = paymentConfig?.supportWa || ''
+
+  return (
+    <div className="space-y-4 md:space-y-6">
+      <PageHeader
+        title="Langganan"
+        subtitle={t('subscriptions.contract.subtitle')}
+        action={
+          <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300">
+            {t('subscriptions.contract.badge')}
+          </span>
+        }
+      />
+      <SectionCard title={t('subscriptions.contract.title')}>
+        <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{t('subscriptions.contract.body')}</p>
+        {waNumber && (
+          <a href={`https://wa.me/${waNumber.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
+            className="inline-block mt-4 px-4 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors">
+            {t('subscriptions.contract.contact')}
+          </a>
+        )}
+      </SectionCard>
+      <BillingHistory />
+    </div>
+  )
+}
+
 // ─── Root Page ─────────────────────────────────────────────────────────────────
 export default function SubscriptionsPage() {
   const { data: profile, isLoading } = trpc.auth.getProfile.useQuery()
+  const { data: planData, isLoading: planLoading } = trpc.auth.getPlan.useQuery()
 
-  if (isLoading) return <p className="text-center py-16 text-gray-400 text-sm">Memuat...</p>
+  if (isLoading || planLoading) return <p className="text-center py-16 text-gray-400 text-sm">Memuat...</p>
   if (profile?.role === 'super_admin') return <SuperAdminView />
+  if (planData?.plan === CONTRACT_PLAN) return <ContractPlanView />
   return <UserUpgradeView />
 }

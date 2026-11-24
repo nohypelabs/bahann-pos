@@ -555,5 +555,11 @@
   "plan.expiry.grace": "Masa {kind} {plan} kamu sudah berakhir. Akses tetap jalan sampai {date}, setelah itu toko turun ke paket Free.",
   "plan.expiry.renew": "Perpanjang",
   "plan.expiry.dismiss": "Tutup",
-  "transactions.export.locked": "Export tersedia mulai paket Starter"
+  "transactions.export.locked": "Export tersedia mulai paket Starter",
+
+  "subscriptions.contract.subtitle": "Paket Anda diatur sesuai perjanjian kerja sama.",
+  "subscriptions.contract.badge": "Kontrak",
+  "subscriptions.contract.title": "Paket Kontrak",
+  "subscriptions.contract.body": "Batas outlet, kasir, dan ekspor di paket ini tidak dibatasi aplikasi. Masa berlaku, tagihan, dan perpanjangan mengikuti perjanjian yang sudah ditandatangani, bukan paket di halaman ini.",
+  "subscriptions.contract.contact": "Hubungi kami via WhatsApp"
 }

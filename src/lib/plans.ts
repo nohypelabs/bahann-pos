@@ -1,4 +1,4 @@
-export type PlanId = 'free' | 'warung' | 'starter' | 'professional' | 'business' | 'enterprise'
+export type PlanId = 'free' | 'warung' | 'starter' | 'professional' | 'business' | 'enterprise' | 'custom'
 
 export interface PlanLimits {
   maxOutlets: number
@@ -17,7 +17,13 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
   professional: { maxOutlets: 3, maxCashiers: 10,       canExport: true,  canInstallPWA: true  },
   business:     { maxOutlets: UNLIMITED, maxCashiers: UNLIMITED, canExport: true, canInstallPWA: true },
   enterprise:   { maxOutlets: UNLIMITED, maxCashiers: UNLIMITED, canExport: true, canInstallPWA: true },
+  // Contract clients. Their terms live in a signed contract, not in these limits,
+  // and the plan never lapses on its own (see migration 053).
+  custom:       { maxOutlets: UNLIMITED, maxCashiers: UNLIMITED, canExport: true, canInstallPWA: true },
 }
+
+/** The plan for contract clients: not sold on the website, granted by a super admin. */
+export const CONTRACT_PLAN: PlanId = 'custom'
 
 export function getLimits(plan: string): PlanLimits {
   return PLAN_LIMITS[plan as PlanId] ?? PLAN_LIMITS.free

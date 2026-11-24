@@ -10,7 +10,7 @@ import { createAuditLog } from '@/lib/audit'
 import { supabaseAdmin } from '@/infra/supabase/server'
 import { TRPCError } from '@trpc/server'
 import { sendPlanUpgradeEmail } from '@/lib/email'
-import { getLimits, isUnlimited } from '@/lib/plans'
+import { CONTRACT_PLAN, getLimits, isUnlimited } from '@/lib/plans'
 import bcrypt from 'bcryptjs'
 
 const roleKeySchema = z.enum(['ADMIN_TENANT', 'AREA_MANAGER', 'STORE_MANAGER', 'CASHIER', 'AUDITOR'])
@@ -645,7 +645,7 @@ export const usersRouter = router({
   updatePlan: superAdminProcedure
     .input(z.object({
       userId: z.string().uuid(),
-      plan: z.enum(['free', 'warung', 'starter', 'professional', 'business', 'enterprise']),
+      plan: z.enum(['free', 'warung', 'starter', 'professional', 'business', 'enterprise', 'custom']),
       amount: z.number().int().min(0).optional(),
       note: z.string().max(500).optional(),
     }))
@@ -668,7 +668,8 @@ export const usersRouter = router({
         metadata: { targetEmail: result.before.email, targetName: result.before.name, amount: input.amount, note: input.note },
       })
 
-      if (result.before.email && result.before.name) {
+      // Contract clients hear about their plan from us directly, not from a plan-upgrade email.
+      if (result.before.email && result.before.name && input.plan !== CONTRACT_PLAN) {
         await sendPlanUpgradeEmail({
           to: result.before.email,
           name: result.before.name,

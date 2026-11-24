@@ -14,6 +14,7 @@ const PLAN_COLORS: Record<string, string> = {
   professional: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
   business: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300',
   enterprise: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
+  custom: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300',
 }
 
 const PLAN_BORDER_ACCENT: Record<string, string> = {
@@ -23,6 +24,7 @@ const PLAN_BORDER_ACCENT: Record<string, string> = {
   professional: 'border-l-purple-400 dark:border-l-purple-500',
   business: 'border-l-orange-400 dark:border-l-orange-500',
   enterprise: 'border-l-red-400 dark:border-l-red-500',
+  custom: 'border-l-teal-400 dark:border-l-teal-500',
 }
 
 const PLAN_CHIP_ACTIVE: Record<string, string> = {
@@ -32,10 +34,11 @@ const PLAN_CHIP_ACTIVE: Record<string, string> = {
   professional: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700',
   business: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 ring-1 ring-orange-300 dark:ring-orange-700',
   enterprise: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 ring-1 ring-red-300 dark:ring-red-700',
+  custom: 'bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-300 ring-1 ring-teal-300 dark:ring-teal-700',
 }
 
-const PLANS = ['free', 'warung', 'starter', 'professional', 'business', 'enterprise'] as const
-const PAID_PLANS = ['warung', 'starter', 'professional', 'business', 'enterprise'] as const
+const PLANS = ['free', 'warung', 'starter', 'professional', 'business', 'enterprise', 'custom'] as const
+const PAID_PLANS = ['warung', 'starter', 'professional', 'business', 'enterprise', 'custom'] as const
 
 const PLAN_META: Record<string, { label: string; price: number; color: string; bg: string; border: string; features: string[] }> = {
   free:         { label: 'Free',         price: 0,       color: 'text-gray-600',    bg: 'bg-gray-50 dark:bg-gray-800',       border: 'border-gray-200 dark:border-gray-700',    features: ['1 Outlet', '1 Kasir', '100 tx/bulan'] },
@@ -44,6 +47,7 @@ const PLAN_META: Record<string, { label: string; price: number; color: string; b
   professional: { label: 'Professional', price: 1200000, color: 'text-purple-600',  bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-300 dark:border-purple-700', features: ['3 Outlet', '10 User', 'API Access'] },
   business:     { label: 'Business',     price: 0,       color: 'text-orange-600',  bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-300 dark:border-orange-700', features: ['Unlimited', 'Custom'] },
   enterprise:   { label: 'Enterprise',   price: 0,       color: 'text-red-600',     bg: 'bg-red-50 dark:bg-red-900/20',      border: 'border-red-300 dark:border-red-700',       features: ['White-label', 'On-premise'] },
+  custom:       { label: 'Kontrak',      price: 0,       color: 'text-teal-600',    bg: 'bg-teal-50 dark:bg-teal-900/20',    border: 'border-teal-300 dark:border-teal-700',     features: ['Sesuai kontrak', 'Tanpa masa habis'] },
 }
 
 export default function TenantsPage() {

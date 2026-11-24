@@ -354,6 +354,7 @@ const PLAN_LABEL: Record<string, string> = {
   professional: 'Professional',
   business: 'Business',
   enterprise: 'Enterprise',
+  custom: 'Kontrak',
 }
 
 function formatLimit(n: number): string {

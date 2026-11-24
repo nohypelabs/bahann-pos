@@ -24,6 +24,7 @@ const PLAN_LIMITS: Record<string, number> = {
   professional: Infinity,
   business: Infinity,
   enterprise: Infinity,
+  custom: Infinity,
 }
 
 const transactionItemInput = z.object({

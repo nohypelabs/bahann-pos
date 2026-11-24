@@ -555,5 +555,11 @@
   "plan.expiry.grace": "Your {plan} {kind} has ended. Access continues until {date}, then your store moves to Free.",
   "plan.expiry.renew": "Renew now",
   "plan.expiry.dismiss": "Dismiss",
-  "transactions.export.locked": "Export is available on Starter and above"
+  "transactions.export.locked": "Export is available on Starter and above",
+
+  "subscriptions.contract.subtitle": "Your plan follows your service agreement.",
+  "subscriptions.contract.badge": "Contract",
+  "subscriptions.contract.title": "Contract plan",
+  "subscriptions.contract.body": "The app does not limit outlets, cashiers, or exports on this plan. Its term, billing, and renewal follow your signed agreement, not the plans on this page.",
+  "subscriptions.contract.contact": "Contact us on WhatsApp"
 }
