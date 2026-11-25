@@ -20,6 +20,24 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-25 · Reset page names the account, Indonesian login error (local app → production DB, then production)
+
+Found while the user tried a cashier account: a reset done in the phone PWA landed on the user's superadmin account,
+because the forgot-password email had been autofilled and the reset page did not say which account it was for.
+Commit `4fb24a1`: `auth.verifyResetToken` returns the account email for a valid, unused link; the reset page shows
+it with a hidden `username` field so the browser saves the password under that account; the login form has
+`autocomplete` hints and shows `login.error` for UNAUTHORIZED.
+
+| # | Check | Result |
+|---|---|---|
+| 11.1 | A reset token made by hand for the unused test cashier `agdscid+kasir-uji@gmail.com` (raw token kept in a private scratch file, row deleted after each check); open `/reset-password?token=…` at 390×844, not submitted | Box "Password baru untuk akun: agdscid+kasir-uji@gmail.com" above the password fields ✅ |
+| 11.2 | Login with that email and a wrong password | "Email atau kata sandi salah" (was "Invalid email or password") ✅ |
+| 11.3 | Unit test `VerifyResetTokenUseCase` | Valid link names the account; used, expired and unknown links do not, and do not look the user up ✅ |
+
+Runs: local `next dev` 11.1–11.2 passed (first try timed out waiting for `networkidle`, which `next dev` never
+reaches; rerun waiting for `load`). Production `https://lakupos.vercel.app` at `4fb24a1`: 11.1–11.2 passed. Unit
+tests 183 passed, 2 skipped; build passed. Both temporary token rows were deleted.
+
 ## 2026-11-25 · Top bar attention counts, sidebar without the workflow box (local app → production DB, then production)
 
 Layout change, commit `fdead56`. The sidebar's "Workflow Inti" box (big Kasir and Gudang buttons plus stock-alert and
