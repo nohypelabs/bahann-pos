@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '../trpc'
-import { getTenantOutletIds } from '@/server/lib/tenant'
+import { getUserOutletIds } from '@/server/lib/tenant'
 import { supabaseAdmin } from '@/infra/supabase/server'
 import { businessDate } from '@/lib/business/timezone'
 
@@ -15,6 +15,16 @@ const EXPENSE_CATEGORIES = [
   { value: 'sewa', label: 'Sewa', icon: '🏠' },
   { value: 'lainnya', label: 'Lainnya', icon: '📋' },
 ] as const
+
+/** The outlets the caller may see; a requested outlet must be one of them. */
+async function scopedOutletIds(userId: string, tenantId: string, outletId?: string): Promise<string[]> {
+  const allowed = await getUserOutletIds(userId, tenantId)
+  if (!outletId) return allowed
+  if (!allowed.includes(outletId)) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Outlet not accessible' })
+  }
+  return [outletId]
+}
 
 export const expensesRouter = router({
   /**
@@ -40,10 +50,7 @@ export const expensesRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
-      const outletIds = await getTenantOutletIds(tenantId)
-      if (!outletIds.includes(input.outletId)) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Outlet not accessible' })
-      }
+      await scopedOutletIds(ctx.userId, tenantId, input.outletId)
 
       const { data, error } = await supabaseAdmin
         .from('operational_expenses')
@@ -84,12 +91,7 @@ export const expensesRouter = router({
     .query(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
 
-      let outletIds: string[]
-      if (input.outletId) {
-        outletIds = [input.outletId]
-      } else {
-        outletIds = await getTenantOutletIds(tenantId)
-      }
+      const outletIds = await scopedOutletIds(ctx.userId, tenantId, input.outletId)
 
       let query = supabaseAdmin
         .from('operational_expenses')
@@ -98,6 +100,7 @@ export const expensesRouter = router({
           user:users!user_id(id, name, email),
           outlet:outlets!outlet_id(id, name)
         `)
+        .eq('tenant_id', tenantId)
         .in('outlet_id', outletIds)
         .order('created_at', { ascending: false })
         .range(input.offset, input.offset + input.limit - 1)
@@ -135,12 +138,7 @@ export const expensesRouter = router({
       const tenantId = ctx.session.tenantId!
       const targetDate = input.date || businessDate()
 
-      let outletIds: string[]
-      if (input.outletId) {
-        outletIds = [input.outletId]
-      } else {
-        outletIds = await getTenantOutletIds(tenantId)
-      }
+      const outletIds = await scopedOutletIds(ctx.userId, tenantId, input.outletId)
 
       // Get expenses for the day
       const { data: expenses, error } = await supabaseAdmin
@@ -150,6 +148,7 @@ export const expensesRouter = router({
           user:users!user_id(id, name),
           outlet:outlets!outlet_id(id, name)
         `)
+        .eq('tenant_id', tenantId)
         .in('outlet_id', outletIds)
         .eq('expense_date', targetDate)
         .eq('is_voided', false)
@@ -209,11 +208,15 @@ export const expensesRouter = router({
           void_reason: input.reason || null,
         })
         .eq('id', input.expenseId)
+        .eq('tenant_id', ctx.session.tenantId!)
         .select()
-        .single()
+        .maybeSingle()
 
       if (error) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: error.message })
+      }
+      if (!data) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Expense not found' })
       }
 
       return { success: true, expense: data }

@@ -5,26 +5,26 @@ import {
 import { supabaseAdmin } from '../supabase/server';
 
 export class SupabasePromotionRepository implements PromotionRepository {
-  async findByCodeAndOwner(code: string, ownerId: string): Promise<Promotion | null> {
+  async findByCode(code: string, tenantId: string): Promise<Promotion | null> {
     const { data, error } = await supabaseAdmin
       .from('promotions')
       .select('*')
       .eq('code', code.toUpperCase())
       .eq('is_active', true)
-      .eq('owner_id', ownerId)
-      .single();
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
 
     if (error || !data) return null;
     return data as Promotion;
   }
 
-  async findByOwnerId(ownerId: string | null, filters?: { activeOnly?: boolean }): Promise<PromotionWithCreator[]> {
+  async findByTenant(tenantId: string, filters?: { activeOnly?: boolean }): Promise<PromotionWithCreator[]> {
     let query = supabaseAdmin
       .from('promotions')
       .select('*, created_by_user:users!created_by (id, name)')
+      .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false });
 
-    if (ownerId) query = query.eq('created_by', ownerId);
     if (filters?.activeOnly) query = query.eq('is_active', true);
 
     const { data, error } = await query;
@@ -32,21 +32,23 @@ export class SupabasePromotionRepository implements PromotionRepository {
     return (data as PromotionWithCreator[]) ?? [];
   }
 
-  async findById(id: string): Promise<PromotionWithCreator | null> {
+  async findById(id: string, tenantId: string): Promise<PromotionWithCreator | null> {
     const { data, error } = await supabaseAdmin
       .from('promotions')
       .select('*, created_by_user:users!created_by (id, name)')
       .eq('id', id)
-      .single();
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
 
     if (error || !data) return null;
     return data as PromotionWithCreator;
   }
 
-  async create(data: CreatePromotionData): Promise<Promotion> {
+  async create(tenantId: string, data: CreatePromotionData): Promise<Promotion> {
     const { data: promo, error } = await supabaseAdmin
       .from('promotions')
       .insert({
+        tenant_id: tenantId,
         code: data.code.toUpperCase(),
         name: data.name,
         description: data.description,
@@ -69,7 +71,7 @@ export class SupabasePromotionRepository implements PromotionRepository {
     return promo as Promotion;
   }
 
-  async update(id: string, data: { isActive?: boolean; endDate?: string; maxUses?: number }): Promise<Promotion> {
+  async update(id: string, tenantId: string, data: { isActive?: boolean; endDate?: string; maxUses?: number }): Promise<Promotion | null> {
     const { data: promo, error } = await supabaseAdmin
       .from('promotions')
       .update({
@@ -78,29 +80,28 @@ export class SupabasePromotionRepository implements PromotionRepository {
         max_uses: data.maxUses,
       })
       .eq('id', id)
+      .eq('tenant_id', tenantId)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw new Error(`Failed to update promotion: ${error.message}`);
-    return promo as Promotion;
+    return (promo as Promotion | null) ?? null;
   }
 
-  async incrementUses(id: string): Promise<void> {
-    const { error: rpcError } = await supabaseAdmin.rpc('increment_promotion_uses', { promo_id: id });
+  async incrementUses(id: string, tenantId: string): Promise<void> {
+    const { data: promo } = await supabaseAdmin
+      .from('promotions')
+      .select('uses_count')
+      .eq('id', id)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
 
-    if (rpcError) {
-      const { data: promo } = await supabaseAdmin
+    if (promo) {
+      await supabaseAdmin
         .from('promotions')
-        .select('uses_count')
+        .update({ uses_count: (promo.uses_count ?? 0) + 1 })
         .eq('id', id)
-        .single();
-
-      if (promo) {
-        await supabaseAdmin
-          .from('promotions')
-          .update({ uses_count: promo.uses_count + 1 })
-          .eq('id', id);
-      }
+        .eq('tenant_id', tenantId);
     }
   }
 

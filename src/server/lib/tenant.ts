@@ -136,6 +136,20 @@ export async function assertOutletAccessible(
   }
 }
 
+/** Throws FORBIDDEN unless every product is one of the tenant's. */
+export async function assertProductsInTenant(tenantId: string, productIds: string[]): Promise<void> {
+  const ids = [...new Set(productIds)]
+  if (ids.length === 0) return
+  const { data, error } = await supabaseAdmin
+    .from('products')
+    .select('id')
+    .eq('tenant_id', tenantId)
+    .in('id', ids)
+  if (error || (data?.length ?? 0) !== ids.length) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied: product not accessible' })
+  }
+}
+
 // Legacy aliases for backward compatibility during migration
 export const getTenantOwnerId = getTenantId
 export const resolveTenantOutletIds = getUserOutletIds

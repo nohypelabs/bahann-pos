@@ -141,14 +141,26 @@ export class SupabasePaymentRequestRepository implements PaymentRequestRepositor
     if (error) throw new Error(`Failed to reject request: ${error.message}`)
   }
 
-  async updateStatus(id: string, status: string, data: Record<string, unknown>): Promise<void> {
-    const { error } = await supabaseAdmin
+  async updateStatus(id: string, status: string, data: Record<string, unknown>): Promise<boolean> {
+    const { data: rows, error } = await supabaseAdmin
       .from('payment_requests')
       .update({ status, ...data })
       .eq('id', id)
       .eq('status', 'pending')
+      .select('id')
 
     if (error) throw new Error(`Failed to update status: ${error.message}`)
+    return (rows?.length ?? 0) > 0
+  }
+
+  async txHashUsed(signature: string): Promise<boolean> {
+    const { count, error } = await supabaseAdmin
+      .from('payment_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('crypto_tx_hash', signature)
+
+    if (error) throw new Error(`Failed to check transaction: ${error.message}`)
+    return (count ?? 0) > 0
   }
 
   async listAll(params: ListParams): Promise<{ requests: PaymentRequestWithUser[]; total: number }> {

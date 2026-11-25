@@ -17,6 +17,29 @@ import { logger } from '@/lib/logger'
 import { normalizeImageUpload } from '@/lib/security/imageUpload'
 import { AppError } from '@/shared/exceptions/AppError'
 
+/** What a plan costs in the given token: USD for stablecoins, SOL at today's price. */
+async function cryptoBasePrice(plan: string, token: string): Promise<number> {
+  const basePriceUsd = CRYPTO_PRICES_USD[plan]
+  if (!basePriceUsd) {
+    throw new AppError('Plan ini tidak tersedia untuk pembayaran crypto.', 400)
+  }
+  if (token !== 'sol') return basePriceUsd
+  const solPrice = await fetchSolPriceUsd()
+  if (!solPrice) throw new AppError('Gagal mengambil harga SOL.', 500)
+  return parseFloat((basePriceUsd / solPrice).toFixed(4))
+}
+
+/**
+ * Whether a previewed amount pays for the plan: at least the price (SOL may have
+ * moved up to 3% since the preview) and no more than the unique-cents offset above it.
+ */
+export function cryptoAmountCoversPlan(amount: number, basePrice: number, token: string): boolean {
+  const slack = token === 'sol' ? 0.03 : 0
+  const min = basePrice * (1 - slack)
+  const max = basePrice * (1 + slack) + (basePrice < 1 ? 0.0001 : 1)
+  return Number.isFinite(amount) && amount >= min && amount < max
+}
+
 export class ManagePaymentUseCase {
   constructor(
     private readonly paymentRequestRepo: PaymentRequestRepository,
@@ -45,18 +68,7 @@ export class ManagePaymentUseCase {
     plan: string,
     token: string,
   ): Promise<{ cryptoAmount: number; token: string }> {
-    const basePriceUsd = CRYPTO_PRICES_USD[plan]
-    if (!basePriceUsd) {
-      throw new AppError('Plan tidak tersedia untuk crypto.', 400)
-    }
-
-    let basePrice = basePriceUsd
-    if (token === 'sol') {
-      const solPrice = await fetchSolPriceUsd()
-      if (!solPrice) throw new AppError('Gagal mengambil harga SOL.', 500)
-      basePrice = parseFloat((basePriceUsd / solPrice).toFixed(4))
-    }
-
+    const basePrice = await cryptoBasePrice(plan, token)
     const cryptoAmount = generateUniqueAmount(basePrice)
     return { cryptoAmount, token }
   }
@@ -82,21 +94,12 @@ export class ManagePaymentUseCase {
     if (isCrypto) {
       cryptoToken = params.paymentMethod.replace('crypto_', '')
 
-      if (params.cryptoAmount) {
-        cryptoAmount = params.cryptoAmount
-      } else {
-        const basePriceUsd = CRYPTO_PRICES_USD[params.plan]
-        if (!basePriceUsd) {
-          throw new AppError('Plan ini tidak tersedia untuk pembayaran crypto.', 400)
-        }
-        let basePrice = basePriceUsd
-        if (cryptoToken === 'sol') {
-          const solPrice = await fetchSolPriceUsd()
-          if (!solPrice) throw new AppError('Gagal mengambil harga SOL.', 500)
-          basePrice = parseFloat((basePriceUsd / solPrice).toFixed(4))
-        }
-        cryptoAmount = generateUniqueAmount(basePrice)
-      }
+      // The amount shown in the preview is kept only if it really pays for the
+      // plan; otherwise a client could ask to pay any amount it likes.
+      const basePrice = await cryptoBasePrice(params.plan, cryptoToken)
+      cryptoAmount = params.cryptoAmount && cryptoAmountCoversPlan(params.cryptoAmount, basePrice, cryptoToken)
+        ? params.cryptoAmount
+        : generateUniqueAmount(basePrice)
     } else {
       const basePrice = PLAN_PRICES_IDR[params.plan]
       if (basePrice) {
@@ -200,17 +203,24 @@ export class ManagePaymentUseCase {
       }
 
       const tolerance = pending.cryptoToken === 'sol' ? 0.000001 : 0.0001
-      const match = transfers.find(t =>
-        matchTransferToAmount(t.amount, pending.cryptoAmount!, tolerance)
-      )
+      let match: (typeof transfers)[number] | undefined
+      for (const t of transfers) {
+        if (t.timestamp < sinceTimestamp) continue
+        if (!matchTransferToAmount(t.amount, pending.cryptoAmount!, tolerance)) continue
+        // One transfer pays for one request only.
+        if (await this.paymentRequestRepo.txHashUsed(t.signature)) continue
+        match = t
+        break
+      }
 
       if (!match) return { checked: true, matched: false }
 
-      await this.paymentRequestRepo.updateStatus(pending.id, 'approved', {
+      const approved = await this.paymentRequestRepo.updateStatus(pending.id, 'approved', {
         crypto_tx_hash: match.signature,
         admin_note: `Auto-verified on-chain. TX: ${match.signature.slice(0, 16)}...`,
         reviewed_at: new Date().toISOString(),
       })
+      if (!approved) return { checked: true, matched: false }
 
       const user = await this.userRepo.findById(pending.userId)
       const currentPlan = await this.userRepo.getPlan(pending.userId)

@@ -54,12 +54,12 @@ export interface PromotionUsageStats {
 }
 
 export interface PromotionRepository {
-  findByCodeAndOwner(code: string, ownerId: string): Promise<Promotion | null>;
-  findByOwnerId(ownerId: string | null, filters?: { activeOnly?: boolean }): Promise<PromotionWithCreator[]>;
-  findById(id: string): Promise<PromotionWithCreator | null>;
-  create(data: CreatePromotionData): Promise<Promotion>;
-  update(id: string, data: { isActive?: boolean; endDate?: string; maxUses?: number }): Promise<Promotion>;
-  incrementUses(id: string): Promise<void>;
+  findByCode(code: string, tenantId: string): Promise<Promotion | null>;
+  findByTenant(tenantId: string, filters?: { activeOnly?: boolean }): Promise<PromotionWithCreator[]>;
+  findById(id: string, tenantId: string): Promise<PromotionWithCreator | null>;
+  create(tenantId: string, data: CreatePromotionData): Promise<Promotion>;
+  update(id: string, tenantId: string, data: { isActive?: boolean; endDate?: string; maxUses?: number }): Promise<Promotion | null>;
+  incrementUses(id: string, tenantId: string): Promise<void>;
   countUsageByUser(promotionId: string, userId: string): Promise<number>;
   recordUsage(data: { promotionId: string; transactionId: string; userId?: string; discountApplied: number }): Promise<void>;
   getUsageStats(promotionId: string): Promise<PromotionUsageStats>;

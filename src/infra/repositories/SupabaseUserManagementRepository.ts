@@ -33,6 +33,18 @@ export class SupabaseUserManagementRepository implements UserManagementRepositor
     return data as UserRecord;
   }
 
+  async findInTenant(id: string, tenantId: string): Promise<UserRecord | null> {
+    const { data, error } = await supabaseAdmin
+      .from('users')
+      .select('id, email, name, role, outlet_id, permissions, created_at')
+      .eq('id', id)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data as UserRecord;
+  }
+
   async getPlan(userId: string): Promise<string> {
     const { data } = await supabaseAdmin
       .from('users')
@@ -53,11 +65,12 @@ export class SupabaseUserManagementRepository implements UserManagementRepositor
     return count ?? 0;
   }
 
-  async updatePermissions(userId: string, permissions: Record<string, unknown>): Promise<void> {
+  async updatePermissions(userId: string, tenantId: string, permissions: Record<string, unknown>): Promise<void> {
     const { error } = await supabaseAdmin
       .from('users')
       .update({ permissions })
-      .eq('id', userId);
+      .eq('id', userId)
+      .eq('tenant_id', tenantId);
 
     if (error) throw new Error(`Failed to update permissions: ${error.message}`);
   }

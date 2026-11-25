@@ -20,8 +20,8 @@ export interface ValidatePromotionResult {
 export class PromotionUseCase {
   constructor(private readonly promoRepo: PromotionRepository) {}
 
-  async validate(input: ValidatePromotionInput, ownerId: string): Promise<ValidatePromotionResult> {
-    const promo = await this.promoRepo.findByCodeAndOwner(input.code, ownerId);
+  async validate(input: ValidatePromotionInput, tenantId: string): Promise<ValidatePromotionResult> {
+    const promo = await this.promoRepo.findByCode(input.code, tenantId);
     if (!promo) throw new Error('Invalid promotion code');
 
     const now = new Date();
@@ -69,31 +69,35 @@ export class PromotionUseCase {
     };
   }
 
-  async recordUsage(data: { promotionId: string; transactionId: string; userId?: string; discountApplied: number }): Promise<void> {
-    await this.promoRepo.incrementUses(data.promotionId);
+  /** The caller has already checked the sale belongs to the tenant. */
+  async recordUsage(tenantId: string, data: { promotionId: string; transactionId: string; userId?: string; discountApplied: number }): Promise<void> {
+    await this.getById(data.promotionId, tenantId);
+    await this.promoRepo.incrementUses(data.promotionId, tenantId);
     await this.promoRepo.recordUsage(data);
   }
 
-  async create(data: CreatePromotionData): Promise<Promotion> {
-    return this.promoRepo.create(data);
+  async create(tenantId: string, data: CreatePromotionData): Promise<Promotion> {
+    return this.promoRepo.create(tenantId, data);
   }
 
-  async update(id: string, data: { isActive?: boolean; endDate?: string; maxUses?: number }): Promise<Promotion> {
-    return this.promoRepo.update(id, data);
-  }
-
-  async list(ownerId: string | null, filters?: { activeOnly?: boolean }): Promise<PromotionWithCreator[]> {
-    return this.promoRepo.findByOwnerId(ownerId, filters);
-  }
-
-  async getById(id: string, ownerId: string | null): Promise<PromotionWithCreator> {
-    const promo = await this.promoRepo.findById(id);
+  async update(id: string, tenantId: string, data: { isActive?: boolean; endDate?: string; maxUses?: number }): Promise<Promotion> {
+    const promo = await this.promoRepo.update(id, tenantId, data);
     if (!promo) throw new Error('Promotion not found');
-    if (ownerId && promo.created_by !== ownerId) throw new Error('Promotion not found');
     return promo;
   }
 
-  async getUsageStats(promotionId: string): Promise<PromotionUsageStats> {
+  async list(tenantId: string, filters?: { activeOnly?: boolean }): Promise<PromotionWithCreator[]> {
+    return this.promoRepo.findByTenant(tenantId, filters);
+  }
+
+  async getById(id: string, tenantId: string): Promise<PromotionWithCreator> {
+    const promo = await this.promoRepo.findById(id, tenantId);
+    if (!promo) throw new Error('Promotion not found');
+    return promo;
+  }
+
+  async getUsageStats(promotionId: string, tenantId: string): Promise<PromotionUsageStats> {
+    await this.getById(promotionId, tenantId);
     return this.promoRepo.getUsageStats(promotionId);
   }
 }

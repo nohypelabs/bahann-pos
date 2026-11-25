@@ -57,7 +57,10 @@ export interface PaymentRequestRepository {
   findPendingCryptoByUserId(userId: string): Promise<PaymentRequest | null>
   approve(id: string, reviewedBy: string, note?: string): Promise<void>
   reject(id: string, reviewedBy: string, note: string): Promise<void>
-  updateStatus(id: string, status: string, data: Record<string, unknown>): Promise<void>
+  /** false when the request was no longer pending (already handled). */
+  updateStatus(id: string, status: string, data: Record<string, unknown>): Promise<boolean>
+  /** Whether an on-chain transfer already paid for some request. */
+  txHashUsed(signature: string): Promise<boolean>
   listAll(params: ListParams): Promise<{ requests: PaymentRequestWithUser[]; total: number }>
   uploadProof(userId: string, requestId: string, image: PaymentProofUpload): Promise<string>
   getPlatformSettings(keys: string[]): Promise<Record<string, string>>

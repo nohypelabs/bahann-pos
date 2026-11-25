@@ -1,7 +1,8 @@
+import { createHash } from 'node:crypto'
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '../trpc'
-import { getUserOutletIds, getTenantOutletIds } from '@/server/lib/tenant'
+import { getUserOutletIds } from '@/server/lib/tenant'
 import { getLimits } from '@/lib/plans'
 import { getRedisClient } from '@/lib/redis-upstash'
 import { container } from '@/infra/container'
@@ -9,8 +10,14 @@ import { businessDate } from '@/lib/business/timezone'
 
 const DASHBOARD_CACHE_TTL = 120 // 2 minutes
 
-function dashKey(type: string, tenantId: string, outletId: string | undefined, suffix: string) {
-  return `dash:${type}:${tenantId}:${outletId ?? 'all'}:${suffix}`
+/**
+ * Keyed on the outlets actually read, resolved for the caller before the cache is
+ * consulted: a cashier never gets an admin's all-outlet figures, and never fills
+ * the admin's entry with their own.
+ */
+function dashKey(type: string, tenantId: string, outletIds: string[], suffix: string) {
+  const scope = createHash('sha1').update([...outletIds].sort().join(',')).digest('hex').slice(0, 16)
+  return `dash:${type}:${tenantId}:${scope}:${suffix}`
 }
 
 async function withCache<T>(key: string, ttl: number, fetcher: () => Promise<T>): Promise<T> {
@@ -57,9 +64,9 @@ export const dashboardRouter = router({
     .query(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
       const useCase = container.dashboardUseCase()
-      const cacheKey = dashKey('stats', tenantId, input?.outletId, `${input?.days ?? 'all'}`)
+      const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
+      const cacheKey = dashKey('stats', tenantId, outletIds, `${input?.days ?? 'all'}`)
       return withCache(cacheKey, DASHBOARD_CACHE_TTL, async () => {
-        const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
         return useCase.getStats(outletIds, tenantId, input?.days)
       })
     }),
@@ -75,9 +82,9 @@ export const dashboardRouter = router({
       const days = input?.days ?? 7
       const tenantId = ctx.session.tenantId!
       const useCase = container.dashboardUseCase()
-      const cacheKey = dashKey('trend', tenantId, input?.outletId, `${days}`)
+      const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
+      const cacheKey = dashKey('trend', tenantId, outletIds, `${days}`)
       return withCache(cacheKey, DASHBOARD_CACHE_TTL, async () => {
-        const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
         return useCase.getSalesTrend(outletIds, days)
       })
     }),
@@ -95,9 +102,9 @@ export const dashboardRouter = router({
       const limit = input?.limit || 5
       const tenantId = ctx.session.tenantId!
       const useCase = container.dashboardUseCase()
-      const cacheKey = dashKey('top', tenantId, input?.outletId, `${days}:${limit}`)
+      const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
+      const cacheKey = dashKey('top', tenantId, outletIds, `${days}:${limit}`)
       return withCache(cacheKey, DASHBOARD_CACHE_TTL, async () => {
-        const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
         return useCase.getTopProducts(outletIds, days, limit)
       })
     }),
@@ -114,9 +121,9 @@ export const dashboardRouter = router({
       const today = businessDate()
       const tenantId = ctx.session.tenantId!
       const useCase = container.dashboardUseCase()
-      const cacheKey = dashKey('low', tenantId, input?.outletId, `${threshold}:${today}`)
+      const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
+      const cacheKey = dashKey('low', tenantId, outletIds, `${threshold}:${today}`)
       return withCache(cacheKey, DASHBOARD_CACHE_TTL * 2, async () => {
-        const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
         return useCase.getLowStock(outletIds, threshold)
       })
     }),
@@ -134,9 +141,9 @@ export const dashboardRouter = router({
       const days = input?.days
       const tenantId = ctx.session.tenantId!
       const useCase = container.dashboardUseCase()
-      const cacheKey = dashKey('recent', tenantId, input?.outletId, `${limit}:${days ?? 'all'}`)
+      const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
+      const cacheKey = dashKey('recent', tenantId, outletIds, `${limit}:${days ?? 'all'}`)
       return withCache(cacheKey, 30, async () => {
-        const outletIds = await resolveOutletIds(ctx.userId, tenantId, input?.outletId)
         return useCase.getRecentTransactions(outletIds, limit, days)
       })
     }),

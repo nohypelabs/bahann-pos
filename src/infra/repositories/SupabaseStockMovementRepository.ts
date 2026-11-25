@@ -48,7 +48,8 @@ export class SupabaseStockMovementRepository implements StockMovementRepository 
     if (filters.outletId) query = query.eq('outlet_id', filters.outletId);
     if (filters.productId) query = query.eq('product_id', filters.productId);
 
-    if (filters.outletIds && filters.outletIds.length > 0) {
+    // An empty list matches nothing rather than every outlet.
+    if (filters.outletIds) {
       query = query.in('outlet_id', filters.outletIds);
     }
 

@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
 import { router, protectedProcedure } from '../trpc'
 import { container } from '@/infra/container'
-import { assertOutletAccessible, getUserOutletIds, requirePermission } from '@/server/lib/tenant'
+import { assertOutletAccessible, assertProductsInTenant, getUserOutletIds, requirePermission } from '@/server/lib/tenant'
 
 export const stockRouter = router({
   record: protectedProcedure
@@ -21,6 +21,7 @@ export const stockRouter = router({
       const tenantId = ctx.session.tenantId!
       await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
       await requirePermission(ctx.userId, tenantId, 'inventory.adjust', input.outletId)
+      await assertProductsInTenant(tenantId, [input.productId])
 
       const useCase = container.adjustStockUseCase()
       await useCase.execute({
@@ -88,11 +89,14 @@ export const stockRouter = router({
         await requirePermission(ctx.userId, tenantId, 'inventory.view')
       }
 
+      // No outlets means nothing to show; never fall through to an unfiltered query.
+      if (outletIds.length === 0) return { movements: [], total: 0 }
+
       const useCase = container.listStockUseCase()
       return useCase.getMovements({
         outletId: input?.outletId,
         productId: input?.productId,
-        outletIds: outletIds.length > 0 ? outletIds : undefined,
+        outletIds,
         limit: input?.limit,
         offset: input?.offset,
       })

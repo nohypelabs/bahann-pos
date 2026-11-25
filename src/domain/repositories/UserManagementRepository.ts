@@ -33,10 +33,12 @@ export interface UserPermissions {
 
 export interface UserManagementRepository {
   findByOutletIds(outletIds: string[], ownerId: string): Promise<UserRecord[]>;
+  /** Any tenant: for the platform superadmin only. */
   findById(id: string): Promise<UserRecord | null>;
+  findInTenant(id: string, tenantId: string): Promise<UserRecord | null>;
   getPlan(userId: string): Promise<string>;
   countByRoleAndOutletIds(role: string, outletIds: string[]): Promise<number>;
-  updatePermissions(userId: string, permissions: Record<string, unknown>): Promise<void>;
+  updatePermissions(userId: string, tenantId: string, permissions: Record<string, unknown>): Promise<void>;
   getPermissions(userId: string): Promise<{ permissions: Record<string, unknown>; role: string }>;
   updateRole(userId: string, role: string): Promise<void>;
   listAdmins(): Promise<UserRecord[]>;

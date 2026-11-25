@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { router, protectedProcedure } from '../trpc'
 import { RecordDailySaleUseCase } from '@/use-cases/sale/RecordDailySaleUseCase'
 import { SupabaseDailySaleRepository } from '@/infra/repositories/SupabaseDailySaleRepository'
-import { assertOutletAccessible } from '@/server/lib/tenant'
+import { assertOutletAccessible, assertProductsInTenant } from '@/server/lib/tenant'
 import { TRPCError } from '@trpc/server'
 import { businessDate } from '@/lib/business/timezone'
 
@@ -46,6 +46,7 @@ export const salesRouter = router({
     .mutation(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
       await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
+      await assertProductsInTenant(tenantId, [input.productId])
 
       const useCase = new RecordDailySaleUseCase(salesRepository)
       await useCase.execute({ ...input, tenantId })
@@ -64,6 +65,7 @@ export const salesRouter = router({
 
       const tenantId = ctx.session.tenantId!
       await assertOutletAccessible(ctx.userId, tenantId, input.outletId)
+      await assertProductsInTenant(tenantId, input.items.map((i) => i.productId))
 
       const saleDate = businessDate(new Date(input.timestamp ?? Date.now()))
       const useCase = new RecordDailySaleUseCase(salesRepository)

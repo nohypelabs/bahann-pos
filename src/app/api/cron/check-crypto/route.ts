@@ -13,7 +13,7 @@ async function approveRequest(
   token: string,
   txSignature: string,
 ) {
-  const { error: updateError } = await supabaseAdmin
+  const { data: updated, error: updateError } = await supabaseAdmin
     .from('payment_requests')
     .update({
       status: 'approved',
@@ -23,11 +23,15 @@ async function approveRequest(
     })
     .eq('id', reqId)
     .eq('status', 'pending')
+    .select('id')
 
+  // An error here includes the unique index on crypto_tx_hash refusing a reused transfer.
   if (updateError) {
     logger.error(`check-crypto: update request ${reqId} failed`, updateError)
     return false
   }
+  // Already approved by someone else (e.g. the user's own "check payment"): grant nothing twice.
+  if (!updated || updated.length === 0) return false
 
   const { data: user } = await supabaseAdmin
     .from('users')
@@ -97,6 +101,15 @@ export async function GET(request: Request) {
   const sinceTimestamp = Math.floor(Date.now() / 1000) - 86400
   let matched = 0
 
+  // A transfer pays for one request, and only for a request made before it was sent.
+  const { data: usedRows } = await supabaseAdmin
+    .from('payment_requests')
+    .select('crypto_tx_hash')
+    .not('crypto_tx_hash', 'is', null)
+  const used = new Set((usedRows ?? []).map((r) => r.crypto_tx_hash as string))
+  const madeBefore = (r: { created_at: string }, transferTime: number) =>
+    transferTime >= Math.floor(new Date(r.created_at).getTime() / 1000) - 300
+
   // Check USDC & USDT (SPL token transfers)
   for (const token of ['usdc', 'usdt'] as const) {
     const requests = pendingRequests.filter(r => r.crypto_token === token)
@@ -105,10 +118,12 @@ export async function GET(request: Request) {
     try {
       const transfers = await getRecentTransfers(token, sinceTimestamp)
       for (const transfer of transfers) {
+        if (used.has(transfer.signature)) continue
         const req = requests.find(r =>
-          r.crypto_amount && matchTransferToAmount(transfer.amount, parseFloat(r.crypto_amount))
+          r.crypto_amount && madeBefore(r, transfer.timestamp) && matchTransferToAmount(transfer.amount, parseFloat(r.crypto_amount))
         )
         if (!req) continue
+        used.add(transfer.signature)
         const ok = await approveRequest(req.id, req.user_id, req.plan, req.amount, token, transfer.signature)
         if (ok) matched++
       }
@@ -123,10 +138,12 @@ export async function GET(request: Request) {
     try {
       const transfers = await getRecentSolTransfers(sinceTimestamp)
       for (const transfer of transfers) {
+        if (used.has(transfer.signature)) continue
         const req = solRequests.find(r =>
-          r.crypto_amount && matchTransferToAmount(transfer.amount, parseFloat(r.crypto_amount), 0.000001)
+          r.crypto_amount && madeBefore(r, transfer.timestamp) && matchTransferToAmount(transfer.amount, parseFloat(r.crypto_amount), 0.000001)
         )
         if (!req) continue
+        used.add(transfer.signature)
         const ok = await approveRequest(req.id, req.user_id, req.plan, req.amount, 'sol', transfer.signature)
         if (ok) matched++
       }

@@ -578,7 +578,7 @@ export const usersRouter = router({
     .query(async ({ input, ctx }) => {
       const uc = container.userManagementUseCase()
       try {
-        return await uc.getById(input.id, ctx.userId, ctx.session?.role)
+        return await uc.getById(input.id, ctx.session.tenantId!, ctx.userId, ctx.session?.role)
       } catch (e) {
         const msg = (e as Error).message
         if (msg.includes('own profile')) throw new TRPCError({ code: 'FORBIDDEN', message: msg })
@@ -616,9 +616,11 @@ export const usersRouter = router({
       const uc = container.userManagementUseCase()
       let result
       try {
-        result = await uc.updatePermissions(input.userId, input.permissions)
+        result = await uc.updatePermissions(input.userId, ctx.session.tenantId!, input.permissions)
       } catch (e) {
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
+        const msg = (e as Error).message
+        if (msg === 'User not found') throw new TRPCError({ code: 'NOT_FOUND', message: msg })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: msg })
       }
 
       await createAuditLog({

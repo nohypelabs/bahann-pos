@@ -8,6 +8,7 @@ import { router, protectedProcedure, adminProcedure } from '../trpc'
 import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
 import { TRPCError } from '@trpc/server'
+import { supabaseAdmin } from '@/infra/supabase/server'
 
 export const promotionsRouter = router({
   /**
@@ -37,7 +38,7 @@ export const promotionsRouter = router({
           code: input.code,
           cartTotal: input.cartTotal,
           userId: input.userId,
-        }, ownerId ?? '')
+        }, ownerId)
       } catch (e) {
         const msg = (e as Error).message
         if (msg.includes('Invalid')) throw new TRPCError({ code: 'NOT_FOUND', message: msg })
@@ -57,13 +58,24 @@ export const promotionsRouter = router({
         userId: z.string().uuid().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.session.tenantId!
+      const { data: sale } = await supabaseAdmin
+        .from('transactions')
+        .select('id')
+        .eq('id', input.transactionId)
+        .eq('tenant_id', tenantId)
+        .maybeSingle()
+      if (!sale) throw new TRPCError({ code: 'NOT_FOUND', message: 'Transaction not found' })
+
       const uc = container.promotionUseCase()
       try {
-        await uc.recordUsage(input)
+        await uc.recordUsage(tenantId, input)
         return { success: true }
       } catch (e) {
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
+        const msg = (e as Error).message
+        if (msg.includes('not found')) throw new TRPCError({ code: 'NOT_FOUND', message: msg })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: msg })
       }
     }),
 
@@ -91,7 +103,7 @@ export const promotionsRouter = router({
       const uc = container.promotionUseCase()
       let data
       try {
-        data = await uc.create({ ...input, createdBy: ctx.userId })
+        data = await uc.create(ctx.session.tenantId!, { ...input, createdBy: ctx.userId })
       } catch (e) {
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
       }
@@ -125,9 +137,11 @@ export const promotionsRouter = router({
       const { id, ...updates } = input
       let data
       try {
-        data = await uc.update(id, updates)
+        data = await uc.update(id, ctx.session.tenantId!, updates)
       } catch (e) {
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
+        const msg = (e as Error).message
+        if (msg.includes('not found')) throw new TRPCError({ code: 'NOT_FOUND', message: msg })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: msg })
       }
 
       await createAuditLog({
@@ -181,12 +195,14 @@ export const promotionsRouter = router({
    */
   getUsageStats: adminProcedure
     .input(z.object({ promotionId: z.string().uuid() }))
-    .query(async ({ input }) => {
+    .query(async ({ input, ctx }) => {
       const uc = container.promotionUseCase()
       try {
-        return await uc.getUsageStats(input.promotionId)
+        return await uc.getUsageStats(input.promotionId, ctx.session.tenantId!)
       } catch (e) {
-        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: (e as Error).message })
+        const msg = (e as Error).message
+        if (msg.includes('not found')) throw new TRPCError({ code: 'NOT_FOUND', message: msg })
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: msg })
       }
     }),
 })
