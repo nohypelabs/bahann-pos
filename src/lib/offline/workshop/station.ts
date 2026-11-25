@@ -21,6 +21,8 @@ type Listener = () => void
 const listeners = new Set<Listener>()
 let reachable: Reachability = typeof navigator !== 'undefined' && !navigator.onLine ? 'offline' : 'online'
 let syncing: Promise<void> | null = null
+/** Set when sync() was called during a run: one more run follows it. */
+let rerun: { snapshot?: boolean } | null = null
 let started = false
 let lastSyncError: string | null = null
 
@@ -160,34 +162,47 @@ async function pushPending(): Promise<boolean> {
 }
 
 /**
- * Sends waiting operations, then refreshes the notes. One run at a time; a call
- * during a run waits for it.
+ * Sends waiting operations, then refreshes the notes. One run at a time. A call
+ * during a run waits for it, and asks for one more run afterwards: an operation
+ * recorded while a run was past sending would otherwise wait for the next timer.
  */
 export function sync(options: { snapshot?: boolean } = {}): Promise<void> {
-  if (syncing) return syncing
+  if (syncing) {
+    rerun = rerun || { snapshot: false }
+    if (options.snapshot) rerun.snapshot = true
+    return syncing
+  }
   syncing = (async () => {
     notify()
-    try {
-      const anyDone = await pushPending()
-      const snapshotAt = (await offlineDb.wsMeta.get('snapshotAt'))?.value as string | undefined
-      const owner = (await offlineDb.wsMeta.get('owner'))?.value
-      const stale = !snapshotAt || Date.now() - new Date(snapshotAt).getTime() > SNAPSHOT_EVERY_MS || owner !== stationOwner()
-      if (options.snapshot || stale || anyDone) await refreshSnapshot()
-      await refreshNotes()
-      // The server copy now includes them.
-      await offlineDb.wsOutbox.where('status').equals('done').delete()
-      lastSyncError = null
-      setReachable('online')
-    } catch (err) {
-      if (isNetworkError(err)) setReachable('offline')
-      else lastSyncError = err instanceof Error ? err.message : String(err)
-      logger.warn('Workshop station sync did not complete', { error: err instanceof Error ? err.message : String(err) })
-    } finally {
-      syncing = null
-      notify()
+    let run: { snapshot?: boolean } | null = options
+    while (run) {
+      rerun = null
+      await syncOnce(run)
+      run = rerun
     }
+    syncing = null
+    notify()
   })()
   return syncing
+}
+
+async function syncOnce(options: { snapshot?: boolean }): Promise<void> {
+  try {
+    const anyDone = await pushPending()
+    const snapshotAt = (await offlineDb.wsMeta.get('snapshotAt'))?.value as string | undefined
+    const owner = (await offlineDb.wsMeta.get('owner'))?.value
+    const stale = !snapshotAt || Date.now() - new Date(snapshotAt).getTime() > SNAPSHOT_EVERY_MS || owner !== stationOwner()
+    if (options.snapshot || stale || anyDone) await refreshSnapshot()
+    await refreshNotes()
+    // The server copy now includes them.
+    await offlineDb.wsOutbox.where('status').equals('done').delete()
+    lastSyncError = null
+    setReachable('online')
+  } catch (err) {
+    if (isNetworkError(err)) setReachable('offline')
+    else lastSyncError = err instanceof Error ? err.message : String(err)
+    logger.warn('Workshop station sync did not complete', { error: err instanceof Error ? err.message : String(err) })
+  }
 }
 
 /** Sends everything now; resolves true when nothing of this user is left waiting. */
