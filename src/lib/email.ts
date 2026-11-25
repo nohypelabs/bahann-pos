@@ -54,6 +54,155 @@ async function sendMail({ to, subject, html }: SendMailParams): Promise<{ id: st
   return { id: info.messageId }
 }
 
+// ── Layout ───────────────────────────────────────────────────────────────────
+// Every email shares one frame in the app's colours. Email clients ignore
+// stylesheets, gradients and SVG, so everything is inline styles on tables, and
+// the logo is the PNG app icon.
+
+const C = {
+  green: '#0f5f56',
+  greenDark: '#0b4e48',
+  greenTint: '#e5f3ef',
+  greenLine: '#b9cbbf',
+  page: '#f6f5f0',
+  line: '#ddd8cc',
+  ink: '#17201d',
+  text: '#3d4641',
+  muted: '#6f776f',
+  amber: '#a66f10',
+  amberTint: '#fff8ec',
+  amberLine: '#f0d9a8',
+  red: '#b42318',
+  redTint: '#fef3f2',
+  redLine: '#f5c2bd',
+}
+const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif"
+
+/** Escapes text that came from a person (names, store names) before it goes into HTML. */
+function esc(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+interface LayoutParams {
+  /** Small line under the brand in the header, e.g. "Reset Password". */
+  label: string
+  /** Inbox preview text, hidden in the body. */
+  preheader: string
+  heading: string
+  /** Body HTML below the heading. */
+  content: string
+  /** Set false for emails people may reply to. */
+  noReply?: boolean
+}
+
+function layout({ label, preheader, heading, content, noReply = true }: LayoutParams): string {
+  return `<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light only">
+  <title>${label} · Laku POS</title>
+</head>
+<body style="margin:0;padding:0;background-color:${C.page};font-family:${FONT};-webkit-font-smoothing:antialiased;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${preheader}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${C.page};padding:32px 12px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border:1px solid ${C.line};border-radius:28px;overflow:hidden;">
+          <tr>
+            <td style="background-color:${C.green};padding:24px 32px;">
+              <table role="presentation" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="vertical-align:middle;">
+                    <img src="${APP_URL}/icon-96x96.png" width="44" height="44" alt="Laku POS" style="display:block;width:44px;height:44px;border-radius:14px;background-color:#ffffff;">
+                  </td>
+                  <td style="vertical-align:middle;padding-left:14px;">
+                    <p style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">Laku POS</p>
+                    <p style="margin:2px 0 0 0;color:#cfe5df;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">${label}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              <h1 style="margin:0 0 16px 0;color:${C.ink};font-size:22px;line-height:1.3;font-weight:700;">${heading}</h1>
+              ${content}
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:${C.page};border-top:1px solid ${C.line};padding:20px 32px;text-align:center;">
+              <p style="margin:0;color:${C.muted};font-size:12px;line-height:1.6;">
+                ${noReply ? 'Email otomatis dari Laku POS, mohon tidak dibalas.<br>' : ''}© ${new Date().getFullYear()} Laku POS
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+}
+
+const p = (html: string, extra = '') =>
+  `<p style="margin:0 0 16px 0;color:${C.text};font-size:15px;line-height:1.65;${extra}">${html}</p>`
+
+/** A button that survives Outlook: the colour sits on the cell, not only the link. */
+function button(href: string, label: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+    <tr>
+      <td style="background-color:${C.green};border-radius:999px;">
+        <a href="${href}" style="display:inline-block;padding:14px 32px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:999px;">${label}</a>
+      </td>
+    </tr>
+  </table>`
+}
+
+function linkFallback(url: string): string {
+  return `<div style="margin:0 0 20px 0;padding:14px 16px;background-color:${C.page};border:1px solid ${C.line};border-radius:16px;word-break:break-all;">
+    <p style="margin:0 0 4px 0;color:${C.muted};font-size:12px;">Tombol tidak bisa diklik? Salin link ini ke browser:</p>
+    <a href="${url}" style="color:${C.green};font-size:13px;text-decoration:none;">${url}</a>
+  </div>`
+}
+
+type Tone = 'green' | 'amber' | 'red'
+const TONES: Record<Tone, { bg: string; line: string; ink: string }> = {
+  green: { bg: C.greenTint, line: C.greenLine, ink: C.greenDark },
+  amber: { bg: C.amberTint, line: C.amberLine, ink: C.amber },
+  red: { bg: C.redTint, line: C.redLine, ink: C.red },
+}
+
+/** A tinted box with an optional title and either text or a list. */
+function box(tone: Tone, title: string | null, body: string | string[]): string {
+  const t = TONES[tone]
+  const inner = Array.isArray(body)
+    ? `<ul style="margin:0;padding-left:18px;color:${t.ink};font-size:14px;line-height:1.7;">${body.map((li) => `<li>${li}</li>`).join('')}</ul>`
+    : `<p style="margin:0;color:${t.ink};font-size:14px;line-height:1.6;">${body}</p>`
+  return `<div style="margin:0 0 20px 0;padding:16px 18px;background-color:${t.bg};border:1px solid ${t.line};border-radius:18px;">
+    ${title ? `<p style="margin:0 0 8px 0;color:${t.ink};font-size:14px;font-weight:700;">${title}</p>` : ''}
+    ${inner}
+  </div>`
+}
+
+/** Label/value rows, e.g. plan limits or a sign-up's details. */
+function rows(items: [string, string][]): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px 0;border:1px solid ${C.line};border-radius:18px;border-collapse:separate;overflow:hidden;">
+    ${items.map(([k, v], i) => `<tr>
+      <td style="padding:12px 16px;${i ? `border-top:1px solid ${C.line};` : ''}color:${C.muted};font-size:14px;">${k}</td>
+      <td style="padding:12px 16px;${i ? `border-top:1px solid ${C.line};` : ''}color:${C.ink};font-size:14px;font-weight:700;text-align:right;">${v}</td>
+    </tr>`).join('')}
+  </table>`
+}
+
+// ── Emails ───────────────────────────────────────────────────────────────────
+
 export interface SendPasswordResetEmailParams {
   to: string
   name: string
@@ -61,7 +210,7 @@ export interface SendPasswordResetEmailParams {
 }
 
 /**
- * Send password reset email
+ * Password reset link; also the invite a new staff member gets to set a password.
  */
 export async function sendPasswordResetEmail({
   to,
@@ -73,98 +222,25 @@ export async function sendPasswordResetEmail({
   try {
     const { id } = await sendMail({
       to,
-      subject: 'Reset Password - Laku POS',
-      html: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reset Password</title>
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color: white; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;">
-
-          <!-- Header -->
-          <tr>
-            <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; text-align: center;">
-              <h1 style="margin: 0; color: white; font-size: 32px; font-weight: bold;">Laku POS</h1>
-              <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">Point of Sale System</p>
-            </td>
-          </tr>
-
-          <!-- Body -->
-          <tr>
-            <td style="padding: 40px;">
-              <h2 style="margin: 0 0 20px 0; color: #1a202c; font-size: 24px;">Reset Password Anda</h2>
-
-              <p style="margin: 0 0 20px 0; color: #4a5568; font-size: 16px; line-height: 1.6;">
-                Halo <strong>${name}</strong>,
-              </p>
-
-              <p style="margin: 0 0 20px 0; color: #4a5568; font-size: 16px; line-height: 1.6;">
-                Kami menerima permintaan untuk reset password akun Anda. Klik tombol di bawah untuk membuat password baru:
-              </p>
-
-              <!-- Reset Button -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
-                <tr>
-                  <td align="center">
-                    <a href="${resetLink}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.4);">
-                      🔐 Reset Password
-                    </a>
-                  </td>
-                </tr>
-              </table>
-
-              <p style="margin: 20px 0; color: #718096; font-size: 14px; line-height: 1.6;">
-                Atau copy dan paste link berikut ke browser Anda:
-              </p>
-
-              <div style="background-color: #f7fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 20px 0; word-break: break-all;">
-                <a href="${resetLink}" style="color: #667eea; text-decoration: none; font-size: 14px;">
-                  ${resetLink}
-                </a>
-              </div>
-
-              <!-- Warning Box -->
-              <div style="background-color: #fef5e7; border-left: 4px solid #f39c12; padding: 16px; margin: 30px 0; border-radius: 8px;">
-                <p style="margin: 0; color: #d68910; font-size: 14px; font-weight: 600;">⚠️ Penting:</p>
-                <ul style="margin: 10px 0 0 0; padding-left: 20px; color: #d68910; font-size: 14px;">
-                  <li>Link ini hanya berlaku selama <strong>1 jam</strong></li>
-                  <li>Jika Anda tidak merasa meminta reset password, abaikan email ini</li>
-                  <li>Jangan bagikan link ini ke siapapun</li>
-                </ul>
-              </div>
-
-              <p style="margin: 20px 0 0 0; color: #718096; font-size: 14px; line-height: 1.6;">
-                Jika Anda memiliki pertanyaan, hubungi administrator sistem.
-              </p>
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="background-color: #f7fafc; padding: 30px; text-align: center; border-top: 2px solid #e2e8f0;">
-              <p style="margin: 0; color: #a0aec0; font-size: 12px;">
-                © ${new Date().getFullYear()} Laku POS. All rights reserved.
-              </p>
-              <p style="margin: 10px 0 0 0; color: #a0aec0; font-size: 12px;">
-                Email otomatis - mohon tidak membalas email ini
-              </p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
-      `,
+      subject: 'Atur password akun Laku POS kamu',
+      html: layout({
+        label: 'Reset Password',
+        preheader: `Link untuk membuat password baru akun ${esc(to)}, berlaku 1 jam.`,
+        heading: 'Buat password baru',
+        content: [
+          p(`Halo <strong>${esc(name)}</strong>,`),
+          p(`Ada permintaan untuk membuat password baru bagi akun Laku POS ini:`),
+          box('green', null, `<strong style="font-size:15px;color:${C.ink};">${esc(to)}</strong>`),
+          p('Klik tombol di bawah untuk membuat password baru.', 'margin-bottom:0;'),
+          button(resetLink, 'Buat password baru'),
+          linkFallback(resetLink),
+          box('amber', 'Penting', [
+            'Link hanya berlaku <strong>1 jam</strong> dan hanya bisa dipakai sekali.',
+            'Tidak merasa meminta? Abaikan email ini, password lama tetap berlaku.',
+            'Jangan bagikan link ini ke siapa pun.',
+          ]),
+        ].join(''),
+      }),
     })
 
     logger.success('Password reset email sent: to=' + to + ', id=' + id)
@@ -194,31 +270,26 @@ export async function sendNewUserNotification({
   try {
     await sendMail({
       to: adminEmail,
-      subject: `🆕 Pendaftar Baru: ${newUserName}`,
-      html: `
-        <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:24px">
-          <h2 style="color:#2563eb">Ada Pendaftar Baru!</h2>
-          <p>Pengguna berikut baru saja mendaftar ke Laku POS:</p>
-          <table style="width:100%;border-collapse:collapse;margin:16px 0">
-            <tr><td style="padding:8px;font-weight:bold;color:#374151">Nama</td><td style="padding:8px">${newUserName}</td></tr>
-            <tr style="background:#f9fafb"><td style="padding:8px;font-weight:bold;color:#374151">Email</td><td style="padding:8px">${newUserEmail}</td></tr>
-            <tr><td style="padding:8px;font-weight:bold;color:#374151">WhatsApp</td><td style="padding:8px">${newUserWhatsapp}</td></tr>
-          </table>
-          <p>Aksi yang perlu dilakukan:</p>
-          <ol style="color:#374151">
-            <li>Hubungi user via WhatsApp untuk verifikasi</li>
-            <li>Ubah role mereka ke <strong>admin</strong> di panel users</li>
-          </ol>
-          <div style="margin-top:24px;display:flex;gap:12px">
-            <a href="${waLink}" style="background:#25d366;color:white;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;margin-right:12px">
-              💬 Chat via WhatsApp
-            </a>
-            <a href="${usersUrl}" style="background:#2563eb;color:white;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block">
-              👥 Buka Panel Users
-            </a>
-          </div>
-        </div>
-      `,
+      subject: `Pendaftar baru: ${newUserName}`,
+      html: layout({
+        label: 'Pendaftar Baru',
+        preheader: `${esc(newUserName)} baru mendaftar ke Laku POS.`,
+        heading: 'Ada pendaftar baru',
+        content: [
+          p('Pengguna berikut baru saja mendaftar ke Laku POS:'),
+          rows([
+            ['Nama', esc(newUserName)],
+            ['Email', esc(newUserEmail)],
+            ['WhatsApp', esc(newUserWhatsapp)],
+          ]),
+          box('green', 'Yang perlu dilakukan', [
+            'Hubungi lewat WhatsApp untuk verifikasi.',
+            'Ubah perannya ke <strong>admin</strong> di panel pengguna.',
+          ]),
+          button(waLink, 'Chat lewat WhatsApp'),
+          p(`Atau <a href="${usersUrl}" style="color:${C.green};font-weight:700;">buka panel pengguna</a>.`, 'margin-bottom:0;'),
+        ].join(''),
+      }),
     })
   } catch (err) {
     logger.error('Failed to send new user notification:', err)
@@ -236,109 +307,39 @@ export interface SendWelcomeEmailParams {
  * Welcome email sent to new user after registration
  */
 export async function sendWelcomeEmail({ to, name, storeName }: SendWelcomeEmailParams) {
-  const loginUrl = `${APP_URL}/login`
   const dashboardUrl = `${APP_URL}/dashboard`
+  const step = (n: number, text: string) => `<tr>
+    <td style="padding:6px 0;vertical-align:middle;width:36px;">
+      <div style="width:26px;height:26px;border-radius:999px;background-color:${C.green};color:#ffffff;font-size:13px;font-weight:700;line-height:26px;text-align:center;">${n}</div>
+    </td>
+    <td style="padding:6px 0;vertical-align:middle;color:${C.greenDark};font-size:14px;">${text}</td>
+  </tr>`
 
   try {
     await sendMail({
       to,
-      subject: `Selamat datang di Laku POS, ${name}! 🎉`,
-      html: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#f5f5f5;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color:white;border-radius:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);overflow:hidden;">
-
-          <!-- Header -->
-          <tr>
-            <td style="background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);padding:40px;text-align:center;">
-              <h1 style="margin:0;color:white;font-size:36px;font-weight:bold;letter-spacing:-1px;">Laku POS</h1>
-              <p style="margin:10px 0 0 0;color:rgba(255,255,255,0.9);font-size:16px;">Point of Sale untuk Warung Indonesia</p>
-            </td>
-          </tr>
-
-          <!-- Body -->
-          <tr>
-            <td style="padding:40px;">
-              <h2 style="margin:0 0 8px 0;color:#1a202c;font-size:26px;">Halo, ${name}! 👋</h2>
-              <p style="margin:0 0 24px 0;color:#4a5568;font-size:16px;line-height:1.6;">
-                Selamat datang di <strong>Laku POS</strong>! Toko kamu <strong>"${storeName}"</strong> sudah berhasil terdaftar dan siap digunakan.
-              </p>
-
-              <!-- Steps -->
-              <div style="background-color:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:24px;margin:0 0 28px 0;">
-                <p style="margin:0 0 16px 0;color:#15803d;font-size:15px;font-weight:700;">🚀 Mulai dalam 3 langkah mudah:</p>
-                <table width="100%" cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td style="padding:8px 0;vertical-align:top;">
-                      <span style="display:inline-block;background:#16a34a;color:white;width:24px;height:24px;border-radius:50%;text-align:center;line-height:24px;font-size:12px;font-weight:700;margin-right:12px;">1</span>
-                      <span style="color:#166534;font-size:14px;">Login ke dashboard kamu</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding:8px 0;vertical-align:top;">
-                      <span style="display:inline-block;background:#16a34a;color:white;width:24px;height:24px;border-radius:50%;text-align:center;line-height:24px;font-size:12px;font-weight:700;margin-right:12px;">2</span>
-                      <span style="color:#166534;font-size:14px;">Tambahkan produk yang kamu jual</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding:8px 0;vertical-align:top;">
-                      <span style="display:inline-block;background:#16a34a;color:white;width:24px;height:24px;border-radius:50%;text-align:center;line-height:24px;font-size:12px;font-weight:700;margin-right:12px;">3</span>
-                      <span style="color:#166534;font-size:14px;">Mulai catat penjualan harian</span>
-                    </td>
-                  </tr>
-                </table>
-              </div>
-
-              <!-- CTA Button -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
-                <tr>
-                  <td align="center">
-                    <a href="${dashboardUrl}" style="display:inline-block;background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);color:white;text-decoration:none;padding:16px 48px;border-radius:12px;font-size:16px;font-weight:600;box-shadow:0 4px 6px rgba(22,163,74,0.4);">
-                      🏪 Buka Dashboard Saya
-                    </a>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Plan info -->
-              <div style="background-color:#fefce8;border:2px solid #fde68a;border-radius:12px;padding:20px;margin:0 0 24px 0;">
-                <p style="margin:0 0 8px 0;color:#92400e;font-size:14px;font-weight:700;">📋 Kamu mulai dengan plan <strong>Free</strong></p>
-                <p style="margin:0;color:#92400e;font-size:13px;line-height:1.5;">
-                  Plan free mendukung 1 outlet, 50 produk, dan 1 kasir. Upgrade kapan saja untuk mendapatkan lebih banyak fitur.
-                </p>
-                <a href="${APP_URL}/settings/subscriptions" style="display:inline-block;margin-top:12px;color:#d97706;font-size:13px;font-weight:600;text-decoration:underline;">
-                  Lihat pilihan upgrade →
-                </a>
-              </div>
-
-              <p style="margin:0;color:#718096;font-size:14px;line-height:1.6;">
-                Butuh bantuan? Hubungi kami via WhatsApp atau balas email ini.
-              </p>
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="background-color:#f7fafc;padding:24px;text-align:center;border-top:2px solid #e2e8f0;">
-              <p style="margin:0;color:#a0aec0;font-size:12px;">© ${new Date().getFullYear()} Laku POS. All rights reserved.</p>
-              <p style="margin:8px 0 0 0;color:#a0aec0;font-size:12px;">Email otomatis — mohon tidak membalas email ini</p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`,
+      subject: `Selamat datang di Laku POS, ${name}!`,
+      html: layout({
+        label: 'Selamat Datang',
+        preheader: `Toko ${esc(storeName)} sudah terdaftar dan siap dipakai.`,
+        heading: `Halo, ${esc(name)}!`,
+        noReply: false,
+        content: [
+          p(`Selamat datang di <strong>Laku POS</strong>. Toko <strong>${esc(storeName)}</strong> sudah terdaftar dan siap dipakai.`),
+          `<div style="margin:0 0 4px 0;padding:16px 18px;background-color:${C.greenTint};border:1px solid ${C.greenLine};border-radius:18px;">
+            <p style="margin:0 0 8px 0;color:${C.greenDark};font-size:14px;font-weight:700;">Mulai dalam 3 langkah</p>
+            <table role="presentation" cellpadding="0" cellspacing="0">
+              ${step(1, 'Masuk ke dashboard')}
+              ${step(2, 'Tambahkan produk yang dijual')}
+              ${step(3, 'Mulai catat penjualan harian')}
+            </table>
+          </div>`,
+          button(dashboardUrl, 'Buka dashboard'),
+          box('amber', 'Kamu mulai dengan plan Free',
+            `1 outlet, 50 produk, dan 1 kasir. Upgrade kapan saja untuk fitur lebih lengkap. <a href="${APP_URL}/settings/subscriptions" style="color:${C.amber};font-weight:700;">Lihat pilihan plan</a>`),
+          p('Butuh bantuan? Hubungi kami lewat WhatsApp atau balas email ini.', `color:${C.muted};font-size:14px;margin-bottom:0;`),
+        ].join(''),
+      }),
     })
     logger.success('Welcome email sent to: ' + to)
   } catch (err) {
@@ -387,105 +388,37 @@ export async function sendPlanUpgradeEmail({ to, name, oldPlan, newPlan }: SendP
   const newLabel = PLAN_LABEL[newPlan] || newPlan
   const oldLabel = PLAN_LABEL[oldPlan] || oldPlan
   const action = isUpgrade ? 'diupgrade' : 'diubah'
-  const emoji = isUpgrade ? '🎉' : '📋'
 
   try {
     await sendMail({
       to,
-      subject: `${emoji} Plan Laku POS kamu ${action} ke ${newLabel}`,
-      html: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#f5f5f5;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color:white;border-radius:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);overflow:hidden;">
-
-          <!-- Header -->
-          <tr>
-            <td style="background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);padding:40px;text-align:center;">
-              <h1 style="margin:0;color:white;font-size:36px;font-weight:bold;letter-spacing:-1px;">Laku POS</h1>
-              <p style="margin:10px 0 0 0;color:rgba(255,255,255,0.9);font-size:16px;">Konfirmasi Perubahan Plan</p>
-            </td>
-          </tr>
-
-          <!-- Body -->
-          <tr>
-            <td style="padding:40px;">
-              <h2 style="margin:0 0 8px 0;color:#1a202c;font-size:24px;">${emoji} Halo, ${name}!</h2>
-              <p style="margin:0 0 24px 0;color:#4a5568;font-size:16px;line-height:1.6;">
-                Plan Laku POS kamu berhasil ${action} dari <strong>${oldLabel}</strong> ke <strong>${newLabel}</strong>.
-                ${isUpgrade ? 'Selamat menikmati fitur-fitur barumu!' : ''}
-              </p>
-
-              <!-- Plan change badge -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
-                <tr>
-                  <td align="center">
-                    <div style="display:inline-block;background:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:20px 40px;text-align:center;">
-                      <p style="margin:0;color:#6b7280;font-size:14px;">${oldLabel}</p>
-                      <p style="margin:8px 0;color:#16a34a;font-size:28px;">→</p>
-                      <p style="margin:0;color:#15803d;font-size:22px;font-weight:700;">${newLabel}</p>
-                    </div>
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Limits -->
-              <div style="background-color:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:24px;margin:0 0 28px 0;">
-                <p style="margin:0 0 16px 0;color:#15803d;font-size:15px;font-weight:700;">✅ Yang kamu dapatkan dengan plan ${newLabel}:</p>
-                <table width="100%" cellpadding="0" cellspacing="8">
-                  <tr>
-                    <td style="padding:8px 0;border-bottom:1px solid #d1fae5;color:#374151;font-size:14px;">🏪 Jumlah Outlet</td>
-                    <td style="padding:8px 0;border-bottom:1px solid #d1fae5;color:#166534;font-size:14px;font-weight:700;text-align:right;">${limits.outlets}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:8px 0;border-bottom:1px solid #d1fae5;color:#374151;font-size:14px;">👤 Jumlah Kasir</td>
-                    <td style="padding:8px 0;border-bottom:1px solid #d1fae5;color:#166534;font-size:14px;font-weight:700;text-align:right;">${limits.cashiers}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding:8px 0;color:#374151;font-size:14px;">📊 Export Laporan</td>
-                    <td style="padding:8px 0;color:#166534;font-size:14px;font-weight:700;text-align:right;">${limits.canExport ? '✅ Tersedia' : '❌ Tidak tersedia'}</td>
-                  </tr>
-                </table>
-              </div>
-
-              <!-- CTA -->
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px 0;">
-                <tr>
-                  <td align="center">
-                    <a href="${APP_URL}/dashboard" style="display:inline-block;background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);color:white;text-decoration:none;padding:16px 48px;border-radius:12px;font-size:16px;font-weight:600;box-shadow:0 4px 6px rgba(22,163,74,0.4);">
-                      🏪 Buka Dashboard
-                    </a>
-                  </td>
-                </tr>
-              </table>
-
-              <p style="margin:0;color:#718096;font-size:13px;line-height:1.6;">
-                Jika ada pertanyaan tentang perubahan plan ini, hubungi kami via WhatsApp atau balas email ini.
-              </p>
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="background-color:#f7fafc;padding:24px;text-align:center;border-top:2px solid #e2e8f0;">
-              <p style="margin:0;color:#a0aec0;font-size:12px;">© ${new Date().getFullYear()} Laku POS. All rights reserved.</p>
-              <p style="margin:8px 0 0 0;color:#a0aec0;font-size:12px;">Email otomatis — mohon tidak membalas email ini</p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`,
+      subject: `Plan Laku POS kamu ${action} ke ${newLabel}`,
+      html: layout({
+        label: 'Perubahan Plan',
+        preheader: `Plan kamu ${action} dari ${oldLabel} ke ${newLabel}.`,
+        heading: `Halo, ${esc(name)}!`,
+        noReply: false,
+        content: [
+          p(`Plan Laku POS kamu berhasil ${action} dari <strong>${oldLabel}</strong> ke <strong>${newLabel}</strong>.${isUpgrade ? ' Selamat menikmati fitur barunya!' : ''}`),
+          `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px 0;">
+            <tr>
+              <td align="center" style="padding:18px;background-color:${C.greenTint};border:1px solid ${C.greenLine};border-radius:18px;">
+                <span style="color:${C.muted};font-size:15px;">${oldLabel}</span>
+                <span style="color:${C.green};font-size:18px;padding:0 12px;">&rarr;</span>
+                <span style="color:${C.greenDark};font-size:20px;font-weight:700;">${newLabel}</span>
+              </td>
+            </tr>
+          </table>`,
+          `<p style="margin:0 0 8px 0;color:${C.ink};font-size:14px;font-weight:700;">Yang kamu dapat di plan ${newLabel}</p>`,
+          rows([
+            ['Jumlah outlet', limits.outlets],
+            ['Jumlah kasir', limits.cashiers],
+            ['Export laporan', limits.canExport ? 'Tersedia' : 'Tidak tersedia'],
+          ]),
+          button(`${APP_URL}/dashboard`, 'Buka dashboard'),
+          p('Ada pertanyaan tentang perubahan ini? Hubungi kami lewat WhatsApp atau balas email ini.', `color:${C.muted};font-size:14px;margin-bottom:0;`),
+        ].join(''),
+      }),
     })
     logger.success('Plan upgrade email sent to: ' + to)
   } catch (err) {
@@ -512,77 +445,25 @@ export async function sendTrialExpiredEmail({ to, name, plan = 'starter', isTria
   try {
     await sendMail({
       to,
-      subject: isTrial ? '⏰ Trial Laku POS kamu sudah berakhir' : '⏰ Langganan Laku POS kamu sudah berakhir',
-      html: `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#f5f5f5;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color:white;border-radius:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);overflow:hidden;">
-
-          <tr>
-            <td style="background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);padding:40px;text-align:center;">
-              <h1 style="margin:0;color:white;font-size:36px;font-weight:bold;letter-spacing:-1px;">Laku POS</h1>
-              <p style="margin:10px 0 0 0;color:rgba(255,255,255,0.9);font-size:16px;">${isTrial ? 'Trial Period Berakhir' : 'Langganan Berakhir'}</p>
-            </td>
-          </tr>
-
-          <tr>
-            <td style="padding:40px;">
-              <h2 style="margin:0 0 8px 0;color:#1a202c;font-size:24px;">Halo, ${name} 👋</h2>
-              <p style="margin:0 0 24px 0;color:#4a5568;font-size:16px;line-height:1.6;">
-                ${what} kamu sudah berakhir. Akun kamu sekarang kembali ke plan <strong>Free</strong>.
-              </p>
-
-              <div style="background-color:#fef2f2;border:2px solid #fecaca;border-radius:12px;padding:24px;margin:0 0 28px 0;">
-                <p style="margin:0 0 12px 0;color:#991b1b;font-size:15px;font-weight:700;">⚠️ Yang berubah di plan Free:</p>
-                <table width="100%" cellpadding="0" cellspacing="0">
-                  <tr><td style="padding:6px 0;color:#7f1d1d;font-size:14px;">🏪 Maks 1 outlet</td></tr>
-                  <tr><td style="padding:6px 0;color:#7f1d1d;font-size:14px;">🏷️ Maks 50 produk</td></tr>
-                  <tr><td style="padding:6px 0;color:#7f1d1d;font-size:14px;">👤 Maks 1 kasir</td></tr>
-                  <tr><td style="padding:6px 0;color:#7f1d1d;font-size:14px;">🔒 Export laporan tidak tersedia</td></tr>
-                </table>
-              </div>
-
-              <p style="margin:0 0 24px 0;color:#4a5568;font-size:15px;line-height:1.6;">
-                Data dan riwayat transaksimu <strong>aman dan tidak terhapus</strong>. Upgrade kapan saja untuk melanjutkan menggunakan semua fitur.
-              </p>
-
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px 0;">
-                <tr>
-                  <td align="center">
-                    <a href="${APP_URL}/settings/subscriptions" style="display:inline-block;background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);color:white;text-decoration:none;padding:16px 48px;border-radius:12px;font-size:16px;font-weight:600;box-shadow:0 4px 6px rgba(22,163,74,0.4);">
-                      🚀 Upgrade Sekarang
-                    </a>
-                  </td>
-                </tr>
-              </table>
-
-              <p style="margin:0;color:#718096;font-size:13px;line-height:1.6;">
-                Ada pertanyaan? Hubungi kami via WhatsApp atau balas email ini.
-              </p>
-            </td>
-          </tr>
-
-          <tr>
-            <td style="background-color:#f7fafc;padding:24px;text-align:center;border-top:2px solid #e2e8f0;">
-              <p style="margin:0;color:#a0aec0;font-size:12px;">© ${new Date().getFullYear()} Laku POS. All rights reserved.</p>
-              <p style="margin:8px 0 0 0;color:#a0aec0;font-size:12px;">Email otomatis — mohon tidak membalas email ini</p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`,
+      subject: isTrial ? 'Trial Laku POS kamu sudah berakhir' : 'Langganan Laku POS kamu sudah berakhir',
+      html: layout({
+        label: isTrial ? 'Trial Berakhir' : 'Langganan Berakhir',
+        preheader: 'Akunmu kembali ke plan Free. Data tetap aman.',
+        heading: `Halo, ${esc(name)}`,
+        noReply: false,
+        content: [
+          p(`${what} kamu sudah berakhir. Akunmu sekarang kembali ke plan <strong>Free</strong>.`),
+          box('red', 'Batas di plan Free', [
+            'Maksimal 1 outlet',
+            'Maksimal 50 produk',
+            'Maksimal 1 kasir',
+            'Export laporan tidak tersedia',
+          ]),
+          box('green', null, 'Data dan riwayat transaksimu <strong>aman dan tidak terhapus</strong>. Upgrade kapan saja untuk memakai semua fitur lagi.'),
+          button(`${APP_URL}/settings/subscriptions`, 'Upgrade sekarang'),
+          p('Ada pertanyaan? Hubungi kami lewat WhatsApp atau balas email ini.', `color:${C.muted};font-size:14px;margin-bottom:0;`),
+        ].join(''),
+      }),
     })
     logger.success('Trial expired email sent to: ' + to)
   } catch (err) {
@@ -602,65 +483,19 @@ export async function sendVerificationEmail({ to, name, token }: SendVerificatio
   try {
     await sendMail({
       to,
-      subject: '✉️ Verifikasi email kamu — Laku POS',
-      html: `
-<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background-color:#f5f5f5;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f5f5;padding:40px 20px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background-color:white;border-radius:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);overflow:hidden;">
-
-        <tr>
-          <td style="background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);padding:40px;text-align:center;">
-            <h1 style="margin:0;color:white;font-size:36px;font-weight:bold;letter-spacing:-1px;">Laku POS</h1>
-            <p style="margin:10px 0 0 0;color:rgba(255,255,255,0.9);font-size:16px;">Verifikasi Email</p>
-          </td>
-        </tr>
-
-        <tr>
-          <td style="padding:40px;">
-            <h2 style="margin:0 0 16px 0;color:#1a202c;font-size:24px;">Halo, ${name}! 👋</h2>
-            <p style="margin:0 0 24px 0;color:#4a5568;font-size:16px;line-height:1.6;">
-              Satu langkah lagi! Verifikasi emailmu untuk mengaktifkan <strong>trial 14 hari Starter gratis</strong>.
-            </p>
-
-            <div style="background:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:20px;margin:0 0 28px 0;text-align:center;">
-              <p style="margin:0 0 8px 0;color:#15803d;font-size:14px;font-weight:600;">🎁 Yang kamu dapatkan setelah verifikasi:</p>
-              <p style="margin:0;color:#166534;font-size:14px;">14 hari gratis plan Starter (senilai Rp 299.000)</p>
-            </div>
-
-            <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
-              <tr><td align="center">
-                <a href="${verifyUrl}" style="display:inline-block;background:linear-gradient(135deg,#16a34a 0%,#15803d 100%);color:white;text-decoration:none;padding:16px 48px;border-radius:12px;font-size:16px;font-weight:600;box-shadow:0 4px 6px rgba(22,163,74,0.4);">
-                  ✉️ Verifikasi Email Saya
-                </a>
-              </td></tr>
-            </table>
-
-            <div style="background:#f7fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 24px 0;word-break:break-all;">
-              <p style="margin:0 0 4px 0;color:#718096;font-size:12px;">Atau copy link ini ke browser:</p>
-              <a href="${verifyUrl}" style="color:#16a34a;font-size:13px;text-decoration:none;">${verifyUrl}</a>
-            </div>
-
-            <div style="background:#fef5e7;border-left:4px solid #f39c12;padding:16px;border-radius:8px;">
-              <p style="margin:0;color:#d68910;font-size:13px;">⚠️ Link berlaku <strong>24 jam</strong>. Jika tidak merasa mendaftar, abaikan email ini.</p>
-            </div>
-          </td>
-        </tr>
-
-        <tr>
-          <td style="background-color:#f7fafc;padding:24px;text-align:center;border-top:2px solid #e2e8f0;">
-            <p style="margin:0;color:#a0aec0;font-size:12px;">© ${new Date().getFullYear()} Laku POS. All rights reserved.</p>
-          </td>
-        </tr>
-
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>`,
+      subject: 'Verifikasi email kamu - Laku POS',
+      html: layout({
+        label: 'Verifikasi Email',
+        preheader: 'Satu langkah lagi untuk mengaktifkan akun Laku POS kamu.',
+        heading: `Halo, ${esc(name)}!`,
+        content: [
+          p('Satu langkah lagi. Verifikasi emailmu untuk mengaktifkan <strong>trial 14 hari plan Starter gratis</strong>.'),
+          box('green', 'Setelah verifikasi', '14 hari gratis plan Starter (senilai Rp 299.000).'),
+          button(verifyUrl, 'Verifikasi email saya'),
+          linkFallback(verifyUrl),
+          box('amber', null, 'Link berlaku <strong>24 jam</strong>. Tidak merasa mendaftar? Abaikan email ini.'),
+        ].join(''),
+      }),
     })
     logger.success('Verification email sent to: ' + to)
   } catch (err) {
