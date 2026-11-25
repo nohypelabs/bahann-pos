@@ -27,7 +27,7 @@ whatever was not yet replicated when that disk dies. Instead:
 | Works offline | Waits for internet |
 |---|---|
 | Open a note (known or new plate, existing or new customer, member sign-up), mechanic, km, complaint | QRIS, bank transfer, e-wallet (need confirmation) |
-| Add/remove parts and services, agreed labour price, scan barcodes (cached catalogue) | Vouchers (two stations could spend one twice) |
+| Add/remove parts and services, agreed labour price, lowered prices and a discount on the note (with their reasons), scan barcodes (cached catalogue) | Vouchers (two stations could spend one twice) |
 | Cancel a note with a reason | Stamp card display; stamps are counted when the payment reaches the server |
 | Take **cash** and print the receipt (number printed = transaction number on the server) | New member code (shows "kode menyusul") |
 | Reload the page / reopen the browser (service worker serves the page) | Reports, settings, products page |

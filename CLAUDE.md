@@ -150,9 +150,9 @@ Full list including optional Sentry/GA vars: `deployment/ENV_VARIABLES.md`.
 
 Supabase migrations live in `supabase/migrations/`. Run via Supabase CLI. When adding new DB columns, use English names (existing mixed-language columns are kept stable to avoid breaking changes).
 
-**Latest migration:** `057_offline_ops.sql` (`offline_ops` idempotency for the workshop station's offline operations, `claim_offline_op`, `current_stock_levels`; see `docs/OFFLINE_MODE.md`). Before it, `056_daily_sales_accumulate.sql`, `055_product_codes.sql` and `054_workshop_module.sql` (workshop module, see `docs/BENGKEL_MODULE.md`). Production applies migrations by hand (`supabase db query --linked -f <file>`) and records each filename in `public._migrations`.
+**Latest migration:** `058_manual_discounts.sql` (reasons for discounts a cashier gives by hand: `transactions.manual_discount/discount_reason/discount_note`, `transaction_items.list_price/discount_reason/discount_note`, and the same on open service notes; see "Manual discounts" in `docs/BENGKEL_MODULE.md`). Before it, `057_offline_ops.sql` (`offline_ops` idempotency for the workshop station's offline operations, `claim_offline_op`, `current_stock_levels`; see `docs/OFFLINE_MODE.md`), `056_daily_sales_accumulate.sql`, `055_product_codes.sql` and `054_workshop_module.sql` (workshop module, see `docs/BENGKEL_MODULE.md`). Production applies migrations by hand (`supabase db query --linked -f <file>`) and records each filename in `public._migrations`.
 
-Applying one: `supabase db query --linked --project-ref <ref> -f supabase/migrations/<file>.sql`, then `insert into _migrations (filename) values ('<file>.sql')`. Migrations 045–057 were applied this way, and `_migrations` is the record of what production has.
+Applying one: `supabase db query --linked --project-ref <ref> -f supabase/migrations/<file>.sql`, then `insert into _migrations (filename) values ('<file>.sql')`. Migrations 045–058 were applied this way, and `_migrations` is the record of what production has.
 
 ### Testing and the E2E log
 

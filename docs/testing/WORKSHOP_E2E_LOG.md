@@ -20,6 +20,51 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-25 · Manual discount reasons and the void flow (local app → production DB)
+
+From the client pitch: a cashier who lowers a price or gives a discount must give a reason; a void is requested by the
+cashier with a reason and approved by a store manager or admin with only a PIN. Migration 058 was tested on a
+production copy first (applies, re-applies as a no-op, `manual_discount` without a reason and an unknown reason are
+refused by the checks), then applied to production and recorded in `_migrations`.
+
+| # | Check | Result |
+|---|---|---|
+| 9.1 | Spec `12-manual-discount`, service note: spark plug 25.000 → 20.000; saving without a reason shows "Pilih alasan diskon dulu."; reason "Barang / kemasan rusak" | Line shows "Normal Rp 25.000 · Barang / kemasan rusak" ✅ |
+| 9.2 | Rp5.000 off the note with reason "Lainnya" and no note, then with note "pelanggan tetap" | Refused until the note is written; bar shows "Diskon Rp 5.000 · Lainnya", total Rp65.000 ✅ |
+| 9.3 | Pay cash, receipt | Receipt shows "Normal Rp 25.000, hemat Rp 5.000" and Rp65.000 ✅ |
+| 9.4 | Sale on the server | `totalAmount` 65.000, `discountAmount` 5.000, `manualDiscount` 5.000, reason OTHER + note; plug line `unitPrice` 20.000, `listPrice` 25.000, reason DAMAGED; labour line no reason ✅ |
+| 9.5 | Report `transactions.manualDiscounts` and Laporan page | One line row (5.000, DAMAGED) and one sale row (5.000, OTHER) for the sale; the sale number is listed under "Diskon Manual" ✅ |
+| 9.6 | API guard on `transactions.create` | Lowered price with reason "Other" and no note → "Describe the reason…"; Rp999.999 off a Rp25.000 sale → "larger than the amount due"; nothing recorded ✅ |
+| 9.7 | Quick cashier: plug 25.000 → 22.000 (Pembulatan), then 10% off the sale (Kebijakan owner / member) | Dialog shows Rp19.800 after the discount; receipt shows "Normal Rp 25.000, hemat Rp 3.000"; sale 19.800, discount 2.200 (manual 2.200, OWNER_POLICY), line 22.000/25.000 ROUNDING; stock −1 ✅ |
+| 9.8 | Transaksi page | The row shows "Diskon manual: Kebijakan owner / member, Pembulatan" ✅ |
+| 9.9 | Void request with reason "batal", then a 10+ character reason | Refused ("Alasan minimal 10 karakter"), then sent; toast says it waits for approval; sale still completed ✅ |
+| 9.10 | Persetujuan: "Setuju" + PIN only | Sale voided, plug stock back to the value before the sale, report rows for the sale marked voided and not counted ✅ |
+
+Runs:
+- **Run 1: 2 failed.**
+  - Service note: the payment opened the offline cash dialog. Right after `next dev` started, the station's sync had
+    not marked the server reachable yet, so it took the offline path. That is the designed fallback, not a bug in the
+    feature. The note was left open and cancelled by hand afterwards (`E2EDSCVKBNMK`).
+  - Quick cashier: the test's cart-drawer locator matched only the drawer header (test bug).
+- **Run 2: 2 failed.**
+  - Report: the test's report-section locator was too narrow (test bug).
+  - **Real bug: the Void button was not shown at all.** The Transaksi page read the old `users.permissions` flag
+    `canVoidTransactions`, which is empty for every owner on production. The server checks role permissions
+    (`pos.transaction.void.request`). So no one could start a void from the screen. Fixed: new
+    `transactions.myActions` returns the same role permissions the server checks, and the buttons use it.
+  - The quick sale from this run (`TRX-MWVKNCNA-KBRJ7`, Rp19.800) stayed completed.
+- **Run 3:** spec 12 passed (2/2).
+- **Full suite:** **13 passed in 3.1 min**.
+
+Also changed: the void toast said "Transaksi berhasil divoid" while it only sends a request; it now says the request
+waits for approval. The spec sets the test tenant's approval PIN to its documented value (`4321`). The test tenant's
+spark-plug stock was topped up 5 → 35.
+
+Unit tests: 179 passed, 2 skipped (new: discount rules in `WorkshopUseCase` and `CreateTransactionUseCase`, the
+station reducer, the report summary). Production build passed.
+
+---
+
 ## 2026-11-25 · Excel catalogue import (local app → production DB)
 
 Rebuilt for the ±900-SKU import promised to Mr Bengkel (contract Pasal 2: harga jual, harga modal, barcode, stok

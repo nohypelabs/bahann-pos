@@ -30,7 +30,8 @@ The global setup logs in once (login is rate-limited), refuses any account that 
 | `09-offline-reload` | Service worker on: reload while offline (note and list) keeps the unsent note; it syncs afterwards |
 | `10-pos-offline` | Quick cashier: an offline sale is kept in IndexedDB and reaches the server when back online |
 | `11-catalog-import` | Shop-style Excel (title rows, own column names, 940 rows + 4 broken): preview, import with initial stock, re-import to skip and to update; products deleted afterwards |
+| `12-manual-discount` | Service note: a lowered part price and Rp5.000 off the note need reasons ("Other" needs a note), the receipt shows the normal price, the sale and the Laporan "Diskon Manual" section record both. Quick cashier: lowered price and 10% off with reasons, server refuses a missing note or a too-large discount, then void: the reason is required from the requester, the approval takes only the PIN (set to the tenant's documented PIN), stock comes back |
 
 The tests change real data on that tenant: each run adds paid notes, one or two new plates
-(`E2E…`), stamps and stock movements. Parts run down over time (2 spark plugs and 2 oil per
+(`E2E…`), stamps and stock movements. Parts run down over time (about 5 spark plugs and 2 oil per
 run); when a test stops with "top it up", record new stock for the test tenant.

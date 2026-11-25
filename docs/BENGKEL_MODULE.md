@@ -81,6 +81,39 @@ The engine is generic; phase 1 ships the **stamp card**, which is what Mr Bengke
 - Voiding or refunding a transaction reverses the stamps it earned, and voids the voucher it triggered if that
   voucher is still unused. Restores a voucher it redeemed.
 
+## Manual discounts (diskon manual)
+
+Asked for in the client pitch: when a cashier lowers a price or gives a member a discount by owner policy, the
+reason is recorded. Rules live in `src/domain/sales/manualDiscount.ts`; migration 058 adds the columns.
+
+- **Two kinds, both on the service note and the quick cashier:** a line below its list price (the price button on
+  a line), and an amount off the whole sale or note, in rupiah or percent (the "Diskon" button).
+- **A reason is required** for both: owner policy / member, rounding, damaged item or box, complaint
+  compensation, or other (other needs a note). The server checks it again (`DISCOUNT_REASON_REQUIRED`,
+  `DISCOUNT_NOTE_REQUIRED`) and refuses an amount larger than what is due (`DISCOUNT_TOO_LARGE`).
+- A price above the list price needs no reason (agreed labour for a bigger job).
+- **Receipt:** shows the normal price and the saving under a lowered line, and the total discount. The reason is
+  not printed.
+- **Recorded on the sale:** `transaction_items.list_price`, `discount_reason`, `discount_note`;
+  `transactions.manual_discount` (part of `discount_amount`, next to promo or voucher), `discount_reason`,
+  `discount_note`. While a note is open the same lives on `service_order_items` and `service_orders`.
+- **Report:** Laporan → "Diskon Manual" (`transactions.manualDiscounts`): total, per cashier, per reason, and every
+  discount with the sale number. Voided and refunded sales are listed but not counted. Visible to admins and anyone
+  with `report.outlet.view`.
+- Works offline on the service note (`note.setItem` carries the reason, `note.setDiscount`, `note.payCash` pins
+  both) and on the quick cashier (stored with the offline sale and sent by the sync manager).
+- No limit per cashier for now (decided 25 Nov): the reason and the report are the control. A "max discount
+  without the store manager's PIN" setting can be added later.
+
+## Voids
+
+The cashier asks for a void on Transaksi with a reason (min. 10 characters), so the approver knows what happened.
+An owner, admin, area manager or store manager (Kepala Toko) approves or rejects it on Persetujuan with their PIN
+only; no note is needed from them. Approving restores stock and daily sales and reverses the workshop sale (stamps,
+voucher, note cancelled). The Void and Refund buttons follow the same role permissions the server checks
+(`transactions.myActions`); they used to read the older `users.permissions` flags, which are empty for owners, so
+nobody saw the buttons.
+
 ## Security and data
 
 - Every table has `tenant_id` and the same tenant-isolation RLS as the rest of the schema.
