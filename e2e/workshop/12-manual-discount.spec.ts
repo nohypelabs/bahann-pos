@@ -152,7 +152,10 @@ test('quick cashier: price change and percent discount with reasons; void needs 
   if (!password) throw new Error('WORKSHOP_TEST_PASSWORD is needed to set the approver PIN')
   await a.m('users.setPin', { pin: '4321', currentPassword: password })
 
-  await page.goto('/approvals')
+  // Approvers reach the waiting request from the count in the top bar.
+  await page.reload()
+  await page.locator('header').getByRole('link', { name: new RegExp(`^${t('sidebar.operations.approvals')}: \\d+$`) }).click()
+  await expect(page).toHaveURL(/\/approvals/)
   const card = page.locator('div').filter({ hasText: why }).filter({ has: page.getByRole('button', { name: 'Setuju', exact: true }) }).last()
   await card.getByRole('button', { name: 'Setuju', exact: true }).click()
   const pinDialog = page.getByRole('dialog')

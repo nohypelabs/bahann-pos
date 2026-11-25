@@ -139,16 +139,18 @@ async function createApprovalRequest(input: {
 
 export const transactionsRouter = router({
   /**
-   * What the signed-in user may ask for on a sale, from the same role permissions
-   * the void and refund requests check (not the older users.permissions flags).
+   * What the signed-in user may ask for or approve on a sale, from the same role
+   * permissions the void and refund requests check (not the older users.permissions flags).
    */
   myActions: protectedProcedure.query(async ({ ctx }) => {
     const tenantId = ctx.session.tenantId!
-    const [canRequestVoid, canRequestRefund] = await Promise.all([
+    const [canRequestVoid, canRequestRefund, canApproveVoid, canApproveRefund] = await Promise.all([
       userHasPermission(ctx.userId, tenantId, 'pos.transaction.void.request'),
       userHasPermission(ctx.userId, tenantId, 'pos.refund.request'),
+      userHasPermission(ctx.userId, tenantId, 'pos.transaction.void.approve'),
+      userHasPermission(ctx.userId, tenantId, 'pos.refund.approve'),
     ])
-    return { canRequestVoid, canRequestRefund }
+    return { canRequestVoid, canRequestRefund, canApproveVoid, canApproveRefund }
   }),
 
   /**

@@ -866,5 +866,7 @@
   "reports.discounts.truncated": "Menampilkan 500 potongan terbaru. Persempit periode untuk melihat sisanya.",
 
   "transactions.manualDiscount": "Diskon manual",
-  "transactions.voidRequested": "Permintaan void terkirim. Menunggu persetujuan Kepala Toko atau Admin di menu Persetujuan."
+  "transactions.voidRequested": "Permintaan void terkirim. Menunggu persetujuan Kepala Toko atau Admin di menu Persetujuan.",
+
+  "sidebar.operations.approvals": "Persetujuan"
 }

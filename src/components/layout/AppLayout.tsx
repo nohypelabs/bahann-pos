@@ -3,11 +3,13 @@
 import { ReactNode, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Menu, Receipt, Settings, Warehouse } from 'lucide-react'
+import { Bell, CheckCircle, LayoutDashboard, Menu, Receipt, Settings, Warehouse, Wrench } from 'lucide-react'
 import { Sidebar } from './Sidebar'
 import { OfflineIndicator } from '@/components/OfflineIndicator'
 import { MobileScanFab } from './MobileScanFab'
 import { useInventoryAccess } from './useInventoryAccess'
+import { useOpsBadges } from './useOpsBadges'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -69,11 +71,44 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [desktopOpen, setDesktopOpen] = useState(false)
   const routeMeta = getRouteMeta(pathname)
   const inventoryAccess = useInventoryAccess()
+  const { t } = useLanguage()
+  const { alertCount, pendingApprovalsCount, canApprove, canUseInventory, canUseWorkshop } = useOpsBadges()
   const quickLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    // A workshop's day runs on service notes; the quick cashier is for walk-in sales.
+    ...(canUseWorkshop ? [{ href: '/pos/notes', label: t('sidebar.pos.notes'), icon: Wrench }] : []),
     { href: '/pos/sales', label: 'Kasir', icon: Receipt },
     { href: '/warehouse/stock', label: 'Gudang', icon: Warehouse },
   ]
+  // Always visible, phone included: an approval keeps a cashier waiting at the counter.
+  const attention = [
+    ...(canApprove
+      ? [{ href: '/approvals', label: t('sidebar.operations.approvals'), icon: CheckCircle, count: pendingApprovalsCount, tone: 'bg-red-600' }]
+      : []),
+    ...(canUseInventory
+      ? [{ href: '/alerts', label: t('sidebar.operations.alerts'), icon: Bell, count: alertCount, tone: 'bg-amber-500' }]
+      : []),
+  ]
+  const attentionLinks = attention.map(({ href, label, icon: Icon, count, tone }) => (
+    <Link
+      key={href}
+      href={href}
+      title={label}
+      aria-label={count > 0 ? `${label}: ${count}` : label}
+      className={`relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border transition-colors ${
+        pathname.startsWith(href)
+          ? 'border-[#0b4e48] bg-[#0f5f56] text-white'
+          : 'border-[#ddd8cc] bg-white text-[#5f675f] hover:bg-[#f1efe8] hover:text-[#17201d]'
+      }`}
+    >
+      <Icon className="h-5 w-5" />
+      {count > 0 && (
+        <span className={`absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ${tone}`}>
+          {count > 99 ? '99+' : count}
+        </span>
+      )}
+    </Link>
+  ))
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#f6f5f0]">
@@ -109,26 +144,29 @@ export function AppLayout({ children }: AppLayoutProps) {
               </div>
             </div>
 
-            <div className="hidden items-center gap-2 lg:flex">
-              {quickLinks.map(({ href, label, icon: Icon }) => {
-                const isActive = pathname === href || pathname.startsWith(`${href}/`)
+            <div className="flex flex-shrink-0 items-center gap-2">
+              <div className="hidden items-center gap-2 lg:flex">
+                {quickLinks.map(({ href, label, icon: Icon }) => {
+                  const isActive = pathname === href || pathname.startsWith(`${href}/`)
 
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    onClick={href.startsWith('/warehouse') ? inventoryAccess.guard : undefined}
-                    className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition-colors ${
-                      isActive
-                        ? 'border-[#0b4e48] bg-[#0f5f56] text-white'
-                        : 'border-[#ddd8cc] bg-white text-[#5f675f] hover:bg-[#f1efe8] hover:text-[#17201d]'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span>{label}</span>
-                  </Link>
-                )
-              })}
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={href.startsWith('/warehouse') ? inventoryAccess.guard : undefined}
+                      className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition-colors ${
+                        isActive
+                          ? 'border-[#0b4e48] bg-[#0f5f56] text-white'
+                          : 'border-[#ddd8cc] bg-white text-[#5f675f] hover:bg-[#f1efe8] hover:text-[#17201d]'
+                      }`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span>{label}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+              {attentionLinks}
               <Link
                 href="/settings/payments"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#ddd8cc] bg-white text-[#5f675f] transition-colors hover:bg-[#f1efe8] hover:text-[#17201d]"
@@ -137,14 +175,6 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <Settings className="h-5 w-5" />
               </Link>
             </div>
-
-            <Link
-              href="/settings/payments"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#ddd8cc] bg-white text-[#5f675f] transition-colors hover:bg-[#f1efe8] hover:text-[#17201d] lg:hidden"
-              aria-label="Buka pengaturan"
-            >
-              <Settings className="h-5 w-5" />
-            </Link>
           </div>
         </header>
 

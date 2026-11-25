@@ -866,5 +866,7 @@
   "reports.discounts.truncated": "Showing the latest 500 discounts. Narrow the period to see the rest.",
 
   "transactions.manualDiscount": "Manual discount",
-  "transactions.voidRequested": "Void request sent. Waiting for a store manager or admin to approve it under Approvals."
+  "transactions.voidRequested": "Void request sent. Waiting for a store manager or admin to approve it under Approvals.",
+
+  "sidebar.operations.approvals": "Approvals"
 }

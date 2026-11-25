@@ -8,8 +8,7 @@ import { logger } from '@/lib/logger'
 import { usePWA } from '@/lib/pwa/PWAContext'
 import { hasPermission, hasAnyPermission, PERMISSIONS, LEGACY_ROLE_MAP, getRoleDisplayName } from '@/lib/rbac/permissions'
 import { trpc } from '@/lib/trpc/client'
-import { hasModule } from '@/lib/business/modules'
-import { useInventoryAccess } from './useInventoryAccess'
+import { useOpsBadges } from './useOpsBadges'
 import {
   LayoutDashboard, Package, ClipboardList, BarChart3,
   ShoppingCart, History, DollarSign, ArrowLeftRight,
@@ -64,8 +63,10 @@ function SidebarItem({ href, icon, label, badge, isCollapsed }: {
   )
 }
 
-function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths = [] }: {
+function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths = [], badge = 0 }: {
   sectionKey: string; title: string; children: ReactNode; isCollapsed: boolean; activePaths?: string[]
+  /** Shown on the heading while the section is folded, so a count inside is not hidden. */
+  badge?: number
 }) {
   const pathname = usePathname()
   const isActiveSection = activePaths.some((p) => pathname === p || pathname.startsWith(p + '/'))
@@ -106,7 +107,12 @@ function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths 
         <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8a9188] transition-colors group-hover:text-[#5f675f]">
           {title}
         </span>
-        <span className={`text-[9px] text-[#a9afa6] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>▼</span>
+        <span className="flex items-center gap-2">
+          {!isOpen && badge > 0 && (
+            <span className="rounded-full bg-[#17201d] px-2 py-0.5 text-[10px] font-bold text-white">{badge}</span>
+          )}
+          <span className={`text-[9px] text-[#a9afa6] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>▼</span>
+        </span>
       </button>
       <div className={`overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
         <div className="space-y-0.5 pb-1">{children}</div>
@@ -148,13 +154,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
   const [subBantuan, setSubBantuan] = useState(false)
 
   const { data: planData } = trpc.auth.getPlan.useQuery(undefined, { retry: false, staleTime: 5 * 60 * 1000 })
-  const { data: activeAlerts } = trpc.stockAlerts.getActive.useQuery({}, { retry: false, staleTime: 60 * 1000 })
-  const alertCount = activeAlerts?.length || 0
-  const { data: pendingApprovalsData } = trpc.transactionApprovals.list.useQuery(
-    { status: 'pending', limit: 100 },
-    { retry: false, staleTime: 30 * 1000 },
-  )
-  const pendingApprovalsCount = pendingApprovalsData?.approvals?.length || 0
+  const { alertCount, pendingApprovalsCount, canUseInventory, canUseWorkshop } = useOpsBadges()
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -232,15 +232,6 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
   const isImpersonating = impersonationState?.impersonating === true
   const isPlatformView = isSuperAdmin && !isImpersonating
 
-  // Which optional modules this tenant has, from its business type. The app layout
-  // already fetched the profile, so this is normally served from cache.
-  const { data: businessProfile } = trpc.businessProfile.getMyProfile.useQuery(undefined, {
-    staleTime: 5 * 60 * 1000,
-  })
-  const canUseInventory = hasModule(businessProfile?.enabledModules, 'inventory')
-  // Optional module: hidden until the profile says it is on, never shown while loading.
-  const canUseWorkshop = hasModule(businessProfile?.enabledModules ?? [], 'workshop')
-  const inventoryAccess = useInventoryAccess()
   const canManageProducts = hasAnyPermission(userRole, [PERMISSIONS.PRODUCT_MANAGE, PERMISSIONS.PRODUCT_VIEW])
   const canManageSettings = hasAnyPermission(userRole, [PERMISSIONS.SETTINGS_MANAGE, PERMISSIONS.USER_MANAGE])
   const canViewReports = hasPermission(userRole, PERMISSIONS.REPORT_OUTLET_VIEW)
@@ -322,34 +313,6 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
           </div>
         )}
 
-        {!showCollapsed && !isPlatformView && (
-          <div className="mx-3 mt-3 rounded-[35px] border border-[#ddd8cc] bg-[#f1efe8] p-3">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#6f776f]">
-              Workflow Inti
-            </p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <Link href="/pos/sales" className="rounded-[35px] border border-[#ddd8cc] bg-white px-3 py-3 transition-colors hover:bg-[#e5f3ef] hover:text-[#0f5f56]">
-                <ShoppingCart className="h-4 w-4 text-[#0f5f56]" />
-                <p className="mt-2 text-sm font-semibold text-[#17201d]">Kasir</p>
-                <p className="mt-1 text-[11px] text-[#6f776f]">Transaksi cepat</p>
-              </Link>
-              <Link href="/warehouse/stock" onClick={inventoryAccess.guard} className="rounded-[35px] border border-[#ddd8cc] bg-white px-3 py-3 transition-colors hover:bg-[#fff8ec] hover:text-[#a66f10]">
-                <Package className="h-4 w-4 text-[#c98a16]" />
-                <p className="mt-2 text-sm font-semibold text-[#17201d]">Gudang</p>
-                <p className="mt-1 text-[11px] text-[#6f776f]">Stok harian</p>
-              </Link>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              <span className="rounded-full border border-[#ddd8cc] bg-white px-2.5 py-1 text-[10px] font-semibold text-[#5f675f]">
-                {alertCount} alert stok
-              </span>
-              <span className="rounded-full border border-[#ddd8cc] bg-white px-2.5 py-1 text-[10px] font-semibold text-[#5f675f]">
-                {pendingApprovalsCount} approval
-              </span>
-            </div>
-          </div>
-        )}
-
         <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5" role="navigation" aria-label="Menu navigasi">
 
           {/* ═══ SUPERADMIN PANEL — distinct section at top ═══ */}
@@ -425,14 +388,14 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
           )}
 
           {/* ═══ OPERATIONS — all roles ═══ */}
-          <SidebarSection sectionKey="operations" title={t('sidebar.operations')} isCollapsed={showCollapsed} activePaths={['/transactions', '/payments', '/expenses', '/promotions', '/eod', '/alerts', '/approvals']}>
+          <SidebarSection sectionKey="operations" title={t('sidebar.operations')} isCollapsed={showCollapsed} activePaths={['/transactions', '/payments', '/expenses', '/promotions', '/eod', '/alerts', '/approvals']} badge={alertCount + pendingApprovalsCount}>
             <SidebarItem href="/transactions" icon={<ArrowLeftRight />} label={t('sidebar.operations.transactions')} isCollapsed={showCollapsed} />
             <SidebarItem href="/payments"     icon={<CreditCard />}     label={t('sidebar.operations.payments')}     isCollapsed={showCollapsed} />
             <SidebarItem href="/expenses"     icon={<Receipt />}        label={t('sidebar.operations.expenses')}     isCollapsed={showCollapsed} />
             <SidebarItem href="/promotions"   icon={<Ticket />}         label={t('sidebar.operations.promotions')}   isCollapsed={showCollapsed} />
             <SidebarItem href="/eod"          icon={<Briefcase />}      label={t('sidebar.operations.eod')}          isCollapsed={showCollapsed} />
             <SidebarItem href="/alerts"       icon={<Bell />}           label={t('sidebar.operations.alerts')}       isCollapsed={showCollapsed} badge={alertCount > 0 ? String(alertCount) : undefined} />
-            <SidebarItem href="/approvals"    icon={<CheckCircle />}    label="Persetujuan"      isCollapsed={showCollapsed} badge={pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined} />
+            <SidebarItem href="/approvals"    icon={<CheckCircle />}    label={t('sidebar.operations.approvals')}      isCollapsed={showCollapsed} badge={pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined} />
           </SidebarSection>
           </>)}
 
@@ -522,7 +485,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
             <SidebarItem href="/transactions"      icon={<ArrowLeftRight />} label={t('sidebar.operations.transactions')} isCollapsed={true} />
             <SidebarItem href="/expenses"          icon={<Receipt />}       label={t('sidebar.operations.expenses')} isCollapsed={true} />
             <SidebarItem href="/alerts"            icon={<Bell />}          label={t('sidebar.operations.alerts')} isCollapsed={true} badge={alertCount > 0 ? String(alertCount) : undefined} />
-            <SidebarItem href="/approvals"         icon={<CheckCircle />}   label="Persetujuan"     isCollapsed={true} badge={pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined} />
+            <SidebarItem href="/approvals"         icon={<CheckCircle />}   label={t('sidebar.operations.approvals')}     isCollapsed={true} badge={pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined} />
             {canManageSettings && (
               <>
                 <SidebarItem href="/settings/business" icon={<Store />}      label={t('settings.business.title')}   isCollapsed={true} />
@@ -583,7 +546,6 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
           </div>
         </div>
       )}
-      {inventoryAccess.modal}
     </>
   )
 }
