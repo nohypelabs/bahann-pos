@@ -5,9 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { trpc } from '@/lib/trpc/client'
+import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 function ResetPasswordContent() {
   const router = useRouter()
+  const { t } = useLanguage()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
 
@@ -174,6 +176,15 @@ function ResetPasswordContent() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
+                {tokenVerification?.email && (
+                  <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-4">
+                    <p className="text-xs font-semibold text-amber-800">{t('resetPassword.forAccount')}</p>
+                    <p className="break-all text-base font-bold text-gray-900">{tokenVerification.email}</p>
+                    <p className="mt-1 text-xs text-amber-800">{t('resetPassword.checkAccount')}</p>
+                    {/* Lets the browser save the new password under this account, not another one it knows. */}
+                    <input type="email" name="username" autoComplete="username" value={tokenVerification.email} readOnly hidden />
+                  </div>
+                )}
                 <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
                   <p className="text-sm text-blue-900">
                     💡 Masukkan password baru Anda (minimal 8 karakter)
@@ -194,6 +205,7 @@ function ResetPasswordContent() {
                       placeholder="Minimal 8 karakter"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
+                      autoComplete="new-password"
                       className="w-full px-4 py-3 pr-12 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                       required
                     />
@@ -216,6 +228,7 @@ function ResetPasswordContent() {
                       placeholder="Ketik ulang password baru"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
                       className="w-full px-4 py-3 pr-12 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                       required
                     />

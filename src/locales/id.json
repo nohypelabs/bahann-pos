@@ -868,5 +868,8 @@
   "transactions.manualDiscount": "Diskon manual",
   "transactions.voidRequested": "Permintaan void terkirim. Menunggu persetujuan Kepala Toko atau Admin di menu Persetujuan.",
 
-  "sidebar.operations.approvals": "Persetujuan"
+  "sidebar.operations.approvals": "Persetujuan",
+
+  "resetPassword.forAccount": "Password baru untuk akun:",
+  "resetPassword.checkAccount": "Pastikan ini akun yang ingin Anda reset. Kalau salah, minta link baru dengan email yang benar."
 }

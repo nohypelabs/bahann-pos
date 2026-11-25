@@ -67,7 +67,9 @@ function LoginContent() {
       // Full reload ensures React Query cache from any previous user session is cleared
       window.location.href = redirect
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : t('login.error')
+      // A wrong email or password comes back as UNAUTHORIZED; show it in the user's language.
+      const code = (err as { data?: { code?: string } } | null)?.data?.code
+      const errorMessage = code === 'UNAUTHORIZED' || !(err instanceof Error) ? t('login.error') : err.message
       setError(errorMessage)
     } finally {
       setIsLoading(false)
@@ -121,6 +123,8 @@ function LoginContent() {
                 placeholder={t('login.email')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="username"
+                autoCapitalize="none"
                 fullWidth
                 required
               />
@@ -135,6 +139,7 @@ function LoginContent() {
                     placeholder="Masukkan password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
                     className="w-full px-4 py-2.5 sm:py-3 pr-12 border-2 border-gray-300 dark:border-gray-600 rounded-[40px] focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 text-sm sm:text-base"
                     required
                   />

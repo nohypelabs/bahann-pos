@@ -868,5 +868,8 @@
   "transactions.manualDiscount": "Manual discount",
   "transactions.voidRequested": "Void request sent. Waiting for a store manager or admin to approve it under Approvals.",
 
-  "sidebar.operations.approvals": "Approvals"
+  "sidebar.operations.approvals": "Approvals",
+
+  "resetPassword.forAccount": "New password for the account:",
+  "resetPassword.checkAccount": "Make sure this is the account you want to reset. If not, ask for a new link with the right email."
 }
