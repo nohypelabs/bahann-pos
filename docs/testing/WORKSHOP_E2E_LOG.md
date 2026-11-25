@@ -63,6 +63,24 @@ spark-plug stock was topped up 5 → 35.
 Unit tests: 179 passed, 2 skipped (new: discount rules in `WorkshopUseCase` and `CreateTransactionUseCase`, the
 station reducer, the report summary). Production build passed.
 
+Production `https://lakupos.vercel.app`:
+
+- **Run 1, commit `fb9b98f`: 12 passed, 1 failed.** The service-note discount spec opened the offline cash dialog
+  again, now on a warm production server, so it was not the dev compile. **Real bug in the station sync:**
+  - `enqueue()` calls `sync()`, which returned the run already in progress.
+  - An operation recorded after that run had sent its batch (here: the discount set just before "Bayar") waited
+    for the next 15 s timer.
+  - `flush()` then still found it pending and chose the offline path while online. Payment would still have
+    worked, as an offline cash sale synced later, but QRIS and transfer were not offered.
+  - Fixed in `8922c5d`: a `sync()` call during a run asks for one more run, and `flush()` waits for it.
+  - Locally, from a cold `next dev`, specs 01, 07, 09 and 12 then passed (5/5).
+  - The note this run left open (`E2EDSCVL6RPE`) was cancelled.
+- **Run 2, commit `8922c5d`: 13 passed in 2.0 min.**
+  - Note discount: `TRX-MWVLJ19T-Q6FFV` (Rp65.000).
+  - Quick cashier discount then void: `TRX-MWVLJ8M1-8KPT2` (Rp19.800, voided after PIN approval, plug stock back
+    to 17).
+  - Catalogue import tag `IMPLIDB4`.
+
 ---
 
 ## 2026-11-25 · Excel catalogue import (local app → production DB)
