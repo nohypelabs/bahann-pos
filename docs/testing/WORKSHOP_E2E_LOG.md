@@ -20,6 +20,62 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-25 · Tenant isolation audit and fixes (production DB, then production)
+
+Asked by the user before onboarding more clients: can one tenant see or change another's data? Three read-only
+code reviews covered every router, repository, use case and SQL function; the database was checked for RLS and
+anon access. Every finding below was re-read before fixing. Fix commit `9b51bf5`, migration 059.
+
+**Cross-tenant leaks found and fixed**
+
+| # | Where | What a logged-in user of tenant B could do to tenant A | Fix |
+|---|---|---|---|
+| 12.1 | `stock_sales_monitor` view (hand-made, not in migrations) | **Anyone with the public anon key, without logging in**, could read stock, sales and revenue of every tenant: it runs with owner rights and skipped RLS | Dropped (059) |
+| 12.2 | `users.getById` | Read A's user (email, role, permissions) by id | Tenant filter |
+| 12.3 | `users.updatePermissions` | Overwrite A's user permissions | Tenant filter, NOT_FOUND |
+| 12.4 | `expenses.list` / `getDailySummary` | Read A's expenses by passing A's outletId | Caller's outlets only |
+| 12.5 | `expenses.void` | Void A's expense by id | Tenant filter |
+| 12.6 | `promotions.update` / `getUsageStats` / `recordUsage` | Change A's promotion, read its usage, run up its use count | `promotions.tenant_id` everywhere |
+| 12.7 | `stock.record`, `sales.record`, `sales.recordOffline` | Record stock/sales against A's product | Product must be the tenant's |
+| 12.8 | `stock.getMovements` | With no outlets, the query had no outlet filter: every tenant's movements | Empty scope returns nothing |
+| 12.9 | REST `POST /api/stock`, `/api/sales` (unused) | Overwrite A's daily stock with a forged, unsigned Supabase cookie | Routes and `src/middleware/auth.ts` removed |
+| 12.10 | Crypto plan payment | Get a plan for any amount (amount came from the browser), or with another tenant's on-chain transfer | Amount must cover the plan; unique `crypto_tx_hash` (059); transfer after the request; no double grant |
+
+Also fixed inside one tenant: the dashboard cache was keyed on the requested outlet, not the caller's scope, so a
+cashier could get the admin's all-outlet revenue and profit. Now keyed on the caller's resolved outlets.
+
+**Evidence**
+
+- Before the fix, production (old code), as `agdscid+bengkel-uji` with ids of another tenant (status only, data
+  discarded): `users.getById` → OK with data; `expenses.list` → OK, 1 row of the other tenant.
+- Anon key before migration 059: `stock_sales_monitor` HTTP 206 with 5 rows; after: HTTP 404. `products`,
+  `transactions`, `users` return 0 rows to anon (RLS on, no anon policy).
+- Migration 059 on a production copy: applies, re-applies as a no-op, a duplicate `crypto_tx_hash` is refused.
+  Then applied to production and recorded in `_migrations`.
+- Probe script (17 checks: 9 cross-tenant must be refused, 6 own-tenant must work, 2 removed routes 404):
+  local `next dev` on the production DB **17/17**; production at `9b51bf5` **17/17**. The permissions probe sent
+  an empty object, so nothing could change even if it had passed; the victim's permissions hash is unchanged.
+- Workshop E2E suite on production at `9b51bf5`: **13 passed in 2.0 min** (walk-in `E2EWW35XEK`, note discount
+  `TRX-MWW37WYD-HJLYK`, discount then void `TRX-MWW38515-2XU92`, import tag `IMP377V5`).
+- Unit tests 186 passed, 2 skipped (new: `cryptoAmountCoversPlan`); build passed.
+
+**Checked and correctly scoped:** transactions, payments (checkout, settings), transaction approvals, shifts,
+cash sessions, POS devices, products and catalogue import, outlets and outlet groups, stock alerts, audit,
+business profile, all workshop procedures and the offline push (`offline_ops` keyed on tenant + op id), auth,
+impersonation, superadmin. The SECURITY DEFINER SQL functions are not executable by anon.
+
+**Not fixed yet (inside one tenant, or latent):**
+- Outlet scope: `shifts.list`/`getById`, `posDevices.list`, `stock.getInventoryList` without an outlet, workshop
+  `vehicles.lookup/history`, `outletGroups.list` show other outlets of the same tenant to an outlet-scoped role.
+- `users.verifyPin` has no attempt limit (a cashier could try every PIN of the approver).
+- `users.updateRole` lets a co-admin demote the tenant owner.
+- Workshop procedures check login and module, not role (an auditor could edit notes).
+- Latent: `src/lib/payment/payment-service.ts` (unused) has unscoped queries; several repositories skip the
+  tenant filter when `tenantId` is empty (cannot happen today: `users.tenant_id` is NOT NULL).
+- Supabase Auth sign-up is enabled though the app no longer uses Supabase Auth.
+- Functional, not security: promotion codes cannot work yet (`promotion_usage` table and the old `owner_id`
+  column never existed; codes now validate by tenant, usage recording still fails).
+
 ## 2026-11-25 · Reset page names the account, Indonesian login error (local app → production DB, then production)
 
 Found while the user tried a cashier account: a reset done in the phone PWA landed on the user's superadmin account,
