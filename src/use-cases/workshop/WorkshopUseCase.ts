@@ -12,6 +12,7 @@ import type {
   VoucherReward,
 } from '@/domain/entities/Workshop'
 import type { WorkshopRepository } from '@/domain/repositories/WorkshopRepository'
+import { checkManualDiscount, justifyDiscount, type DiscountJustification } from '@/domain/sales/manualDiscount'
 import { normalizePhone, normalizePlate, readStampConfig, validateStampConfig } from '@/domain/workshop/rules'
 
 const clean = (s: string | null | undefined): string | null => (s && s.trim() ? s.trim() : null)
@@ -201,27 +202,53 @@ export class WorkshopUseCase {
     })
   }
 
-  /** Sets a line's quantity (0 removes it) and an optional agreed price. */
+  /**
+   * Sets a line's quantity (0 removes it) and an optional agreed price. A price
+   * below the list price needs a reason; a line already saved at that price keeps
+   * its reason when only the quantity changes.
+   */
   async setServiceOrderItem(
     tenantId: string,
     userId: string,
     orderId: string,
-    input: { productId: string; quantity: number; unitPrice?: number | null },
+    input: { productId: string; quantity: number; unitPrice?: number | null; priceReason?: string | null; priceNote?: string | null },
   ): Promise<void> {
-    await this.requireOpenOrder(tenantId, orderId)
+    const order = await this.requireOpenOrder(tenantId, orderId)
     if (input.quantity <= 0) {
       await this.repo.removeServiceOrderItem(tenantId, orderId, input.productId)
       return
     }
-    if (!(await this.repo.productBelongsToTenant(tenantId, input.productId))) {
+    const listPrice = await this.repo.productPrice(tenantId, input.productId)
+    if (listPrice === null) {
       throw new DomainException(DomainErrorCode.ITEM_NOT_FOUND, 'Product not found')
+    }
+    const unitPrice = input.unitPrice ?? null
+    let justification: DiscountJustification | null = null
+    if (unitPrice !== null && unitPrice < listPrice) {
+      const saved = order.items.find((i) => i.productId === input.productId)
+      justification = !input.priceReason && saved?.unitPrice === unitPrice && saved.priceReason
+        ? { reason: saved.priceReason, note: saved.priceNote }
+        : justifyDiscount({ reason: input.priceReason, note: input.priceNote })
     }
     await this.repo.setServiceOrderItem(tenantId, orderId, {
       productId: input.productId,
       quantity: input.quantity,
-      unitPrice: input.unitPrice ?? null,
+      unitPrice,
+      priceReason: justification?.reason ?? null,
+      priceNote: justification?.note ?? null,
       addedBy: userId,
     })
+  }
+
+  /** Sets (or with amount 0 clears) an amount off the whole note, with a reason. */
+  async setServiceOrderDiscount(
+    tenantId: string,
+    orderId: string,
+    input: { amount: number; reason?: string | null; note?: string | null },
+  ): Promise<void> {
+    const order = await this.requireOpenOrder(tenantId, orderId)
+    const subtotal = order.items.reduce((sum, i) => sum + (i.unitPrice ?? i.listPrice) * i.quantity, 0)
+    await this.repo.setServiceOrderDiscount(tenantId, orderId, checkManualDiscount(input, subtotal))
   }
 
   async cancelServiceOrder(tenantId: string, userId: string, id: string, reason: string): Promise<ServiceOrder> {

@@ -9,6 +9,7 @@ import type {
   Vehicle,
   VoucherReward,
 } from '../entities/Workshop'
+import type { DiscountReason, ManualDiscount } from '../sales/manualDiscount'
 
 export interface CustomerInput {
   /** Set by an offline client, so a replayed create finds the same row. */
@@ -23,6 +24,16 @@ export interface VehicleInput {
   brand: string | null
   model: string | null
   customerId: string | null
+}
+
+export interface ServiceOrderItemInput {
+  productId: string
+  quantity: number
+  unitPrice: number | null
+  /** Set when unitPrice is below the list price. */
+  priceReason: DiscountReason | null
+  priceNote: string | null
+  addedBy: string
 }
 
 export interface ServiceOrderInput {
@@ -78,15 +89,18 @@ export interface WorkshopRepository {
   setServiceOrderItem(
     tenantId: string,
     orderId: string,
-    input: { productId: string; quantity: number; unitPrice: number | null; addedBy: string },
+    input: ServiceOrderItemInput,
   ): Promise<void>
+  /** Sets or clears (null) the amount off the whole open note. */
+  setServiceOrderDiscount(tenantId: string, orderId: string, discount: ManualDiscount | null): Promise<void>
   removeServiceOrderItem(tenantId: string, orderId: string, productId: string): Promise<void>
   cancelServiceOrder(tenantId: string, id: string, reason: string, cancelledBy: string): Promise<void>
   /** Paid notes for a vehicle, newest first: its service history. */
   listServiceHistory(tenantId: string, vehicleId: string, limit: number): Promise<ServiceOrder[]>
   /** Quantities of each product sitting in open notes, for the "reserved" hint. */
   reservedQuantities(tenantId: string, productIds: string[]): Promise<Record<string, number>>
-  productBelongsToTenant(tenantId: string, productId: string): Promise<boolean>
+  /** The product's list price, or null when the tenant has no such product. */
+  productPrice(tenantId: string, productId: string): Promise<number | null>
 
   // Loyalty
   getLoyaltyProgram(tenantId: string, type: LoyaltyProgramType): Promise<LoyaltyProgram<unknown> | null>

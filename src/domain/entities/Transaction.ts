@@ -13,6 +13,11 @@ export type TransactionItem = {
   lineTotal: number
   /** Cost of one unit at the moment of sale (HPP); null when unknown. */
   unitCost?: number | null
+  /** The catalogue price at the moment of sale. */
+  listPrice?: number | null
+  /** Why the line was sold below its list price (src/domain/sales/manualDiscount.ts). */
+  discountReason?: string | null
+  discountNote?: string | null
 }
 
 export type Transaction = {
@@ -25,7 +30,12 @@ export type Transaction = {
   shiftId: string | null
   status: TransactionStatus
   subtotal: number
+  /** Every discount on the sale: promo or voucher plus manualDiscount. */
   discountAmount: number
+  /** The part of discountAmount the cashier gave by hand, with its reason. */
+  manualDiscount?: number
+  discountReason?: string | null
+  discountNote?: string | null
   taxAmount: number
   totalAmount: number
   paymentMethod: PaymentMethod

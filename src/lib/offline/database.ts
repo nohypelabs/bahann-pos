@@ -8,6 +8,7 @@
 import Dexie, { Table } from 'dexie'
 import { logger } from '@/lib/logger'
 import type { PaymentMethod } from '@/domain/entities/Transaction'
+import type { DiscountReason, ManualDiscount } from '@/domain/sales/manualDiscount'
 
 // Offline Transaction - pending sales when offline
 export interface OfflineTransaction {
@@ -24,9 +25,16 @@ export interface OfflineTransaction {
     quantity: number
     unitPrice: number
     total: number
+    /** The catalogue price when the line was sold below it, with the reason. */
+    listPrice?: number
+    discountReason?: DiscountReason
+    discountNote?: string | null
   }>
   subtotal: number
+  /** All discounts: the promo plus manualDiscount. */
   discount: number
+  /** An amount the cashier took off the whole sale, with its reason. */
+  manualDiscount?: ManualDiscount | null
   total: number
   paymentMethod: PaymentMethod
   amountPaid: number
@@ -151,7 +159,12 @@ export interface WsNote {
     quantity: number
     unitPrice: number | null
     listPrice: number
+    /** Why the line is charged below its list price. */
+    priceReason?: DiscountReason | null
+    priceNote?: string | null
   }[]
+  /** An amount off the whole note, with its reason. */
+  discount?: ManualDiscount | null
   /** Set when paid on this station and not yet confirmed by the server. */
   paid?: { transactionNumber: string; total: number; amountPaid: number; change: number; at: string }
   cancelReason?: string

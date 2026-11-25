@@ -13,7 +13,10 @@ import { printHtmlDocument } from '@/lib/print/printHtmlDocument'
 import { formatCurrency, generateTransactionId } from '@/lib/utils'
 import { offlineDb } from '@/lib/offline/database'
 import { useOffline } from '@/hooks/useOffline'
-import { Check, CloudOff, LayoutGrid, List, Package, RefreshCw, ScanLine, Search, ShoppingCart, Store, WalletCards } from 'lucide-react'
+import { BadgePercent, Check, CloudOff, LayoutGrid, List, Package, Pencil, RefreshCw, ScanLine, Search, ShoppingCart, Store, WalletCards } from 'lucide-react'
+import { PriceOverrideModal, type PriceChange } from '@/components/discount/PriceOverrideModal'
+import { ManualDiscountModal } from '@/components/discount/ManualDiscountModal'
+import type { DiscountReason, ManualDiscount } from '@/domain/sales/manualDiscount'
 import { ProductListSkeleton, ProductGridSkeleton } from '@/components/ui/Skeletons'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
@@ -47,7 +50,17 @@ interface CartItem {
   quantity: number
   unitPrice: number
   total: number
+  /** The catalogue price; unitPrice is lower only with a discount reason. */
+  listPrice?: number
+  discountReason?: DiscountReason
+  discountNote?: string | null
 }
+
+/** A line sold below its catalogue price, as the server takes it. */
+const priceOverrideOf = (item: CartItem) =>
+  item.discountReason && item.listPrice !== undefined && item.unitPrice < item.listPrice
+    ? { unitPrice: item.unitPrice, reason: item.discountReason, note: item.discountNote ?? null }
+    : undefined
 
 type CachedInventoryItem = {
   id: string
@@ -94,6 +107,9 @@ export default function SalesTransactionPage() {
   const [selectedCategory, setSelectedCategory] = useState('')
   const [outletSearch, setOutletSearch] = useState('')
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [manualDiscount, setManualDiscount] = useState<ManualDiscount | null>(null)
+  const [isDiscountOpen, setIsDiscountOpen] = useState(false)
+  const [priceEditId, setPriceEditId] = useState<string | null>(null)
   const [viewMode, setViewMode] = useState<'list' | 'grid'>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem('lakupos-view-mode') as 'list' | 'grid') || 'list'
@@ -280,7 +296,7 @@ export default function SalesTransactionPage() {
     if (existingItemIndex >= 0) {
       const updatedCart = [...cart]
       updatedCart[existingItemIndex].quantity += quantity
-      updatedCart[existingItemIndex].total = updatedCart[existingItemIndex].quantity * unitPrice
+      updatedCart[existingItemIndex].total = updatedCart[existingItemIndex].quantity * updatedCart[existingItemIndex].unitPrice
       setCart(updatedCart)
     } else {
       setCart([...cart, {
@@ -290,6 +306,7 @@ export default function SalesTransactionPage() {
         quantity,
         unitPrice,
         total: quantity * unitPrice,
+        listPrice: unitPrice,
       }])
     }
     setSelectedProductId('')
@@ -313,10 +330,10 @@ export default function SalesTransactionPage() {
         if (existingIndex !== -1) {
           const newCart = [...cart]
           newCart[existingIndex].quantity += 1
-          newCart[existingIndex].total = newCart[existingIndex].quantity * unitPrice
+          newCart[existingIndex].total = newCart[existingIndex].quantity * newCart[existingIndex].unitPrice
           setCart(newCart)
         } else {
-          setCart([...cart, { productId: product.id, productName: product.name, productSku: product.sku, quantity: 1, unitPrice, total: unitPrice }])
+          setCart([...cart, { productId: product.id, productName: product.name, productSku: product.sku, quantity: 1, unitPrice, total: unitPrice, listPrice: unitPrice }])
         }
         setShowSuccess(true)
         setTimeout(() => setShowSuccess(false), 2000)
@@ -362,11 +379,29 @@ export default function SalesTransactionPage() {
     ))
   }
 
+  const handleChangePrice = (productId: string, change: PriceChange) => {
+    setCart(cart.map(item => item.productId === productId
+      ? {
+          ...item,
+          unitPrice: change.unitPrice,
+          total: item.quantity * change.unitPrice,
+          discountReason: change.justification?.reason,
+          discountNote: change.justification?.note ?? null,
+        }
+      : item
+    ))
+    setPriceEditId(null)
+  }
+
   const cartSubtotal = cart.reduce((sum, item) => sum + item.total, 0)
+  // Promo discount; the cashier's manual discount comes on top of it.
   const discountAmount = appliedPromo?.discountAmount || 0
-  const cartTotal = cartSubtotal - discountAmount
+  const manualCut = manualDiscount?.amount ?? 0
+  const totalDiscount = discountAmount + manualCut
+  const cartTotal = cartSubtotal - totalDiscount
+  const discountProblem = manualCut > 0 && manualCut > cartSubtotal - discountAmount
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
-  const checkoutDisabled = isPaymentModalOpen || cart.length === 0 || !selectedOutletId || (!isOffline && !activeShift)
+  const checkoutDisabled = isPaymentModalOpen || cart.length === 0 || !selectedOutletId || (!isOffline && !activeShift) || discountProblem
   const checkoutLabel = !selectedOutletId
     ? 'Pilih outlet'
     : (!isOffline && !activeShift)
@@ -445,7 +480,7 @@ export default function SalesTransactionPage() {
         outletId: selectedOutletId,
         items: cart.map(item => ({
           productId: item.productId, productName: item.productName, productSku: item.productSku,
-          quantity: item.quantity, unitPrice: item.unitPrice,
+          quantity: item.quantity, unitPrice: item.unitPrice, priceOverride: priceOverrideOf(item),
         })),
         paymentMethod: mapToBackendPaymentMethod(paymentMethod),
         amountPaid: cartTotal,
@@ -468,9 +503,11 @@ export default function SalesTransactionPage() {
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             total: item.total,
+            ...(priceOverrideOf(item) ? { listPrice: item.listPrice, discountReason: item.discountReason, discountNote: item.discountNote ?? null } : {}),
           })),
           subtotal: cartSubtotal,
-          discount: discountAmount,
+          discount: totalDiscount,
+          manualDiscount,
           total: cartTotal,
           paymentMethod: transactionPayload.paymentMethod,
           amountPaid: cartTotal,
@@ -508,8 +545,8 @@ export default function SalesTransactionPage() {
           phone: userProfile?.whatsappNumber || '',
           email: userProfile?.email || '',
         },
-        items: cart.map(item => ({ name: item.productName, sku: item.productSku, quantity: item.quantity, unitPrice: item.unitPrice, total: item.total })),
-        subtotal: cartSubtotal, tax: 0, discount: discountAmount, total: cartTotal,
+        items: cart.map(item => ({ name: item.productName, sku: item.productSku, quantity: item.quantity, unitPrice: item.unitPrice, total: item.total, listPrice: item.listPrice })),
+        subtotal: cartSubtotal, tax: 0, discount: totalDiscount, total: cartTotal,
         payment: { method: paymentMethod, amount: transaction?.amountPaid ?? cartTotal, change: transaction?.change ?? 0 },
         notes: appliedPromo ? `Promo: ${appliedPromo.promoName} • Terima kasih telah berbelanja di ${selectedOutlet?.name || 'Laku POS'}!` : `Terima kasih telah berbelanja di ${selectedOutlet?.name || 'Laku POS'}`,
       }
@@ -520,6 +557,7 @@ export default function SalesTransactionPage() {
       setCart([])
       setPromoCode('')
       setAppliedPromo(null)
+      setManualDiscount(null)
       setPendingTransactionId('')
       refetchPlanUsage()
       setTimeout(() => setShowSuccess(false), 3000)
@@ -1019,8 +1057,8 @@ export default function SalesTransactionPage() {
                 </div>
                 <div className="flex items-center justify-between text-stone-300">
                   <span>Diskon</span>
-                  <span className={discountAmount > 0 ? 'text-emerald-300' : 'text-white'}>
-                    {discountAmount > 0 ? `- ${formatCurrency(discountAmount)}` : formatCurrency(0)}
+                  <span className={totalDiscount > 0 ? 'text-emerald-300' : 'text-white'}>
+                    {totalDiscount > 0 ? `- ${formatCurrency(totalDiscount)}` : formatCurrency(0)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between border-t border-white/10 pt-3 text-sm font-semibold text-white">
@@ -1052,6 +1090,23 @@ export default function SalesTransactionPage() {
               )}
             </div>
 
+            {/* Manual discount */}
+            <div className="mt-3">
+              <button
+                onClick={() => setIsDiscountOpen(true)}
+                disabled={cart.length === 0}
+                className="flex w-full items-center justify-between rounded-xl px-2 -mx-2 py-1 text-left text-xs font-semibold text-stone-200 hover:bg-white/5 disabled:opacity-50"
+              >
+                <span className="inline-flex items-center gap-1.5"><BadgePercent className="h-3.5 w-3.5" /> {t('discount.total.button')}</span>
+                {manualDiscount && <span className="text-emerald-300">-{formatCurrency(manualDiscount.amount)}</span>}
+              </button>
+              {manualDiscount && (
+                <p className={`mt-1 text-xs ${discountProblem ? 'text-red-300' : 'text-stone-400'}`}>
+                  {discountProblem ? t('discount.total.tooLarge') : t(`discount.reason.${manualDiscount.reason}`)}
+                </p>
+              )}
+            </div>
+
             {/* Summary */}
             {cart.length > 0 && (
               <div className="p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 space-y-1.5">
@@ -1059,10 +1114,10 @@ export default function SalesTransactionPage() {
                   <span className="text-gray-500 dark:text-gray-400">Subtotal</span>
                   <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(cartSubtotal)}</span>
                 </div>
-                {discountAmount > 0 && (
+                {totalDiscount > 0 && (
                   <div className="flex justify-between text-xs">
                     <span className="text-green-600">Diskon</span>
-                    <span className="font-semibold text-green-600">-{formatCurrency(discountAmount)}</span>
+                    <span className="font-semibold text-green-600">-{formatCurrency(totalDiscount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold pt-1.5 border-t border-gray-200 dark:border-gray-600">
@@ -1176,7 +1231,7 @@ export default function SalesTransactionPage() {
         ) : cart.length > 0 ? (
           <>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-500 dark:text-gray-400">{cartItemCount} item{discountAmount > 0 && <span className="text-green-600 ml-1">· Diskon -{formatCurrency(discountAmount)}</span>}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{cartItemCount} item{totalDiscount > 0 && <span className="text-green-600 ml-1">· Diskon -{formatCurrency(totalDiscount)}</span>}</p>
               <p className="text-base font-bold text-blue-600 dark:text-blue-400 leading-tight">{formatCurrency(cartTotal)}</p>
             </div>
             <button
@@ -1222,7 +1277,21 @@ export default function SalesTransactionPage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{item.productName}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">{item.productSku} · {formatCurrency(item.unitPrice)}/unit</p>
+                      {priceOverrideOf(item) && (
+                        <p className="text-xs text-amber-700">
+                          {t('discount.line.from').replace('{price}', formatCurrency(item.listPrice!))} · {t(`discount.reason.${item.discountReason}`)}
+                          {item.discountNote ? ` — ${item.discountNote}` : ''}
+                        </p>
+                      )}
                     </div>
+                    <button
+                      onClick={() => setPriceEditId(item.productId)}
+                      aria-label={`${t('discount.line.button')} ${item.productName}`}
+                      title={t('discount.line.button')}
+                      className="ml-2 p-1 text-gray-400 hover:text-teal-700 shrink-0"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
                     <button onClick={() => handleRemoveFromCart(item.productId)} className="ml-2 text-gray-400 hover:text-red-500 text-sm shrink-0">🗑️</button>
                   </div>
                   <div className="flex items-center justify-between">
@@ -1241,8 +1310,19 @@ export default function SalesTransactionPage() {
               <div className="p-3 border-t border-gray-200 dark:border-gray-700 space-y-2 shrink-0">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-500 dark:text-gray-400">{cartItemCount} item</span>
-                  {discountAmount > 0 && <span className="text-sm text-green-600 font-semibold">Diskon -{formatCurrency(discountAmount)}</span>}
+                  {totalDiscount > 0 && <span className="text-sm text-green-600 font-semibold">Diskon -{formatCurrency(totalDiscount)}</span>}
                 </div>
+                <button
+                  onClick={() => setIsDiscountOpen(true)}
+                  className="flex w-full items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm"
+                >
+                  <span className="inline-flex items-center gap-1.5 font-semibold"><BadgePercent className="h-4 w-4" /> {t('discount.total.button')}</span>
+                  <span className={discountProblem ? 'text-red-600 text-xs' : 'text-teal-700 text-xs'}>
+                    {manualDiscount
+                      ? (discountProblem ? t('discount.total.tooLarge') : `-${formatCurrency(manualDiscount.amount)} · ${t(`discount.reason.${manualDiscount.reason}`)}`)
+                      : ''}
+                  </span>
+                </button>
                 <div className="flex justify-between items-center">
                   <span className="text-base font-bold text-gray-900 dark:text-gray-100">Total</span>
                   <span className="text-sm md:text-xl font-bold text-blue-600">{formatCurrency(cartTotal)}</span>
@@ -1273,6 +1353,30 @@ export default function SalesTransactionPage() {
       )}
 
       {receiptData && <PrintPreviewModal isOpen={isPrintModalOpen} onClose={() => setIsPrintModalOpen(false)} receiptData={receiptData} />}
+
+      {priceEditId && (() => {
+        const item = cart.find(i => i.productId === priceEditId)
+        if (!item) return null
+        return (
+          <PriceOverrideModal
+            itemName={item.productName}
+            listPrice={item.listPrice ?? item.unitPrice}
+            currentPrice={item.unitPrice}
+            current={{ reason: item.discountReason, note: item.discountNote }}
+            onSave={(change) => handleChangePrice(item.productId, change)}
+            onClose={() => setPriceEditId(null)}
+          />
+        )
+      })()}
+
+      {isDiscountOpen && (
+        <ManualDiscountModal
+          due={cartSubtotal - discountAmount}
+          current={manualDiscount}
+          onSave={(d) => { setManualDiscount(d); setIsDiscountOpen(false) }}
+          onClose={() => setIsDiscountOpen(false)}
+        />
+      )}
       {isScannerOpen && <BarcodeScanner onScan={handleBarcodeScan} onClose={() => setIsScannerOpen(false)} />}
       <PaymentModal
         isOpen={isPaymentModalOpen}
@@ -1288,8 +1392,10 @@ export default function SalesTransactionPage() {
           productSku: item.productSku,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
+          priceOverride: priceOverrideOf(item),
         }))}
         discountAmount={discountAmount}
+        manualDiscount={manualDiscount}
         notes={appliedPromo ? `Promo applied: ${appliedPromo.promoName}` : undefined}
         customerName={selectedOutlet?.name}
         onSuccess={handlePaymentSuccess}

@@ -76,7 +76,7 @@ export default function TransactionsPage() {
 
   const { data, isLoading, refetch } = trpc.transactions.list.useQuery(filters)
   const { data: outletsData }        = trpc.outlets.getAll.useQuery()
-  const { data: permissionsData }    = trpc.users.getMyPermissions.useQuery()
+  const { data: actions }            = trpc.transactions.myActions.useQuery()
   const { data: planData }           = trpc.auth.getPlan.useQuery()
   const canExport = planData ? getLimits(planData.plan).canExport : null
 
@@ -91,7 +91,7 @@ export default function TransactionsPage() {
     if (!selectedTx || voidReason.length < 10) { showToast('Alasan minimal 10 karakter', 'error'); return }
     try {
       await voidMutation.mutateAsync({ transactionId: selectedTx, reason: voidReason })
-      showToast('Transaksi berhasil divoid', 'success')
+      showToast(t('transactions.voidRequested'), 'success')
     } catch (err) { showToast(err instanceof Error ? err.message : 'Gagal void transaksi. Periksa koneksi dan coba lagi.', 'error') }
   }
 
@@ -106,11 +106,11 @@ export default function TransactionsPage() {
   const canVoid = (tx: { status: string; createdAt: string | Date }): boolean =>
     tx.status === 'completed' &&
     new Date(tx.createdAt).toDateString() === new Date().toDateString() &&
-    !!permissionsData?.permissions?.canVoidTransactions
+    !!actions?.canRequestVoid
 
   const canRefund = (tx: { status: string }): boolean =>
     (tx.status === 'completed' || tx.status === 'voided') &&
-    !!permissionsData?.permissions?.canVoidTransactions
+    !!actions?.canRequestRefund
 
   const outletOptions = [
     { value: '', label: 'Semua Outlet' },
@@ -258,6 +258,17 @@ export default function TransactionsPage() {
                           -{formatCurrency(tx.discountAmount)}
                         </span>
                       )}
+                      {(() => {
+                        const lines = tx.items?.filter(i => i.discountReason) ?? []
+                        const reasons = [tx.discountReason, ...lines.map(i => i.discountReason)].filter((r): r is string => !!r)
+                        if (reasons.length === 0) return null
+                        const notes = [tx.discountNote, ...lines.map(i => i.discountNote)].filter(Boolean)
+                        return (
+                          <span className="block text-[10px] font-normal text-amber-700" title={notes.join(' · ') || undefined}>
+                            {t('transactions.manualDiscount')}: {[...new Set(reasons)].map(r => t(`discount.reason.${r}`)).join(', ')}
+                          </span>
+                        )
+                      })()}
                     </td>
                     <td className="px-3 md:px-4 py-3 text-xs capitalize text-gray-600 dark:text-gray-400">{tx.paymentMethod}</td>
                     <td className="px-3 md:px-4 py-3">

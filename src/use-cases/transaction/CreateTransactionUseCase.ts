@@ -12,6 +12,11 @@ import { StockBehavior } from '@/domain/catalog/value-objects/stock-behavior'
 import { DomainException, DomainErrorCode } from '@/domain/errors/DomainException'
 import { logger } from '@/lib/logger'
 import { businessDate } from '@/lib/business/timezone'
+import {
+  checkManualDiscount,
+  justifyDiscount,
+  type DiscountJustification,
+} from '@/domain/sales/manualDiscount'
 
 export interface CreateTransactionInput {
   tenantId: string
@@ -33,10 +38,20 @@ export interface CreateTransactionInput {
      * checkout input schemas must never accept it from the client.
      */
     agreedUnitPrice?: number
+    /** Server-set with agreedUnitPrice: why the note charged it below the list price. */
+    agreedReason?: DiscountJustification | null
+    /**
+     * A line the cashier sold below its catalogue price, with the reason. Used only
+     * when it is lower than the catalogue price; the reason is checked here.
+     */
+    priceOverride?: { unitPrice: number; reason?: string | null; note?: string | null }
   }[]
   paymentMethod: 'cash' | 'card' | 'transfer' | 'ewallet'
   amountPaid?: number
+  /** Promo or voucher discount. */
   discountAmount: number
+  /** An amount the cashier takes off the whole sale, with a reason; added to discountAmount. */
+  manualDiscount?: { amount: number; reason?: string | null; note?: string | null } | null
   notes?: string
   planLimit: number | null
   currentMonthCount: number
@@ -63,6 +78,8 @@ type ResolvedTransactionItem = {
   quantity: number
   unitPrice: number
   unitCost: number | null
+  listPrice: number
+  justification: DiscountJustification | null
 }
 
 export class CreateTransactionUseCase {
@@ -101,7 +118,9 @@ export class CreateTransactionUseCase {
       0,
     )
     const taxAmount = 0
-    const totalAmount = subtotal - input.discountAmount + taxAmount
+    const manual = checkManualDiscount(input.manualDiscount, subtotal - input.discountAmount)
+    const discountAmount = input.discountAmount + (manual?.amount ?? 0)
+    const totalAmount = subtotal - discountAmount + taxAmount
     const status = input.status ?? 'completed'
     const amountPaid = status === 'pending' ? 0 : input.amountPaid ?? totalAmount
     const changeAmount = status === 'pending' ? 0 : amountPaid - totalAmount
@@ -129,7 +148,10 @@ export class CreateTransactionUseCase {
         shiftId: input.shiftId ?? null,
         status,
         subtotal,
-        discountAmount: input.discountAmount,
+        discountAmount,
+        manualDiscount: manual?.amount ?? 0,
+        discountReason: manual?.reason ?? null,
+        discountNote: manual?.note ?? null,
         taxAmount,
         totalAmount,
         paymentMethod: input.paymentMethod,
@@ -170,6 +192,9 @@ export class CreateTransactionUseCase {
       unitPrice: item.unitPrice,
       lineTotal: item.quantity * item.unitPrice,
       unitCost: item.unitCost,
+      listPrice: item.listPrice,
+      discountReason: item.justification?.reason ?? null,
+      discountNote: item.justification?.note ?? null,
     }))
 
     try {
@@ -279,14 +304,27 @@ export class CreateTransactionUseCase {
         throw new Error(`Product not found: ${item.productId}`)
       }
 
+      const listPrice = this.resolveUnitPrice(product, item.unitPrice)
+      let unitPrice = listPrice
+      let justification: DiscountJustification | null = null
+      if (item.agreedUnitPrice !== undefined) {
+        unitPrice = item.agreedUnitPrice
+        if (unitPrice < listPrice) justification = item.agreedReason ?? null
+      } else if (item.priceOverride && item.priceOverride.unitPrice < listPrice) {
+        justification = justifyDiscount(item.priceOverride)
+        unitPrice = Math.max(0, item.priceOverride.unitPrice)
+      }
+
       return {
         productId: product.id,
         productName: product.name,
         productSku: product.sku,
         quantity: item.quantity,
-        unitPrice: item.agreedUnitPrice ?? this.resolveUnitPrice(product, item.unitPrice),
+        unitPrice,
         // Snapshot the cost so later cost changes do not rewrite past profit.
         unitCost: product.cost_price != null ? Number(product.cost_price) : null,
+        listPrice,
+        justification,
       }
     })
   }

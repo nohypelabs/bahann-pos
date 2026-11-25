@@ -11,6 +11,7 @@ import { trpc } from '@/lib/trpc/client'
 import { ChartSkeleton, ExportLoadingSkeleton } from '@/components/ui/Skeletons'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { getLimits } from '@/lib/plans'
+import { ManualDiscountReport } from '@/components/reports/ManualDiscountReport'
 import { DollarSign, TrendingUp, Receipt, Package, BarChart3, Trophy, FileText, Download, Lock } from 'lucide-react'
 
 const RevenueLineChart = lazy(() => import('@/components/charts/RevenueLineChartLazy'))
@@ -158,6 +159,8 @@ export default function ReportsPage() {
           </div>
         </div>
       </SectionCard>
+
+      <ManualDiscountReport outletId={selectedOutletId || undefined} days={dateRange} />
 
       {/* Export */}
       <SectionCard

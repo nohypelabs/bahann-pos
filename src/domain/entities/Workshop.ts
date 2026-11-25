@@ -1,4 +1,5 @@
 // Workshop (bengkel) module entities. Design: docs/BENGKEL_MODULE.md.
+import type { DiscountReason, ManualDiscount } from '@/domain/sales/manualDiscount'
 
 export interface Customer {
   id: string
@@ -45,6 +46,9 @@ export interface ServiceOrderItem {
   unitPrice: number | null
   /** The product's current price, for display and when unitPrice is null. */
   listPrice: number
+  /** Why the line is charged below its list price (see src/domain/sales/manualDiscount.ts). */
+  priceReason: DiscountReason | null
+  priceNote: string | null
 }
 
 export interface ServiceOrder {
@@ -64,6 +68,8 @@ export interface ServiceOrder {
   closedAt: string | null
   cancelReason: string | null
   items: ServiceOrderItem[]
+  /** An amount off the whole note, given by the cashier with a reason. */
+  manualDiscount: ManualDiscount | null
 }
 
 /** A row in the open-notes list. */

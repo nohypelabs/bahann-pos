@@ -9,6 +9,8 @@ export interface ReceiptItem {
   quantity: number
   unitPrice: number
   total: number
+  /** The normal price, printed when the line was sold below it. */
+  listPrice?: number
 }
 
 export interface ReceiptData {
@@ -133,6 +135,11 @@ export const PrintReceipt = forwardRef<HTMLDivElement, PrintReceiptProps>(
                     <td className="receipt-item-name">
                       <div>{item.name}</div>
                       <div className="receipt-item-sku">SKU: {item.sku}</div>
+                      {item.listPrice !== undefined && item.listPrice > item.unitPrice && (
+                        <div className="receipt-item-sku">
+                          Normal {formatCurrency(item.listPrice)}, hemat {formatCurrency((item.listPrice - item.unitPrice) * item.quantity)}
+                        </div>
+                      )}
                     </td>
                     <td className="text-center">{item.quantity}</td>
                     <td className="text-right">

@@ -13,10 +13,13 @@ import {
   getUserOutletIds,
   requirePermission,
   assertOutletAccessible,
+  userHasPermission,
 } from '@/server/lib/tenant'
 import { container } from '@/infra/container'
 import { toRangeEnd, toRangeStart } from '@/lib/business/timezone'
 import { MONTHLY_TRANSACTION_LIMITS } from '@/lib/plans'
+import { manualDiscountInput, priceOverrideInput } from '@/shared/schemas/manualDiscount'
+import { loadManualDiscounts } from '@/server/lib/manualDiscountReport'
 
 const PLAN_LIMITS: Record<string, number> = MONTHLY_TRANSACTION_LIMITS
 
@@ -26,6 +29,7 @@ const transactionItemInput = z.object({
   productSku: z.string().optional(),
   quantity: z.number().positive(),
   unitPrice: z.number().nonnegative().optional(),
+  priceOverride: priceOverrideInput.optional(),
 })
 
 type ApprovalActionType = 'void' | 'refund'
@@ -134,6 +138,42 @@ async function createApprovalRequest(input: {
 }
 
 export const transactionsRouter = router({
+  /**
+   * What the signed-in user may ask for on a sale, from the same role permissions
+   * the void and refund requests check (not the older users.permissions flags).
+   */
+  myActions: protectedProcedure.query(async ({ ctx }) => {
+    const tenantId = ctx.session.tenantId!
+    const [canRequestVoid, canRequestRefund] = await Promise.all([
+      userHasPermission(ctx.userId, tenantId, 'pos.transaction.void.request'),
+      userHasPermission(ctx.userId, tenantId, 'pos.refund.request'),
+    ])
+    return { canRequestVoid, canRequestRefund }
+  }),
+
+  /**
+   * Discounts cashiers gave by hand (lines below the list price, amounts off a
+   * sale) with who and why. For the owner, admins and anyone allowed outlet reports.
+   */
+  manualDiscounts: protectedProcedure
+    .input(z.object({
+      outletId: z.string().uuid().optional(),
+      /** Last N days; 0 for all time. */
+      days: z.number().int().min(0).max(3660).default(30),
+    }))
+    .query(async ({ input, ctx }) => {
+      const tenantId = ctx.session.tenantId!
+      const outletIds = await getUserOutletIds(ctx.userId, tenantId)
+      if (input.outletId && !outletIds.includes(input.outletId)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied: outlet not accessible' })
+      }
+      if (ctx.session.role !== 'admin') {
+        await requirePermission(ctx.userId, tenantId, 'report.outlet.view', input.outletId)
+      }
+      const since = input.days > 0 ? new Date(Date.now() - input.days * 24 * 60 * 60 * 1000) : null
+      return loadManualDiscounts(tenantId, input.outletId ? [input.outletId] : outletIds, since)
+    }),
+
   getPlanUsage: protectedProcedure
     .input(z.object({ outletId: z.string().uuid() }))
     .query(async ({ input, ctx }) => {
@@ -156,6 +196,7 @@ export const transactionsRouter = router({
         paymentMethod: z.enum(['cash', 'card', 'transfer', 'ewallet']),
         amountPaid: z.number().nonnegative().optional(),
         discountAmount: z.number().nonnegative().default(0),
+        manualDiscount: manualDiscountInput.optional(),
         notes: z.string().optional(),
         /**
          * A sale made while offline, sent now by the sync manager: it keeps its own
@@ -226,6 +267,7 @@ export const transactionsRouter = router({
           paymentMethod: input.paymentMethod,
           amountPaid: input.amountPaid,
           discountAmount: input.discountAmount,
+          manualDiscount: input.manualDiscount,
           notes: input.notes,
           planLimit: limit === Infinity || input.offline ? null : limit,
           currentMonthCount,

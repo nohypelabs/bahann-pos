@@ -27,7 +27,8 @@ function makeRepo(overrides: Record<string, jest.Mock> = {}) {
     getServiceOrder: jest.fn().mockResolvedValue(order()),
     removeServiceOrderItem: jest.fn(),
     setServiceOrderItem: jest.fn(),
-    productBelongsToTenant: jest.fn().mockResolvedValue(true),
+    productPrice: jest.fn().mockResolvedValue(50000),
+    setServiceOrderDiscount: jest.fn(),
     cancelServiceOrder: jest.fn(),
     getLoyaltyProgram: jest.fn().mockResolvedValue({ id: 'prog-1', tenantId: T, type: 'stamp', name: 'Kartu Servis', isActive: true, config: {} }),
     saveLoyaltyProgram: jest.fn().mockImplementation(async (_t, type, p) => ({ id: 'prog-1', tenantId: T, type, ...p })),
@@ -83,11 +84,63 @@ describe('note items', () => {
   });
 
   it("refuses another tenant's product", async () => {
-    const repo = makeRepo({ productBelongsToTenant: jest.fn().mockResolvedValue(false) });
+    const repo = makeRepo({ productPrice: jest.fn().mockResolvedValue(null) });
     await expect(
       useCase(repo).setServiceOrderItem(T, 'user-1', 'so-1', { productId: 'p-x', quantity: 1 }),
     ).rejects.toBeInstanceOf(DomainException);
     expect(repo.setServiceOrderItem).not.toHaveBeenCalled();
+  });
+
+  it('needs a reason to charge below the list price', async () => {
+    const repo = makeRepo();
+    await expect(
+      useCase(repo).setServiceOrderItem(T, 'user-1', 'so-1', { productId: 'p-1', quantity: 1, unitPrice: 45000 }),
+    ).rejects.toMatchObject({ code: DomainErrorCode.DISCOUNT_REASON_REQUIRED });
+    await expect(
+      useCase(repo).setServiceOrderItem(T, 'user-1', 'so-1', { productId: 'p-1', quantity: 1, unitPrice: 45000, priceReason: 'OTHER' }),
+    ).rejects.toMatchObject({ code: DomainErrorCode.DISCOUNT_NOTE_REQUIRED });
+
+    await useCase(repo).setServiceOrderItem(T, 'user-1', 'so-1', {
+      productId: 'p-1', quantity: 1, unitPrice: 45000, priceReason: 'OWNER_POLICY', priceNote: ' langganan lama ',
+    });
+    expect(repo.setServiceOrderItem).toHaveBeenCalledWith(T, 'so-1', expect.objectContaining({
+      unitPrice: 45000, priceReason: 'OWNER_POLICY', priceNote: 'langganan lama',
+    }));
+  });
+
+  it('needs no reason for a price at or above the list price', async () => {
+    const repo = makeRepo();
+    await useCase(repo).setServiceOrderItem(T, 'user-1', 'so-1', { productId: 'p-1', quantity: 1, unitPrice: 60000, priceReason: 'ROUNDING' });
+    expect(repo.setServiceOrderItem).toHaveBeenCalledWith(T, 'so-1', expect.objectContaining({ unitPrice: 60000, priceReason: null }));
+  });
+
+  it('keeps the saved reason when only the quantity changes', async () => {
+    const saved = { productId: 'p-1', unitPrice: 45000, listPrice: 50000, quantity: 1, priceReason: 'DAMAGED', priceNote: 'dus penyok' };
+    const repo = makeRepo({ getServiceOrder: jest.fn().mockResolvedValue(order({ items: [saved] })) });
+    await useCase(repo).setServiceOrderItem(T, 'user-1', 'so-1', { productId: 'p-1', quantity: 2, unitPrice: 45000 });
+    expect(repo.setServiceOrderItem).toHaveBeenCalledWith(T, 'so-1', expect.objectContaining({
+      quantity: 2, priceReason: 'DAMAGED', priceNote: 'dus penyok',
+    }));
+  });
+});
+
+describe('setServiceOrderDiscount', () => {
+  const items = [{ productId: 'p-1', unitPrice: null, listPrice: 50000, quantity: 2 }];
+
+  it('takes an amount off the note with a reason', async () => {
+    const repo = makeRepo({ getServiceOrder: jest.fn().mockResolvedValue(order({ items })) });
+    await useCase(repo).setServiceOrderDiscount(T, 'so-1', { amount: 5000, reason: 'ROUNDING' });
+    expect(repo.setServiceOrderDiscount).toHaveBeenCalledWith(T, 'so-1', { amount: 5000, reason: 'ROUNDING', note: null });
+  });
+
+  it('clears with zero and refuses more than the note is worth or no reason', async () => {
+    const repo = makeRepo({ getServiceOrder: jest.fn().mockResolvedValue(order({ items })) });
+    await useCase(repo).setServiceOrderDiscount(T, 'so-1', { amount: 0 });
+    expect(repo.setServiceOrderDiscount).toHaveBeenCalledWith(T, 'so-1', null);
+    await expect(useCase(repo).setServiceOrderDiscount(T, 'so-1', { amount: 100001, reason: 'ROUNDING' }))
+      .rejects.toMatchObject({ code: DomainErrorCode.DISCOUNT_TOO_LARGE });
+    await expect(useCase(repo).setServiceOrderDiscount(T, 'so-1', { amount: 1000 }))
+      .rejects.toMatchObject({ code: DomainErrorCode.DISCOUNT_REASON_REQUIRED });
   });
 });
 

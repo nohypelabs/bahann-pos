@@ -12,9 +12,11 @@ import type {
   Vehicle,
   VoucherReward,
 } from '@/domain/entities/Workshop'
+import { isDiscountReason, type ManualDiscount } from '@/domain/sales/manualDiscount'
 import type {
   CustomerInput,
   ServiceOrderInput,
+  ServiceOrderItemInput,
   VehicleInput,
   WorkshopRepository,
 } from '@/domain/repositories/WorkshopRepository'
@@ -81,11 +83,12 @@ const toProgram = (r: Row): LoyaltyProgram<unknown> => ({
 // The column hints (!customer_id …) pick the right foreign key: vehicles also points at customers.
 const ORDER_SELECT = `
   id, tenant_id, outlet_id, status, complaint, odometer_km, transaction_id, opened_at, closed_at, cancel_reason,
+  manual_discount, discount_reason, discount_note,
   vehicle:vehicles!vehicle_id(*),
   customer:customers!customer_id(*),
   mechanic:mechanics!mechanic_id(*),
   sale:transactions!transaction_id(total_amount),
-  items:service_order_items(id, product_id, quantity, unit_price, created_at, product:products(name, sku, price, item_type))
+  items:service_order_items(id, product_id, quantity, unit_price, price_reason, price_note, created_at, product:products(name, sku, price, item_type))
 `
 
 function toServiceOrder(r: Row): ServiceOrder {
@@ -102,8 +105,11 @@ function toServiceOrder(r: Row): ServiceOrder {
       quantity: i.quantity as number,
       unitPrice: i.unit_price === null || i.unit_price === undefined ? null : Number(i.unit_price),
       listPrice: Number(p.price ?? 0),
+      priceReason: isDiscountReason(i.price_reason) ? i.price_reason : null,
+      priceNote: (i.price_note as string | null) ?? null,
     }
   })
+  const manualAmount = Number(r.manual_discount ?? 0)
   return {
     id: r.id as string,
     tenantId: r.tenant_id as string,
@@ -120,6 +126,9 @@ function toServiceOrder(r: Row): ServiceOrder {
     closedAt: (r.closed_at as string | null) ?? null,
     cancelReason: (r.cancel_reason as string | null) ?? null,
     items,
+    manualDiscount: manualAmount > 0 && isDiscountReason(r.discount_reason)
+      ? { amount: manualAmount, reason: r.discount_reason, note: (r.discount_note as string | null) ?? null }
+      : null,
   }
 }
 
@@ -362,7 +371,7 @@ export class SupabaseWorkshopRepository implements WorkshopRepository {
   async setServiceOrderItem(
     tenantId: string,
     orderId: string,
-    input: { productId: string; quantity: number; unitPrice: number | null; addedBy: string },
+    input: ServiceOrderItemInput,
   ): Promise<void> {
     const { error } = await supabase.from('service_order_items').upsert(
       {
@@ -371,11 +380,27 @@ export class SupabaseWorkshopRepository implements WorkshopRepository {
         product_id: input.productId,
         quantity: input.quantity,
         unit_price: input.unitPrice,
+        price_reason: input.priceReason,
+        price_note: input.priceNote,
         added_by: input.addedBy,
       },
       { onConflict: 'service_order_id,product_id' },
     )
     if (error) fail('save note item', error)
+  }
+
+  async setServiceOrderDiscount(tenantId: string, orderId: string, discount: ManualDiscount | null): Promise<void> {
+    const { error } = await supabase
+      .from('service_orders')
+      .update({
+        manual_discount: discount?.amount ?? 0,
+        discount_reason: discount?.reason ?? null,
+        discount_note: discount?.note ?? null,
+      })
+      .eq('tenant_id', tenantId)
+      .eq('id', orderId)
+      .eq('status', 'open')
+    if (error) fail('save note discount', error)
   }
 
   async removeServiceOrderItem(tenantId: string, orderId: string, productId: string): Promise<void> {
@@ -432,10 +457,10 @@ export class SupabaseWorkshopRepository implements WorkshopRepository {
     return reserved
   }
 
-  async productBelongsToTenant(tenantId: string, productId: string): Promise<boolean> {
-    const { data, error } = await supabase.from('products').select('id').eq('tenant_id', tenantId).eq('id', productId).maybeSingle()
+  async productPrice(tenantId: string, productId: string): Promise<number | null> {
+    const { data, error } = await supabase.from('products').select('price').eq('tenant_id', tenantId).eq('id', productId).maybeSingle()
     if (error) fail('check product', error)
-    return Boolean(data)
+    return data ? Number((data as Row).price ?? 0) : null
   }
 
   // ─── Loyalty ────────────────────────────────────────────────────────────

@@ -21,6 +21,9 @@ interface TransactionRow {
   status: string
   subtotal: number
   discount_amount: number
+  manual_discount?: number | null
+  discount_reason?: string | null
+  discount_note?: string | null
   tax_amount: number
   total_amount: number
   payment_method: string
@@ -47,6 +50,9 @@ interface TransactionItemRow {
   quantity: number
   unit_price: number
   line_total: number
+  list_price?: number | null
+  discount_reason?: string | null
+  discount_note?: string | null
 }
 
 const TRANSACTION_WITH_RELATIONS_SELECT = `
@@ -68,6 +74,9 @@ function toTransaction(row: TransactionRow): Transaction {
     status: row.status as Transaction['status'],
     subtotal: row.subtotal,
     discountAmount: row.discount_amount,
+    manualDiscount: Number(row.manual_discount ?? 0),
+    discountReason: row.discount_reason ?? null,
+    discountNote: row.discount_note ?? null,
     taxAmount: row.tax_amount,
     totalAmount: row.total_amount,
     paymentMethod: row.payment_method as Transaction['paymentMethod'],
@@ -96,6 +105,9 @@ function toTransactionItem(row: TransactionItemRow): TransactionItem {
     quantity: row.quantity,
     unitPrice: row.unit_price,
     lineTotal: row.line_total,
+    listPrice: row.list_price == null ? null : Number(row.list_price),
+    discountReason: row.discount_reason ?? null,
+    discountNote: row.discount_note ?? null,
   }
 }
 
@@ -113,6 +125,9 @@ export class SupabaseTransactionRepository implements TransactionRepository {
         status: transaction.status,
         subtotal: transaction.subtotal,
         discount_amount: transaction.discountAmount,
+        manual_discount: transaction.manualDiscount ?? 0,
+        discount_reason: transaction.discountReason ?? null,
+        discount_note: transaction.discountNote ?? null,
         tax_amount: transaction.taxAmount,
         total_amount: transaction.totalAmount,
         payment_method: transaction.paymentMethod,
@@ -139,6 +154,9 @@ export class SupabaseTransactionRepository implements TransactionRepository {
       unit_price: item.unitPrice,
       line_total: item.lineTotal,
       unit_cost: item.unitCost ?? null,
+      list_price: item.listPrice ?? null,
+      discount_reason: item.discountReason ?? null,
+      discount_note: item.discountNote ?? null,
     }))
 
     const { error } = await supabase

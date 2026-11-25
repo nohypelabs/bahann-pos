@@ -17,6 +17,7 @@ import { BankTransferDisplay } from './BankTransferDisplay'
 import { CashPaymentDisplay } from './CashPaymentDisplay'
 import { EWalletDisplay } from './EWalletDisplay'
 import { trpc } from '@/lib/trpc/client'
+import type { DiscountReason, ManualDiscount } from '@/domain/sales/manualDiscount'
 
 type CheckoutItem = {
   productId: string
@@ -24,6 +25,7 @@ type CheckoutItem = {
   productSku?: string
   quantity: number
   unitPrice?: number
+  priceOverride?: { unitPrice: number; reason: DiscountReason; note?: string | null }
 }
 
 type PaymentResult = {
@@ -61,6 +63,8 @@ interface PaymentModalProps {
   amount: number
   items: CheckoutItem[]
   discountAmount?: number
+  /** The cashier's amount off the whole sale, with its reason (not for service notes). */
+  manualDiscount?: ManualDiscount | null
   notes?: string
   customerName?: string
   customerPhone?: string
@@ -94,6 +98,7 @@ export function PaymentModal({
   amount,
   items,
   discountAmount = 0,
+  manualDiscount,
   notes,
   customerName,
   customerPhone,
@@ -129,6 +134,7 @@ export function PaymentModal({
       amountPaid,
       items,
       discountAmount,
+      manualDiscount: manualDiscount ?? undefined,
       notes,
       customerName,
       customerPhone,

@@ -107,8 +107,9 @@ export async function refreshNotes(): Promise<void> {
     openedAt: n.openedAt,
     items: n.items.map((i) => ({
       productId: i.productId, productName: i.productName, productSku: i.productSku, itemType: i.itemType,
-      quantity: i.quantity, unitPrice: i.unitPrice, listPrice: i.listPrice,
+      quantity: i.quantity, unitPrice: i.unitPrice, listPrice: i.listPrice, priceReason: i.priceReason, priceNote: i.priceNote,
     })),
+    discount: n.manualDiscount,
   }))
   await offlineDb.transaction('rw', [offlineDb.wsNotes, offlineDb.wsMeta], async () => {
     await offlineDb.wsNotes.clear()

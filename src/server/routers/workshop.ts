@@ -7,6 +7,8 @@ import { run, workshopAdminProcedure, workshopProcedure } from '@/server/lib/wor
 import { assertOutletAccessible, getUserOutletIds } from '@/server/lib/tenant'
 import { cancelPendingNoteCheckouts } from '@/server/lib/workshopSale'
 import { workshopOfflineRouter } from './workshopOffline'
+import { DISCOUNT_NOTE_MAX } from '@/domain/sales/manualDiscount'
+import { discountReasonSchema } from '@/shared/schemas/manualDiscount'
 
 /**
  * Workshop (bengkel) module: customers and members, vehicles, mechanics, open
@@ -167,11 +169,28 @@ const notesRouter = router({
       productId: id,
       quantity: z.number().int().min(0).max(9999),
       unitPrice: z.number().min(0).max(1_000_000_000).nullish(),
+      priceReason: discountReasonSchema.nullish(),
+      priceNote: z.string().max(DISCOUNT_NOTE_MAX).nullish(),
     }))
     .mutation(async ({ input, ctx }) => {
       const tenantId = ctx.session.tenantId!
       await noteInAccessibleOutlet(ctx.userId, tenantId, input.id)
       await run(() => uc().setServiceOrderItem(tenantId, ctx.userId, input.id, input))
+      return { success: true }
+    }),
+
+  /** An amount off the whole note (0 clears it), with a reason. */
+  setDiscount: protectedProcedure
+    .input(z.object({
+      id,
+      amount: z.number().min(0).max(1_000_000_000),
+      reason: discountReasonSchema.nullish(),
+      note: z.string().max(DISCOUNT_NOTE_MAX).nullish(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const tenantId = ctx.session.tenantId!
+      await noteInAccessibleOutlet(ctx.userId, tenantId, input.id)
+      await run(() => uc().setServiceOrderDiscount(tenantId, input.id, input))
       return { success: true }
     }),
 

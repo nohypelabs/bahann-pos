@@ -98,8 +98,14 @@ async function applyOp(ctx: OpContext, op: OfflineOp): Promise<unknown> {
     case 'note.setItem': {
       await noteAtAccessibleOutlet(ctx, op.noteId)
       await run(() => uc().setServiceOrderItem(tenantId, userId, op.noteId, {
-        productId: op.productId, quantity: op.quantity, unitPrice: op.unitPrice,
+        productId: op.productId, quantity: op.quantity, unitPrice: op.unitPrice, priceReason: op.priceReason, priceNote: op.priceNote,
       }))
+      return null
+    }
+
+    case 'note.setDiscount': {
+      await noteAtAccessibleOutlet(ctx, op.noteId)
+      await run(() => uc().setServiceOrderDiscount(tenantId, op.noteId, { amount: op.amount, reason: op.reason, note: op.note }))
       return null
     }
 
@@ -125,6 +131,7 @@ async function applyOp(ctx: OpContext, op: OfflineOp): Promise<unknown> {
       for (const line of op.lines) {
         await run(() => uc().setServiceOrderItem(tenantId, userId, op.noteId, line))
       }
+      await run(() => uc().setServiceOrderDiscount(tenantId, op.noteId, op.discount ?? { amount: 0 }))
 
       const result = await runCheckout(ctx, {
         transactionId: op.transactionNumber,

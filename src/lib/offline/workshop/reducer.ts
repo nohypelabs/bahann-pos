@@ -18,6 +18,13 @@ export function lineTotal(note: Pick<WsNote, 'items'>): number {
   return note.items.reduce((sum, i) => sum + (i.unitPrice ?? i.listPrice) * i.quantity, 0)
 }
 
+/** The reason kept on a line: only while it is charged below its list price. */
+function lineReason(unitPrice: number | null, listPrice: number, op: { priceReason?: WsNote['items'][number]['priceReason']; priceNote?: string | null }, saved?: WsNote['items'][number]) {
+  if (unitPrice === null || unitPrice >= listPrice) return { priceReason: null, priceNote: null }
+  if (op.priceReason) return { priceReason: op.priceReason, priceNote: op.priceNote ?? null }
+  return { priceReason: saved?.priceReason ?? null, priceNote: saved?.priceNote ?? null }
+}
+
 /** Returns new notes with `ops` applied in order; the inputs are not modified. */
 export function applyOps(notes: WsNote[], ops: OfflineOp[], lookups: StationLookups): WsNote[] {
   const byId = new Map(notes.map((n) => [n.id, n]))
@@ -79,7 +86,9 @@ export function applyOps(notes: WsNote[], ops: OfflineOp[], lookups: StationLook
         if (op.quantity <= 0) {
           items = note.items.filter((i) => i.productId !== op.productId)
         } else if (existing) {
-          items = note.items.map((i) => (i.productId === op.productId ? { ...i, quantity: op.quantity, unitPrice: op.unitPrice } : i))
+          items = note.items.map((i) => (i.productId === op.productId
+            ? { ...i, quantity: op.quantity, unitPrice: op.unitPrice, ...lineReason(op.unitPrice, i.listPrice, op, i) }
+            : i))
         } else {
           const product = lookups.products.get(op.productId)
           if (!product) break
@@ -91,9 +100,20 @@ export function applyOps(notes: WsNote[], ops: OfflineOp[], lookups: StationLook
             quantity: op.quantity,
             unitPrice: op.unitPrice,
             listPrice: product.price,
+            ...lineReason(op.unitPrice, product.price, op),
           }]
         }
         byId.set(note.id, { ...note, items })
+        break
+      }
+
+      case 'note.setDiscount': {
+        const note = byId.get(op.noteId)
+        if (!note || note.status !== 'open') break
+        byId.set(note.id, {
+          ...note,
+          discount: op.amount > 0 && op.reason ? { amount: op.amount, reason: op.reason, note: op.note ?? null } : null,
+        })
         break
       }
 
@@ -111,10 +131,14 @@ export function applyOps(notes: WsNote[], ops: OfflineOp[], lookups: StationLook
         const charged = new Map(op.lines.map((l) => [l.productId, l]))
         const items = note.items
           .filter((i) => charged.has(i.productId))
-          .map((i) => ({ ...i, quantity: charged.get(i.productId)!.quantity, unitPrice: charged.get(i.productId)!.unitPrice }))
+          .map((i) => {
+            const line = charged.get(i.productId)!
+            return { ...i, quantity: line.quantity, unitPrice: line.unitPrice, ...lineReason(line.unitPrice, i.listPrice, line, i) }
+          })
         byId.set(note.id, {
           ...note,
           items,
+          discount: op.discount ? { amount: op.discount.amount, reason: op.discount.reason, note: op.discount.note ?? null } : null,
           status: 'paid',
           paid: {
             transactionNumber: op.transactionNumber,

@@ -9,6 +9,7 @@ import { container } from '@/infra/container'
 import { DomainException, DomainErrorCode } from '@/domain/errors/DomainException'
 import { voucherDiscount } from '@/domain/workshop/rules'
 import type { VoucherReward } from '@/domain/entities/Workshop'
+import type { DiscountJustification, ManualDiscount } from '@/domain/sales/manualDiscount'
 
 export interface NoteCheckout {
   serviceOrderId: string
@@ -20,9 +21,12 @@ export interface NoteCheckout {
     productSku: string
     quantity: number
     agreedUnitPrice: number
+    agreedReason: DiscountJustification | null
   }[]
   subtotal: number
   voucher: { id: string; code: string; discount: number } | null
+  /** The cashier's amount off the whole note, with its reason. */
+  manualDiscount: ManualDiscount | null
 }
 
 export interface LoyaltyOutcome {
@@ -108,6 +112,7 @@ export async function prepareNoteCheckout(
     productSku: i.productSku,
     quantity: i.quantity,
     agreedUnitPrice: i.unitPrice ?? i.listPrice,
+    agreedReason: i.priceReason ? { reason: i.priceReason, note: i.priceNote } : null,
   }))
   const subtotal = items.reduce((s, i) => s + i.agreedUnitPrice * i.quantity, 0)
 
@@ -133,7 +138,10 @@ export async function prepareNoteCheckout(
     }
   }
 
-  return { serviceOrderId, customerId: order.customer?.id ?? null, vehicleId: order.vehicle.id, items, subtotal, voucher }
+  return {
+    serviceOrderId, customerId: order.customer?.id ?? null, vehicleId: order.vehicle.id, items, subtotal, voucher,
+    manualDiscount: order.manualDiscount,
+  }
 }
 
 /** Records who and what a sale was for, and links its voucher. */

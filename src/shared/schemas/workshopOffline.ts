@@ -1,4 +1,5 @@
 import { z } from 'zod/v4'
+import { DISCOUNT_NOTE_MAX, DISCOUNT_REASONS } from '@/domain/sales/manualDiscount'
 
 // Operations a workshop cashier station records locally and sends to the server
 // (workshop.offline.push). Every id is generated on the client, so replaying an
@@ -6,6 +7,7 @@ import { z } from 'zod/v4'
 
 const uuid = z.string().uuid()
 const text = (max: number) => z.string().trim().max(max).nullish()
+const reason = z.enum(DISCOUNT_REASONS)
 
 const base = {
   /** Idempotency key: the server records each opId once. */
@@ -55,6 +57,18 @@ export const offlineOpSchema = z.discriminatedUnion('kind', [
     productId: uuid,
     quantity: z.number().int().min(0).max(9999),
     unitPrice: z.number().min(0).max(1_000_000_000).nullable(),
+    /** Why unitPrice is below the list price. */
+    priceReason: reason.nullish(),
+    priceNote: text(DISCOUNT_NOTE_MAX),
+  }),
+  z.object({
+    ...base,
+    kind: z.literal('note.setDiscount'),
+    noteId: uuid,
+    /** Amount off the whole note; 0 clears it. */
+    amount: z.number().min(0).max(1_000_000_000),
+    reason: reason.nullish(),
+    note: text(DISCOUNT_NOTE_MAX),
   }),
   z.object({
     ...base,
@@ -81,7 +95,15 @@ export const offlineOpSchema = z.discriminatedUnion('kind', [
       productId: uuid,
       quantity: z.number().int().min(1).max(9999),
       unitPrice: z.number().min(0).max(1_000_000_000),
+      priceReason: reason.nullish(),
+      priceNote: text(DISCOUNT_NOTE_MAX),
     })).min(1).max(500),
+    /** The amount off the whole note that was charged, if any. */
+    discount: z.object({
+      amount: z.number().min(0).max(1_000_000_000),
+      reason,
+      note: text(DISCOUNT_NOTE_MAX),
+    }).nullish(),
     total: z.number().min(0),
   }),
 ])

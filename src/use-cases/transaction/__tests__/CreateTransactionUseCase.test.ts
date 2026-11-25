@@ -142,3 +142,58 @@ describe('CreateTransactionUseCase prices', () => {
     expect(transactionRepo.create).toHaveBeenCalledWith(expect.objectContaining({ subtotal: 45000 }));
   });
 });
+
+describe('CreateTransactionUseCase manual discounts', () => {
+  const pending = { ...baseInput, status: 'pending' as const, amountPaid: 0 };
+
+  it('sells a line below its price only with a reason, and records both prices', async () => {
+    const { useCase, transactionRepo } = makeUseCase();
+    await expect(useCase.execute({
+      ...pending, items: [{ productId: 'prod-1', quantity: 2, priceOverride: { unitPrice: 4000 } }],
+    })).rejects.toMatchObject({ code: 'DISCOUNT_REASON_REQUIRED' });
+
+    await useCase.execute({
+      ...pending, items: [{ productId: 'prod-1', quantity: 2, priceOverride: { unitPrice: 4000, reason: 'DAMAGED', note: 'segel sobek' } }],
+    });
+    expect(transactionRepo.create).toHaveBeenCalledWith(expect.objectContaining({ subtotal: 8000 }));
+    expect(transactionRepo.createItems).toHaveBeenCalledWith([expect.objectContaining({
+      unitPrice: 4000, listPrice: 5000, discountReason: 'DAMAGED', discountNote: 'segel sobek',
+    })]);
+  });
+
+  it('ignores an override that is not below the catalogue price', async () => {
+    const { useCase, transactionRepo } = makeUseCase();
+    await useCase.execute({ ...pending, items: [{ productId: 'prod-1', quantity: 1, priceOverride: { unitPrice: 9000, reason: 'OTHER' } }] });
+    expect(transactionRepo.createItems).toHaveBeenCalledWith([expect.objectContaining({ unitPrice: 5000, discountReason: null })]);
+  });
+
+  it('adds an amount off the sale to the promo discount, with its reason', async () => {
+    const { useCase, transactionRepo } = makeUseCase();
+    await useCase.execute({
+      ...pending, discountAmount: 1000, items: [{ productId: 'prod-1', quantity: 2 }],
+      manualDiscount: { amount: 500, reason: 'ROUNDING' },
+    });
+    expect(transactionRepo.create).toHaveBeenCalledWith(expect.objectContaining({
+      subtotal: 10000, discountAmount: 1500, manualDiscount: 500, discountReason: 'ROUNDING', totalAmount: 8500,
+    }));
+  });
+
+  it('refuses an amount off larger than what is left to pay', async () => {
+    const { useCase, transactionRepo } = makeUseCase();
+    await expect(useCase.execute({
+      ...pending, discountAmount: 6000, items: [{ productId: 'prod-1', quantity: 2 }],
+      manualDiscount: { amount: 5000, reason: 'OWNER_POLICY' },
+    })).rejects.toMatchObject({ code: 'DISCOUNT_TOO_LARGE' });
+    expect(transactionRepo.create).not.toHaveBeenCalled();
+  });
+
+  it("keeps a service note's reason for its agreed price", async () => {
+    const { useCase, transactionRepo } = makeUseCase();
+    await useCase.execute({
+      ...pending, items: [{ productId: 'prod-1', quantity: 1, agreedUnitPrice: 4500, agreedReason: { reason: 'OWNER_POLICY', note: null } }],
+    });
+    expect(transactionRepo.createItems).toHaveBeenCalledWith([expect.objectContaining({
+      unitPrice: 4500, listPrice: 5000, discountReason: 'OWNER_POLICY',
+    })]);
+  });
+});

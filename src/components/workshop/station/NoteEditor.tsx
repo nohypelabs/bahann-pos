@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ArrowLeft, CloudOff, Minus, Plus, ScanLine, Search, Trash2, Ticket, Wrench } from 'lucide-react'
+import { ArrowLeft, BadgePercent, CloudOff, Minus, Pencil, Plus, ScanLine, Search, Trash2, Ticket, Wrench } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input, Select, Textarea } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
@@ -23,6 +23,9 @@ import { lineTotal } from '@/lib/offline/workshop/reducer'
 import { enqueue, flush, newId, sync } from '@/lib/offline/workshop/station'
 import type { StationCatalog, StationNotes } from '@/lib/offline/workshop/useStation'
 import { OfflineCashModal } from './OfflineCashModal'
+import { PriceOverrideModal, type PriceChange } from '@/components/discount/PriceOverrideModal'
+import { ManualDiscountModal } from '@/components/discount/ManualDiscountModal'
+import type { DiscountJustification, ManualDiscount } from '@/domain/sales/manualDiscount'
 
 interface Props {
   noteId: string
@@ -66,6 +69,9 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
   const [cancelOpen, setCancelOpen] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
   const [draft, setDraft] = useState<{ mechanicId: string; complaint: string; odometer: string } | null>(null)
+  /** The line whose price is being changed, and the price typed so far. */
+  const [priceEdit, setPriceEdit] = useState<{ productId: string; price: number } | null>(null)
+  const [discountOpen, setDiscountOpen] = useState(false)
 
   useEffect(() => {
     const timer = setTimeout(() => setTerm(search.trim().toLowerCase()), 150)
@@ -110,25 +116,49 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
   const vouchers = online && !unsynced ? (serverNote.data?.vouchers ?? []) : []
   const stampCard = online ? serverNote.data?.stampCard ?? null : null
   const voucher = vouchers.find((v) => v.code === voucherCode) ?? null
-  let discount = 0
+  let voucherCut = 0
   let voucherProblem = ''
   if (voucher) {
     try {
-      discount = voucherDiscount(voucher.reward, n.items.map((i) => ({ itemType: i.itemType, unitPrice: priceOf(i), quantity: i.quantity })))
+      voucherCut = voucherDiscount(voucher.reward, n.items.map((i) => ({ itemType: i.itemType, unitPrice: priceOf(i), quantity: i.quantity })))
     } catch (err) {
       voucherProblem = workshopErrorMessage(err instanceof Error ? new Error((err as { code?: string }).code ?? err.message) : err, language)
     }
   }
+  // The cashier's amount off the whole note comes after the voucher.
+  const manual = n.discount ?? null
+  const manualCut = manual?.amount ?? 0
+  const discount = voucherCut + manualCut
   const total = subtotal - discount
-  const canPay = isOpen && n.items.length > 0 && !!shift && !voucherProblem
+  const discountProblem = manualCut > 0 && manualCut > subtotal - voucherCut
+  const canPay = isOpen && n.items.length > 0 && !!shift && !voucherProblem && !discountProblem
 
-  const setItem = (productId: string, quantity: number, unitPrice: number | null) =>
-    enqueue({ kind: 'note.setItem', opId: newId(), at: now(), noteId, productId, quantity, unitPrice })
+  type Line = WsNote['items'][number]
+  const setItem = (productId: string, quantity: number, unitPrice: number | null, why: DiscountJustification | null = null) =>
+    enqueue({
+      kind: 'note.setItem', opId: newId(), at: now(), noteId, productId, quantity, unitPrice,
+      priceReason: why?.reason ?? null, priceNote: why?.note ?? null,
+    })
+  /** A line's saved reason, sent again when only its quantity changes. */
+  const keptReason = (i: Line): DiscountJustification | null => (i.priceReason ? { reason: i.priceReason, note: i.priceNote ?? null } : null)
 
   const addProduct = async (productId: string) => {
     const existing = n.items.find((i) => i.productId === productId)
-    await setItem(productId, (existing?.quantity ?? 0) + 1, existing?.unitPrice ?? null)
+    await setItem(productId, (existing?.quantity ?? 0) + 1, existing?.unitPrice ?? null, existing ? keptReason(existing) : null)
     setSearch('')
+  }
+
+  const savePrice = async (i: Line, change: PriceChange) => {
+    await setItem(i.productId, i.quantity, change.unitPrice === i.listPrice ? null : change.unitPrice, change.justification)
+    setPriceEdit(null)
+  }
+
+  const saveDiscount = async (d: ManualDiscount | null) => {
+    await enqueue({
+      kind: 'note.setDiscount', opId: newId(), at: now(), noteId,
+      amount: d?.amount ?? 0, reason: d?.reason ?? null, note: d?.note ?? null,
+    })
+    setDiscountOpen(false)
   }
 
   /** A scanned or typed barcode/SKU, matched exactly; otherwise the only search result. */
@@ -183,7 +213,10 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
       time: at.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       cashier: profile?.name ?? cashierName(),
       outlet: { name: outlet?.name ?? 'Laku POS', address: outlet?.address ?? '', phone: profile?.whatsappNumber ?? '', email: profile?.email ?? '' },
-      items: n.items.map((i) => ({ name: i.productName, sku: i.productSku, quantity: i.quantity, unitPrice: priceOf(i), total: priceOf(i) * i.quantity })),
+      items: n.items.map((i) => ({
+        name: i.productName, sku: i.productSku, quantity: i.quantity, unitPrice: priceOf(i), total: priceOf(i) * i.quantity,
+        listPrice: i.listPrice,
+      })),
       subtotal, tax: 0, discount, total,
       payment: { method: args.method, amount: args.amountPaid, change: args.change },
       notes: args.offline ? t('workshop.offline.receiptNote') : undefined,
@@ -193,7 +226,7 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
         mechanic: n.mechanic?.name,
         odometerKm: n.odometerKm,
         member: n.customer?.isMember ? { name: n.customer.name, code: n.customer.memberCode ?? '' } : undefined,
-        voucherUsed: voucher ? { code: voucher.code, discount } : undefined,
+        voucherUsed: voucher ? { code: voucher.code, discount: voucherCut } : undefined,
         stamps: args.loyalty?.required ? { balance: args.loyalty.balance ?? 0, required: args.loyalty.required } : undefined,
         newVouchers: args.loyalty?.vouchers?.length ? args.loyalty.vouchers : undefined,
       },
@@ -227,13 +260,16 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
   const payOffline = async (cashGiven: number) => {
     if (!shift) return
     const number = generateTransactionId()
-    const receiptData = makeReceipt({ number, method: 'cash', amountPaid: cashGiven, change: Math.max(0, cashGiven - subtotal), offline: true })
+    const receiptData = makeReceipt({ number, method: 'cash', amountPaid: cashGiven, change: Math.max(0, cashGiven - total), offline: true })
     await enqueue({
       kind: 'note.payCash', opId: newId(), at: now(), noteId,
       outletId: n.outletId, shiftId: shift.id, deviceId: shift.deviceId ?? undefined,
       transactionNumber: number, amountPaid: cashGiven,
-      lines: n.items.map((i) => ({ productId: i.productId, quantity: i.quantity, unitPrice: priceOf(i) })),
-      total: subtotal,
+      lines: n.items.map((i) => ({
+        productId: i.productId, quantity: i.quantity, unitPrice: priceOf(i), priceReason: i.priceReason ?? null, priceNote: i.priceNote ?? null,
+      })),
+      discount: manual,
+      total,
     })
     setOfflinePayOpen(false)
     setReceipt(receiptData)
@@ -356,32 +392,51 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
                     {i.productName}
                   </p>
                   <p className="text-xs text-gray-400">{i.productSku}</p>
+                  {i.priceReason && priceOf(i) < i.listPrice && (
+                    <p className="text-xs text-amber-700">
+                      {t('discount.line.from').replace('{price}', formatCurrency(i.listPrice))} · {t(`discount.reason.${i.priceReason}`)}
+                      {i.priceNote ? ` — ${i.priceNote}` : ''}
+                    </p>
+                  )}
                 </div>
                 {i.itemType === 'SERVICE' && isOpen ? (
                   <input
-                    key={`${i.productId}-${i.unitPrice}`}
+                    key={`${i.productId}-${i.unitPrice}${priceEdit?.productId === i.productId ? '-edit' : ''}`}
                     defaultValue={priceOf(i)}
                     inputMode="numeric"
                     aria-label={t('workshop.note.agreedPrice')}
                     title={t('workshop.note.agreedPrice')}
                     onBlur={(e) => {
                       const v = Number(e.target.value.replace(/\D/g, ''))
-                      if (v !== priceOf(i)) void setItem(i.productId, i.quantity, v === i.listPrice ? null : v)
+                      if (v === priceOf(i)) return
+                      // Below the list price needs a reason, asked for in the dialog.
+                      if (v < i.listPrice) setPriceEdit({ productId: i.productId, price: v })
+                      else void setItem(i.productId, i.quantity, v === i.listPrice ? null : v)
                     }}
                     className="w-28 px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-right text-sm"
                   />
                 ) : (
                   <span className="w-28 text-right text-sm">{formatCurrency(priceOf(i))}</span>
                 )}
+                {isOpen && (
+                  <button
+                    onClick={() => setPriceEdit({ productId: i.productId, price: priceOf(i) })}
+                    className="p-1.5 rounded-lg text-gray-500 hover:text-teal-700"
+                    aria-label={`${t('discount.line.button')} ${i.productName}`}
+                    title={t('discount.line.button')}
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                )}
                 <div className="flex items-center gap-1">
                   {isOpen && (
-                    <button onClick={() => void setItem(i.productId, i.quantity - 1, i.unitPrice)} className="p-1.5 rounded-lg border" aria-label="-">
+                    <button onClick={() => void setItem(i.productId, i.quantity - 1, i.unitPrice, keptReason(i))} className="p-1.5 rounded-lg border" aria-label="-">
                       <Minus className="w-3.5 h-3.5" />
                     </button>
                   )}
                   <span className="w-8 text-center text-sm font-semibold">{i.quantity}</span>
                   {isOpen && (
-                    <button onClick={() => void setItem(i.productId, i.quantity + 1, i.unitPrice)} className="p-1.5 rounded-lg border" aria-label="+">
+                    <button onClick={() => void setItem(i.productId, i.quantity + 1, i.unitPrice, keptReason(i))} className="p-1.5 rounded-lg border" aria-label="+">
                       <Plus className="w-3.5 h-3.5" />
                     </button>
                   )}
@@ -408,6 +463,13 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
             <div>
               <p className="text-xs text-gray-500">{discount > 0 ? `${formatCurrency(subtotal)} − ${formatCurrency(discount)}` : t('workshop.note.subtotal')}</p>
               <p className="text-xl font-extrabold">{formatCurrency(total)}</p>
+              {manual && (
+                <p className={`text-xs ${discountProblem ? 'text-red-600' : 'text-teal-700'}`}>
+                  {discountProblem
+                    ? t('discount.total.tooLarge')
+                    : t('discount.applied').replace('{amount}', formatCurrency(manual.amount)).replace('{reason}', t(`discount.reason.${manual.reason}`))}
+                </p>
+              )}
             </div>
             {vouchers.length > 0 && (
               <div className="flex-1 max-w-xs">
@@ -424,6 +486,9 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
               </div>
             )}
             <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setDiscountOpen(true)} disabled={n.items.length === 0}>
+                <BadgePercent className="w-4 h-4 mr-1" /> {t('discount.total.button')}
+              </Button>
               <Button variant="outline" onClick={() => setCancelOpen(true)}>{t('workshop.note.cancel')}</Button>
               <Button onClick={() => void startPay()} disabled={!canPay || preparing} title={!shift ? t('workshop.note.needShift') : undefined}>
                 {preparing ? t('common.loading') : t('workshop.note.pay')}
@@ -459,7 +524,32 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
       )}
 
       {offlinePayOpen && (
-        <OfflineCashModal amount={subtotal} onConfirm={payOffline} onClose={() => setOfflinePayOpen(false)} />
+        <OfflineCashModal amount={total} onConfirm={payOffline} onClose={() => setOfflinePayOpen(false)} />
+      )}
+
+      {priceEdit && (() => {
+        const line = n.items.find((i) => i.productId === priceEdit.productId)
+        if (!line) return null
+        return (
+          <PriceOverrideModal
+            itemName={line.productName}
+            listPrice={line.listPrice}
+            currentPrice={priceEdit.price}
+            current={{ reason: line.priceReason, note: line.priceNote }}
+            allowAbove={line.itemType === 'SERVICE'}
+            onSave={(change) => void savePrice(line, change)}
+            onClose={() => setPriceEdit(null)}
+          />
+        )
+      })()}
+
+      {discountOpen && (
+        <ManualDiscountModal
+          due={subtotal - voucherCut}
+          current={manual}
+          onSave={(d) => void saveDiscount(d)}
+          onClose={() => setDiscountOpen(false)}
+        />
       )}
 
       {scannerOpen && <BarcodeScanner onScan={(c) => void onScan(c)} onClose={() => setScannerOpen(false)} />}

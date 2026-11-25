@@ -56,6 +56,11 @@ export const DomainErrorCode = {
   VOUCHER_EXPIRED: 'VOUCHER_EXPIRED',
   VOUCHER_OTHER_CUSTOMER: 'VOUCHER_OTHER_CUSTOMER',
   VOUCHER_NEEDS_SERVICE: 'VOUCHER_NEEDS_SERVICE',
+
+  // Manual discounts
+  DISCOUNT_REASON_REQUIRED: 'DISCOUNT_REASON_REQUIRED',
+  DISCOUNT_NOTE_REQUIRED: 'DISCOUNT_NOTE_REQUIRED',
+  DISCOUNT_TOO_LARGE: 'DISCOUNT_TOO_LARGE',
 } as const;
 
 export type DomainErrorCode = (typeof DomainErrorCode)[keyof typeof DomainErrorCode];
@@ -95,6 +100,9 @@ export const DOMAIN_ERROR_MESSAGES_ID: Record<DomainErrorCode, string> = {
   VOUCHER_EXPIRED: 'Voucher sudah kedaluwarsa',
   VOUCHER_OTHER_CUSTOMER: 'Voucher ini milik pelanggan lain',
   VOUCHER_NEEDS_SERVICE: 'Voucher servis gratis butuh minimal satu jasa servis di nota',
+  DISCOUNT_REASON_REQUIRED: 'Pilih alasan diskon',
+  DISCOUNT_NOTE_REQUIRED: 'Tulis keterangan alasan diskon',
+  DISCOUNT_TOO_LARGE: 'Diskon melebihi total yang harus dibayar',
 };
 
 export const DOMAIN_ERROR_MESSAGES_EN: Record<DomainErrorCode, string> = {
@@ -128,4 +136,7 @@ export const DOMAIN_ERROR_MESSAGES_EN: Record<DomainErrorCode, string> = {
   VOUCHER_EXPIRED: 'Voucher has expired',
   VOUCHER_OTHER_CUSTOMER: 'This voucher belongs to another customer',
   VOUCHER_NEEDS_SERVICE: 'A free-service voucher needs at least one labour line',
+  DISCOUNT_REASON_REQUIRED: 'Choose a reason for the discount',
+  DISCOUNT_NOTE_REQUIRED: 'Describe the reason for the discount',
+  DISCOUNT_TOO_LARGE: 'The discount is larger than the amount due',
 };

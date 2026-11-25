@@ -887,6 +887,56 @@ export type Database = {
           },
         ]
       }
+      offline_ops: {
+        Row: {
+          created_at: string
+          device_id: string | null
+          error: string | null
+          kind: string
+          occurred_at: string | null
+          op_id: string
+          result: Json | null
+          status: string
+          tenant_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_id?: string | null
+          error?: string | null
+          kind: string
+          occurred_at?: string | null
+          op_id: string
+          result?: Json | null
+          status: string
+          tenant_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_id?: string | null
+          error?: string | null
+          kind?: string
+          occurred_at?: string | null
+          op_id?: string
+          result?: Json | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offline_ops_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       operational_expenses: {
         Row: {
           amount: number
@@ -1936,6 +1986,8 @@ export type Database = {
           added_by: string | null
           created_at: string
           id: string
+          price_note: string | null
+          price_reason: string | null
           product_id: string
           quantity: number
           service_order_id: string
@@ -1947,6 +1999,8 @@ export type Database = {
           added_by?: string | null
           created_at?: string
           id?: string
+          price_note?: string | null
+          price_reason?: string | null
           product_id: string
           quantity: number
           service_order_id: string
@@ -1958,6 +2012,8 @@ export type Database = {
           added_by?: string | null
           created_at?: string
           id?: string
+          price_note?: string | null
+          price_reason?: string | null
           product_id?: string
           quantity?: number
           service_order_id?: string
@@ -2004,7 +2060,10 @@ export type Database = {
           complaint: string | null
           created_at: string
           customer_id: string | null
+          discount_note: string | null
+          discount_reason: string | null
           id: string
+          manual_discount: number
           mechanic_id: string | null
           odometer_km: number | null
           opened_at: string
@@ -2023,7 +2082,10 @@ export type Database = {
           complaint?: string | null
           created_at?: string
           customer_id?: string | null
+          discount_note?: string | null
+          discount_reason?: string | null
           id?: string
+          manual_discount?: number
           mechanic_id?: string | null
           odometer_km?: number | null
           opened_at?: string
@@ -2042,7 +2104,10 @@ export type Database = {
           complaint?: string | null
           created_at?: string
           customer_id?: string | null
+          discount_note?: string | null
+          discount_reason?: string | null
           id?: string
+          manual_discount?: number
           mechanic_id?: string | null
           odometer_km?: number | null
           opened_at?: string
@@ -2513,8 +2578,11 @@ export type Database = {
       transaction_items: {
         Row: {
           created_at: string | null
+          discount_note: string | null
+          discount_reason: string | null
           id: string
           line_total: number
+          list_price: number | null
           product_id: string | null
           product_name: string
           product_sku: string | null
@@ -2526,8 +2594,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          discount_note?: string | null
+          discount_reason?: string | null
           id?: string
           line_total: number
+          list_price?: number | null
           product_id?: string | null
           product_name: string
           product_sku?: string | null
@@ -2539,8 +2610,11 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          discount_note?: string | null
+          discount_reason?: string | null
           id?: string
           line_total?: number
+          list_price?: number | null
           product_id?: string | null
           product_name?: string
           product_sku?: string | null
@@ -2583,7 +2657,10 @@ export type Database = {
           customer_id: string | null
           device_id: string | null
           discount_amount: number | null
+          discount_note: string | null
+          discount_reason: string | null
           id: string
+          manual_discount: number
           notes: string | null
           outlet_id: string | null
           payment_method: string
@@ -2615,7 +2692,10 @@ export type Database = {
           customer_id?: string | null
           device_id?: string | null
           discount_amount?: number | null
+          discount_note?: string | null
+          discount_reason?: string | null
           id?: string
+          manual_discount?: number
           notes?: string | null
           outlet_id?: string | null
           payment_method: string
@@ -2647,7 +2727,10 @@ export type Database = {
           customer_id?: string | null
           device_id?: string | null
           discount_amount?: number | null
+          discount_note?: string | null
+          discount_reason?: string | null
           id?: string
+          manual_discount?: number
           notes?: string | null
           outlet_id?: string | null
           payment_method?: string
@@ -3074,8 +3157,33 @@ export type Database = {
         Args: { p_code: string; p_customer_id: string; p_tenant_id: string }
         Returns: Json
       }
+      claim_offline_op: {
+        Args: {
+          p_device_id: string
+          p_kind: string
+          p_occurred_at: string
+          p_op_id: string
+          p_tenant_id: string
+          p_user_id: string
+        }
+        Returns: {
+          claimed: boolean
+          error: string
+          result: Json
+          status: string
+        }[]
+      }
       cleanup_expired_refresh_tokens: { Args: never; Returns: undefined }
       compute_expected_cash: { Args: { p_shift_id: string }; Returns: number }
+      current_stock_levels: {
+        Args: { p_tenant_id: string }
+        Returns: {
+          outlet_id: string
+          product_id: string
+          stock: number
+          stock_date: string
+        }[]
+      }
       effective_plan: {
         Args: { u: Database["public"]["Tables"]["users"]["Row"] }
         Returns: string

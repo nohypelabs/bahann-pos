@@ -26,10 +26,15 @@ function toTransactionCreateInput(transaction: OfflineTransaction) {
       productSku: item.productSku,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
+      ...(item.discountReason && item.listPrice !== undefined && item.unitPrice < item.listPrice
+        ? { priceOverride: { unitPrice: item.unitPrice, reason: item.discountReason, note: item.discountNote ?? null } }
+        : {}),
     })),
     paymentMethod: transaction.paymentMethod,
     amountPaid: transaction.amountPaid,
-    discountAmount: transaction.discount,
+    // `discount` holds every discount; the manual part travels on its own.
+    discountAmount: transaction.discount - (transaction.manualDiscount?.amount ?? 0),
+    manualDiscount: transaction.manualDiscount ?? undefined,
     notes: transaction.notes,
     // Already paid at the counter: recorded at its own time, never refused for stock.
     offline: { occurredAt: new Date(transaction.timestamp).toISOString() },

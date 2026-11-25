@@ -93,4 +93,37 @@ describe('workshop station reducer', () => {
   it('ignores operations on notes it does not have', () => {
     expect(applyOps([], [op('note.setItem', { noteId: NOTE, productId: PLUG, quantity: 1, unitPrice: null })], lookups)).toEqual([]);
   });
+
+  it('keeps a price reason only while the line is below its list price', () => {
+    const notes = applyOps([], [
+      open('B1234UJI'),
+      op('note.setItem', { noteId: NOTE, productId: PLUG, quantity: 1, unitPrice: 20_000, priceReason: 'DAMAGED', priceNote: 'dus rusak' }),
+      op('note.setItem', { noteId: NOTE, productId: PLUG, quantity: 2, unitPrice: 20_000 }),
+    ], lookups);
+    expect(notes[0].items[0]).toMatchObject({ quantity: 2, unitPrice: 20_000, priceReason: 'DAMAGED', priceNote: 'dus rusak' });
+
+    const back = applyOps(notes, [op('note.setItem', { noteId: NOTE, productId: PLUG, quantity: 2, unitPrice: null })], lookups);
+    expect(back[0].items[0]).toMatchObject({ unitPrice: null, priceReason: null });
+  });
+
+  it('sets and clears an amount off the note, and pays with it', () => {
+    const withDiscount = applyOps([], [
+      open('B1234UJI'),
+      op('note.setItem', { noteId: NOTE, productId: SERVICE, quantity: 1, unitPrice: null }),
+      op('note.setDiscount', { noteId: NOTE, amount: 5_000, reason: 'ROUNDING', note: null }),
+    ], lookups);
+    expect(withDiscount[0].discount).toEqual({ amount: 5_000, reason: 'ROUNDING', note: null });
+
+    const cleared = applyOps(withDiscount, [op('note.setDiscount', { noteId: NOTE, amount: 0 })], lookups);
+    expect(cleared[0].discount).toBeNull();
+
+    const [paid] = applyOps(withDiscount, [op('note.payCash', {
+      noteId: NOTE, outletId: OUTLET, shiftId: OUTLET, transactionNumber: 'TRX-OFF-1', amountPaid: 50_000,
+      lines: [{ productId: SERVICE, quantity: 1, unitPrice: 50_000 }],
+      discount: { amount: 5_000, reason: 'ROUNDING', note: null }, total: 45_000,
+    })], lookups);
+    expect(paid.status).toBe('paid');
+    expect(paid.discount?.amount).toBe(5_000);
+    expect(paid.paid).toMatchObject({ total: 45_000, change: 5_000 });
+  });
 });

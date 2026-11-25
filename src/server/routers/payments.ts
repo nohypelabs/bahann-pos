@@ -7,6 +7,7 @@ import { supabaseAdmin } from '@/infra/supabase/server'
 import { assertOutletAccessible, requirePermission } from '@/server/lib/tenant'
 import { createAuditLog } from '@/lib/audit'
 import { MONTHLY_TRANSACTION_LIMITS } from '@/lib/plans'
+import { manualDiscountInput, priceOverrideInput } from '@/shared/schemas/manualDiscount'
 import { attachSaleToNote, completeWorkshopSale, prepareNoteCheckout, releaseVoucher, type NoteCheckout } from '@/server/lib/workshopSale'
 
 type CheckoutMethod = 'cash' | 'qris' | 'bank_transfer' | 'ewallet' | 'debit' | 'credit'
@@ -19,6 +20,8 @@ const checkoutItemSchema = z.object({
   productSku: z.string().optional(),
   quantity: z.number().positive(),
   unitPrice: z.number().nonnegative().optional(),
+  /** Sold below the catalogue price by the cashier, with the reason. */
+  priceOverride: priceOverrideInput.optional(),
 })
 
 function methodToCode(method: CheckoutMethod) {
@@ -82,6 +85,8 @@ export const startCheckoutInput = z.object({
   amountPaid: z.number().nonnegative().optional(),
   items: z.array(checkoutItemSchema).min(1),
   discountAmount: z.number().nonnegative().default(0),
+  /** An amount the cashier takes off the whole sale, with a reason (not for service notes). */
+  manualDiscount: manualDiscountInput.optional(),
   notes: z.string().optional(),
   customerName: z.string().optional(),
   customerPhone: z.string().optional(),
@@ -210,6 +215,7 @@ export async function runCheckout(ctx: CheckoutContext, input: StartCheckoutInpu
         paymentMethod: methodToTransactionPaymentMethod(input.method),
         amountPaid: 0,
         discountAmount: note ? (note.voucher?.discount ?? 0) : input.discountAmount,
+        manualDiscount: note ? note.manualDiscount : input.manualDiscount,
         notes: note?.voucher ? `Voucher ${note.voucher.code}${input.notes ? ` | ${input.notes}` : ''}` : input.notes,
         planLimit: limit === Infinity || options.offline ? null : limit,
         currentMonthCount: planUsage.count,
