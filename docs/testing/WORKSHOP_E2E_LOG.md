@@ -20,6 +20,30 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-25 · Top bar attention counts, sidebar without the workflow box (local app → production DB, then production)
+
+Layout change, commit `fdead56`. The sidebar's "Workflow Inti" box (big Kasir and Gudang buttons plus stock-alert and
+approval counts) was removed: the links are in the menu and the top bar. The counts moved to the top bar as icons
+shown on every screen size: approvals only for people who may approve (`transactions.myActions.canApproveVoid` /
+`canApproveRefund`), stock alerts only with the inventory module. A folded sidebar section shows the count inside
+it. Workshop tenants get a "Nota Servis" link in the top bar.
+
+| # | Check | Result |
+|---|---|---|
+| 10.1 | Spec `12-manual-discount`, after the cashier's void request: reload, click the top-bar link named "Persetujuan: N" | Opens `/approvals`; approval with PIN then voids the sale as before ✅ |
+| 10.2 | Screenshots, 1440×900 and 390×844, with no pending approvals | Top bar: Dashboard, Nota Servis, Kasir, Gudang (desktop only), then the approval, bell and settings icons (all sizes), no badge; sidebar starts with the user card, then the menu ✅ |
+| 10.3 | One void request made by hand on test sale `TRX-MWVTFV9T-TOS8T`, screenshots, then the request rejected | Red "1" on the approval icon on desktop and phone; folded "Operasional" heading shows "1"; nothing left pending after the reject ✅ |
+
+Runs:
+- **Local (`next dev`, production DB): 13 passed in 3.8 min.** Evidence: note discount `TRX-MWVTFV9T-TOS8T`, quick
+  cashier discount then void `TRX-MWVTGBMO-UB29J`, import tag `IMPTEL2K`.
+- **Production `https://lakupos.vercel.app`, commit `fdead56`: 13 passed in 3.3 min.** Evidence: walk-in
+  `E2EWVTP0N7`, note discount `TRX-MWVTSGG2-2RTSF`, quick cashier discount then void `TRX-MWVTSSOR-9KLN4`, import tag
+  `IMPTRAEQ`.
+
+Unit tests: 181 passed, 2 skipped. Production build passed. The test tenant's stock was topped up afterwards
+(`BUSI-NGK-C7` 7 → 37, `OLI-MPX1-08` 0 → 20).
+
 ## 2026-11-25 · Manual discount reasons and the void flow (local app → production DB)
 
 From the client pitch: a cashier who lowers a price or gives a discount must give a reason; a void is requested by the
