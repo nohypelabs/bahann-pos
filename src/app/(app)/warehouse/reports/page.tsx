@@ -9,13 +9,16 @@ import { FilterBar } from '@/components/ui/FilterBar'
 import { UpgradeModal } from '@/components/ui/UpgradeModal'
 import { trpc } from '@/lib/trpc/client'
 import { ChartSkeleton, ExportLoadingSkeleton } from '@/components/ui/Skeletons'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency } from '@/lib/utils'
 import { getLimits } from '@/lib/plans'
 import { ManualDiscountReport } from '@/components/reports/ManualDiscountReport'
 import { DollarSign, TrendingUp, Receipt, Package, BarChart3, Trophy, FileText, Download, Lock } from 'lucide-react'
 
 const RevenueLineChart = lazy(() => import('@/components/charts/RevenueLineChartLazy'))
 const ItemsSoldBarChart = lazy(() => import('@/components/charts/ItemsSoldBarChartLazy'))
+/** Short axis label, e.g. "27 Nov": full dates crowd a phone-width chart. */
+const formatDate = (date: string) => new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
+
 const RevenuePieChart   = lazy(() => import('@/components/charts/RevenuePieChartLazy'))
 const ReportExporter    = lazy(() => import('@/components/reports/ReportExporter'))
 

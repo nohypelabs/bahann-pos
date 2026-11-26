@@ -44,6 +44,7 @@ export default function RevenueAreaChartLazy({
           tickLine={false}
           axisLine={false}
           interval="preserveStartEnd"
+          minTickGap={16}
         />
         <YAxis
           stroke="none"

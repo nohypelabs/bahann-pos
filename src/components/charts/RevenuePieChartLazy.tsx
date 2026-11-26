@@ -54,7 +54,9 @@ export default function RevenuePieChartLazy({
   const total = data.reduce((s, d) => s + d.value, 0)
 
   return (
-    <div className={className} style={className ? undefined : { height }}>
+    <div className={`flex flex-col ${className ?? ''}`} style={className ? undefined : { height }}>
+      {/* The chart takes what the legend leaves, so the legend is never cut off */}
+      <div className="min-h-0 flex-1">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           {/* outer thin ring */}
@@ -97,10 +99,10 @@ export default function RevenuePieChartLazy({
             cy="50%"
             outerRadius={0}
             dataKey="value"
-            label={() => (
+            label={({ cx, cy }: { cx?: number; cy?: number }) => (
               <DonutLabel
-                cx={0}
-                cy={0}
+                cx={cx ?? 0}
+                cy={cy ?? 0}
                 total={total}
                 formatCurrency={formatCurrency}
               />
@@ -123,6 +125,7 @@ export default function RevenuePieChartLazy({
           />
         </PieChart>
       </ResponsiveContainer>
+      </div>
 
       {/* legend */}
       <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1.5">

@@ -46,6 +46,7 @@ export default function DailyRevenueBarChartLazy({
           tickLine={false}
           axisLine={false}
           interval="preserveStartEnd"
+          minTickGap={16}
         />
         <YAxis
           stroke="none"

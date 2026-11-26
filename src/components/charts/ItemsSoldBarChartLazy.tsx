@@ -41,6 +41,7 @@ export default function ItemsSoldBarChartLazy({
           tickLine={false}
           axisLine={false}
           interval="preserveStartEnd"
+          minTickGap={16}
         />
         <YAxis
           stroke="none"

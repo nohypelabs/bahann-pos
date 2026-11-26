@@ -53,6 +53,7 @@ export default function RevenueLineChartLazy({
           tickLine={false}
           axisLine={false}
           interval="preserveStartEnd"
+          minTickGap={16}
         />
         <YAxis
           stroke="none"
