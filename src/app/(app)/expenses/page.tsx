@@ -15,6 +15,7 @@ import {
   Zap, Droplets, Users, ShoppingCart, Wrench, Car, Home, FileText,
 } from 'lucide-react'
 import { friendlyError } from '@/lib/errors/friendlyError'
+import { useSoleOutlet } from '@/hooks/useSoleOutlet'
 
 type AlertState = { type: 'success' | 'error' | 'info'; msg: string } | null
 
@@ -74,6 +75,7 @@ export default function ExpensesPage() {
 
   // Queries
   const { data: outletsData } = trpc.outlets.getAll.useQuery()
+  useSoleOutlet(outletsData?.outlets, selectedOutlet, setSelectedOutlet)
   const { data: categories } = trpc.expenses.getCategories.useQuery()
   const { data: dailySummary, isLoading: summaryLoading } = trpc.expenses.getDailySummary.useQuery(
     { outletId: selectedOutlet || undefined, date: expenseDate },

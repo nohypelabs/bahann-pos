@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/Button'
 import { trpc } from '@/lib/trpc/client'
 import { Package, Store, ShoppingCart, AlertTriangle, CheckCircle2, XCircle, CalendarClock } from 'lucide-react'
 import { businessDate } from '@/lib/business/timezone'
 import { friendlyError } from '@/lib/errors/friendlyError'
+import { useSoleOutlet } from '@/hooks/useSoleOutlet'
 
 // ─── Stepper ────────────────────────────────────────────────────────────────
 function Stepper({
@@ -108,6 +109,9 @@ export default function StockManagementPage() {
   // Only show TRACKED products in stock management (services/menu don't need stock tracking)
   const products = allProducts.filter(p => p.stock_behavior === 'TRACKED' || !p.stock_behavior)
   const outlets = outletsResponse?.outlets || []
+  const setFormOutlet = useCallback((outletId: string) => setFormData(prev => ({ ...prev, outletId })), [])
+  useSoleOutlet(outletsResponse?.outlets, formData.outletId, setFormOutlet)
+  useSoleOutlet(outletsResponse?.outlets, adjOutletId, setAdjOutletId)
 
   const canFetchLatest = !!(formData.productId && formData.outletId)
   const { data: latestStock, isLoading: latestStockLoading, refetch: refetchLatest } = trpc.stock.getLatest.useQuery(

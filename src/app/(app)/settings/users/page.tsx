@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -8,6 +8,7 @@ import { SectionCard } from '@/components/ui/SectionCard'
 import { useToast } from '@/components/ui/Toast'
 import { trpc } from '@/lib/trpc/client'
 import { friendlyError } from '@/lib/errors/friendlyError'
+import { useSoleOutlet } from '@/hooks/useSoleOutlet'
 
 const ROLES = [
   { key: 'ADMIN_TENANT', label: '👑 Admin Tenant', desc: 'Akses penuh semua outlet', scope: 'TENANT', icon: '👑' },
@@ -59,6 +60,10 @@ export default function UsersManagementPage() {
     outletGroupId: '',
   })
   const [formError, setFormError] = useState('')
+  const setFormOutlet = useCallback((outletId: string) => setForm(f => ({ ...f, outletId })), [])
+  const setEditOutlet = useCallback((outletId: string) => setEditForm(f => ({ ...f, outletId })), [])
+  useSoleOutlet(outletsResponse?.outlets, form.outletId, setFormOutlet)
+  useSoleOutlet(outletsResponse?.outlets, editForm.outletId, setEditOutlet)
 
   const createUserMutation = trpc.users.create.useMutation({
     onSuccess: async (data) => {
@@ -66,7 +71,7 @@ export default function UsersManagementPage() {
       closeForm()
       showToast(data.inviteSent ? 'Undangan login dikirim' : 'Pengguna ditambahkan', 'success')
     },
-    onError: err => setFormError(err.message),
+    onError: err => setFormError(friendlyError(err)),
   })
 
   const updateRoleMutation = trpc.users.updateRole.useMutation({

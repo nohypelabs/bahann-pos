@@ -13,6 +13,7 @@ import { unsentOfflineWork } from '@/lib/offline/unsent'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { Clock, Banknote, User, CheckCircle, Sunrise, Moon, CheckCircle2, XCircle, Info, Hourglass } from 'lucide-react'
 import { friendlyError } from '@/lib/errors/friendlyError'
+import { useSoleOutlet } from '@/hooks/useSoleOutlet'
 
 type AlertState = { type: 'success' | 'error' | 'info'; msg: string } | null
 
@@ -37,6 +38,7 @@ export default function EODPage() {
   }
 
   const { data: outletsData } = trpc.outlets.getAll.useQuery()
+  useSoleOutlet(outletsData?.outlets, selectedOutlet, setSelectedOutlet)
   const { data: activeShift, refetch } = trpc.shifts.getActive.useQuery(
     { outletId: selectedOutlet },
     { enabled: !!selectedOutlet }
