@@ -100,7 +100,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       className={`relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border transition-colors ${
         pathname.startsWith(href)
           ? 'border-[#0b4e48] bg-[#0f5f56] text-white'
-          : 'border-[#ddd8cc] bg-white text-[#5f675f] hover:bg-[#f1efe8] hover:text-[#17201d]'
+          : 'border-[#E4E6E7] bg-white text-[#5f675f] hover:bg-[#F4F5F5] hover:text-[#17201d]'
       }`}
     >
       <Icon className="h-5 w-5" />
@@ -113,7 +113,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   ))
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#f6f5f0]">
+    <div className="flex h-screen overflow-hidden bg-[#FFFFFF]">
       <Sidebar
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
@@ -127,14 +127,14 @@ export function AppLayout({ children }: AppLayoutProps) {
         className="flex-1 overflow-y-auto bg-[linear-gradient(180deg,_#fbfaf6_0%,_#f6f5f0_44%,_#eeebe3_100%)]"
         role="main"
       >
-        <header className="sticky top-0 z-30 border-b border-[#ddd8cc]/90 bg-[#fbfaf6]/95 backdrop-blur-md">
+        <header className="sticky top-0 z-30 border-b border-[#E4E6E7]/90 bg-[#fbfaf6]/95 backdrop-blur-md">
           <div className="flex min-h-16 items-center justify-between gap-3 px-3 sm:px-4 lg:px-6">
             <div className="flex min-w-0 items-center gap-3">
               {/* Phones only: opens the drawer. On desktop the toggle lives in the sidebar header. */}
               <button
                 type="button"
                 onClick={() => setMobileOpen(true)}
-                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-[#ddd8cc] bg-white text-[#5f675f] transition-colors hover:bg-[#f1efe8] hover:text-[#17201d] md:hidden"
+                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-[#E4E6E7] bg-white text-[#5f675f] transition-colors hover:bg-[#F4F5F5] hover:text-[#17201d] md:hidden"
                 aria-label={t('sidebar.openMenu')}
               >
                 <Menu className="h-5 w-5" />
@@ -144,7 +144,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <h1 className="truncate text-sm font-semibold text-[#17201d] sm:text-base">
                     {routeMeta.title}
                   </h1>
-                  <span className="hidden rounded-full border border-[#ddd8cc] bg-white px-2.5 py-1 text-[10px] font-semibold text-[#5f675f] lg:inline-flex">
+                  <span className="hidden rounded-full border border-[#E4E6E7] bg-white px-2.5 py-1 text-[10px] font-semibold text-[#5f675f] lg:inline-flex">
                     {routeMeta.badge}
                   </span>
                 </div>
@@ -167,7 +167,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                       className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition-colors ${
                         isActive
                           ? 'border-[#0b4e48] bg-[#0f5f56] text-white'
-                          : 'border-[#ddd8cc] bg-white text-[#5f675f] hover:bg-[#f1efe8] hover:text-[#17201d]'
+                          : 'border-[#E4E6E7] bg-white text-[#5f675f] hover:bg-[#F4F5F5] hover:text-[#17201d]'
                       }`}
                     >
                       <Icon className="h-4 w-4" />
@@ -179,7 +179,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               {attentionLinks}
               <Link
                 href="/settings/payments"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#ddd8cc] bg-white text-[#5f675f] transition-colors hover:bg-[#f1efe8] hover:text-[#17201d]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#E4E6E7] bg-white text-[#5f675f] transition-colors hover:bg-[#F4F5F5] hover:text-[#17201d]"
                 aria-label="Buka pengaturan"
               >
                 <Settings className="h-5 w-5" />

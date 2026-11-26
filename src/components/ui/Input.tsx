@@ -28,7 +28,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           className={`
             input-mobile w-full
             bg-white dark:bg-gray-800 text-[#17201D] dark:text-gray-100
-            border border-[#DDD8CC] dark:border-gray-600
+            border border-[#E4E6E7] dark:border-gray-600
             ${pill ? 'rounded-[40px]' : 'rounded-[20px]'}
             focus:outline-none focus:border-[#0F5F56] focus:ring-2 focus:ring-[#8ECFC2]/35 dark:focus:border-gray-400
             transition-all duration-200
@@ -77,7 +77,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           className={`
             input-mobile w-full
             bg-white dark:bg-gray-800 text-[#17201D] dark:text-gray-100
-            border border-[#DDD8CC] dark:border-gray-600
+            border border-[#E4E6E7] dark:border-gray-600
             rounded-[20px]
             focus:outline-none focus:border-[#0F5F56] focus:ring-2 focus:ring-[#8ECFC2]/35 dark:focus:border-gray-400
             transition-all duration-200
@@ -126,7 +126,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           className={`
             input-mobile w-full
             bg-white dark:bg-gray-800 text-[#17201D] dark:text-gray-100
-            border border-[#DDD8CC] dark:border-gray-600
+            border border-[#E4E6E7] dark:border-gray-600
             rounded-[20px]
             focus:outline-none focus:border-[#0F5F56] focus:ring-2 focus:ring-[#8ECFC2]/35 dark:focus:border-gray-400
             transition-all duration-200

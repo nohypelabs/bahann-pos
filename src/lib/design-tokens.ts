@@ -11,9 +11,9 @@ export const colors = {
   // Surfaces
   surface: {
     primary: '#FFFFFF',
-    secondary: '#F6F5F0',
-    tertiary: '#F1EFE8',
-    hover: '#ECE9DF',
+    secondary: '#FFFFFF',
+    tertiary: '#F4F5F5',
+    hover: '#EDEEEE',
   },
 
   // Brand & Accent
@@ -51,8 +51,8 @@ export const colors = {
 
   // Borders
   border: {
-    default: '#DDD8CC',
-    strong: '#CFC7B9',
+    default: '#E4E6E7',
+    strong: '#CDD1D3',
     focus: '#0F5F56',
   },
 

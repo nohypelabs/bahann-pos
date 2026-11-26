@@ -14,13 +14,13 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 
     const variantStyles = {
       default: `
-        border border-[#DDD8CC] dark:border-gray-700
+        border border-[#E4E6E7] dark:border-gray-700
       `,
       elevated: `
-        border border-[#CFC7B9] dark:border-gray-600 shadow-[0_1px_2px_rgba(23,32,29,0.05)]
+        border border-[#CDD1D3] dark:border-gray-600 shadow-[0_1px_2px_rgba(23,32,29,0.05)]
       `,
       flat: `
-        border border-[#DDD8CC] dark:border-gray-600
+        border border-[#E4E6E7] dark:border-gray-600
       `,
     }
 

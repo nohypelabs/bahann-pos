@@ -711,9 +711,9 @@ export default function SalesTransactionPage() {
               </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-                <input type="text" value={outletSearch} onChange={(e) => setOutletSearch(e.target.value)} placeholder="Cari outlet..." className="w-full rounded-2xl border border-stone-200 bg-[#fcfbf7] py-3 pl-10 pr-4 text-sm text-stone-900 focus:border-emerald-500 focus:outline-none" />
+                <input type="text" value={outletSearch} onChange={(e) => setOutletSearch(e.target.value)} placeholder="Cari outlet..." className="w-full rounded-2xl border border-stone-200 bg-[#F8F9F9] py-3 pl-10 pr-4 text-sm text-stone-900 focus:border-emerald-500 focus:outline-none" />
               </div>
-              <div className="max-h-32 overflow-y-auto divide-y divide-stone-100 rounded-2xl border border-stone-200 bg-[#fcfbf7]">
+              <div className="max-h-32 overflow-y-auto divide-y divide-stone-100 rounded-2xl border border-stone-200 bg-[#F8F9F9]">
                 {showOutletsLoading ? (
                   <div className="py-4 text-center text-sm text-stone-400">Memuat...</div>
                 ) : filteredOutlets.map(outlet => (
@@ -749,9 +749,9 @@ export default function SalesTransactionPage() {
                 <p className="mt-1 text-xs text-stone-500">{selectedOutletId ? `${filteredProducts.length} item siap dijual` : 'Pilih outlet sebelum mencari barang'}</p>
               </div>
               <div className="flex gap-1 items-center">
-                <input ref={barcodeInputRef} type="text" value={barcodeInput} onChange={handleBarcodeInputChange} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleBarcodeInputSubmit() } }} placeholder="Scan SKU..." disabled={!selectedOutletId} className="hidden md:block w-32 rounded-2xl border border-stone-200 bg-[#fcfbf7] px-3 py-2 text-xs uppercase text-stone-900 focus:border-emerald-500 focus:outline-none disabled:opacity-50" />
-                <Button variant="secondary" size="sm" onClick={handleBarcodeInputSubmit} disabled={!selectedOutletId || !barcodeInput.trim()} className="hidden md:flex !rounded-2xl !border-stone-200 !bg-[#fcfbf7] !text-stone-700 hover:!bg-white">OK</Button>
-                <Button variant="secondary" size="sm" onClick={() => setIsScannerOpen(true)} disabled={!selectedOutletId} className="!rounded-2xl !border-stone-200 !bg-[#fcfbf7] !text-stone-700 hover:!bg-white">
+                <input ref={barcodeInputRef} type="text" value={barcodeInput} onChange={handleBarcodeInputChange} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleBarcodeInputSubmit() } }} placeholder="Scan SKU..." disabled={!selectedOutletId} className="hidden md:block w-32 rounded-2xl border border-stone-200 bg-[#F8F9F9] px-3 py-2 text-xs uppercase text-stone-900 focus:border-emerald-500 focus:outline-none disabled:opacity-50" />
+                <Button variant="secondary" size="sm" onClick={handleBarcodeInputSubmit} disabled={!selectedOutletId || !barcodeInput.trim()} className="hidden md:flex !rounded-2xl !border-stone-200 !bg-[#F8F9F9] !text-stone-700 hover:!bg-white">OK</Button>
+                <Button variant="secondary" size="sm" onClick={() => setIsScannerOpen(true)} disabled={!selectedOutletId} className="!rounded-2xl !border-stone-200 !bg-[#F8F9F9] !text-stone-700 hover:!bg-white">
                   <ScanLine className="mr-1 h-4 w-4" />
                   <span className="hidden sm:inline">Scan</span>
                 </Button>
@@ -769,7 +769,7 @@ export default function SalesTransactionPage() {
               <div className="flex gap-2 shrink-0">
                 <div className="relative flex-1 min-w-0">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-                  <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearchEnter() } }} placeholder="Cari produk / scan barcode..." disabled={!selectedOutletId} className="w-full pl-10 pr-8 py-2.5 border border-stone-200 rounded-xl bg-[#fcfbf7] text-sm text-stone-900 focus:border-emerald-500 focus:outline-none disabled:opacity-50" />
+                  <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearchEnter() } }} placeholder="Cari produk / scan barcode..." disabled={!selectedOutletId} className="w-full pl-10 pr-8 py-2.5 border border-stone-200 rounded-xl bg-[#F8F9F9] text-sm text-stone-900 focus:border-emerald-500 focus:outline-none disabled:opacity-50" />
                   {productSearch && <button onClick={() => setProductSearch('')} aria-label="Hapus pencarian" className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 hover:bg-stone-200 rounded-full w-6 h-6 flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>}
                 </div>
                 {categories.length > 0 && (

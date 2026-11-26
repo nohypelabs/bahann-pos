@@ -27,7 +27,7 @@ describe('Button', () => {
   it('applies secondary variant styles', () => {
     render(<Button variant="secondary">Secondary</Button>)
     const button = screen.getByText('Secondary')
-    expect(button).toHaveClass('bg-[#F1EFE8]', 'text-[#2F3A35]')
+    expect(button).toHaveClass('bg-[#F4F5F5]', 'text-[#2F3A35]')
   })
 
   it('applies danger variant styles', () => {

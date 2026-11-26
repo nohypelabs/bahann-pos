@@ -11,7 +11,7 @@ export const CHART = {
   brand: '#0F5F56',
   brandLight: '#5FB3A6',
   amber: '#E9A23B',
-  grid: '#EEECE6',
+  grid: '#EEF0F0',
   axis: '#8A9188',
   series: ['#0F5F56', '#E9A23B', '#5FB3A6', '#C9772B', '#8A9188', '#2F6F9F'],
 }
@@ -24,7 +24,7 @@ export function compactRupiah(n: number): string {
 }
 
 const tooltipStyle = {
-  contentStyle: { borderRadius: 10, border: '1px solid #E4E1D8', boxShadow: '0 4px 16px rgba(23,32,29,0.08)', fontSize: 12 },
+  contentStyle: { borderRadius: 10, border: '1px solid #E4E6E7', boxShadow: '0 4px 16px rgba(23,32,29,0.08)', fontSize: 12 },
   labelStyle: { color: '#17201D', fontWeight: 600, marginBottom: 4 },
   cursor: { fill: 'rgba(15,95,86,0.06)' },
 }

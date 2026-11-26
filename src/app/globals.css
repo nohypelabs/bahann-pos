@@ -9,7 +9,7 @@
 
 :root {
   /* Cashier-comfort light theme: warm, low-glare, high readability */
-  --background: #F6F5F0;
+  --background: #FFFFFF;
   --foreground: #17201D;
 
   /* Brand (navigation, non-critical surfaces only) */
@@ -18,10 +18,10 @@
 
   /* Surface & Border */
   --surface: #FFFFFF;
-  --surface-soft: #F1EFE8;
-  --surface-muted: #ECE9DF;
-  --border: #DDD8CC;
-  --border-strong: #CFC7B9;
+  --surface-soft: #F4F5F5;
+  --surface-muted: #EDEEEE;
+  --border: #E4E6E7;
+  --border-strong: #CDD1D3;
   --text-muted: #5F675F;
   --primary: #0F5F56;
   --primary-hover: #0B4E48;

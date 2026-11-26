@@ -95,7 +95,7 @@ function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths 
   if (isCollapsed) {
     return (
       <div className="mb-1">
-        <div className="mx-auto my-1.5 h-px w-6 bg-[#ddd8cc]" />
+        <div className="mx-auto my-1.5 h-px w-6 bg-[#E4E6E7]" />
         <div className="space-y-0.5">{children}</div>
       </div>
     )
@@ -254,7 +254,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
 
       <aside className={`
         w-72 ${isCollapsed ? 'md:w-[60px]' : 'md:w-64'}
-        h-screen overflow-hidden bg-[#fbfaf6] border-r border-[#ddd8cc]
+        h-screen overflow-hidden bg-[#fbfaf6] border-r border-[#E4E6E7]
         flex-shrink-0 fixed md:relative z-50
         transition-[width,transform] duration-200 ease-out motion-reduce:transition-none
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
@@ -268,7 +268,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
               // Icon rail: the logo shows at rest; hovering the header (or focusing the button) swaps it for the expand button.
               <div className="relative h-8 w-8">
                 <img src="/logo.svg" alt="Laku POS"
-                  className="h-8 w-8 rounded-lg border border-[#ddd8cc] bg-white p-1 transition-opacity duration-150 group-hover/header:opacity-0 group-focus-within/header:opacity-0" />
+                  className="h-8 w-8 rounded-lg border border-[#E4E6E7] bg-white p-1 transition-opacity duration-150 group-hover/header:opacity-0 group-focus-within/header:opacity-0" />
                 <button type="button" onClick={onToggleDesktop}
                   aria-label={t('sidebar.expand')}
                   title={`${t('sidebar.expand')} (${shortcut})`}
@@ -280,7 +280,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
             ) : (
               <>
                 <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5 rounded-md">
-                  <img src="/logo.svg" alt="" className="h-8 w-8 flex-shrink-0 rounded-lg border border-[#ddd8cc] bg-white p-1" />
+                  <img src="/logo.svg" alt="" className="h-8 w-8 flex-shrink-0 rounded-lg border border-[#E4E6E7] bg-white p-1" />
                   <span className="truncate whitespace-nowrap text-[15px] font-semibold text-[#17201d]">Laku POS</span>
                 </Link>
                 <button type="button" onClick={onToggleDesktop}
@@ -300,7 +300,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
           </div>
 
           {!showCollapsed && (
-            <div className="mx-3 mt-1 rounded-lg border border-[#ddd8cc]/80 bg-white/80 p-3">
+            <div className="mx-3 mt-1 rounded-lg border border-[#E4E6E7]/80 bg-white/80 p-3">
               <div className="mb-3 flex items-start justify-between gap-3">
                 <Link href="/profile" className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#0f5f56] text-lg font-bold text-white transition-opacity hover:opacity-90">
                   {userInitial}
@@ -425,7 +425,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
 
           {/* ── Settings & Support (X-style collapsible) ── */}
           {!showCollapsed && (
-            <div className="border-t border-[#ddd8cc] flex-shrink-0">
+            <div className="border-t border-[#E4E6E7] flex-shrink-0">
               <button onClick={() => setSettingsOpen(!settingsOpen)}
                 className="w-full flex items-center justify-between whitespace-nowrap px-4 py-3 text-[14px] font-medium text-[#2f3a35] hover:bg-[#17201d]/[0.04] transition-colors">
                 <span>{t('sidebar.settingsHelp')}</span>
@@ -496,7 +496,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
 
           {/* Collapsed: settings + support icons */}
           {showCollapsed && (
-            <div className="border-t border-[#ddd8cc] p-2 flex-shrink-0 space-y-1">
+            <div className="border-t border-[#E4E6E7] p-2 flex-shrink-0 space-y-1">
               {!isPlatformView && (<>
               {canManageProducts && (
                 <>
@@ -539,7 +539,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4"
           onClick={e => e.target === e.currentTarget && setShowLogoutModal(false)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div className="relative bg-white dark:bg-gray-900 rounded-[18px] shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-[#ddd8cc] dark:border-gray-800">
+          <div className="relative bg-white dark:bg-gray-900 rounded-[18px] shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-[#E4E6E7] dark:border-gray-800">
             <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-500">
               <LogOut className="w-7 h-7" />
             </div>
@@ -549,7 +549,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
             </div>
             <div className="flex gap-3 w-full">
               <button onClick={() => setShowLogoutModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-[#ddd8cc] dark:border-gray-700 text-sm font-semibold text-[#2f3a35] dark:text-gray-300 hover:bg-[#f1efe8] dark:hover:bg-gray-800 transition-colors">
+                className="flex-1 py-2.5 rounded-xl border border-[#E4E6E7] dark:border-gray-700 text-sm font-semibold text-[#2f3a35] dark:text-gray-300 hover:bg-[#F4F5F5] dark:hover:bg-gray-800 transition-colors">
                 {t('sidebar.logoutModal.cancel')}
               </button>
               <button onClick={confirmLogout}

@@ -12,7 +12,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       inline-flex items-center justify-center cursor-pointer
       font-medium rounded-[20px]
       transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-[#8ECFC2] focus:ring-offset-2 focus:ring-offset-[#F6F5F0]
+      focus:outline-none focus:ring-2 focus:ring-[#8ECFC2] focus:ring-offset-2 focus:ring-offset-[#FFFFFF]
       disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none
       ${fullWidth ? 'w-full' : ''}
     `
@@ -31,14 +31,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         hover:bg-[#0B4E48]
       `,
       secondary: `
-        bg-[#F1EFE8] text-[#2F3A35]
-        border border-[#DDD8CC]
-        hover:bg-[#ECE9DF] hover:text-[#17201D]
+        bg-[#F4F5F5] text-[#2F3A35]
+        border border-[#E4E6E7]
+        hover:bg-[#EDEEEE] hover:text-[#17201D]
       `,
       outline: `
         bg-white text-[#2F3A35]
-        border border-[#DDD8CC]
-        hover:border-[#B9CBBF] hover:bg-[#F8F7F3] hover:text-[#0F5F56]
+        border border-[#E4E6E7]
+        hover:border-[#B9CBBF] hover:bg-[#F8F9F9] hover:text-[#0F5F56]
       `,
       danger: `
         bg-[#B42318] text-white

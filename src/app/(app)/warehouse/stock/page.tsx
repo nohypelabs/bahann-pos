@@ -187,14 +187,14 @@ export default function StockManagementPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-[#fcfbf7] px-3 py-1.5 text-[11px] font-medium text-stone-600">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-[#F8F9F9] px-3 py-1.5 text-[11px] font-medium text-stone-600">
               <CalendarClock className="h-3.5 w-3.5 text-stone-500" />
               {today}
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-[#fcfbf7] px-3 py-1.5 text-[11px] font-medium text-stone-600">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-[#F8F9F9] px-3 py-1.5 text-[11px] font-medium text-stone-600">
               {products.length} produk tracked
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-[#fcfbf7] px-3 py-1.5 text-[11px] font-medium text-stone-600">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-[#F8F9F9] px-3 py-1.5 text-[11px] font-medium text-stone-600">
               {stats?.lowStockCount ?? 0} stok tipis
             </span>
           </div>
@@ -217,7 +217,7 @@ export default function StockManagementPage() {
 
       {/* Info banner for filtered items */}
       {allProducts.length > products.length && (
-        <div className="flex items-center gap-3 rounded-2xl border border-stone-200 bg-[#fcfbf7] p-3">
+        <div className="flex items-center gap-3 rounded-2xl border border-stone-200 bg-[#F8F9F9] p-3">
           <Package className="w-4 h-4 text-stone-400 shrink-0" />
           <p className="text-xs text-stone-500">
             Item bertipe Jasa dan Menu (tanpa stok) tidak ditampilkan di halaman ini.

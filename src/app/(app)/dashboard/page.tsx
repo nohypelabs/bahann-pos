@@ -38,7 +38,7 @@ function Panel({ title, action, children, className = '' }: { title?: string; ac
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className={`rounded-[14px] border border-[#E4E1D8] bg-white p-4 md:p-5 ${className}`}
+      className={`rounded-[14px] border border-[#E4E6E7] bg-white p-4 md:p-5 ${className}`}
     >
       {(title || action) && (
         <div className="mb-4 flex items-center justify-between gap-3">
@@ -52,7 +52,7 @@ function Panel({ title, action, children, className = '' }: { title?: string; ac
 }
 
 function Skeleton({ className }: { className: string }) {
-  return <div className={`animate-pulse rounded-lg bg-[#F3F2EE] ${className}`} />
+  return <div className={`animate-pulse rounded-lg bg-[#F3F4F4] ${className}`} />
 }
 
 function Delta({ now, before, label }: { now: number; before: number; label: string }) {
@@ -78,7 +78,7 @@ function KpiCard({ label, value, icon, tone, delta, spark, footnote }: {
     brand: { bg: 'bg-[#E3F1EE]', fg: 'text-[#0F5F56]', bar: '#0F5F56' },
     amber: { bg: 'bg-amber-50', fg: 'text-amber-600', bar: '#E9A23B' },
     teal: { bg: 'bg-teal-50', fg: 'text-teal-600', bar: '#5FB3A6' },
-    slate: { bg: 'bg-[#F3F2EE]', fg: 'text-[#5F675F]', bar: '#8A9188' },
+    slate: { bg: 'bg-[#F3F4F4]', fg: 'text-[#5F675F]', bar: '#8A9188' },
   }[tone]
   return (
     <Panel className="flex flex-col">
@@ -184,7 +184,7 @@ export default function DashboardPage() {
                 <button
                   key={q.href}
                   onClick={() => (!q.guarded || inventoryAccess.guard()) && router.push(q.href)}
-                  className="group flex items-center gap-3 rounded-[10px] border border-[#E4E1D8] bg-[#FBFAF7] px-3 py-3 text-left transition-colors hover:border-[#0F5F56]/40 hover:bg-[#E3F1EE]/50"
+                  className="group flex items-center gap-3 rounded-[10px] border border-[#E4E6E7] bg-[#F8F9F9] px-3 py-3 text-left transition-colors hover:border-[#0F5F56]/40 hover:bg-[#E3F1EE]/50"
                 >
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#0F5F56] shadow-[0_1px_2px_rgba(23,32,29,0.08)] [&>svg]:h-[18px] [&>svg]:w-[18px]">{q.icon}</span>
                   <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[#17201D]">{q.label}</span>
@@ -279,10 +279,10 @@ export default function DashboardPage() {
             {loading || !o ? <Skeleton className="h-[200px]" /> : o.mechanicsToday.length === 0 ? (
               <p className="py-6 text-sm text-[#8A9188]">{t('dashboard.mechanics.empty')}</p>
             ) : (
-              <ul className="divide-y divide-[#EEECE6]">
+              <ul className="divide-y divide-[#EEF0F0]">
                 {o.mechanicsToday.map((m) => (
                   <li key={m.mechanicId} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F3F2EE] text-xs font-bold text-[#5F675F]">{initials(m.name)}</span>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F3F4F4] text-xs font-bold text-[#5F675F]">{initials(m.name)}</span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-[#17201D]">{m.name}</p>
                       <p className="text-xs text-[#8A9188]">{t('dashboard.mechanics.done').replace('{n}', String(m.paidToday))}</p>
@@ -314,7 +314,7 @@ export default function DashboardPage() {
                       </span>
                       <span className="shrink-0 text-xs text-[#5F675F] tabular-nums">{t('dashboard.topItems.qty').replace('{n}', item.quantity.toLocaleString('id-ID'))}</span>
                     </div>
-                    <div className="h-2 rounded-full bg-[#F3F2EE]">
+                    <div className="h-2 rounded-full bg-[#F3F4F4]">
                       <motion.div className="h-2 rounded-full" style={{ background: item.isService ? '#E9A23B' : '#0F5F56' }}
                         initial={{ width: 0 }} animate={{ width: `${(item.quantity / maxItemQty) * 100}%` }} transition={{ duration: 0.5, ease: 'easeOut' }} />
                     </div>
@@ -331,12 +331,12 @@ export default function DashboardPage() {
               <div className="flex h-[220px] items-end gap-3">
                 {o.categories.slice(0, 5).map((c, i) => (
                   <div key={c.category} className="flex h-full min-w-0 flex-1 flex-col items-center gap-2">
-                    <div className="relative w-full flex-1 overflow-hidden rounded-[10px] bg-[#F3F2EE]">
+                    <div className="relative w-full flex-1 overflow-hidden rounded-[10px] bg-[#F3F4F4]">
                       <motion.div className="absolute inset-x-0 bottom-0 rounded-[10px]" style={{ background: SERIES[i % SERIES.length] }}
                         initial={{ height: 0 }} animate={{ height: `${Math.max(4, c.share * 100)}%` }} transition={{ duration: 0.6, ease: 'easeOut' }} />
                     </div>
                     <span className="w-full truncate text-center text-xs text-[#5F675F]" title={c.category}>{c.category}</span>
-                    <span className="rounded-md border border-[#E4E1D8] px-1.5 py-0.5 text-xs font-semibold text-[#17201D] tabular-nums">{Math.round(c.share * 100)}%</span>
+                    <span className="rounded-md border border-[#E4E6E7] px-1.5 py-0.5 text-xs font-semibold text-[#17201D] tabular-nums">{Math.round(c.share * 100)}%</span>
                   </div>
                 ))}
               </div>
@@ -349,7 +349,7 @@ export default function DashboardPage() {
               <p className="py-6 text-sm text-[#8A9188]">{t('dashboard.lowStock.none')}</p>
             ) : (
               <>
-                <ul className="divide-y divide-[#EEECE6]">
+                <ul className="divide-y divide-[#EEF0F0]">
                   {lowStock.slice(0, 5).map((s) => (
                     <li key={`${s.productId}-${s.outletName}`} className="flex items-center gap-3 py-2 first:pt-0">
                       <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
@@ -359,7 +359,7 @@ export default function DashboardPage() {
                   ))}
                 </ul>
                 <button onClick={() => inventoryAccess.guard() && router.push('/warehouse/stock')}
-                  className="mt-3 w-full rounded-[10px] border border-[#E4E1D8] py-2 text-sm font-semibold text-[#0F5F56] hover:bg-[#E3F1EE]/50">
+                  className="mt-3 w-full rounded-[10px] border border-[#E4E6E7] py-2 text-sm font-semibold text-[#0F5F56] hover:bg-[#E3F1EE]/50">
                   {t('dashboard.lowStock.record')}
                 </button>
               </>
@@ -376,7 +376,7 @@ export default function DashboardPage() {
             <div className="-mx-4 overflow-x-auto md:-mx-5">
               <table className="w-full min-w-[640px] text-sm">
                 <thead>
-                  <tr className="border-y border-[#EEECE6] bg-[#FBFAF7] text-left text-xs font-semibold text-[#5F675F]">
+                  <tr className="border-y border-[#EEF0F0] bg-[#F8F9F9] text-left text-xs font-semibold text-[#5F675F]">
                     <th className="px-4 py-2.5 md:px-5">{t('dashboard.recent.number')}</th>
                     <th className="px-3 py-2.5">{t('dashboard.recent.time')}</th>
                     <th className="px-3 py-2.5">{t('dashboard.recent.customer')}</th>
@@ -385,9 +385,9 @@ export default function DashboardPage() {
                     <th className="px-4 py-2.5 text-right md:px-5">{t('dashboard.recent.total')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#EEECE6]">
+                <tbody className="divide-y divide-[#EEF0F0]">
                   {o.recent.map((r) => (
-                    <tr key={r.id} className="hover:bg-[#FBFAF7]">
+                    <tr key={r.id} className="hover:bg-[#F8F9F9]">
                       <td className="px-4 py-3 font-mono text-xs text-[#17201D] md:px-5">{r.number || '—'}</td>
                       <td className="px-3 py-3 text-[#5F675F] tabular-nums">{shortTime(r.createdAt)}</td>
                       <td className="px-3 py-3">
