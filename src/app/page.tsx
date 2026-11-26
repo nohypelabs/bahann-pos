@@ -330,7 +330,7 @@ function Ready() {
           <Reveal delay={0.15} className="mt-9"><Pill href="#harga" tone="light" big>{L.ready.cta}</Pill></Reveal>
         </div>
         <Reveal delay={0.1} className="aspect-[918/485] overflow-hidden rounded-l-[16px]">
-          <Picture alt="Dasbor Laku POS" label="Screenshot dasbor" tone="dark" />
+          <Picture src="/landing/dashboard.jpg" alt="Dasbor Laku POS: omzet, laba kotor, transaksi, dan penjualan harian" label="Screenshot dasbor" tone="dark" className="object-left-top" />
         </Reveal>
       </div>
     </section>

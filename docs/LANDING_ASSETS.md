@@ -16,6 +16,6 @@ commercial use, no attribution required. Credits kept here anyway.
 | `card-kasir.jpg` | Platform card: kasir | pexels.com/photo/12935064 | iMin Technology | Pexels | — |
 | `card-nota.jpg` | Platform card: nota servis | pexels.com/photo/12741644 | Quang Nguyen Vinh | Pexels | — |
 | `card-gudang.jpg` | Platform card: gudang | pexels.com/photo/33164257 | Th2city Santana | Pexels | — |
+| `dashboard.jpg` | Second navy band | Laku POS dashboard, try-out tenant, 27 Nov 2026 (own screenshot) | — | Ours | Cropped to the content area, sidebar rail and dev badge removed |
 
-Still a placeholder: the dashboard screenshot in the second navy band (meant for a real Laku POS screenshot).
 Replace any image by keeping the file name, or pass a new `src` to `Picture` in `src/app/page.tsx`.
