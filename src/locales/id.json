@@ -86,7 +86,7 @@
   "sidebar.logoutModal.confirm": "Ya, Keluar",
 
   "login.title": "Masuk ke Laku POS",
-  "login.subtitle": "Masukkan email dan kata sandi Anda",
+  "login.subtitle": "Masuk untuk mengelola kasir, nota servis, dan stok.",
   "login.email": "Alamat Email",
   "login.password": "Kata Sandi",
   "login.button": "Masuk",
@@ -964,5 +964,24 @@
   "dashboard.recent.method": "Metode",
   "dashboard.recent.total": "Total",
   "dashboard.recent.walkIn": "Umum",
-  "dashboard.recent.serviceNote": "Nota servis"
+  "dashboard.recent.serviceNote": "Nota servis",
+
+  "login.welcome": "Selamat datang kembali",
+  "login.passwordPlaceholder": "Masukkan password",
+  "login.forgot": "Lupa password?",
+  "login.tabLogin": "Masuk",
+  "login.tabRegister": "Daftar",
+  "login.checkEmail": "Cek email Anda untuk verifikasi sebelum login.",
+  "login.verified": "Email berhasil diverifikasi. Silakan login.",
+  "login.hero.title": "Satu kasir untuk bengkel dan toko Anda.",
+  "login.hero.body": "Nota servis, stok, dan laporan omzet di satu tempat, tetap jalan walau internet putus.",
+  "login.hero.f1": "Nota servis & antrean motor",
+  "login.hero.f1Body": "Pelanggan bayar belakangan, antrean tetap rapi.",
+  "login.hero.f2": "Scan barcode & label otomatis",
+  "login.hero.f2Body": "Stok berkurang sendiri setiap barang terjual.",
+  "login.hero.f3": "Laporan omzet harian",
+  "login.hero.f3Body": "Lihat laba, jam ramai, dan barang paling laku.",
+  "login.hero.revenueToday": "Omzet hari ini",
+  "login.hero.vsYesterday": "dari kemarin",
+  "login.hero.sample": "Contoh"
 }

@@ -86,7 +86,7 @@
   "sidebar.logoutModal.confirm": "Yes, Logout",
 
   "login.title": "Sign In to Laku POS",
-  "login.subtitle": "Enter your email and password",
+  "login.subtitle": "Log in to run your cashier, service notes and stock.",
   "login.email": "Email Address",
   "login.password": "Password",
   "login.button": "Sign In",
@@ -964,5 +964,24 @@
   "dashboard.recent.method": "Method",
   "dashboard.recent.total": "Total",
   "dashboard.recent.walkIn": "Walk-in",
-  "dashboard.recent.serviceNote": "Service note"
+  "dashboard.recent.serviceNote": "Service note",
+
+  "login.welcome": "Welcome back",
+  "login.passwordPlaceholder": "Enter your password",
+  "login.forgot": "Forgot password?",
+  "login.tabLogin": "Log in",
+  "login.tabRegister": "Sign up",
+  "login.checkEmail": "Check your email to verify before logging in.",
+  "login.verified": "Email verified. Please log in.",
+  "login.hero.title": "One cashier for your workshop and shop.",
+  "login.hero.body": "Service notes, stock and revenue reports in one place, even when the internet drops.",
+  "login.hero.f1": "Service notes & bike queue",
+  "login.hero.f1Body": "Customers pay later; the queue stays in order.",
+  "login.hero.f2": "Barcode scanning & labels",
+  "login.hero.f2Body": "Stock goes down by itself with every sale.",
+  "login.hero.f3": "Daily revenue reports",
+  "login.hero.f3Body": "See profit, busy hours and best sellers.",
+  "login.hero.revenueToday": "Revenue today",
+  "login.hero.vsYesterday": "vs yesterday",
+  "login.hero.sample": "Example"
 }
