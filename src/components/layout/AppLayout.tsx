@@ -57,7 +57,7 @@ const ROUTE_META = [
 function getRouteMeta(pathname: string) {
   return (
     ROUTE_META.find((item) => item.match(pathname)) ?? {
-      title: 'Bahann POS',
+      title: 'Laku POS',
       description: 'Workspace operasional untuk kasir, gudang, dan aktivitas toko harian.',
       badge: 'Workspace',
     }
