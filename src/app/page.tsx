@@ -22,8 +22,8 @@ const GUTTER = 'px-5 md:px-[54px]'
  * Image slot. Without `src` it shows a 1920×1080 placeholder with its size, to be swapped for a
  * real photo later (put it in /public/landing/ and pass `src`).
  */
-function Picture({ src, alt, label, className = '', tone = 'light' }: { src?: string; alt: string; label: string; className?: string; tone?: 'light' | 'grey' | 'dark' }) {
-  if (src) return <img src={src} alt={alt} width={1920} height={1080} className={`h-full w-full object-cover ${className}`} />
+function Picture({ src, alt, label, className = '', tone = 'light', eager = false }: { src?: string; alt: string; label: string; className?: string; tone?: 'light' | 'grey' | 'dark'; eager?: boolean }) {
+  if (src) return <img src={src} alt={alt} loading={eager ? 'eager' : 'lazy'} decoding="async" className={`h-full w-full object-cover ${className}`} />
   const tones = {
     light: 'bg-[#E4E8E6] text-[#5F6B67] [--grid:rgba(7,17,11,0.06)]',
     grey: 'bg-[#DADDDC] text-[#5F6B67] [--grid:rgba(7,17,11,0.07)]',
@@ -149,7 +149,7 @@ function Hero() {
           </div>
         </Reveal>
         <Reveal delay={0.4} className="aspect-[16/9] lg:aspect-auto lg:h-[440px]">
-          <Picture alt="Ilustrasi bengkel dan kasir Laku POS" label="Ilustrasi hero" />
+          <Picture src="/landing/hero.jpg" eager alt="Ilustrasi isometrik Laku POS" label="Ilustrasi hero" />
         </Reveal>
       </div>
     </section>
@@ -191,7 +191,7 @@ function WidePhoto() {
   return (
     <div ref={ref} className="relative h-[60vw] max-h-[787px] min-h-[300px] overflow-hidden">
       <motion.div style={{ scale }} className="absolute inset-0 grayscale">
-        <Picture alt="Bengkel motor yang memakai Laku POS" label="Foto lebar" tone="grey" />
+        <Picture src="/landing/workshop-wide.jpg" alt="Mekanik bekerja di samping motor di bengkel" label="Foto lebar" tone="grey" />
       </motion.div>
     </div>
   )
@@ -205,7 +205,7 @@ function Why() {
         <div>
           <Reveal><h2 className={`${H2} max-w-[560px] text-[#07110B]`}>{L.why.title}</h2></Reveal>
           <Reveal delay={0.1} className="mt-12 aspect-[4/3] max-w-[560px]">
-            <Picture alt="Ilustrasi alur kerja bengkel" label="Ilustrasi" />
+            <Picture src="/landing/why.jpg" alt="Troli belanja miniatur" label="Ilustrasi" />
           </Reveal>
         </div>
         <div className="space-y-10 lg:pt-1">
@@ -236,7 +236,7 @@ function Steps() {
                 <p className={`mt-3 ${BODY} ${dark ? 'text-[#BCC2C0]' : ''}`}>{s.body}</p>
                 <div className="mt-auto pb-8 pt-6">
                   <div className="aspect-[4/3.6] overflow-hidden rounded-[14px]">
-                    <Picture alt={s.title} label={`Gambar ${s.n}`} tone={dark ? 'dark' : 'grey'} />
+                    <Picture src={`/landing/step-${s.n}.jpg`} alt={s.title} label={`Gambar ${s.n}`} tone={dark ? 'dark' : 'grey'} />
                   </div>
                 </div>
               </article>
@@ -257,7 +257,7 @@ function Statement() {
         <p className="mx-auto mt-8 max-w-[900px] text-[22px] leading-[1.4] text-[#07110B] md:text-[30px]">{L.statement.body}</p>
       </Reveal>
       <Reveal delay={0.1} className="mt-16 aspect-[21/9] md:mt-24">
-        <Picture alt="Ilustrasi besar Laku POS" label="Ilustrasi lebar" />
+        <Picture src="/landing/statement-wide.png" alt="Kotak-kotak di atas conveyor" label="Ilustrasi lebar" />
       </Reveal>
     </section>
   )
@@ -280,13 +280,15 @@ function Economics() {
         </div>
         <Reveal delay={0.1} className="mx-auto mt-16 max-w-[806px] px-5">
           <div className="aspect-[806/414] overflow-hidden rounded-t-[18px]">
-            <Picture alt="Laku POS di tablet kasir" label="Foto tablet kasir" tone="dark" />
+            <Picture src="/landing/tablet.jpg" alt="Tablet kasir di tangan" label="Foto tablet kasir" tone="dark" />
           </div>
         </Reveal>
       </div>
     </section>
   )
 }
+
+const PLATFORM_IMAGES = ['card-kasir.jpg', 'card-nota.jpg', 'card-gudang.jpg']
 
 // ─── 9. Platform ───────────────────────────────────────────────────────────────
 function Platform() {
@@ -306,7 +308,7 @@ function Platform() {
         {L.platform.cards.map((c, i) => (
           <Reveal key={c.title} delay={i * 0.08}>
             <div className="aspect-[3/2] overflow-hidden rounded-[16px]">
-              <Picture alt={c.title} label={`Foto ${i + 1}`} />
+              <Picture src={`/landing/${PLATFORM_IMAGES[i]}`} alt={c.title} label={`Foto ${i + 1}`} />
             </div>
             <h3 className={`mt-5 ${H3} text-[#07110B]`}>{c.title}</h3>
             <p className={`mt-2 ${BODY} text-[#565C59]`}>{c.body}</p>
