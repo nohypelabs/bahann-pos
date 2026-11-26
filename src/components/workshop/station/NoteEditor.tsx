@@ -24,6 +24,7 @@ import { enqueue, flush, newId, sync } from '@/lib/offline/workshop/station'
 import type { StationCatalog, StationNotes } from '@/lib/offline/workshop/useStation'
 import { OfflineCashModal } from './OfflineCashModal'
 import { OpenShiftModal } from '@/components/shift/OpenShiftModal'
+import { BarcodeWedge } from '@/hooks/useBarcodeWedge'
 import { PriceOverrideModal, type PriceChange } from '@/components/discount/PriceOverrideModal'
 import { ManualDiscountModal } from '@/components/discount/ManualDiscountModal'
 import type { DiscountJustification, ManualDiscount } from '@/domain/sales/manualDiscount'
@@ -507,6 +508,8 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
         </div>
       )}
       {shiftOpen && <OpenShiftModal outletId={outletId} outletName={outlet?.name} onClose={() => setShiftOpen(false)} />}
+      {/* A scan with no text field focused adds the item to this note. */}
+      <BarcodeWedge onScan={(c) => void onScan(c)} enabled={isOpen && !payOpen && !offlinePayOpen && !cancelOpen && !discountOpen && !shiftOpen && !priceEdit} />
 
       {payOpen && shift && (
         <PaymentModal

@@ -20,6 +20,7 @@ import type { DiscountReason, ManualDiscount } from '@/domain/sales/manualDiscou
 import { ProductListSkeleton, ProductGridSkeleton } from '@/components/ui/Skeletons'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { OpenShiftModal } from '@/components/shift/OpenShiftModal'
+import { useBarcodeWedge } from '@/hooks/useBarcodeWedge'
 import { friendlyError } from '@/lib/errors/friendlyError'
 
 /** Product cards drawn at once; the rest are reached by searching or scanning. */
@@ -99,6 +100,8 @@ export default function SalesTransactionPage() {
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
   const [error, setError] = useState('')
   const [showSuccess, setShowSuccess] = useState(false)
+  // The line a scan or click just added, highlighted in the cart so the cashier sees what went in.
+  const [lastAddedId, setLastAddedId] = useState<string | null>(null)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [isPromoExpanded, setIsPromoExpanded] = useState(false)
   const [isScannerOpen, setIsScannerOpen] = useState(false)
@@ -312,6 +315,7 @@ export default function SalesTransactionPage() {
         listPrice: unitPrice,
       }])
     }
+    setLastAddedId(selectedProduct.id)
     setSelectedProductId('')
     setQuantity(1)
     setError('')
@@ -320,32 +324,49 @@ export default function SalesTransactionPage() {
 
   const handleQuickQuantity = (qty: number) => setQuantity(qty)
 
-  const handleBarcodeScan = (barcode: string) => {
-    const trimmed = barcode.trim()
-    const product = products?.find(p => p.barcode && p.barcode === trimmed)
+  const findByCode = (code: string) => {
+    const trimmed = code.trim()
+    return products?.find(p => p.barcode && p.barcode === trimmed)
       ?? products?.find(p => p.sku === trimmed.toUpperCase())
-    if (product) {
-      setSelectedProductId(product.id)
-      setQuantity(1)
-      setTimeout(() => {
-        const unitPrice = product.price || 0
-        const existingIndex = cart.findIndex(item => item.productId === product.id)
-        if (existingIndex !== -1) {
-          const newCart = [...cart]
-          newCart[existingIndex].quantity += 1
-          newCart[existingIndex].total = newCart[existingIndex].quantity * newCart[existingIndex].unitPrice
-          setCart(newCart)
-        } else {
-          setCart([...cart, { productId: product.id, productName: product.name, productSku: product.sku, quantity: 1, unitPrice, total: unitPrice, listPrice: unitPrice }])
-        }
-        setShowSuccess(true)
-        setTimeout(() => setShowSuccess(false), 2000)
-      }, 100)
-    } else {
-      setError(`Produk dengan barcode ${barcode} tidak ditemukan`)
-      setTimeout(() => setError(''), 3000)
-    }
+  }
+
+  const handleBarcodeScan = (barcode: string) => {
     setIsScannerOpen(false)
+    const product = findByCode(barcode)
+    if (!product) {
+      setError(`Produk dengan barcode ${barcode.trim()} tidak ditemukan`)
+      setTimeout(() => setError(''), 3000)
+      return
+    }
+    const inCart = cart.find(item => item.productId === product.id)?.quantity ?? 0
+    const isUntracked = product.stock_behavior === 'UNTRACKED' || product.stock_behavior === 'CONSUMED'
+    const stock = effectiveInventoryList?.find(p => p.id === product.id)?.currentStock
+    if (!isUntracked && selectedOutletId && stock !== undefined && stock < inCart + 1) {
+      setError(`Stok ${product.name} tidak cukup! Hanya ${stock} unit tersedia`)
+      setTimeout(() => setError(''), 3000)
+      return
+    }
+    const unitPrice = product.price || 0
+    setCart(current => current.some(item => item.productId === product.id)
+      ? current.map(item => item.productId === product.id
+        ? { ...item, quantity: item.quantity + 1, total: (item.quantity + 1) * item.unitPrice }
+        : item)
+      : [...current, { productId: product.id, productName: product.name, productSku: product.sku, quantity: 1, unitPrice, total: unitPrice, listPrice: unitPrice }])
+    setLastAddedId(product.id)
+    setError('')
+    setShowSuccess(true)
+    setTimeout(() => setShowSuccess(false), 2000)
+  }
+
+  // A scan with no text field focused (the USB scanner types like a keyboard).
+  useBarcodeWedge(handleBarcodeScan, !!selectedOutletId && !isPaymentModalOpen && !isShiftModalOpen)
+
+  /** Enter in the product search: a scanned or typed barcode/SKU goes straight into the cart. */
+  const handleSearchEnter = () => {
+    const code = productSearch.trim()
+    if (!code) return
+    if (findByCode(code)) { handleBarcodeScan(code); setProductSearch('') }
+    else if (/^\d{8,}$/.test(code)) { handleBarcodeScan(code); setProductSearch('') }
   }
 
   const handleBarcodeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setBarcodeInput(e.target.value.toUpperCase())
@@ -748,7 +769,7 @@ export default function SalesTransactionPage() {
               <div className="flex gap-2 shrink-0">
                 <div className="relative flex-1 min-w-0">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-                  <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} placeholder="Cari produk..." disabled={!selectedOutletId} className="w-full pl-10 pr-8 py-2.5 border border-stone-200 rounded-xl bg-[#fcfbf7] text-sm text-stone-900 focus:border-emerald-500 focus:outline-none disabled:opacity-50" />
+                  <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearchEnter() } }} placeholder="Cari produk / scan barcode..." disabled={!selectedOutletId} className="w-full pl-10 pr-8 py-2.5 border border-stone-200 rounded-xl bg-[#fcfbf7] text-sm text-stone-900 focus:border-emerald-500 focus:outline-none disabled:opacity-50" />
                   {productSearch && <button onClick={() => setProductSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 hover:bg-stone-200 rounded-full w-6 h-6 flex items-center justify-center transition-colors">✕</button>}
                 </div>
                 {categories.length > 0 && (
@@ -1059,26 +1080,52 @@ export default function SalesTransactionPage() {
               </div>
             </div>
 
-            <div className="mt-4 rounded-[35px] border border-white/10 bg-white/5 p-4">
-              <p className="text-xs text-stone-300">Total tagihan</p>
-              <p className="mt-1 text-3xl font-semibold tracking-tight text-white">
-                {cart.length > 0 ? formatCurrency(cartTotal) : 'Rp 0'}
-              </p>
-              <div className="mt-4 space-y-2 text-sm">
-                <div className="flex items-center justify-between text-stone-300">
-                  <span>Subtotal</span>
-                  <span className="text-white">{formatCurrency(cartSubtotal)}</span>
+            {/* Cart, one line per item, so every scan shows up next to the total */}
+            {cart.length > 0 && (
+              <div className="mt-3 max-h-[38vh] overflow-y-auto rounded-2xl border border-white/10 bg-white/5 divide-y divide-white/10">
+                {cart.map((item) => (
+                  <div
+                    key={item.productId}
+                    ref={item.productId === lastAddedId ? (el) => el?.scrollIntoView({ block: 'nearest' }) : undefined}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs ${item.productId === lastAddedId ? 'bg-emerald-400/20' : ''}`}
+                  >
+                    <button
+                      onClick={() => setPriceEditId(item.productId)}
+                      title={`${item.productSku} · ${formatCurrency(item.unitPrice)} — ${t('discount.line.button')}`}
+                      className="min-w-0 flex-1 truncate text-left text-stone-100 hover:text-white"
+                    >
+                      {item.productName}
+                      {priceOverrideOf(item) && <span className="ml-1 text-amber-300">*</span>}
+                    </button>
+                    <button onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)} aria-label={`Kurangi ${item.productName}`} className="h-5 w-5 shrink-0 rounded border border-white/20 leading-none text-stone-300 hover:border-emerald-400">−</button>
+                    <span className="w-5 shrink-0 text-center font-semibold text-white">{item.quantity}</span>
+                    <button onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)} aria-label={`Tambah ${item.productName}`} className="h-5 w-5 shrink-0 rounded border border-white/20 leading-none text-stone-300 hover:border-emerald-400">+</button>
+                    <span className="w-[4.75rem] shrink-0 text-right font-semibold text-white">{formatCurrency(item.total)}</span>
+                    <button onClick={() => handleRemoveFromCart(item.productId)} aria-label={`Hapus ${item.productName}`} className="shrink-0 px-0.5 text-stone-500 hover:text-red-400">✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Total on one line with its label; subtotal and discount share the next line */}
+            <div className="mt-3 rounded-[28px] border border-white/10 bg-white/5 px-4 py-3">
+              <div className="flex items-end justify-between gap-3">
+                <div className="shrink-0 pb-1">
+                  <p className="text-xs text-stone-300">Total tagihan</p>
+                  <p className="text-xs text-stone-400">{cartItemCount} item</p>
                 </div>
-                <div className="flex items-center justify-between text-stone-300">
-                  <span>Diskon</span>
+                <p className="truncate text-3xl font-semibold tracking-tight text-white">
+                  {cart.length > 0 ? formatCurrency(cartTotal) : 'Rp 0'}
+                </p>
+              </div>
+              <div className="mt-2 flex items-center justify-between gap-2 border-t border-white/10 pt-2 text-sm text-stone-300">
+                <span>Subtotal <span className="text-white">{formatCurrency(cartSubtotal)}</span></span>
+                <span>
+                  Diskon{' '}
                   <span className={totalDiscount > 0 ? 'text-emerald-300' : 'text-white'}>
                     {totalDiscount > 0 ? `- ${formatCurrency(totalDiscount)}` : formatCurrency(0)}
                   </span>
-                </div>
-                <div className="flex items-center justify-between border-t border-white/10 pt-3 text-sm font-semibold text-white">
-                  <span>{cartItemCount} item</span>
-                  <span>{formatCurrency(cartTotal)}</span>
-                </div>
+                </span>
               </div>
             </div>
             {/* Promo */}
