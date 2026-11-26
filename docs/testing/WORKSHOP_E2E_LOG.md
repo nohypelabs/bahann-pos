@@ -20,6 +20,30 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-27 · Phone layout of POS, warehouse and dashboard (local app → production DB, try-out tenant)
+
+Playwright, Chromium at 390 × 844 (mobile, touch), signed in as the client try-out owner. Nine pages: `/dashboard`,
+`/pos/sales`, `/pos/notes`, `/pos/history`, `/pos/revenue`, `/warehouse/stock`, `/warehouse/inventory`,
+`/warehouse/movements`, `/warehouse/reports`. Each page checked for page-level overflow and for inner boxes that
+scroll sideways, and screenshotted at full height.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 25.1 | Page-level horizontal overflow, all nine pages | None | ✅ none, before and after |
+| 25.2 | Dashboard daily and hourly charts | Axis labels readable | ❌ labels ran together ("Sab, 21Min, 22…", "00:0002:00…") → fixed: ticks thinned (`minTickGap`) |
+| 25.3 | Dashboard "Transaksi terakhir" | No sideways scrolling | ❌ 640 px table in a 364 px box → fixed: one row per sale on phones, table from md up |
+| 25.4 | `/pos/history` "Laporan Per Produk" and "Semua Transaksi" | Revenue and status visible | ❌ seven-column tables, revenue and status cut off → fixed: list rows on phones |
+| 25.5 | `/warehouse/inventory` search | Icon beside the placeholder | ❌ icon over the text: the unlayered `.input-mobile` padding beat `pl-9` → fixed: `.input-mobile` moved into `@layer components` (only this Input passes its own padding) |
+| 25.6 | `/warehouse/inventory` tables | Names readable | ❌ names wrapped to 3–4 lines → fixed: outlet and category move under the name on phones |
+| 25.7 | `/warehouse/reports` charts | Dates readable, donut legend shown | ❌ full dates crowded; donut legend cut off and "Total" drawn in the top-left corner (label at cx/cy 0) → fixed: short dates, ticks thinned, legend outside the chart box, label centred |
+| 25.8 | After the fixes: inner boxes scrolling sideways, all four changed pages | None | ✅ none; screenshots checked |
+| 25.9 | `/pos/sales`, `/pos/notes`, `/pos/revenue`, `/warehouse/stock`, `/warehouse/movements` | Usable at 390 px | ✅ no change needed |
+
+Not checked: the cart and payment sheet on `/pos/sales` with items in it on a phone, and a real phone (only Chromium's
+mobile emulation).
+
+---
+
 ## 2026-11-27 · Landing contact form saved to the database (local app → production DB)
 
 Migration `060_contact_requests.sql` applied to production by hand and recorded in `_migrations`. `contact.submit`
