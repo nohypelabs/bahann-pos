@@ -20,6 +20,27 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-26 · Daily backup installed, restore tested (production DB)
+
+Setup and paths: `deployment/backup/README.md` ("Where it runs").
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 15.1 | Role `lakupos_backup` reads `public.users` | Rows returned | ✅ |
+| 15.2 | Same role: `update products` and `insert into _migrations`, even after `set transaction read write` | Refused | ✅ permission denied |
+| 15.3 | `SECURITY DEFINER` functions in `public` the role may execute | None | ✅ 0 |
+| 15.4 | First dump on Helipod as user `lakupos-backup` | Encrypted dump, ≥ 30 tables | ✅ 48 tables, 640 KB, 33 s |
+| 15.5 | Pull to PC Ryzen | 1 file in `~/.lakupos-backup/daily` | ✅ |
+| 15.6 | Pull key opens a shell / writes to the VPS | Refused | ✅ rrsync refused both |
+| 15.7 | Restore the PC Ryzen copy with `lakupos-restore-test.sh` | `restore: OK`, latest migration 059 | ✅ 48 tables, 2892 rows |
+| 15.8 | Compare restored counts with production | Equal | ✅ transactions 135, service_orders 148, transaction_items 222, payments 122 |
+
+Before this, Helipod's PostgreSQL 16 (used only by the bioray trial app) was upgraded to 17.12 with
+`pg_upgradecluster`; a `pg_dumpall` of 16 is kept in `/root/pg16-before-upgrade`. Row counts and bioray's own
+login (with its tenant setting) matched before and after.
+
+---
+
 ## 2026-11-26 · Suspension at login and refresh (production)
 
 Prompted by a wrong note in the entry below ("is_suspended is not checked at login"). Login did check the account's
