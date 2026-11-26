@@ -38,6 +38,7 @@ export const RateLimitPresets = {
   REFRESH: { windowMs: 5 * 60 * 1000, maxRequests: 20 }, // 20 refresh attempts per 5 min
   API: { windowMs: 60 * 1000, maxRequests: 100 }, // 100 req per minute
   SENSITIVE: { windowMs: 60 * 1000, maxRequests: 10 }, // 10 req per minute
+  CONTACT: { windowMs: 15 * 60 * 1000, maxRequests: 5 }, // 5 landing-page messages per 15 min per IP
 }
 
 interface RateLimitRow {

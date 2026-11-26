@@ -23,6 +23,7 @@ import { transactionApprovalsRouter } from './transactionApprovals'
 import { outletGroupsRouter } from './outletGroups'
 import { impersonationRouter } from './impersonation'
 import { workshopRouter } from './workshop'
+import { contactRouter } from './contact'
 
 /**
  * Main tRPC app router
@@ -30,6 +31,7 @@ import { workshopRouter } from './workshop'
  */
 export const appRouter = router({
   auth: authRouter,
+  contact: contactRouter,
   stock: stockRouter,
   sales: salesRouter,
   products: productsRouter,

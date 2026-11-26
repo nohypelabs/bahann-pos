@@ -9,7 +9,7 @@ import { usePWA } from '@/lib/pwa/PWAContext'
 import { hasPermission, hasAnyPermission, PERMISSIONS, LEGACY_ROLE_MAP, getRoleDisplayName } from '@/lib/rbac/permissions'
 import { trpc } from '@/lib/trpc/client'
 import { useOpsBadges } from './useOpsBadges'
-import {
+import { Inbox,
   LayoutDashboard, Package, ClipboardList, BarChart3,
   ShoppingCart, History, DollarSign, ArrowLeftRight,
   CreditCard, Ticket, Briefcase, Bell,
@@ -351,6 +351,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
                       <SidebarItem href="/admin/tenants" icon={<Users />} label={t('sidebar.adminTenants')} isCollapsed={false} />
                       <SidebarItem href="/admin/roles" icon={<Shield />} label="Kelola Role" isCollapsed={false} />
                       <SidebarItem href="/admin/payments" icon={<CreditCard />} label={t('sidebar.adminPayments')} isCollapsed={false} />
+                      <SidebarItem href="/admin/leads" icon={<Inbox />} label="Pesan Masuk" isCollapsed={false} />
                       <SidebarItem href="/admin/settings" icon={<Settings />} label={t('sidebar.adminSettings')} isCollapsed={false} />
                     </div>
                   </div>
@@ -361,6 +362,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
                     <SidebarItem href="/admin/tenants" icon={<Users />} label={t('sidebar.adminTenants')} isCollapsed={true} />
                     <SidebarItem href="/admin/roles" icon={<Shield />} label="Kelola Role" isCollapsed={true} />
                     <SidebarItem href="/admin/payments" icon={<CreditCard />} label={t('sidebar.adminPayments')} isCollapsed={true} />
+                    <SidebarItem href="/admin/leads" icon={<Inbox />} label="Pesan Masuk" isCollapsed={true} />
                     <SidebarItem href="/admin/settings" icon={<Settings />} label={t('sidebar.adminSettings')} isCollapsed={true} />
                     <div className="h-px bg-purple-300 dark:bg-purple-700 mx-3 mt-1" />
                   </div>
