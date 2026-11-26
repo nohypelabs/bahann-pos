@@ -49,7 +49,7 @@ export default function SetupPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-3">
-            <img src="/logo.svg" alt="Laku POS" className="w-16 h-16 rounded-2xl shadow-md" />
+            <img src="/logo.svg" alt="Laku POS" className="w-12 h-12" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             {t('setup.title')}

@@ -268,7 +268,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
               // Icon rail: the logo shows at rest; hovering the header (or focusing the button) swaps it for the expand button.
               <div className="relative h-8 w-8">
                 <img src="/logo.svg" alt="Laku POS"
-                  className="h-8 w-8 rounded-lg border border-[#E4E6E7] bg-white p-1 transition-opacity duration-150 group-hover/header:opacity-0 group-focus-within/header:opacity-0" />
+                  className="h-8 w-8 p-1 transition-opacity duration-150 group-hover/header:opacity-0 group-focus-within/header:opacity-0" />
                 <button type="button" onClick={onToggleDesktop}
                   aria-label={t('sidebar.expand')}
                   title={`${t('sidebar.expand')} (${shortcut})`}
@@ -280,7 +280,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
             ) : (
               <>
                 <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5 rounded-md">
-                  <img src="/logo.svg" alt="" className="h-8 w-8 flex-shrink-0 rounded-lg border border-[#E4E6E7] bg-white p-1" />
+                  <img src="/logo.svg" alt="" className="h-7 w-7 flex-shrink-0" />
                   <span className="truncate whitespace-nowrap text-[15px] font-semibold text-[#17201d]">Laku POS</span>
                 </Link>
                 <button type="button" onClick={onToggleDesktop}

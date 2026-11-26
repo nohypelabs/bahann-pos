@@ -48,7 +48,9 @@ export function AuthTabs({ active }: { active: 'login' | 'register' }) {
 export function AuthHeading({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="mb-8 flex flex-col items-center text-center lg:items-start lg:text-left">
-      <img src="/logo.svg" alt="Laku POS" className="mb-6 h-12 w-12 rounded-[40px] lg:mb-10 lg:h-11 lg:w-11" />
+      <img src="/logo.svg" alt="Laku POS" className="mb-6 h-10 w-10 lg:hidden" />
+      {/* The glass card is dark from lg up: the white mark keeps its contrast there. */}
+      <img src="/logo-light.svg" alt="Laku POS" className="mb-10 hidden h-10 w-10 lg:block" />
       <h1 className="text-[26px] font-bold tracking-tight text-[#17201D] lg:text-4xl lg:text-white">{title}</h1>
       <p className="mt-1.5 text-sm text-[#5F675F] lg:text-base lg:text-white/70">{subtitle}</p>
     </div>
