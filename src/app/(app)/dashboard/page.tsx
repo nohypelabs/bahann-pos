@@ -380,7 +380,24 @@ export default function DashboardPage() {
           {loading || !o ? <Skeleton className="h-[240px]" /> : o.recent.length === 0 ? (
             <p className="py-6 text-sm text-[#8A9188]">{t('dashboard.empty')}</p>
           ) : (
-            <div className="-mx-4 overflow-x-auto md:-mx-5">
+            <>
+            {/* Phones: one row per sale instead of a table that scrolls sideways */}
+            <ul className="-mx-4 divide-y divide-[#EEF0F0] border-t border-[#EEF0F0] md:hidden">
+              {o.recent.map((r) => (
+                <li key={r.id} className="flex items-start justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-[#17201D]">
+                      {r.customerName ?? t('dashboard.recent.walkIn')}
+                      {r.serviceNote && <span className="ml-2 rounded bg-[#E3F1EE] px-1.5 py-0.5 text-[11px] font-semibold text-[#0F5F56]">{t('dashboard.recent.serviceNote')}</span>}
+                    </p>
+                    <p className="mt-0.5 truncate font-mono text-[11px] text-[#8A9188]">{r.number || '—'}</p>
+                    <p className="mt-0.5 text-xs text-[#5F675F] tabular-nums">{shortTime(r.createdAt)} · {r.items} {t('dashboard.recent.items').toLowerCase()} · {methodLabel(r.paymentMethod)}</p>
+                  </div>
+                  <p className="shrink-0 text-sm font-semibold text-[#17201D] tabular-nums">{formatCurrency(r.total)}</p>
+                </li>
+              ))}
+            </ul>
+            <div className="-mx-4 hidden overflow-x-auto md:-mx-5 md:block">
               <table className="w-full min-w-[640px] text-sm">
                 <thead>
                   <tr className="border-y border-[#EEF0F0] bg-white/40 text-left text-xs font-semibold text-[#5F675F]">
@@ -409,6 +426,7 @@ export default function DashboardPage() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </Panel>
 

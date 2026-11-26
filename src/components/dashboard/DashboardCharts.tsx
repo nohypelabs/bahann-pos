@@ -51,7 +51,7 @@ export function DailySalesChart({ daily, labels }: { daily: DashboardOverview['d
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: 0 }} barCategoryGap={many ? '18%' : '28%'}>
         <CartesianGrid vertical={false} stroke={CHART.grid} />
-        <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: CHART.axis }} interval={many ? 'preserveStartEnd' : 0} minTickGap={8} />
+        <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: CHART.axis }} interval="preserveStartEnd" minTickGap={12} />
         <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: CHART.axis }} tickFormatter={compactRupiah} width={56} />
         <Tooltip {...tooltipStyle} formatter={(v, name) => [formatCurrency(Number(v)), name === 'goods' ? labels.goods : labels.services]} />
         <Bar dataKey="goods" stackId="s" fill={CHART.brand} radius={[0, 0, 4, 4]} animationDuration={600} />
@@ -76,7 +76,7 @@ export function HourlyChart({ hours }: { hours: DashboardOverview['hourlyToday']
           </linearGradient>
         </defs>
         <CartesianGrid vertical={false} stroke={CHART.grid} />
-        <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: CHART.axis }} interval={1} />
+        <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: CHART.axis }} interval="preserveStartEnd" minTickGap={16} />
         <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: CHART.axis }} tickFormatter={compactRupiah} width={56} />
         <Tooltip {...tooltipStyle} cursor={{ stroke: CHART.brandLight, strokeDasharray: '4 4' }}
           formatter={(v, _n, item) => [`${formatCurrency(Number(v))} · ${(item.payload as { transactions: number }).transactions} transaksi`, 'Omzet']} />
