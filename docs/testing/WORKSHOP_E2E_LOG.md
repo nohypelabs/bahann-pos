@@ -20,6 +20,19 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-27 · New landing page (local dev server, public page)
+
+Rebuilt `/` in the style of a reference the owner liked (big wordmark, full-width photo, two-column sections, a dark
+band, cards); own code and Laku POS copy, plans and FAQ carried over, images are 1920×1080 placeholders.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 22.1 | Headless Chromium at 1440×900, scrolled through, screenshots checked by eye | All sections render, reveal on scroll | ✅ header, hero wordmark, photo, "Yang membuat Laku POS berbeda", dark band, features, pricing (both tabs' layout), FAQ, CTA, footer |
+| 22.2 | Same at 390×844 | No horizontal scroll, menu button | ✅ no overflow; wordmark scales to the width |
+| 22.3 | Links | Masuk/Daftar go to the app, WhatsApp uses the owner's number | ✅ `/login`, `/register`, `wa.me/6281221575053` |
+
+---
+
 ## 2026-11-27 · New dashboard (`dashboard.getOverview`) against production data
 
 | # | Step | Expected | Actual |
