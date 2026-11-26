@@ -16,9 +16,19 @@ import { Inbox,
   Tag, Store, Users, Shield, Trash2, Star,
   User, HelpCircle, Info,
   LogOut, Download, X,
-  Settings, ChevronDown, Crown, PanelLeftClose, PanelLeftOpen,
+  Settings, ChevronDown, Crown,
   Receipt, ArrowDownUp, CheckCircle, Wrench, IdCard,
 } from 'lucide-react'
+
+/** Panel icon for the sidebar toggle: a rounded square with a short bar on the left, the same open or closed. */
+function SidebarToggleIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" aria-hidden className={className}>
+      <rect x="3" y="3" width="18" height="18" rx="4.5" />
+      <path d="M8.5 9v6" />
+    </svg>
+  )
+}
 
 function SidebarItem({ href, icon, label, badge, isCollapsed }: {
   href: string; icon: ReactNode; label: string; badge?: string; isCollapsed: boolean
@@ -274,7 +284,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
                   title={`${t('sidebar.expand')} (${shortcut})`}
                   aria-keyshortcuts="Control+B Meta+B"
                   className="absolute inset-0 flex items-center justify-center rounded-md text-[#5f675f] opacity-0 transition-[opacity,background-color,color] duration-150 hover:bg-[#17201d]/[0.06] hover:text-[#17201d] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f5f56]/40 group-hover/header:opacity-100">
-                  <PanelLeftOpen className="h-[18px] w-[18px]" />
+                  <SidebarToggleIcon className="h-[18px] w-[18px]" />
                 </button>
               </div>
             ) : (
@@ -288,7 +298,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
                   title={`${t('sidebar.collapse')} (${shortcut})`}
                   aria-keyshortcuts="Control+B Meta+B"
                   className="hidden h-8 w-8 flex-shrink-0 items-center justify-center rounded-md text-[#6f776f] transition-colors duration-150 hover:bg-[#17201d]/[0.06] hover:text-[#17201d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f5f56]/40 md:inline-flex">
-                  <PanelLeftClose className="h-[18px] w-[18px]" />
+                  <SidebarToggleIcon className="h-[18px] w-[18px]" />
                 </button>
                 <button type="button" onClick={() => setMobileOpen(false)}
                   className="md:hidden rounded-md p-2 text-[#6f776f] transition-colors hover:bg-[#17201d]/[0.06] hover:text-[#17201d]"
