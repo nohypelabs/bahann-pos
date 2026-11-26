@@ -715,7 +715,7 @@
   "products.labels.showPrice": "Tampilkan harga",
   "products.labels.outline": "Cetak garis bantu (untuk uji di kertas biasa)",
   "products.labels.summary": "{labels} label · {sheets} lembar A4",
-  "products.labels.printerHint": "Di dialog cetak: pilih kertas A4, skala 100% (bukan \"fit to page\"), margin None. Uji dulu di kertas biasa dengan garis bantu, lalu tempel ke kertas stiker untuk mengecek posisi.",
+  "products.labels.printerHint": "Saat mencetak (langsung atau dari PDF): kertas A4, skala 100% / \"Actual size\" (bukan \"fit to page\"), margin None. Uji dulu di kertas biasa dengan garis bantu, lalu tempel ke kertas stiker untuk mengecek posisi.",
   "products.labels.preview": "Pratinjau lembar pertama",
   "products.labels.printFailed": "Gagal membuka dialog cetak",
   "pos.moreProducts": "Menampilkan {shown} produk pertama, {n} lainnya: ketik nama/SKU atau scan barcode",
@@ -902,5 +902,8 @@
   "workshop.members.stamps": "{n}/{total} stempel",
   "workshop.members.activeVouchers": "{n} voucher aktif",
   "workshop.members.whatsapp": "Chat WhatsApp",
-  "workshop.members.count": "{n} pelanggan"
+  "workshop.members.count": "{n} pelanggan",
+
+  "products.labels.pdf": "Unduh PDF",
+  "products.labels.pdfFailed": "PDF label gagal dibuat. Coba lagi."
 }

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import JsBarcode from 'jsbarcode'
-import { ArrowLeft, Printer, Search, Trash2 } from 'lucide-react'
+import { ArrowLeft, Download, Printer, Search, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { Button } from '@/components/ui/Button'
@@ -129,6 +129,29 @@ export default function ProductLabelsPage() {
     if (!ok) showToast(t('products.labels.printFailed'), 'error')
   }
 
+  const [pdfBusy, setPdfBusy] = useState(false)
+  const downloadPdf = async () => {
+    setPdfBusy(true)
+    try {
+      // jsPDF is large; load it only when a PDF is asked for.
+      const { buildLabelPdf } = await import('@/lib/labels/labelPdf')
+      const labels = products.flatMap((p) => Array.from({ length: Math.max(0, counts[p.id] ?? 1) }, () => ({
+        name: p.name,
+        code: labelCode(p),
+        // jsPDF's standard fonts have no narrow no-break space, which Intl puts in "Rp 25.000".
+        price: showPrice ? formatCurrency(p.price).replace(/\s/g, ' ') : null,
+      })))
+      const doc = buildLabelPdf(labels, sheet, { skip, outline })
+      const now = new Date()
+      const day = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+      doc.save(`label-produk-${day}.pdf`)
+    } catch {
+      showToast(t('products.labels.pdfFailed'), 'error')
+    } finally {
+      setPdfBusy(false)
+    }
+  }
+
   const num = (v: string) => Number(v.replace(',', '.')) || 0
   const customField = (key: keyof LabelSheet, label: string) => (
     <Input
@@ -150,7 +173,14 @@ export default function ProductLabelsPage() {
       <PageHeader
         title={t('products.labels.title')}
         subtitle={t('products.labels.subtitle')}
-        action={<Button onClick={print} disabled={!total || !fits}><Printer className="w-4 h-4 mr-1" /> {t('products.labels.print')}</Button>}
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={downloadPdf} disabled={!total || !fits || pdfBusy}>
+              <Download className="w-4 h-4 mr-1" /> {pdfBusy ? t('common.loading') : t('products.labels.pdf')}
+            </Button>
+            <Button onClick={print} disabled={!total || !fits}><Printer className="w-4 h-4 mr-1" /> {t('products.labels.print')}</Button>
+          </div>
+        }
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

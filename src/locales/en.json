@@ -715,7 +715,7 @@
   "products.labels.showPrice": "Show price",
   "products.labels.outline": "Print guide lines (for a test on plain paper)",
   "products.labels.summary": "{labels} labels · {sheets} A4 sheet(s)",
-  "products.labels.printerHint": "In the print dialog choose A4, scale 100% (not \"fit to page\") and margins None. Test on plain paper with guide lines first, then hold it against a sticker sheet to check alignment.",
+  "products.labels.printerHint": "When printing (directly or from the PDF): A4, scale 100% / \"Actual size\" (not \"fit to page\"), margins None. Test on plain paper with guide lines first, then hold it against a sticker sheet to check alignment.",
   "products.labels.preview": "First sheet preview",
   "products.labels.printFailed": "Could not open the print dialog",
   "pos.moreProducts": "Showing the first {shown} products, {n} more: type a name/SKU or scan a barcode",
@@ -902,5 +902,8 @@
   "workshop.members.stamps": "{n}/{total} stamps",
   "workshop.members.activeVouchers": "{n} active vouchers",
   "workshop.members.whatsapp": "WhatsApp chat",
-  "workshop.members.count": "{n} customers"
+  "workshop.members.count": "{n} customers",
+
+  "products.labels.pdf": "Download PDF",
+  "products.labels.pdfFailed": "Could not create the label PDF. Try again."
 }
