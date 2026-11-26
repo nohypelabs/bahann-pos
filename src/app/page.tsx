@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, MotionConfig, motion, useScroll, useTransform } from 'framer-motion'
-import { Menu, MessageCircle, Minus, Plus, X } from 'lucide-react'
+import { Mail, Menu, MessageCircle, Minus, Plus, X } from 'lucide-react'
 import { LANDING as L, type Plan } from '@/components/landing/content'
 import { SUPPORT_WHATSAPP_DISPLAY, supportWhatsAppLink } from '@/lib/contact'
 import { landingFont } from '@/components/landing/fonts'
@@ -172,7 +172,7 @@ function Problem() {
           <p>{L.problem.p1}</p>
           <p>{L.problem.p2}</p>
         </Reveal>
-        <Reveal delay={0.1} className="space-y-10 lg:pl-[22%]">
+        <Reveal delay={0.1} className="space-y-10 lg:pl-[82px]">
           {row(L.problem.builtFor, L.problem.builtForItems)}
           {row(L.problem.worksWith, L.problem.worksWithItems)}
         </Reveal>
@@ -199,7 +199,7 @@ function WidePhoto() {
 function Why() {
   return (
     <section id="fitur" className={`scroll-mt-24 ${GUTTER} pb-[70px] pt-[100px]`}>
-      <div className="grid gap-12 lg:grid-cols-2 lg:gap-20">
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_560px] lg:gap-20">
         <div>
           <Reveal><h2 className={`${H2} max-w-[560px] text-[#07110B]`}>{L.why.title}</h2></Reveal>
           <Reveal delay={0.1} className="mt-12 aspect-[4/3] max-w-[560px]">
@@ -290,7 +290,7 @@ function Economics() {
 function Platform() {
   return (
     <section className={`${GUTTER} py-20 md:py-[110px]`}>
-      <div className="grid gap-10 lg:grid-cols-2 lg:gap-20">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_568px] lg:gap-20">
         <Reveal><h2 className={`${H2} max-w-[660px] text-[#07110B]`}>{L.platform.title}</h2></Reveal>
         <Reveal delay={0.1} className="lg:pt-3">
           <p className={`${BODY} max-w-[520px] text-[#07110B]`}>{L.platform.body}</p>
@@ -456,36 +456,47 @@ function Contact() {
 }
 
 // ─── 13. Footer ────────────────────────────────────────────────────────────────
+// Two halves on one baseline grid: wordmark over the icon row on the left; link columns over
+// the copyright on the right, both starting at the same x so the text lines up.
 function Footer() {
   const cols: { title: string; links: { href: string; label: string; external?: boolean }[] }[] = [
     { title: L.footer.company, links: [{ href: '#kontak', label: L.nav.contact }, { href: supportWhatsAppLink('Halo, saya butuh bantuan dengan Laku POS.'), label: 'WhatsApp', external: true }] },
     { title: L.footer.product, links: [{ href: '#fitur', label: L.nav.features }, { href: '#cara-kerja', label: L.nav.how }, { href: '#harga', label: L.nav.pricing }, { href: '#faq', label: L.nav.faq }] },
     { title: L.footer.account, links: [{ href: '/login', label: L.nav.login }, { href: '/register', label: 'Daftar gratis' }] },
   ]
+  const social = [
+    { href: supportWhatsAppLink(), label: 'WhatsApp Laku POS', icon: <MessageCircle className="h-[18px] w-[18px]" /> },
+    { href: '#kontak', label: L.nav.contact, icon: <Mail className="h-[18px] w-[18px]" /> },
+  ]
   return (
-    <footer className="bg-[#041C15] px-5 pb-14 pt-20 text-white md:px-[38px]">
-      <div className="grid gap-14 lg:grid-cols-2">
-        <span className="block whitespace-nowrap text-[18vw] font-bold leading-[0.94] tracking-[-0.022em] lg:text-[clamp(64px,8.6vw,132px)]">LAKU POS</span>
-        <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:pl-[60px]">
+    <footer className="bg-[#041C15] px-5 pb-[52px] pt-20 text-white md:px-[38px]">
+      <div className="grid gap-y-14 lg:grid-cols-2 lg:grid-rows-[auto_auto] lg:gap-y-[84px]">
+        <span className="block whitespace-nowrap text-[17vw] font-bold leading-[0.78] tracking-[-0.05em] lg:text-[clamp(56px,8.6vw,124px)]">LAKU POS</span>
+
+        <div className="grid grid-cols-2 gap-y-10 sm:grid-cols-[225px_225px_1fr] lg:pl-[83px] lg:pt-[14px]">
           {cols.map((c) => (
             <div key={c.title}>
-              <p className="text-[16px] text-white/75">{c.title}</p>
-              <ul className="mt-5 space-y-[18px]">
+              <p className="text-[16px] leading-6 text-white/75">{c.title}</p>
+              <ul className="mt-[14px] space-y-4 leading-[19.5px]">
                 {c.links.map((l) => (
                   <li key={l.label}>
-                    <a href={l.href} target={l.external ? '_blank' : undefined} rel={l.external ? 'noopener noreferrer' : undefined} className={`${LABEL} hover:opacity-70`}>{l.label}</a>
+                    <a href={l.href} target={l.external ? '_blank' : undefined} rel={l.external ? 'noopener noreferrer' : undefined}
+                      className={`block ${LABEL} leading-[19.5px] text-white transition-opacity hover:opacity-70`}>{l.label}</a>
                   </li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
-      </div>
-      <div className="mt-20 grid gap-6 lg:grid-cols-2">
-        <a href={supportWhatsAppLink()} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Laku POS" className="w-fit text-white/80 hover:text-white">
-          <MessageCircle className="h-[18px] w-[18px]" />
-        </a>
-        <div className="space-y-1 text-[15px] text-white/75 lg:pl-[60px]">
+
+        <div className="flex items-start gap-10 lg:self-start lg:pt-1">
+          {social.map((x) => (
+            <a key={x.label} href={x.href} target={x.href.startsWith('http') ? '_blank' : undefined} rel={x.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+              aria-label={x.label} className="text-white/85 transition-opacity hover:opacity-70">{x.icon}</a>
+          ))}
+        </div>
+
+        <div className="text-[15px] leading-7 text-white/75 lg:self-start lg:pl-[83px]">
           <p>&copy; {new Date().getFullYear()} Laku POS. {L.footer.rights}</p>
           <p>{L.footer.tagline}</p>
         </div>
