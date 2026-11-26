@@ -119,7 +119,7 @@ export default function InventoryMonitorPage() {
           placeholder="Cari produk berdasarkan nama atau SKU..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          className="pl-9"
+          className="pl-10"
           fullWidth
         />
       </div>
@@ -137,8 +137,8 @@ export default function InventoryMonitorPage() {
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
-                  {['Produk', 'SKU', 'Kategori', 'Outlet', 'Stok Saat Ini', 'Status'].map((h, i) => (
-                    <th key={h} className={`px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ${i === 1 || i === 2 ? 'hidden md:table-cell' : ''}`}>{h}</th>
+                  {['Produk', 'SKU', 'Kategori', 'Outlet', 'Stok', 'Status'].map((h, i) => (
+                    <th key={h} className={`px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ${i >= 1 && i <= 3 ? 'hidden md:table-cell' : ''}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -148,10 +148,13 @@ export default function InventoryMonitorPage() {
                   return (
                     <tr key={`${item.productId}-${item.outletId}`}
                       className={`hover:opacity-80 transition-opacity ${sev === 'critical' ? 'bg-red-50 dark:bg-red-900/20' : sev === 'warning' ? 'bg-yellow-50 dark:bg-yellow-900/20' : 'bg-orange-50 dark:bg-orange-900/20'}`}>
-                      <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{item.productName}</td>
+                      <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        {item.productName}
+                        <p className="text-xs font-normal text-gray-500 md:hidden">{item.outletName}</p>
+                      </td>
                       <td className="hidden md:table-cell px-3 md:px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400">{item.productSku}</td>
                       <td className="hidden md:table-cell px-3 md:px-4 py-3 text-xs text-gray-600 dark:text-gray-400">{item.productCategory || '—'}</td>
-                      <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">{item.outletName}</td>
+                      <td className="hidden md:table-cell px-3 md:px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300">{item.outletName}</td>
                       <td className="px-3 md:px-4 py-3 text-right">
                         <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{item.currentStock}</p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">unit</p>
@@ -183,7 +186,7 @@ export default function InventoryMonitorPage() {
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
                   {['Nama Produk', 'SKU', 'Kategori', 'Stok', 'Harga'].map((h, i) => (
-                    <th key={h} className={`px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ${i === 1 ? 'hidden md:table-cell' : ''}`}>{h}</th>
+                    <th key={h} className={`px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider ${i === 1 || i === 2 ? 'hidden md:table-cell' : ''} ${i === 4 ? 'text-right md:text-left' : ''}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -193,9 +196,12 @@ export default function InventoryMonitorPage() {
                   const stockColor = status === 'out' ? 'text-red-600' : status === 'low' ? 'text-yellow-600' : 'text-green-600'
                   return (
                     <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                      <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">{product.name}</td>
+                      <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        {product.name}
+                        <span className="mt-1 block w-fit rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700 md:hidden">{product.category || 'Umum'}</span>
+                      </td>
                       <td className="hidden md:table-cell px-3 md:px-4 py-3 font-mono text-xs text-gray-600 dark:text-gray-400">{product.sku}</td>
-                      <td className="px-3 md:px-4 py-3">
+                      <td className="hidden md:table-cell px-3 md:px-4 py-3">
                         <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-full text-[10px] font-semibold">
                           {product.category || 'Umum'}
                         </span>
@@ -206,7 +212,7 @@ export default function InventoryMonitorPage() {
                           {status === 'out' ? 'Habis' : status === 'low' ? 'Rendah' : 'Tersedia'}
                         </p>
                       </td>
-                      <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      <td className="px-3 md:px-4 py-3 text-right text-sm font-semibold text-gray-900 tabular-nums whitespace-nowrap md:text-left dark:text-gray-100">
                         {formatCurrency(product.price || 0)}
                       </td>
                     </tr>

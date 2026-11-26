@@ -151,10 +151,19 @@ button:not(:disabled) { cursor: pointer; }
   border-radius: var(--card-radius);
 }
 
-.btn-mobile, .input-mobile {
+.btn-mobile {
   min-height: var(--touch-target-min);
   padding: var(--space-md) var(--space-lg);
   font-size: var(--font-size-base);
+}
+
+/* In the components layer so a padding utility passed to <Input> (room for a leading icon) wins. */
+@layer components {
+  .input-mobile {
+    min-height: var(--touch-target-min);
+    padding: var(--space-md) var(--space-lg);
+    font-size: var(--font-size-base);
+  }
 }
 
 /* ============================================
