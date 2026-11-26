@@ -20,6 +20,18 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-27 · New dashboard (`dashboard.getOverview`) against production data
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 21.1 | Unit tests for the aggregation: period split on business days, gross profit with uncosted lines, daily goods/services, hours, rankings, latest sales, empty period | Pass | ✅ 8/8; all unit tests 219 passed |
+| 21.2 | `loadDashboardOverview` for the workshop test tenant, 30 days, vs SQL over the same WIB days | Same totals | ✅ 122 sales, Rp 6.829.800, 108 service notes; query ~150 ms |
+| 21.3 | Same run: categories, best sellers, top customers, mechanics | Plausible against the test data | ✅ Jasa 46 %, Oli 29 %, Sparepart 25 %; Busi NGK ×78 first; Andi (member uji) Rp 2.625.000 over 42 sales; Budi and Dedi listed, no notes today |
+
+Not yet checked: the page in a browser (layout, charts, phone width).
+
+---
+
 ## 2026-11-27 · Label preview dialog and smaller corner radii (local app → production DB)
 
 Headless Chromium as `pemilik@mrbengkel.test`, screenshots checked by eye.
