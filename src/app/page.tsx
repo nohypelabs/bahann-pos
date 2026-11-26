@@ -12,6 +12,7 @@ import {
   ArrowRight, Scissors, Car, Wrench, Fish, WashingMachine,
   ChefHat, BriefcaseBusiness, Layers2, X,
 } from 'lucide-react'
+import { SUPPORT_WHATSAPP_NUMBER } from '@/lib/contact'
 
 type Lang = 'id' | 'en'
 
@@ -465,7 +466,7 @@ function lerpColor(a: number[], b: number[], t: number): string {
   return `rgb(${clamp(a[0] + (b[0] - a[0]) * t)}, ${clamp(a[1] + (b[1] - a[1]) * t)}, ${clamp(a[2] + (b[2] - a[2]) * t)})`
 }
 
-const WA_NUMBER = '6287874415491'
+const WA_NUMBER = SUPPORT_WHATSAPP_NUMBER
 function buildWaLink(msg: string) {
   return `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`
 }

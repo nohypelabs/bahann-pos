@@ -22,6 +22,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { OpenShiftModal } from '@/components/shift/OpenShiftModal'
 import { useBarcodeWedge } from '@/hooks/useBarcodeWedge'
 import { friendlyError } from '@/lib/errors/friendlyError'
+import { SUPPORT_WHATSAPP_NUMBER } from '@/lib/contact'
 
 /** Product cards drawn at once; the rest are reached by searching or scanning. */
 const MAX_VISIBLE_PRODUCTS = 120
@@ -1407,7 +1408,7 @@ export default function SalesTransactionPage() {
             <p className="text-gray-600 dark:text-gray-400 mb-2">Paket <span className="font-semibold text-blue-600">Gratis</span> hanya mendukung <span className="font-semibold">100 transaksi per bulan</span>.</p>
             <p className="text-gray-600 dark:text-gray-400 mb-3 md:mb-6">Upgrade ke paket <span className="font-semibold text-orange-500">Warung (Rp 99rb/bulan)</span> untuk transaksi tidak terbatas.</p>
             <div className="flex flex-col gap-3">
-              <a href={`https://wa.me/6287874415491?text=${encodeURIComponent('Halo, saya ingin upgrade dari paket Gratis ke paket Warung Laku POS (Rp 99rb/bulan). Mohon bantuannya.')}`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-xs md:text-lg transition-colors"><MessageCircle className="w-4 h-4 md:w-5 md:h-5" /> Upgrade via WhatsApp</a>
+              <a href={`https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${encodeURIComponent('Halo, saya ingin upgrade dari paket Gratis ke paket Warung Laku POS (Rp 99rb/bulan). Mohon bantuannya.')}`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-xs md:text-lg transition-colors"><MessageCircle className="w-4 h-4 md:w-5 md:h-5" /> Upgrade via WhatsApp</a>
               <button onClick={() => setShowUpgradeModal(false)} className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 transition-colors">Tutup</button>
             </div>
           </div>

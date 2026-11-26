@@ -9,6 +9,7 @@ import {
   Telescope, Building, Rocket, ScrollText, Heart,
   Handshake, MessageCircle, Star, ExternalLink, Mail, Phone, Check
 } from 'lucide-react'
+import { SUPPORT_WHATSAPP_DISPLAY, supportWhatsAppLink } from '@/lib/contact'
 
 export default function AboutPage() {
   const { t } = useLanguage()
@@ -293,7 +294,7 @@ export default function AboutPage() {
               <div className="space-y-2">
                 {[
                   { icon: <Mail className="w-4 h-4" />, href: 'mailto:agdscid@gmail.com', label: 'agdscid@gmail.com', color: 'text-blue-600 dark:text-blue-400' },
-                  { icon: <Phone className="w-4 h-4" />, href: 'https://wa.me/6287874415491', label: '+62 878-7441-5491', color: 'text-emerald-600 dark:text-emerald-400' },
+                  { icon: <Phone className="w-4 h-4" />, href: supportWhatsAppLink(), label: SUPPORT_WHATSAPP_DISPLAY, color: 'text-emerald-600 dark:text-emerald-400' },
                   { icon: <ExternalLink className="w-4 h-4" />, href: 'https://github.com/agds-alt', label: 'github.com/agds-alt', color: 'text-gray-900 dark:text-gray-100' },
                 ].map((contact) => (
                   <div key={contact.label} className="flex items-center justify-center md:justify-start gap-3 p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
@@ -305,7 +306,7 @@ export default function AboutPage() {
                 ))}
               </div>
               <div className="mt-4 flex flex-wrap gap-3 justify-center md:justify-start">
-                <a href="https://wa.me/6287874415491" target="_blank" rel="noopener noreferrer">
+                <a href={supportWhatsAppLink()} target="_blank" rel="noopener noreferrer">
                   <Button variant="primary"><MessageCircle className="w-4 h-4 mr-1" /> WhatsApp</Button>
                 </a>
                 <a href="https://github.com/agds-alt" target="_blank" rel="noopener noreferrer">
@@ -431,8 +432,8 @@ export default function AboutPage() {
               {t('about.support.text2')}
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
-              <a href="https://wa.me/6287874415491" target="_blank" rel="noopener noreferrer">
-                <Button variant="primary" size="lg"><MessageCircle className="w-4 h-4 mr-1" /> WhatsApp: +62 878-7441-5491</Button>
+              <a href={supportWhatsAppLink()} target="_blank" rel="noopener noreferrer">
+                <Button variant="primary" size="lg"><MessageCircle className="w-4 h-4 mr-1" /> WhatsApp: {SUPPORT_WHATSAPP_DISPLAY}</Button>
               </a>
               <a href="mailto:agdscid@gmail.com">
                 <Button variant="secondary" size="lg"><Mail className="w-4 h-4 mr-1" /> Email: agdscid@gmail.com</Button>

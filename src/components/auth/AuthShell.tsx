@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { MotionConfig, motion } from 'framer-motion'
 import { BarChart3, MessageCircle, ScanBarcode, Wrench } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { supportWhatsAppLink } from '@/lib/contact'
 
 // The login and sign-up pages share this frame. Phones get a plain white page (lg:hidden parts);
 // from lg up the form sits on a glass card over a Laku teal backdrop, next to a dark panel about
@@ -114,7 +115,7 @@ function ProductPanel() {
   )
 }
 
-const SUPPORT_WHATSAPP = 'https://wa.me/6287874415491?text=' + encodeURIComponent('Halo, saya butuh bantuan dengan Laku POS.')
+const SUPPORT_WHATSAPP = supportWhatsAppLink('Halo, saya butuh bantuan dengan Laku POS.')
 
 function AuthFooter() {
   const { t } = useLanguage()
