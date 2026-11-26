@@ -437,7 +437,7 @@ export default function SalesTransactionPage() {
         : cart.length === 0
           ? 'Keranjang kosong'
           : `Bayar ${formatCurrency(cartTotal)}`
-  const surfaceClass = 'rounded-[28px] border border-stone-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
+  const surfaceClass = 'rounded-[14px] border border-stone-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
   const chipClass = 'inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-white px-3 py-1 text-[11px] font-medium text-stone-600'
 
   useEffect(() => {
@@ -596,7 +596,7 @@ export default function SalesTransactionPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden rounded-[30px] border border-stone-200 bg-[#f4f2ea] shadow-[0_20px_45px_-35px_rgba(28,25,23,0.45)]">
+    <div className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden rounded-[15px] border border-stone-200 bg-[#f4f2ea] shadow-[0_20px_45px_-35px_rgba(28,25,23,0.45)]">
 
       {/* ── Top Bar ── */}
       <div className="shrink-0 border-b border-stone-200 bg-white/95 px-4 py-3">
@@ -1029,7 +1029,7 @@ export default function SalesTransactionPage() {
 
               {/* Qty + Add */}
               {selectedProduct && (
-                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-[35px] shrink-0">
+                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-[18px] shrink-0">
                   {/* Product info row */}
                   <div className="flex items-center gap-2 mb-2.5 min-w-0">
                     <p className="text-xs md:text-sm font-bold text-emerald-950 truncate flex-1">{selectedProduct.name}</p>
@@ -1069,7 +1069,7 @@ export default function SalesTransactionPage() {
         <div className="hidden md:flex flex-col gap-4 w-[22rem] shrink-0 overflow-hidden">
 
           {/* Payment card */}
-          <div className="shrink-0 rounded-[35px] bg-stone-950 p-4 text-white shadow-[0_20px_45px_-25px_rgba(28,25,23,0.75)]">
+          <div className="shrink-0 rounded-[18px] bg-stone-950 p-4 text-white shadow-[0_20px_45px_-25px_rgba(28,25,23,0.75)]">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-400">Checkout</p>
@@ -1108,7 +1108,7 @@ export default function SalesTransactionPage() {
             )}
 
             {/* Total on one line with its label; subtotal and discount share the next line */}
-            <div className="mt-3 rounded-[28px] border border-white/10 bg-white/5 px-4 py-3">
+            <div className="mt-3 rounded-[14px] border border-white/10 bg-white/5 px-4 py-3">
               <div className="flex items-end justify-between gap-3">
                 <div className="shrink-0 pb-1">
                   <p className="text-xs text-stone-300">Total tagihan</p>
@@ -1400,7 +1400,7 @@ export default function SalesTransactionPage() {
       {/* ── Modals ── */}
       {showUpgradeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-[35px] shadow-2xl max-w-md w-full p-4 md:p-8 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-[18px] shadow-2xl max-w-md w-full p-4 md:p-8 text-center">
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4"><span className="text-xs md:text-lg md:text-3xl">🚫</span></div>
             <h2 className="text-base md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Batas Transaksi Tercapai</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-2">Paket <span className="font-semibold text-blue-600">Gratis</span> hanya mendukung <span className="font-semibold">100 transaksi per bulan</span>.</p>

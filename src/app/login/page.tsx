@@ -89,14 +89,14 @@ function LoginContent() {
         </div>
 
         {/* Login Card */}
-        <div className="bg-white border border-neutral-200 rounded-[35px] p-6 sm:p-8">
+        <div className="bg-white border border-neutral-200 rounded-[18px] p-6 sm:p-8">
           <div className="pb-2 sm:pb-4">
             <h2 className="text-mobile-base md:text-mobile-xl font-bold text-gray-900 dark:text-gray-100">{t('login.title')}</h2>
           </div>
           <div className="pt-0 sm:pt-2">
             <form onSubmit={handleLogin} className="space-y-3 sm:space-y-6">
               {showRegisteredMessage && (
-                <div className="p-3 bg-green-50 border-2 border-green-200 rounded-[35px]">
+                <div className="p-3 bg-green-50 border-2 border-green-200 rounded-[18px]">
                   <p className="text-sm font-semibold text-green-600">
                     ✅ {t('register.success')} Cek email Anda untuk verifikasi sebelum login.
                   </p>
@@ -104,7 +104,7 @@ function LoginContent() {
               )}
 
               {showVerifiedMessage && (
-                <div className="p-3 bg-blue-50 border-2 border-blue-200 rounded-[35px]">
+                <div className="p-3 bg-blue-50 border-2 border-blue-200 rounded-[18px]">
                   <p className="text-sm font-semibold text-blue-700">
                     Email berhasil diverifikasi. Silakan login.
                   </p>
@@ -112,12 +112,13 @@ function LoginContent() {
               )}
 
               {error && (
-                <div className="p-3 bg-red-50 border-2 border-red-200 rounded-[35px]">
+                <div className="p-3 bg-red-50 border-2 border-red-200 rounded-[18px]">
                   <p className="text-sm text-red-600">{error}</p>
                 </div>
               )}
 
               <Input
+                pill
                 type="email"
                 label={t('login.email')}
                 placeholder={t('login.email')}

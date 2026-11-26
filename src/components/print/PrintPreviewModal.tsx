@@ -51,7 +51,7 @@ export function PrintPreviewModal({ isOpen, onClose, receiptData }: PrintPreview
         role="dialog"
         aria-modal="true"
         aria-labelledby="print-preview-title"
-        className="flex max-h-[90vh] w-full max-w-[500px] flex-col rounded-3xl border-[3px] border-gray-200 bg-white shadow-2xl"
+        className="flex max-h-[90vh] w-full max-w-[500px] flex-col rounded-xl border-[3px] border-gray-200 bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b-2 border-gray-200 px-6 pb-4 pt-6">

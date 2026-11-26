@@ -113,12 +113,12 @@ export default function RegisterPage() {
           </p>
           {/* Step indicator */}
           <div className="flex justify-center gap-2 mt-4">
-            <span className={`w-8 h-1 rounded-[40px] ${step === 1 ? 'bg-blue-500' : 'bg-blue-500'}`} />
-            <span className={`w-8 h-1 rounded-[40px] ${step === 2 ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-700'}`} />
+            <span className={`w-8 h-1 rounded-[20px] ${step === 1 ? 'bg-blue-500' : 'bg-blue-500'}`} />
+            <span className={`w-8 h-1 rounded-[20px] ${step === 2 ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-700'}`} />
           </div>
         </div>
 
-        <div className="bg-white border border-neutral-200 rounded-[40px] p-6 sm:p-8">
+        <div className="bg-white border border-neutral-200 rounded-[20px] p-6 sm:p-8">
           <div className="mb-4">
             <h2 className="text-mobile-base md:text-mobile-xl font-bold text-gray-900 dark:text-gray-100">
               {step === 1
@@ -141,12 +141,13 @@ export default function RegisterPage() {
               /* Step 1: Account Info */
               <form onSubmit={handleNextStep} className="space-y-4">
                 {error && (
-                  <div className="p-4 bg-red-50 border-2 border-red-200 rounded-[40px]">
+                  <div className="p-4 bg-red-50 border-2 border-red-200 rounded-[20px]">
                     <p className="text-sm font-semibold text-red-600">❌ {error}</p>
                   </div>
                 )}
 
                 <Input
+                  pill
                   type="text"
                   name="name"
                   label={isId ? 'Nama Lengkap' : 'Full Name'}
@@ -158,6 +159,7 @@ export default function RegisterPage() {
                 />
 
                 <Input
+                  pill
                   type="text"
                   name="storeName"
                   label={isId ? 'Nama Toko / Warung' : 'Store / Shop Name'}
@@ -199,7 +201,7 @@ export default function RegisterPage() {
                       <button
                         type="button"
                         onClick={() => removeAdditionalOutlet(index)}
-                        className="shrink-0 px-3 py-2.5 rounded-[40px] border-2 border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 transition-colors"
+                        className="shrink-0 px-3 py-2.5 rounded-[20px] border-2 border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 transition-colors"
                         aria-label={isId ? 'Hapus outlet tambahan' : 'Remove additional outlet'}
                       >
                         ✕
@@ -229,6 +231,7 @@ export default function RegisterPage() {
                 </div>
 
                 <Input
+                  pill
                   type="email"
                   name="email"
                   label={isId ? 'Email' : 'Email'}
@@ -306,7 +309,7 @@ export default function RegisterPage() {
               /* Step 2: Business Type Selection */
               <div className="space-y-4">
                 {error && (
-                  <div className="p-4 bg-red-50 border-2 border-red-200 rounded-[40px]">
+                  <div className="p-4 bg-red-50 border-2 border-red-200 rounded-[20px]">
                     <p className="text-sm font-semibold text-red-600">❌ {error}</p>
                   </div>
                 )}
@@ -324,14 +327,14 @@ export default function RegisterPage() {
                       <button
                         key={bt.type}
                         onClick={() => setSelectedType(bt.type)}
-                        className={`relative text-left p-4 rounded-[40px] border-2 transition-all ${
+                        className={`relative text-left p-4 rounded-[20px] border-2 transition-all ${
                           isSelected
                             ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-md'
                             : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
                         }`}
                       >
                         {isSelected && (
-                          <div className="absolute top-3 right-3 w-5 h-5 rounded-[40px] bg-blue-500 flex items-center justify-center">
+                          <div className="absolute top-3 right-3 w-5 h-5 rounded-[20px] bg-blue-500 flex items-center justify-center">
                             <span className="text-white text-xs font-bold">✓</span>
                           </div>
                         )}
@@ -373,7 +376,7 @@ export default function RegisterPage() {
         </div>
 
         {!success && step === 1 && (
-          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-[40px]">
+          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-[20px]">
             <p className="text-sm text-blue-900 dark:text-blue-200 font-semibold mb-2">
               ℹ️ {isId ? 'Informasi Pendaftaran' : 'Registration Info'}:
             </p>

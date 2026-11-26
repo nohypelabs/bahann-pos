@@ -278,7 +278,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         </div>
 
         {!showCollapsed && (
-          <div className="mx-3 mt-3 rounded-[35px] border border-[#ddd8cc] bg-white p-4 shadow-[0_1px_0_rgba(23,32,29,0.04)]">
+          <div className="mx-3 mt-3 rounded-[18px] border border-[#ddd8cc] bg-white p-4 shadow-[0_1px_0_rgba(23,32,29,0.04)]">
             <div className="mb-3 flex items-start justify-between gap-3">
               <Link href="/profile" className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#0f5f56] text-lg font-bold text-white transition-opacity hover:opacity-90">
                 {userInitial}
@@ -525,7 +525,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4"
           onClick={e => e.target === e.currentTarget && setShowLogoutModal(false)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div className="relative bg-white dark:bg-gray-900 rounded-[35px] shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-[#ddd8cc] dark:border-gray-800">
+          <div className="relative bg-white dark:bg-gray-900 rounded-[18px] shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-[#ddd8cc] dark:border-gray-800">
             <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-500">
               <LogOut className="w-7 h-7" />
             </div>

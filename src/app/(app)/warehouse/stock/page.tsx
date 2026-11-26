@@ -167,7 +167,7 @@ export default function StockManagementPage() {
   const selectedProduct = products.find(p => p.id === formData.productId)
   const selectedOutlet  = outlets.find(o => o.id === formData.outletId)
   const akhirNegative   = formData.stockAkhir < 0
-  const panelClass = 'rounded-[28px] border border-stone-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
+  const panelClass = 'rounded-[14px] border border-stone-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
 
   return (
     <div className="space-y-5">
@@ -437,7 +437,7 @@ export default function StockManagementPage() {
           </div>
 
           {/* How to use */}
-          <div className="rounded-[28px] border border-stone-200 bg-[#f7f5ee] p-4">
+          <div className="rounded-[14px] border border-stone-200 bg-[#f7f5ee] p-4">
             <p className="text-xs font-bold text-stone-800 mb-2">Cara pakai</p>
             <ul className="text-[11px] text-stone-600 space-y-1 leading-relaxed">
               <li>• Pilih produk dan outlet</li>
@@ -452,7 +452,7 @@ export default function StockManagementPage() {
       </div>
 
       {/* ── Penyesuaian Stok ── */}
-      <div className="rounded-[28px] border border-orange-200 bg-[#fffaf3] shadow-[0_1px_0_rgba(28,25,23,0.04)] overflow-hidden">
+      <div className="rounded-[14px] border border-orange-200 bg-[#fffaf3] shadow-[0_1px_0_rgba(28,25,23,0.04)] overflow-hidden">
         <div className="px-4 md:px-6 py-4 border-b border-orange-100">
           <p className="text-sm font-bold text-stone-950">Penyesuaian Stok</p>
           <p className="text-xs text-stone-500 mt-0.5">Untuk barang rusak, hilang, expired, atau koreksi cepat tanpa pindah halaman.</p>

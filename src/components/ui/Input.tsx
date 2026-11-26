@@ -4,10 +4,12 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
   fullWidth?: boolean
+  /** Fully rounded, as on the login and sign-up pages; elsewhere fields use the softer app radius. */
+  pill?: boolean
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, fullWidth = false, id, className = '', ...props }, ref) => {
+  ({ label, error, fullWidth = false, pill = false, id, className = '', ...props }, ref) => {
     const defaultId = useId()
     const inputId = id || defaultId
     const errorId = error ? `${inputId}-error` : undefined
@@ -27,7 +29,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             input-mobile w-full
             bg-white dark:bg-gray-800 text-[#17201D] dark:text-gray-100
             border border-[#DDD8CC] dark:border-gray-600
-            rounded-[40px]
+            ${pill ? 'rounded-[40px]' : 'rounded-[20px]'}
             focus:outline-none focus:border-[#0F5F56] focus:ring-2 focus:ring-[#8ECFC2]/35 dark:focus:border-gray-400
             transition-all duration-200
             disabled:opacity-50 disabled:cursor-not-allowed
@@ -76,7 +78,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             input-mobile w-full
             bg-white dark:bg-gray-800 text-[#17201D] dark:text-gray-100
             border border-[#DDD8CC] dark:border-gray-600
-            rounded-[40px]
+            rounded-[20px]
             focus:outline-none focus:border-[#0F5F56] focus:ring-2 focus:ring-[#8ECFC2]/35 dark:focus:border-gray-400
             transition-all duration-200
             disabled:opacity-50 disabled:cursor-not-allowed
@@ -125,7 +127,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             input-mobile w-full
             bg-white dark:bg-gray-800 text-[#17201D] dark:text-gray-100
             border border-[#DDD8CC] dark:border-gray-600
-            rounded-[40px]
+            rounded-[20px]
             focus:outline-none focus:border-[#0F5F56] focus:ring-2 focus:ring-[#8ECFC2]/35 dark:focus:border-gray-400
             transition-all duration-200
             disabled:opacity-50 disabled:cursor-not-allowed

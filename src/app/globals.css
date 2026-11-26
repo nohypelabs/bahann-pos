@@ -120,7 +120,7 @@ html {
 
   /* Component sizing - Mobile */
   --card-padding: 1rem;           /* 16px */
-  --card-radius: 35px;            /* Login-style card corners */
+  --card-radius: 18px;            /* Login-style card corners */
   --input-height: 2.75rem;        /* 44px - iOS touch standard */
   --button-height: 2.75rem;       /* 44px - iOS touch standard */
   --touch-target-min: 2.75rem;    /* 44px minimum */
@@ -183,7 +183,7 @@ button:not(:disabled) { cursor: pointer; }
 
     /* Tablet Component Sizing */
     --card-padding: 0.75rem;     /* 12px - tight cards */
-    --card-radius: 35px;         /* Consistent card corners */
+    --card-radius: 18px;         /* Consistent card corners */
     --input-height: 2.25rem;     /* 36px - compact inputs */
     --button-height: 2.25rem;    /* 36px - compact buttons */
     --touch-target-min: 2.25rem; /* 36px touch targets */
@@ -310,7 +310,7 @@ button:not(:disabled) { cursor: pointer; }
 
     /* Desktop Component Sizing */
     --card-padding: 1.5rem;      /* 24px */
-    --card-radius: 35px;
+    --card-radius: 18px;
     --input-height: 2.5rem;      /* 40px */
     --button-height: 2.5rem;     /* 40px */
     --touch-target-min: 2.5rem;  /* 40px */
