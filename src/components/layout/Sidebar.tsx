@@ -16,7 +16,7 @@ import {
   Tag, Store, Users, Shield, Trash2, Star,
   User, HelpCircle, Info,
   LogOut, Download, X,
-  Settings, ChevronDown, Crown,
+  Settings, ChevronDown, Crown, PanelLeftClose, PanelLeftOpen,
   Receipt, ArrowDownUp, CheckCircle, Wrench, IdCard,
 } from 'lucide-react'
 
@@ -26,27 +26,29 @@ function SidebarItem({ href, icon, label, badge, isCollapsed }: {
   const pathname = usePathname()
   const isActive = pathname === href || pathname.startsWith(href + '/')
 
+  // On the icon rail the label lives in the tooltip and the accessible name; a count becomes a dot.
+  const railLabel = badge ? `${label} (${badge})` : label
+
   return (
     <Link
       href={href}
-      title={isCollapsed ? label : undefined}
+      title={isCollapsed ? railLabel : undefined}
+      aria-label={isCollapsed ? railLabel : undefined}
+      aria-current={isActive ? 'page' : undefined}
       className={`
-        group relative flex items-center gap-3.5 rounded-2xl border text-[14px] font-medium
-        transition-all duration-150
-        ${isCollapsed ? 'justify-center px-2.5 py-3' : 'px-3.5 py-3'}
+        group relative flex items-center rounded-lg text-[14px] font-medium
+        transition-colors duration-150
+        ${isCollapsed ? 'mx-auto h-10 w-10 justify-center' : 'gap-3 px-3 py-2.5 md:py-2'}
         ${isActive
-          ? 'border-[#b9cbbf] bg-[#e5f3ef] text-[#0b4e48] shadow-[0_1px_0_rgba(15,95,86,0.08)]'
-          : 'border-transparent text-[#5f675f] hover:border-[#ddd8cc] hover:bg-white hover:text-[#17201d]'
+          ? 'bg-[#0f5f56]/[0.09] text-[#0b4e48]'
+          : 'text-[#5f675f] hover:bg-[#17201d]/[0.05] hover:text-[#17201d]'
         }
       `}
     >
-      {isActive && !isCollapsed && (
-        <span className="absolute left-1.5 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-[#0f5f56]" />
-      )}
-      <span className={`flex-shrink-0 [&>svg]:w-[20px] [&>svg]:h-[20px] ${isActive ? 'text-[#0f5f56]' : 'opacity-75 group-hover:opacity-100'}`}>{icon}</span>
+      <span className={`flex-shrink-0 [&>svg]:h-[18px] [&>svg]:w-[18px] ${isActive ? 'text-[#0f5f56]' : 'opacity-80 group-hover:opacity-100'}`}>{icon}</span>
       {!isCollapsed && (
         <>
-          <span className="flex-1 min-w-0 truncate">{label}</span>
+          <span className="min-w-0 flex-1 truncate whitespace-nowrap">{label}</span>
           {badge && (
             <span className="flex-shrink-0 rounded-full bg-[#17201d] px-2 py-0.5 text-[10px] font-bold text-white">
               {badge}
@@ -55,9 +57,7 @@ function SidebarItem({ href, icon, label, badge, isCollapsed }: {
         </>
       )}
       {isCollapsed && badge && (
-        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#17201d] text-[9px] font-bold text-white">
-          {badge}
-        </span>
+        <span aria-hidden="true" className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-600 ring-2 ring-[#fbfaf6]" />
       )}
     </Link>
   )
@@ -95,7 +95,7 @@ function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths 
   if (isCollapsed) {
     return (
       <div className="mb-1">
-        <div className="mx-3 mb-1 h-px bg-[#ddd8cc]" />
+        <div className="mx-auto my-1.5 h-px w-6 bg-[#ddd8cc]" />
         <div className="space-y-0.5">{children}</div>
       </div>
     )
@@ -103,7 +103,7 @@ function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths 
 
   return (
     <div className="mb-1">
-      <button onClick={toggle} className="w-full flex items-center justify-between px-3 py-1.5 group hover:bg-white/50 rounded-xl transition-colors">
+      <button onClick={toggle} className="w-full flex items-center justify-between px-3 py-1.5 group hover:bg-[#17201d]/[0.04] rounded-md transition-colors">
         <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8a9188] transition-colors group-hover:text-[#5f675f]">
           {title}
         </span>
@@ -111,7 +111,7 @@ function SidebarSection({ sectionKey, title, children, isCollapsed, activePaths 
           {!isOpen && badge > 0 && (
             <span className="rounded-full bg-[#17201d] px-2 py-0.5 text-[10px] font-bold text-white">{badge}</span>
           )}
-          <span className={`text-[9px] text-[#a9afa6] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>▼</span>
+          <ChevronDown className={`h-3.5 w-3.5 text-[#a9afa6] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </span>
       </button>
       <div className={`overflow-hidden transition-all duration-200 ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -138,11 +138,15 @@ interface SidebarProps {
   mobileOpen: boolean
   setMobileOpen: (open: boolean) => void
   desktopOpen?: boolean
+  /** Flips the desktop sidebar between expanded and the icon rail. */
+  onToggleDesktop?: () => void
+  /** Keyboard shortcut shown in the toggle's tooltip, e.g. 'Ctrl+B'. */
+  shortcut?: string
 }
 
-export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: SidebarProps) {
+export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggleDesktop, shortcut = 'Ctrl+B' }: SidebarProps) {
   const pathname = usePathname()
-  const { language, setLanguage, t } = useLanguage()
+  const { t } = useLanguage()
   const { canInstall, isInstalled, install } = usePWA()
   const [userName,  setUserName]  = useState('User')
   const [userEmail, setUserEmail] = useState('')
@@ -249,274 +253,284 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true }: Sideb
       )}
 
       <aside className={`
-        w-72 ${isCollapsed ? 'md:w-[68px]' : 'md:w-64'}
-        h-screen bg-[#fbfaf6] border-r border-[#ddd8cc]
-        flex flex-col transition-all duration-300 ease-in-out flex-shrink-0
-        fixed md:relative z-50
+        w-72 ${isCollapsed ? 'md:w-[60px]' : 'md:w-64'}
+        h-screen overflow-hidden bg-[#fbfaf6] border-r border-[#ddd8cc]
+        flex-shrink-0 fixed md:relative z-50
+        transition-[width,transform] duration-200 ease-out motion-reduce:transition-none
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
+        {/* The column keeps the final width at once while the aside animates and clips it, so labels
+            never wrap or squeeze mid-animation. Widths are 1px less than the aside's for its border. */}
+        <div className={`flex h-full w-full flex-col ${isCollapsed ? 'md:w-[59px]' : 'md:w-[255px]'}`}>
 
-        <div className={`flex h-16 flex-shrink-0 items-center border-b border-[#ddd8cc] bg-[#f6f5f0] ${showCollapsed ? 'justify-center px-3' : 'justify-between px-4'}`}>
-          <Link href="/dashboard" className={`flex min-w-0 items-center gap-3 ${showCollapsed ? 'justify-center' : ''}`}>
-            <img src="/logo.svg" alt="Laku POS" className="h-9 w-9 rounded-2xl border border-[#ddd8cc] bg-white p-1" />
-            {!showCollapsed && (
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-[#17201d]">Laku POS</p>
-                <p className="truncate text-[11px] uppercase tracking-[0.22em] text-[#6f776f]">
-                  Operasional Harian
-                </p>
+          <div className={`group/header flex h-14 flex-shrink-0 items-center ${showCollapsed ? 'justify-center' : 'justify-between gap-2 pl-4 pr-2.5'}`}>
+            {showCollapsed ? (
+              // Icon rail: the logo shows at rest; hovering the header (or focusing the button) swaps it for the expand button.
+              <div className="relative h-8 w-8">
+                <img src="/logo.svg" alt="Laku POS"
+                  className="h-8 w-8 rounded-lg border border-[#ddd8cc] bg-white p-1 transition-opacity duration-150 group-hover/header:opacity-0 group-focus-within/header:opacity-0" />
+                <button type="button" onClick={onToggleDesktop}
+                  aria-label={t('sidebar.expand')}
+                  title={`${t('sidebar.expand')} (${shortcut})`}
+                  aria-keyshortcuts="Control+B Meta+B"
+                  className="absolute inset-0 flex items-center justify-center rounded-md text-[#5f675f] opacity-0 transition-[opacity,background-color,color] duration-150 hover:bg-[#17201d]/[0.06] hover:text-[#17201d] focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f5f56]/40 group-hover/header:opacity-100">
+                  <PanelLeftOpen className="h-[18px] w-[18px]" />
+                </button>
               </div>
+            ) : (
+              <>
+                <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5 rounded-md">
+                  <img src="/logo.svg" alt="" className="h-8 w-8 flex-shrink-0 rounded-lg border border-[#ddd8cc] bg-white p-1" />
+                  <span className="truncate whitespace-nowrap text-[15px] font-semibold text-[#17201d]">Laku POS</span>
+                </Link>
+                <button type="button" onClick={onToggleDesktop}
+                  aria-label={t('sidebar.collapse')}
+                  title={`${t('sidebar.collapse')} (${shortcut})`}
+                  aria-keyshortcuts="Control+B Meta+B"
+                  className="hidden h-8 w-8 flex-shrink-0 items-center justify-center rounded-md text-[#6f776f] transition-colors duration-150 hover:bg-[#17201d]/[0.06] hover:text-[#17201d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0f5f56]/40 md:inline-flex">
+                  <PanelLeftClose className="h-[18px] w-[18px]" />
+                </button>
+                <button type="button" onClick={() => setMobileOpen(false)}
+                  className="md:hidden rounded-md p-2 text-[#6f776f] transition-colors hover:bg-[#17201d]/[0.06] hover:text-[#17201d]"
+                  aria-label={t('sidebar.closeMenu')}>
+                  <X className="w-5 h-5" />
+                </button>
+              </>
             )}
-          </Link>
-          {!showCollapsed && (
-            <button onClick={() => setMobileOpen(false)}
-              className="md:hidden rounded-2xl p-2 text-[#6f776f] transition-colors hover:bg-white hover:text-[#17201d]"
-              aria-label="Tutup menu">
-              <X className="w-5 h-5" />
-            </button>
-          )}
-        </div>
+          </div>
 
-        {!showCollapsed && (
-          <div className="mx-3 mt-3 rounded-[18px] border border-[#ddd8cc] bg-white p-4 shadow-[0_1px_0_rgba(23,32,29,0.04)]">
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <Link href="/profile" className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#0f5f56] text-lg font-bold text-white transition-opacity hover:opacity-90">
+          {!showCollapsed && (
+            <div className="mx-3 mt-1 rounded-lg border border-[#ddd8cc]/80 bg-white/80 p-3">
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <Link href="/profile" className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#0f5f56] text-lg font-bold text-white transition-opacity hover:opacity-90">
+                  {userInitial}
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <Link href="/profile" className="block group">
+                    <p className="truncate text-[15px] font-semibold leading-tight text-[#17201d] group-hover:underline">{userName}</p>
+                    <p className="truncate text-[13px] text-[#6f776f]">{userEmail}</p>
+                  </Link>
+                </div>
+                <button onClick={() => setShowLogoutModal(true)} title={t('sidebar.logout')}
+                  className="rounded-2xl p-2 text-[#8a9188] transition-colors hover:bg-red-50 hover:text-red-600">
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${roleBadge.color}`}>
+                  {isPlatformView ? t('sidebar.superAdmin') : roleBadge.label}
+                </span>
+                <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${PLAN_BADGE[plan] || PLAN_BADGE.free}`}>
+                  {PLAN_LABEL[plan] || 'Gratis'}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {showCollapsed && (
+            <div className="flex flex-col items-center py-2">
+              <Link href="/profile" className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#0f5f56] text-sm font-bold text-white transition-opacity hover:opacity-90" title={userName} aria-label={userName}>
                 {userInitial}
               </Link>
-              <div className="min-w-0 flex-1">
-                <Link href="/profile" className="block group">
-                  <p className="truncate text-[15px] font-semibold leading-tight text-[#17201d] group-hover:underline">{userName}</p>
-                  <p className="truncate text-[13px] text-[#6f776f]">{userEmail}</p>
-                </Link>
-              </div>
-              <button onClick={() => setShowLogoutModal(true)} title={t('sidebar.logout')}
-                className="rounded-2xl p-2 text-[#8a9188] transition-colors hover:bg-red-50 hover:text-red-600">
-                <LogOut className="w-4 h-4" />
-              </button>
             </div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${roleBadge.color}`}>
-                {isPlatformView ? t('sidebar.superAdmin') : roleBadge.label}
-              </span>
-              <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${PLAN_BADGE[plan] || PLAN_BADGE.free}`}>
-                {PLAN_LABEL[plan] || 'Gratis'}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {showCollapsed && (
-          <div className="flex flex-col items-center py-3 border-b border-[#ddd8cc]">
-            <Link href="/profile" className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0f5f56] text-sm font-bold text-white" title={userName}>
-              {userInitial}
-            </Link>
-          </div>
-        )}
-
-        <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5" role="navigation" aria-label="Menu navigasi">
-
-          {/* ═══ SUPERADMIN PANEL — distinct section at top ═══ */}
-          {isSuperAdmin && (
-            <>
-              {!showCollapsed ? (
-                <div className="mb-2 mx-1 p-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Crown className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                    <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest">Platform</span>
-                  </div>
-                  <div className="space-y-0.5">
-                    <SidebarItem href="/admin" icon={<Crown />} label={t('sidebar.adminPanel')} isCollapsed={false} />
-                    <SidebarItem href="/admin/tenants" icon={<Users />} label={t('sidebar.adminTenants')} isCollapsed={false} />
-                    <SidebarItem href="/admin/roles" icon={<Shield />} label="Kelola Role" isCollapsed={false} />
-                    <SidebarItem href="/admin/payments" icon={<CreditCard />} label={t('sidebar.adminPayments')} isCollapsed={false} />
-                    <SidebarItem href="/admin/settings" icon={<Settings />} label={t('sidebar.adminSettings')} isCollapsed={false} />
-                  </div>
-                </div>
-              ) : (
-                <div className="mb-1">
-                  <div className="h-px bg-purple-300 dark:bg-purple-700 mx-3 mb-1" />
-                  <SidebarItem href="/admin" icon={<Crown />} label={t('sidebar.adminPanel')} isCollapsed={true} />
-                  <SidebarItem href="/admin/tenants" icon={<Users />} label={t('sidebar.adminTenants')} isCollapsed={true} />
-                  <SidebarItem href="/admin/roles" icon={<Shield />} label="Kelola Role" isCollapsed={true} />
-                  <SidebarItem href="/admin/payments" icon={<CreditCard />} label={t('sidebar.adminPayments')} isCollapsed={true} />
-                  <SidebarItem href="/admin/settings" icon={<Settings />} label={t('sidebar.adminSettings')} isCollapsed={true} />
-                  <div className="h-px bg-purple-300 dark:bg-purple-700 mx-3 mt-1" />
-                </div>
-              )}
-            </>
           )}
 
-          {/* ═══ TENANT SURFACES — a platform superadmin sees only the platform
-              panel; tenant features are reached by impersonating a tenant. ═══ */}
-          {!isPlatformView && (<>
-          {/* ═══ SHARED: Dashboard ═══ */}
-          <div className={`${showCollapsed ? 'mb-1' : 'mb-2'}`}>
-            <SidebarItem href="/dashboard" icon={<LayoutDashboard />} label={t('sidebar.dashboard')} isCollapsed={showCollapsed} />
-          </div>
+          <nav className={`flex-1 overflow-y-auto overflow-x-hidden py-2 space-y-0.5 ${showCollapsed ? 'px-2 [scrollbar-width:none]' : 'px-3'}`} role="navigation" aria-label="Menu navigasi">
 
-          {/* ═══ POS ═══ */}
-          <SidebarSection sectionKey="pos" title={t('sidebar.pos')} isCollapsed={showCollapsed} activePaths={['/pos']}>
-            <SidebarItem href="/pos/sales"   icon={<ShoppingCart />} label={t('sidebar.pos.sales')}   isCollapsed={showCollapsed} />
-            {canUseWorkshop && (
+            {/* ═══ SUPERADMIN PANEL — distinct section at top ═══ */}
+            {isSuperAdmin && (
               <>
-                <SidebarItem href="/pos/notes" icon={<Wrench />} label={t('sidebar.pos.notes')} isCollapsed={showCollapsed} />
-                <SidebarItem href="/members"   icon={<IdCard />} label={t('sidebar.pos.members')} isCollapsed={showCollapsed} />
-              </>
-            )}
-            <SidebarItem href="/pos/history" icon={<History />}      label={t('sidebar.pos.history')} isCollapsed={showCollapsed} />
-            {canViewReports && (
-              <SidebarItem href="/pos/revenue" icon={<DollarSign />} label={t('sidebar.pos.revenue')} isCollapsed={showCollapsed} />
-            )}
-          </SidebarSection>
-
-          {/* ═══ WAREHOUSE — only when the business type enables inventory ═══ */}
-          {canUseInventory && (
-            <SidebarSection sectionKey="warehouse" title={t('sidebar.warehouse')} isCollapsed={showCollapsed} activePaths={['/warehouse']}>
-              <SidebarItem href="/warehouse/stock"     icon={<Package />}       label={t('sidebar.warehouse.stock')}     isCollapsed={showCollapsed} />
-              <SidebarItem href="/warehouse/movements" icon={<ArrowDownUp />}   label={t('sidebar.warehouse.movements')} isCollapsed={showCollapsed} />
-              <SidebarItem href="/warehouse/inventory" icon={<ClipboardList />} label={t('sidebar.warehouse.inventory')} isCollapsed={showCollapsed} />
-              <SidebarItem href="/warehouse/reports"   icon={<BarChart3 />}     label={t('sidebar.warehouse.reports')}   isCollapsed={showCollapsed} />
-            </SidebarSection>
-          )}
-
-          {/* ═══ MASTER DATA — product.manage or product.view ═══ */}
-          {canManageProducts && (
-            <SidebarSection sectionKey="masterdata" title={t('sidebar.masterData')} isCollapsed={showCollapsed} activePaths={['/products', '/outlets']}>
-              <SidebarItem href="/products" icon={<Tag />}   label={t('sidebar.masterData.products')} isCollapsed={showCollapsed} />
-              <SidebarItem href="/outlets"  icon={<Store />} label={t('sidebar.masterData.outlets')}  isCollapsed={showCollapsed} />
-            </SidebarSection>
-          )}
-
-          {/* ═══ OPERATIONS — all roles ═══ */}
-          <SidebarSection sectionKey="operations" title={t('sidebar.operations')} isCollapsed={showCollapsed} activePaths={['/transactions', '/payments', '/expenses', '/promotions', '/eod', '/alerts', '/approvals']} badge={alertCount + pendingApprovalsCount}>
-            <SidebarItem href="/transactions" icon={<ArrowLeftRight />} label={t('sidebar.operations.transactions')} isCollapsed={showCollapsed} />
-            <SidebarItem href="/payments"     icon={<CreditCard />}     label={t('sidebar.operations.payments')}     isCollapsed={showCollapsed} />
-            <SidebarItem href="/expenses"     icon={<Receipt />}        label={t('sidebar.operations.expenses')}     isCollapsed={showCollapsed} />
-            <SidebarItem href="/promotions"   icon={<Ticket />}         label={t('sidebar.operations.promotions')}   isCollapsed={showCollapsed} />
-            <SidebarItem href="/eod"          icon={<Briefcase />}      label={t('sidebar.operations.eod')}          isCollapsed={showCollapsed} />
-            <SidebarItem href="/alerts"       icon={<Bell />}           label={t('sidebar.operations.alerts')}       isCollapsed={showCollapsed} badge={alertCount > 0 ? String(alertCount) : undefined} />
-            <SidebarItem href="/approvals"    icon={<CheckCircle />}    label={t('sidebar.operations.approvals')}      isCollapsed={showCollapsed} badge={pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined} />
-          </SidebarSection>
-          </>)}
-
-        </nav>
-
-        {/* ── Settings & Support (X-style collapsible) ── */}
-        {!showCollapsed && (
-          <div className="border-t border-[#ddd8cc] flex-shrink-0">
-            <button onClick={() => setSettingsOpen(!settingsOpen)}
-              className="w-full flex items-center justify-between px-4 py-3.5 text-[15px] font-medium text-[#2f3a35] hover:bg-white transition-colors">
-              <span>{t('sidebar.settingsHelp')}</span>
-              <ChevronDown className={`w-5 h-5 text-[#8a9188] transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />
-            </button>
-            <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
-              <div className="px-2 pb-2">
-                {canManageSettings && !isPlatformView && (
-                  <>
-                    {/* Pengaturan sub-group */}
-                    <button onClick={() => setSubPengaturan(!subPengaturan)}
-                      className="w-full flex items-center justify-between px-3 py-2 group hover:bg-white/50 rounded-xl transition-colors">
-                      <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8a9188] group-hover:text-[#5f675f] transition-colors">{t('sidebar.settings')}</span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-[#a9afa6] transition-transform duration-200 ${subPengaturan ? 'rotate-180' : ''}`} />
-                    </button>
-                    <div className={`overflow-hidden transition-all duration-200 ${subPengaturan ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
-                      <div className="space-y-0.5 pb-1">
-                        {canManageSettings && (
-                          <>
-                            <SidebarItem href="/settings/business"      icon={<Store />}      label={t('settings.business.title')}       isCollapsed={false} />
-                            <SidebarItem href="/settings/payments"      icon={<DollarSign />} label={t('sidebar.settings.payment')}      isCollapsed={false} />
-                            {canUseWorkshop && (
-                              <SidebarItem href="/settings/workshop"    icon={<Wrench />}     label={t('sidebar.settings.workshop')}     isCollapsed={false} />
-                            )}
-                          </>
-                        )}
-                        {canManageUsers && (
-                          <SidebarItem href="/settings/users"         icon={<Users />}      label={t('sidebar.settings.users')}         isCollapsed={false} />
-                        )}
-                        {canViewAudit && (
-                          <SidebarItem href="/settings/audit-logs"    icon={<Shield />}     label={t('sidebar.settings.auditLogs')}    isCollapsed={false} />
-                        )}
-                        {canManageSettings && (
-                          <>
-                            <SidebarItem href="/settings/reset"         icon={<Trash2 />}     label={t('sidebar.settings.reset')}         isCollapsed={false} />
-                            <SidebarItem href="/settings/subscriptions" icon={<Star />}       label={t('sidebar.settings.subscriptions')} isCollapsed={false} />
-                          </>
-                        )}
-                      </div>
+                {!showCollapsed ? (
+                  <div className="mb-2 mx-1 p-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Crown className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest">Platform</span>
                     </div>
-                  </>
+                    <div className="space-y-0.5">
+                      <SidebarItem href="/admin" icon={<Crown />} label={t('sidebar.adminPanel')} isCollapsed={false} />
+                      <SidebarItem href="/admin/tenants" icon={<Users />} label={t('sidebar.adminTenants')} isCollapsed={false} />
+                      <SidebarItem href="/admin/roles" icon={<Shield />} label="Kelola Role" isCollapsed={false} />
+                      <SidebarItem href="/admin/payments" icon={<CreditCard />} label={t('sidebar.adminPayments')} isCollapsed={false} />
+                      <SidebarItem href="/admin/settings" icon={<Settings />} label={t('sidebar.adminSettings')} isCollapsed={false} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mb-1">
+                    <div className="h-px bg-purple-300 dark:bg-purple-700 mx-3 mb-1" />
+                    <SidebarItem href="/admin" icon={<Crown />} label={t('sidebar.adminPanel')} isCollapsed={true} />
+                    <SidebarItem href="/admin/tenants" icon={<Users />} label={t('sidebar.adminTenants')} isCollapsed={true} />
+                    <SidebarItem href="/admin/roles" icon={<Shield />} label="Kelola Role" isCollapsed={true} />
+                    <SidebarItem href="/admin/payments" icon={<CreditCard />} label={t('sidebar.adminPayments')} isCollapsed={true} />
+                    <SidebarItem href="/admin/settings" icon={<Settings />} label={t('sidebar.adminSettings')} isCollapsed={true} />
+                    <div className="h-px bg-purple-300 dark:bg-purple-700 mx-3 mt-1" />
+                  </div>
                 )}
+              </>
+            )}
 
-                {/* Bantuan sub-group */}
-                <button onClick={() => setSubBantuan(!subBantuan)}
-                  className="w-full flex items-center justify-between px-3 py-2 group hover:bg-white/50 rounded-xl transition-colors">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8a9188] group-hover:text-[#5f675f] transition-colors">{t('sidebar.helpSection')}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-[#a9afa6] transition-transform duration-200 ${subBantuan ? 'rotate-180' : ''}`} />
-                </button>
-                <div className={`overflow-hidden transition-all duration-200 ${subBantuan ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'}`}>
-                  <div className="space-y-0.5 pb-1">
-                    <SidebarItem href="/profile" icon={<User />}       label={t('sidebar.profile')} isCollapsed={false} />
-                    <SidebarItem href="/help"    icon={<HelpCircle />} label={t('sidebar.help')}    isCollapsed={false} />
-                    <SidebarItem href="/about"   icon={<Info />}       label={t('sidebar.about')}   isCollapsed={false} />
-                    {canInstall && !isInstalled && (
-                      <button onClick={install}
-                        className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-[#0f5f56] dark:text-green-400 hover:bg-[#e5f3ef] dark:hover:bg-green-900/30 transition-colors">
-                        <Download className="w-5 h-5 opacity-80" />
-                        <span>{t('sidebar.installApp')}</span>
+            {/* ═══ TENANT SURFACES — a platform superadmin sees only the platform
+                panel; tenant features are reached by impersonating a tenant. ═══ */}
+            {!isPlatformView && (<>
+            {/* ═══ SHARED: Dashboard ═══ */}
+            <div className={`${showCollapsed ? 'mb-1' : 'mb-2'}`}>
+              <SidebarItem href="/dashboard" icon={<LayoutDashboard />} label={t('sidebar.dashboard')} isCollapsed={showCollapsed} />
+            </div>
+
+            {/* ═══ POS ═══ */}
+            <SidebarSection sectionKey="pos" title={t('sidebar.pos')} isCollapsed={showCollapsed} activePaths={['/pos']}>
+              <SidebarItem href="/pos/sales"   icon={<ShoppingCart />} label={t('sidebar.pos.sales')}   isCollapsed={showCollapsed} />
+              {canUseWorkshop && (
+                <>
+                  <SidebarItem href="/pos/notes" icon={<Wrench />} label={t('sidebar.pos.notes')} isCollapsed={showCollapsed} />
+                  <SidebarItem href="/members"   icon={<IdCard />} label={t('sidebar.pos.members')} isCollapsed={showCollapsed} />
+                </>
+              )}
+              <SidebarItem href="/pos/history" icon={<History />}      label={t('sidebar.pos.history')} isCollapsed={showCollapsed} />
+              {canViewReports && (
+                <SidebarItem href="/pos/revenue" icon={<DollarSign />} label={t('sidebar.pos.revenue')} isCollapsed={showCollapsed} />
+              )}
+            </SidebarSection>
+
+            {/* ═══ WAREHOUSE — only when the business type enables inventory ═══ */}
+            {canUseInventory && (
+              <SidebarSection sectionKey="warehouse" title={t('sidebar.warehouse')} isCollapsed={showCollapsed} activePaths={['/warehouse']}>
+                <SidebarItem href="/warehouse/stock"     icon={<Package />}       label={t('sidebar.warehouse.stock')}     isCollapsed={showCollapsed} />
+                <SidebarItem href="/warehouse/movements" icon={<ArrowDownUp />}   label={t('sidebar.warehouse.movements')} isCollapsed={showCollapsed} />
+                <SidebarItem href="/warehouse/inventory" icon={<ClipboardList />} label={t('sidebar.warehouse.inventory')} isCollapsed={showCollapsed} />
+                <SidebarItem href="/warehouse/reports"   icon={<BarChart3 />}     label={t('sidebar.warehouse.reports')}   isCollapsed={showCollapsed} />
+              </SidebarSection>
+            )}
+
+            {/* ═══ MASTER DATA — product.manage or product.view ═══ */}
+            {canManageProducts && (
+              <SidebarSection sectionKey="masterdata" title={t('sidebar.masterData')} isCollapsed={showCollapsed} activePaths={['/products', '/outlets']}>
+                <SidebarItem href="/products" icon={<Tag />}   label={t('sidebar.masterData.products')} isCollapsed={showCollapsed} />
+                <SidebarItem href="/outlets"  icon={<Store />} label={t('sidebar.masterData.outlets')}  isCollapsed={showCollapsed} />
+              </SidebarSection>
+            )}
+
+            {/* ═══ OPERATIONS — all roles ═══ */}
+            <SidebarSection sectionKey="operations" title={t('sidebar.operations')} isCollapsed={showCollapsed} activePaths={['/transactions', '/payments', '/expenses', '/promotions', '/eod', '/alerts', '/approvals']} badge={alertCount + pendingApprovalsCount}>
+              <SidebarItem href="/transactions" icon={<ArrowLeftRight />} label={t('sidebar.operations.transactions')} isCollapsed={showCollapsed} />
+              <SidebarItem href="/payments"     icon={<CreditCard />}     label={t('sidebar.operations.payments')}     isCollapsed={showCollapsed} />
+              <SidebarItem href="/expenses"     icon={<Receipt />}        label={t('sidebar.operations.expenses')}     isCollapsed={showCollapsed} />
+              <SidebarItem href="/promotions"   icon={<Ticket />}         label={t('sidebar.operations.promotions')}   isCollapsed={showCollapsed} />
+              <SidebarItem href="/eod"          icon={<Briefcase />}      label={t('sidebar.operations.eod')}          isCollapsed={showCollapsed} />
+              <SidebarItem href="/alerts"       icon={<Bell />}           label={t('sidebar.operations.alerts')}       isCollapsed={showCollapsed} badge={alertCount > 0 ? String(alertCount) : undefined} />
+              <SidebarItem href="/approvals"    icon={<CheckCircle />}    label={t('sidebar.operations.approvals')}      isCollapsed={showCollapsed} badge={pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined} />
+            </SidebarSection>
+            </>)}
+
+          </nav>
+
+          {/* ── Settings & Support (X-style collapsible) ── */}
+          {!showCollapsed && (
+            <div className="border-t border-[#ddd8cc] flex-shrink-0">
+              <button onClick={() => setSettingsOpen(!settingsOpen)}
+                className="w-full flex items-center justify-between whitespace-nowrap px-4 py-3 text-[14px] font-medium text-[#2f3a35] hover:bg-[#17201d]/[0.04] transition-colors">
+                <span>{t('sidebar.settingsHelp')}</span>
+                <ChevronDown className={`w-5 h-5 text-[#8a9188] transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />
+              </button>
+              <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="px-2 pb-2">
+                  {canManageSettings && !isPlatformView && (
+                    <>
+                      {/* Pengaturan sub-group */}
+                      <button onClick={() => setSubPengaturan(!subPengaturan)}
+                        className="w-full flex items-center justify-between px-3 py-2 group hover:bg-white/50 rounded-xl transition-colors">
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8a9188] group-hover:text-[#5f675f] transition-colors">{t('sidebar.settings')}</span>
+                        <ChevronDown className={`w-3.5 h-3.5 text-[#a9afa6] transition-transform duration-200 ${subPengaturan ? 'rotate-180' : ''}`} />
                       </button>
-                    )}
+                      <div className={`overflow-hidden transition-all duration-200 ${subPengaturan ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
+                        <div className="space-y-0.5 pb-1">
+                          {canManageSettings && (
+                            <>
+                              <SidebarItem href="/settings/business"      icon={<Store />}      label={t('settings.business.title')}       isCollapsed={false} />
+                              <SidebarItem href="/settings/payments"      icon={<DollarSign />} label={t('sidebar.settings.payment')}      isCollapsed={false} />
+                              {canUseWorkshop && (
+                                <SidebarItem href="/settings/workshop"    icon={<Wrench />}     label={t('sidebar.settings.workshop')}     isCollapsed={false} />
+                              )}
+                            </>
+                          )}
+                          {canManageUsers && (
+                            <SidebarItem href="/settings/users"         icon={<Users />}      label={t('sidebar.settings.users')}         isCollapsed={false} />
+                          )}
+                          {canViewAudit && (
+                            <SidebarItem href="/settings/audit-logs"    icon={<Shield />}     label={t('sidebar.settings.auditLogs')}    isCollapsed={false} />
+                          )}
+                          {canManageSettings && (
+                            <>
+                              <SidebarItem href="/settings/reset"         icon={<Trash2 />}     label={t('sidebar.settings.reset')}         isCollapsed={false} />
+                              <SidebarItem href="/settings/subscriptions" icon={<Star />}       label={t('sidebar.settings.subscriptions')} isCollapsed={false} />
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Bantuan sub-group */}
+                  <button onClick={() => setSubBantuan(!subBantuan)}
+                    className="w-full flex items-center justify-between px-3 py-2 group hover:bg-white/50 rounded-xl transition-colors">
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8a9188] group-hover:text-[#5f675f] transition-colors">{t('sidebar.helpSection')}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-[#a9afa6] transition-transform duration-200 ${subBantuan ? 'rotate-180' : ''}`} />
+                  </button>
+                  <div className={`overflow-hidden transition-all duration-200 ${subBantuan ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <div className="space-y-0.5 pb-1">
+                      <SidebarItem href="/profile" icon={<User />}       label={t('sidebar.profile')} isCollapsed={false} />
+                      <SidebarItem href="/help"    icon={<HelpCircle />} label={t('sidebar.help')}    isCollapsed={false} />
+                      <SidebarItem href="/about"   icon={<Info />}       label={t('sidebar.about')}   isCollapsed={false} />
+                      {canInstall && !isInstalled && (
+                        <button onClick={install}
+                          className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-[#0f5f56] dark:text-green-400 hover:bg-[#e5f3ef] dark:hover:bg-green-900/30 transition-colors">
+                          <Download className="w-5 h-5 opacity-80" />
+                          <span>{t('sidebar.installApp')}</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Collapsed: settings + support icons */}
-        {showCollapsed && (
-          <div className="border-t border-[#ddd8cc] p-2 flex-shrink-0 space-y-1">
-            {!isPlatformView && (<>
-            {canManageProducts && (
-              <>
-                <SidebarItem href="/products"          icon={<Tag />}          label={t('sidebar.masterData.products')} isCollapsed={true} />
-                <SidebarItem href="/outlets"           icon={<Store />}        label={t('sidebar.masterData.outlets')}  isCollapsed={true} />
-              </>
-            )}
-            <SidebarItem href="/transactions"      icon={<ArrowLeftRight />} label={t('sidebar.operations.transactions')} isCollapsed={true} />
-            <SidebarItem href="/expenses"          icon={<Receipt />}       label={t('sidebar.operations.expenses')} isCollapsed={true} />
-            <SidebarItem href="/alerts"            icon={<Bell />}          label={t('sidebar.operations.alerts')} isCollapsed={true} badge={alertCount > 0 ? String(alertCount) : undefined} />
-            <SidebarItem href="/approvals"         icon={<CheckCircle />}   label={t('sidebar.operations.approvals')}     isCollapsed={true} badge={pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined} />
-            {canManageSettings && (
-              <>
-                <SidebarItem href="/settings/business" icon={<Store />}      label={t('settings.business.title')}   isCollapsed={true} />
-                <SidebarItem href="/settings/payments" icon={<Settings />}   label={t('sidebar.settings.payment')}  isCollapsed={true} />
-              </>
-            )}
-            </>)}
-            <SidebarItem href="/profile"           icon={<User />}         label={t('sidebar.profile')}             isCollapsed={true} />
-            <SidebarItem href="/help"              icon={<HelpCircle />}   label={t('sidebar.help')}                isCollapsed={true} />
-            {canInstall && !isInstalled && (
-              <button onClick={install} title={t('sidebar.installApp')}
-                className="w-full flex justify-center p-3 rounded-xl text-[#0f5f56] hover:bg-[#e5f3ef] dark:hover:bg-green-900/30 transition-colors">
-                <Download className="w-[18px] h-[18px]" />
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* ── Bottom bar: dark mode + lang (X-style) ── */}
-        <div className={`border-t border-[#ddd8cc] flex-shrink-0 ${showCollapsed ? 'p-2 flex flex-col items-center gap-1.5' : 'px-4 py-3 flex items-center justify-end gap-2'}`}>
-          <button onClick={() => setLanguage(language === 'id' ? 'en' : 'id')}
-            title={language === 'id' ? 'Switch to English' : 'Ganti ke Indonesia'}
-            className="p-2 rounded-full text-[#6f776f] hover:bg-white transition-colors text-xs font-bold">
-            {language === 'id' ? 'ID' : 'EN'}
-          </button>
-          {showCollapsed && (
-            <button onClick={() => setShowLogoutModal(true)} title={t('sidebar.logout')}
-              className="p-2 rounded-full text-[#6f776f] hover:text-red-600 hover:bg-red-50 transition-colors">
-              <LogOut className="w-5 h-5" />
-            </button>
           )}
+
+          {/* Collapsed: settings + support icons */}
+          {showCollapsed && (
+            <div className="border-t border-[#ddd8cc] p-2 flex-shrink-0 space-y-1">
+              {!isPlatformView && (<>
+              {canManageProducts && (
+                <>
+                  <SidebarItem href="/products"          icon={<Tag />}          label={t('sidebar.masterData.products')} isCollapsed={true} />
+                  <SidebarItem href="/outlets"           icon={<Store />}        label={t('sidebar.masterData.outlets')}  isCollapsed={true} />
+                </>
+              )}
+              <SidebarItem href="/transactions"      icon={<ArrowLeftRight />} label={t('sidebar.operations.transactions')} isCollapsed={true} />
+              <SidebarItem href="/expenses"          icon={<Receipt />}       label={t('sidebar.operations.expenses')} isCollapsed={true} />
+              <SidebarItem href="/alerts"            icon={<Bell />}          label={t('sidebar.operations.alerts')} isCollapsed={true} badge={alertCount > 0 ? String(alertCount) : undefined} />
+              <SidebarItem href="/approvals"         icon={<CheckCircle />}   label={t('sidebar.operations.approvals')}     isCollapsed={true} badge={pendingApprovalsCount > 0 ? String(pendingApprovalsCount) : undefined} />
+              {canManageSettings && (
+                <>
+                  <SidebarItem href="/settings/business" icon={<Store />}      label={t('settings.business.title')}   isCollapsed={true} />
+                  <SidebarItem href="/settings/payments" icon={<Settings />}   label={t('sidebar.settings.payment')}  isCollapsed={true} />
+                </>
+              )}
+              </>)}
+              <SidebarItem href="/profile"           icon={<User />}         label={t('sidebar.profile')}             isCollapsed={true} />
+              <SidebarItem href="/help"              icon={<HelpCircle />}   label={t('sidebar.help')}                isCollapsed={true} />
+              {canInstall && !isInstalled && (
+                <button onClick={install} title={t('sidebar.installApp')} aria-label={t('sidebar.installApp')}
+                  className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg text-[#0f5f56] hover:bg-[#0f5f56]/[0.09] transition-colors">
+                  <Download className="w-[18px] h-[18px]" />
+                </button>
+              )}
+              <button onClick={() => setShowLogoutModal(true)} title={t('sidebar.logout')} aria-label={t('sidebar.logout')}
+                className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg text-[#6f776f] hover:bg-red-50 hover:text-red-600 transition-colors">
+                <LogOut className="w-[18px] h-[18px]" />
+              </button>
+            </div>
+          )}
+          {/* The language switch and its footer strip are hidden for now (owner's request);
+              the language stays whatever LanguageContext has saved. */}
         </div>
       </aside>
 

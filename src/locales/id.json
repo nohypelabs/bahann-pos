@@ -906,5 +906,9 @@
 
   "products.labels.pdf": "Unduh PDF",
   "products.labels.pdfFailed": "PDF label gagal dibuat. Coba lagi.",
-  "products.labels.sheetNo": "Lembar {n}"
+  "products.labels.sheetNo": "Lembar {n}",
+  "sidebar.collapse": "Tutup sidebar",
+  "sidebar.expand": "Buka sidebar",
+  "sidebar.openMenu": "Buka menu",
+  "sidebar.closeMenu": "Tutup menu"
 }

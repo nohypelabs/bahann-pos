@@ -906,5 +906,9 @@
 
   "products.labels.pdf": "Download PDF",
   "products.labels.pdfFailed": "Could not create the label PDF. Try again.",
-  "products.labels.sheetNo": "Sheet {n}"
+  "products.labels.sheetNo": "Sheet {n}",
+  "sidebar.collapse": "Collapse sidebar",
+  "sidebar.expand": "Expand sidebar",
+  "sidebar.openMenu": "Open menu",
+  "sidebar.closeMenu": "Close menu"
 }

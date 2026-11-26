@@ -10,6 +10,7 @@ import { MobileScanFab } from './MobileScanFab'
 import { useInventoryAccess } from './useInventoryAccess'
 import { useOpsBadges } from './useOpsBadges'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { useSidebarOpen, useSidebarShortcut } from '@/hooks/useSidebarOpen'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -68,7 +69,8 @@ export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname()
   const isPosSales = pathname === '/pos/sales'
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [desktopOpen, setDesktopOpen] = useState(false)
+  const sidebar = useSidebarOpen()
+  useSidebarShortcut(sidebar.toggle)
   const routeMeta = getRouteMeta(pathname)
   const inventoryAccess = useInventoryAccess()
   const { t } = useLanguage()
@@ -112,7 +114,13 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#f6f5f0]">
-      <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} desktopOpen={desktopOpen} />
+      <Sidebar
+        mobileOpen={mobileOpen}
+        setMobileOpen={setMobileOpen}
+        desktopOpen={sidebar.open}
+        onToggleDesktop={sidebar.toggle}
+        shortcut={sidebar.shortcut}
+      />
       {inventoryAccess.modal}
 
       <main
@@ -122,10 +130,12 @@ export function AppLayout({ children }: AppLayoutProps) {
         <header className="sticky top-0 z-30 border-b border-[#ddd8cc]/90 bg-[#fbfaf6]/95 backdrop-blur-md">
           <div className="flex min-h-16 items-center justify-between gap-3 px-3 sm:px-4 lg:px-6">
             <div className="flex min-w-0 items-center gap-3">
+              {/* Phones only: opens the drawer. On desktop the toggle lives in the sidebar header. */}
               <button
-                onClick={() => { setMobileOpen(true); setDesktopOpen(!desktopOpen) }}
-                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-[#ddd8cc] bg-white text-[#5f675f] transition-colors hover:bg-[#f1efe8] hover:text-[#17201d]"
-                aria-label="Toggle menu"
+                type="button"
+                onClick={() => setMobileOpen(true)}
+                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-[#ddd8cc] bg-white text-[#5f675f] transition-colors hover:bg-[#f1efe8] hover:text-[#17201d] md:hidden"
+                aria-label={t('sidebar.openMenu')}
               >
                 <Menu className="h-5 w-5" />
               </button>
