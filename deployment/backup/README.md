@@ -20,6 +20,15 @@ These scripts provide the backups the client contract promises (Pasal 7 ayat 2, 
 | Pull key | `~/.ssh/id_lakupos_backup_pull` on PC Ryzen; on the VPS it is limited to `restrict,command="/usr/bin/rrsync -ro /var/backups/lakupos"` |
 | Decryption key | `~/.config/lakupos-backup/lakupos-backup.key` on the laptop, plus the user's password manager. Never on the VPS or PC Ryzen |
 
+**Alerts (Telegram, bot @agdsgrid_bot, reused from the idle smart-grid-bot):**
+- Helipod sends "⚠️ Backup … GAGAL" when a dump fails.
+- PC Ryzen sends "⚠️ Salinan backup … GAGAL" when the pull fails or the VPS has no dump newer than 26 hours,
+  which also covers the VPS being down or expired.
+- PC Ryzen sends "✅ Backup … aman" every Sunday. No Sunday message means PC Ryzen itself may be down.
+- `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `HOST_LABEL` live in each machine's config file. The token is passed to
+  curl on stdin, so it does not show in `ps` on the shared agent server.
+- Test: `FORCE_SUMMARY=1 ~/.local/bin/lakupos-backup-pull.sh` on PC Ryzen sends the weekly message now.
+
 To change the role's password: `alter role lakupos_backup password '…'` on Supabase, then update `DATABASE_URL`
 in `/etc/lakupos-backup.env` (user `lakupos_backup.<project-ref>`, session pooler port 5432).
 

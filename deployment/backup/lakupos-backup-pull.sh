@@ -20,7 +20,14 @@ KEEP_DAYS="${KEEP_DAYS:-56}"
 MAX_AGE_HOURS="${MAX_AGE_HOURS:-26}"
 
 log() { echo "$(date '+%F %T') $*"; }
-trap 'rc=$?; [ $rc -ne 0 ] && log "FAILED (exit $rc)"' EXIT
+# Telegram alert. The token goes through curl's stdin config, so it never shows in `ps`.
+notify() {
+  [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ] || return 0
+  printf 'url = "https://api.telegram.org/bot%s/sendMessage"\n' "$TELEGRAM_BOT_TOKEN" \
+    | curl -fsS -m 15 --retry 2 -o /dev/null -K - --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" --data-urlencode "text=$1" || true
+}
+HOST_LABEL="${HOST_LABEL:-$(hostname)}"
+trap 'rc=$?; if [ $rc -ne 0 ]; then log "FAILED (exit $rc)"; notify "⚠️ Salinan backup Laku POS di $HOST_LABEL GAGAL (exit $rc): VPS backup tidak terjangkau atau tidak membuat backup baru. Cek ~/.local/state/lakupos-backup-pull.log"; fi' EXIT
 
 mkdir -p "$DEST"
 # rrsync on the VPS roots paths at its backup directory.
@@ -36,4 +43,10 @@ if [ "$fresh" -eq 0 ]; then
   log "no backup newer than $MAX_AGE_HOURS hours on the VPS"
   exit 4
 fi
-log "ok: $(find "$DEST" -type f -name 'lakupos-*.dump*' | wc -l) files, $(du -sh "$DEST" | cut -f1)"
+count=$(find "$DEST" -type f -name 'lakupos-*.dump*' | wc -l)
+log "ok: $count files, $(du -sh "$DEST" | cut -f1)"
+# A weekly all-clear, so silence itself is a warning (this machine may be the one that is down).
+if [ "$(date +%u)" = 7 ] || [ "${FORCE_SUMMARY:-0}" = 1 ]; then
+  newest=$(find "$DEST" -type f -name 'lakupos-*.dump*' -printf '%T@ %f\n' | sort -n | tail -1 | cut -d' ' -f2)
+  notify "✅ Backup database Laku POS aman. Terbaru: $newest. Tersimpan $count file di $HOST_LABEL. Kalau pesan mingguan ini tidak datang hari Minggu, cek server."
+fi

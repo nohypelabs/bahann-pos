@@ -16,6 +16,12 @@ MIN_TABLES="${MIN_TABLES:-30}"
 OFFSITE_KEEP_DAYS="${OFFSITE_KEEP_DAYS:-56}"
 
 log() { echo "$(date '+%F %T') $*"; }
+# Telegram alert. The token goes through curl's stdin config, so it never shows in `ps`.
+notify() {
+  [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ] || return 0
+  printf 'url = "https://api.telegram.org/bot%s/sendMessage"\n' "$TELEGRAM_BOT_TOKEN" \
+    | curl -fsS -m 15 --retry 2 -o /dev/null -K - --data-urlencode "chat_id=$TELEGRAM_CHAT_ID" --data-urlencode "text=$1" || true
+}
 ping_hc() { [ -n "${HEALTHCHECK_URL:-}" ] && curl -fsS -m 10 --retry 3 -o /dev/null "${HEALTHCHECK_URL}$1" || true; }
 
 mkdir -p "$BACKUP_DIR/daily" "$BACKUP_DIR/weekly" "$BACKUP_DIR/tmp"
@@ -23,7 +29,7 @@ exec 9>"$BACKUP_DIR/.lock"
 flock -n 9 || { log "another backup is still running"; exit 1; }
 
 tmp="$BACKUP_DIR/tmp/current.dump"
-trap 'rc=$?; rm -f "$tmp"; if [ $rc -ne 0 ]; then log "FAILED (exit $rc)"; ping_hc /fail; fi' EXIT
+trap 'rc=$?; rm -f "$tmp"; if [ $rc -ne 0 ]; then log "FAILED (exit $rc)"; ping_hc /fail; notify "⚠️ Backup database Laku POS GAGAL di ${HOST_LABEL:-$(hostname)} (exit $rc). Cek /var/log/lakupos-backup/backup.log"; fi' EXIT
 ping_hc /start
 
 # pg_dump must be at least as new as the server, or it refuses to dump.
