@@ -149,7 +149,7 @@ function Hero() {
           </div>
         </Reveal>
         <Reveal delay={0.4} className="aspect-[16/9] lg:aspect-auto lg:h-[440px]">
-          <Picture src="/landing/hero.jpg" eager alt="Ilustrasi isometrik Laku POS" label="Ilustrasi hero" />
+          <Picture src="/landing/hero.jpg" eager alt="Meja kasir dengan tablet POS dan pembayaran lewat HP" label="Ilustrasi hero" />
         </Reveal>
       </div>
     </section>
@@ -205,7 +205,7 @@ function Why() {
         <div>
           <Reveal><h2 className={`${H2} max-w-[560px] text-[#07110B]`}>{L.why.title}</h2></Reveal>
           <Reveal delay={0.1} className="mt-12 aspect-[4/3] max-w-[560px]">
-            <Picture src="/landing/why.jpg" alt="Troli belanja miniatur" label="Ilustrasi" />
+            <Picture src="/landing/why.jpg" alt="Terminal pembayaran di meja kasir" label="Ilustrasi" />
           </Reveal>
         </div>
         <div className="space-y-10 lg:pt-1">
@@ -257,7 +257,7 @@ function Statement() {
         <p className="mx-auto mt-8 max-w-[900px] text-[22px] leading-[1.4] text-[#07110B] md:text-[30px]">{L.statement.body}</p>
       </Reveal>
       <Reveal delay={0.1} className="mt-16 aspect-[21/9] md:mt-24">
-        <Picture src="/landing/statement-wide.png" alt="Kotak-kotak di atas conveyor" label="Ilustrasi lebar" />
+        <Picture src="/landing/statement-wide.jpg" alt="Rak gudang berisi barang" label="Ilustrasi lebar" />
       </Reveal>
     </section>
   )
