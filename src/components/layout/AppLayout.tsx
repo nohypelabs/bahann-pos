@@ -124,10 +124,10 @@ export function AppLayout({ children }: AppLayoutProps) {
       {inventoryAccess.modal}
 
       <main
-        className="flex-1 overflow-y-auto bg-[linear-gradient(180deg,_#fbfaf6_0%,_#f6f5f0_44%,_#eeebe3_100%)]"
+        className="flex-1 overflow-y-auto bg-white"
         role="main"
       >
-        <header className="sticky top-0 z-30 border-b border-[#E4E6E7]/90 bg-[#fbfaf6]/95 backdrop-blur-md">
+        <header className="sticky top-0 z-30 border-b border-[#E4E6E7]/90 bg-[#FFFFFF]/95 backdrop-blur-md">
           <div className="flex min-h-16 items-center justify-between gap-3 px-3 sm:px-4 lg:px-6">
             <div className="flex min-w-0 items-center gap-3">
               {/* Phones only: opens the drawer. On desktop the toggle lives in the sidebar header. */}

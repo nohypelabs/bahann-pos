@@ -167,7 +167,7 @@ export default function StockManagementPage() {
   const selectedProduct = products.find(p => p.id === formData.productId)
   const selectedOutlet  = outlets.find(o => o.id === formData.outletId)
   const akhirNegative   = formData.stockAkhir < 0
-  const panelClass = 'rounded-[14px] border border-stone-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
+  const panelClass = 'rounded-[14px] border border-neutral-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
 
   return (
     <div className="space-y-5">
@@ -176,25 +176,25 @@ export default function StockManagementPage() {
       <div className={`${panelClass} px-5 py-4`}>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-stone-500">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-neutral-500">
               Gudang Operasional
             </p>
-            <h1 className="mt-1 text-2xl font-semibold text-stone-950 md:text-3xl">
+            <h1 className="mt-1 text-2xl font-semibold text-neutral-950 md:text-3xl">
               Manajemen Stok
             </h1>
-            <p className="mt-1 text-sm text-stone-500">
+            <p className="mt-1 text-sm text-neutral-500">
               Catat stok masuk, koreksi, dan pantau inventori tanpa harus pindah-pindah halaman.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-[#F8F9F9] px-3 py-1.5 text-[11px] font-medium text-stone-600">
-              <CalendarClock className="h-3.5 w-3.5 text-stone-500" />
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-[#F8F9F9] px-3 py-1.5 text-[11px] font-medium text-neutral-600">
+              <CalendarClock className="h-3.5 w-3.5 text-neutral-500" />
               {today}
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-[#F8F9F9] px-3 py-1.5 text-[11px] font-medium text-stone-600">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-[#F8F9F9] px-3 py-1.5 text-[11px] font-medium text-neutral-600">
               {products.length} produk tracked
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-stone-200 bg-[#F8F9F9] px-3 py-1.5 text-[11px] font-medium text-stone-600">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-[#F8F9F9] px-3 py-1.5 text-[11px] font-medium text-neutral-600">
               {stats?.lowStockCount ?? 0} stok tipis
             </span>
           </div>
@@ -217,9 +217,9 @@ export default function StockManagementPage() {
 
       {/* Info banner for filtered items */}
       {allProducts.length > products.length && (
-        <div className="flex items-center gap-3 rounded-2xl border border-stone-200 bg-[#F8F9F9] p-3">
-          <Package className="w-4 h-4 text-stone-400 shrink-0" />
-          <p className="text-xs text-stone-500">
+        <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-[#F8F9F9] p-3">
+          <Package className="w-4 h-4 text-neutral-400 shrink-0" />
+          <p className="text-xs text-neutral-500">
             Item bertipe Jasa dan Menu (tanpa stok) tidak ditampilkan di halaman ini.
             <span className="font-semibold"> {allProducts.length - products.length} item disembunyikan.</span>
           </p>
@@ -233,12 +233,12 @@ export default function StockManagementPage() {
         <form onSubmit={handleSubmit} className={`${panelClass} lg:col-span-3 overflow-hidden`}>
 
           {/* Section: Produk & Outlet */}
-          <div className="px-4 md:px-6 pt-4 md:pt-5 pb-4 md:pb-5 border-b border-stone-100">
+          <div className="px-4 md:px-6 pt-4 md:pt-5 pb-4 md:pb-5 border-b border-neutral-100">
             <div className="mb-3">
-              <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider">
+              <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
                 1 · Pilih Produk &amp; Outlet
               </p>
-              <p className="mt-1 text-sm font-semibold text-stone-900">
+              <p className="mt-1 text-sm font-semibold text-neutral-900">
                 Tentukan item dan outlet yang sedang menerima stok
               </p>
             </div>
@@ -309,8 +309,8 @@ export default function StockManagementPage() {
           </div>
 
           {/* Section: Tanggal */}
-          <div className="px-4 md:px-6 py-4 border-b border-stone-100">
-            <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-3">
+          <div className="px-4 md:px-6 py-4 border-b border-neutral-100">
+            <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-3">
               2 · Tanggal Pencatatan
             </p>
             <div className="flex items-center gap-2">
@@ -339,12 +339,12 @@ export default function StockManagementPage() {
           </div>
 
           {/* Section: Pergerakan Stok */}
-          <div className="px-4 md:px-6 py-4 border-b border-stone-100">
+          <div className="px-4 md:px-6 py-4 border-b border-neutral-100">
             <div className="mb-4">
-              <p className="text-[11px] font-semibold text-stone-400 uppercase tracking-wider">
+              <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
                 3 · Pergerakan Stok
               </p>
-              <p className="mt-1 text-sm font-semibold text-stone-900">
+              <p className="mt-1 text-sm font-semibold text-neutral-900">
                 Gunakan kalkulator cepat untuk barang datang hari ini
               </p>
             </div>
@@ -411,7 +411,7 @@ export default function StockManagementPage() {
               size="lg"
               fullWidth
               disabled={recordStockMutation.isPending || productsLoading || outletsLoading || akhirNegative}
-              className="!rounded-2xl !border-stone-900 !bg-stone-900 !text-white hover:!bg-stone-800"
+              className="!rounded-2xl !border-neutral-900 !bg-neutral-900 !text-white hover:!bg-neutral-800"
             >
               {recordStockMutation.isPending ? 'Menyimpan…' : 'Simpan Pergerakan Stok'}
             </Button>
@@ -424,7 +424,7 @@ export default function StockManagementPage() {
           {/* Summary Stats */}
           <div className={`${panelClass} overflow-hidden`}>
             <div className="px-4 md:px-5 pt-4 pb-2">
-              <p className="text-xs font-bold text-stone-500 uppercase tracking-wider">Ringkasan Inventori</p>
+              <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Ringkasan Inventori</p>
             </div>
             <div className="px-4 md:px-5 pb-4 space-y-2">
               <StatCard icon={<Package className="w-5 h-5" />} label="Total Produk" value={(stats?.totalProducts ?? 0).toLocaleString()} color="gray" />
@@ -437,9 +437,9 @@ export default function StockManagementPage() {
           </div>
 
           {/* How to use */}
-          <div className="rounded-[14px] border border-stone-200 bg-[#f7f5ee] p-4">
-            <p className="text-xs font-bold text-stone-800 mb-2">Cara pakai</p>
-            <ul className="text-[11px] text-stone-600 space-y-1 leading-relaxed">
+          <div className="rounded-[14px] border border-neutral-200 bg-[#F3F3F4] p-4">
+            <p className="text-xs font-bold text-neutral-800 mb-2">Cara pakai</p>
+            <ul className="text-[11px] text-neutral-600 space-y-1 leading-relaxed">
               <li>• Pilih produk dan outlet</li>
               <li>• Stok Awal otomatis dari catatan terakhir</li>
               <li>• Isi Masuk (barang datang dari supplier)</li>
@@ -452,10 +452,10 @@ export default function StockManagementPage() {
       </div>
 
       {/* ── Penyesuaian Stok ── */}
-      <div className="rounded-[14px] border border-orange-200 bg-[#fffaf3] shadow-[0_1px_0_rgba(28,25,23,0.04)] overflow-hidden">
+      <div className="rounded-[14px] border border-orange-200 bg-[#FFFFFF] shadow-[0_1px_0_rgba(28,25,23,0.04)] overflow-hidden">
         <div className="px-4 md:px-6 py-4 border-b border-orange-100">
-          <p className="text-sm font-bold text-stone-950">Penyesuaian Stok</p>
-          <p className="text-xs text-stone-500 mt-0.5">Untuk barang rusak, hilang, expired, atau koreksi cepat tanpa pindah halaman.</p>
+          <p className="text-sm font-bold text-neutral-950">Penyesuaian Stok</p>
+          <p className="text-xs text-neutral-500 mt-0.5">Untuk barang rusak, hilang, expired, atau koreksi cepat tanpa pindah halaman.</p>
         </div>
         <div className="px-4 md:px-6 py-4 space-y-3">
           {/* Adj Success/Error */}
@@ -589,8 +589,8 @@ export default function StockManagementPage() {
       {/* ── Low Stock Table ── */}
       {lowStock && lowStock.length > 0 && (
         <div className={`${panelClass} overflow-hidden`}>
-          <div className="px-4 md:px-6 py-4 border-b border-stone-100 flex items-center justify-between">
-            <p className="text-sm font-bold text-stone-950 flex items-center gap-1.5"><AlertTriangle className="w-4 h-4 text-yellow-500" /> Stok Hampir Habis</p>
+          <div className="px-4 md:px-6 py-4 border-b border-neutral-100 flex items-center justify-between">
+            <p className="text-sm font-bold text-neutral-950 flex items-center gap-1.5"><AlertTriangle className="w-4 h-4 text-yellow-500" /> Stok Hampir Habis</p>
             <span className="px-2.5 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-full">
               {lowStock.length} produk
             </span>

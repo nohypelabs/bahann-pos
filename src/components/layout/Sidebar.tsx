@@ -57,7 +57,7 @@ function SidebarItem({ href, icon, label, badge, isCollapsed }: {
         </>
       )}
       {isCollapsed && badge && (
-        <span aria-hidden="true" className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-600 ring-2 ring-[#fbfaf6]" />
+        <span aria-hidden="true" className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-600 ring-2 ring-[#FFFFFF]" />
       )}
     </Link>
   )
@@ -254,7 +254,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
 
       <aside className={`
         w-72 ${isCollapsed ? 'md:w-[60px]' : 'md:w-64'}
-        h-screen overflow-hidden bg-[#fbfaf6] border-r border-[#E4E6E7]
+        h-screen overflow-hidden bg-[#FFFFFF] border-r border-[#E4E6E7]
         flex-shrink-0 fixed md:relative z-50
         transition-[width,transform] duration-200 ease-out motion-reduce:transition-none
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}

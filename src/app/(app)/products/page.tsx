@@ -227,16 +227,16 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
             fullWidth
           />
           {formData.imageUrl && (
-            <div className="mt-2 flex items-center gap-3 p-2 bg-stone-50 dark:bg-stone-800 rounded-xl border border-stone-200 dark:border-stone-700">
+            <div className="mt-2 flex items-center gap-3 p-2 bg-neutral-50 dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700">
               <img
                 src={formData.imageUrl}
                 alt="Pratinjau"
-                className="w-12 h-12 rounded-lg object-cover border border-stone-300 dark:border-stone-600 shrink-0"
+                className="w-12 h-12 rounded-lg object-cover border border-neutral-300 dark:border-neutral-600 shrink-0"
                 onError={(e) => { (e.target as HTMLElement).style.display = 'none' }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-stone-700 dark:text-stone-300 truncate">Pratinjau Gambar Cloudinary</p>
-                <p className="text-[10px] text-stone-400 dark:text-stone-500 truncate">{formData.imageUrl}</p>
+                <p className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 truncate">Pratinjau Gambar Cloudinary</p>
+                <p className="text-[10px] text-neutral-400 dark:text-neutral-500 truncate">{formData.imageUrl}</p>
               </div>
             </div>
           )}
