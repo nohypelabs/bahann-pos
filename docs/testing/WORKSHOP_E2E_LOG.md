@@ -34,6 +34,7 @@ Setup and paths: `deployment/backup/README.md` ("Where it runs").
 | 15.6 | Pull key opens a shell / writes to the VPS | Refused | ✅ rrsync refused both |
 | 15.7 | Restore the PC Ryzen copy with `lakupos-restore-test.sh` | `restore: OK`, latest migration 059 | ✅ 48 tables, 2892 rows |
 | 15.8 | Compare restored counts with production | Equal | ✅ transactions 135, service_orders 148, transaction_items 222, payments 122 |
+| 15.9 | Telegram alerts (db03852): forced weekly all-clear on PC Ryzen; forced failure on Helipod (`MIN_TABLES=999`, scratch dir) | Both messages arrive from @agdsgrid_bot; real backups untouched | ✅ the user confirmed both in Telegram |
 
 Before this, Helipod's PostgreSQL 16 (used only by the bioray trial app) was upgraded to 17.12 with
 `pg_upgradecluster`; a `pg_dumpall` of 16 is kept in `/root/pg16-before-upgrade`. Row counts and bioray's own
