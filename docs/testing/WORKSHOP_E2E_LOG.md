@@ -20,6 +20,34 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-26 · Suspension at login and refresh (production)
+
+Prompted by a wrong note in the entry below ("is_suspended is not checked at login"). Login did check the account's
+own flag, and for cashiers (`role = 'user'` with an outlet) the outlet owner's. Real gaps found:
+- staff admins and store managers of a suspended tenant could still log in (a superadmin suspends a tenant by
+  flagging only the owner row, `users.id = tenant_id`);
+- `auth.refresh` never checked suspension, so open sessions lived on for up to 30 days.
+
+Fix be0b3f6: the check moved into `createRefreshToken`, which login and refresh both go through. It looks at the
+account's flag, then the tenant owner's. Unit test `src/lib/__tests__/refreshTokenSuspension.test.ts` (3 cases).
+Unit tests 189 passed, build passed.
+
+Probe on production after deploy, on the try-out tenant "Mr Bengkel (Uji Coba)"; the owner was flagged for a few
+seconds and unflagged in a `finally`:
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 14.1 | Cashier logs in, then refreshes | Both work | ✅ |
+| 14.2 | Flag the owner, refresh the cashier's session | Refused, cookies cleared | ✅ "Failed to refresh token - please login again" |
+| 14.3 | Cashier logs in | FORBIDDEN, tenant message | ✅ "Akun bisnis Anda telah dinonaktifkan. Hubungi pemilik." |
+| 14.4 | Owner logs in | FORBIDDEN, account message | ✅ "Akun Anda telah dinonaktifkan. Hubungi admin." |
+| 14.5 | Unflag, cashier logs in | Works | ✅; both accounts `is_suspended = false` afterwards |
+
+Still by design: a request with an access token issued before the suspension works until that token expires
+(15 minutes), since the tRPC context trusts the signed JWT without a database read.
+
+---
+
 ## 2026-11-26 · Try-out tenant for Mr Bengkel (production)
 
 For the client's progress report: a separate tenant the client can log in to before go-live, so their tries do not
@@ -44,8 +72,8 @@ Bugs found:
 - The first run failed to log in after setting the password: the bcrypt hash (`$2b$08$…`) went through a shell
   argument and `$…` was expanded. Fixed in the script before commit: queries go through a file (`-f`).
 - The default page header still said "Bahann POS" (products, labels, settings, approvals…). Fixed in 64cc2e8.
-- Not fixed, noted: `users.is_suspended` is not checked at login or in the tRPC context, so a tenant suspended by
-  the superadmin can still log in. `revoke` therefore also replaces the password hash and revokes refresh tokens.
+- ~~`users.is_suspended` is not checked at login~~ **Wrong, corrected the same day:** login did check it (a grep
+  cut short by `head` hid `auth.ts`). The real gaps were narrower; see "Suspension at login and refresh" above.
 
 Evidence: tenant "Mr Bengkel (Uji Coba)", notes B1234ABC and B9012DEF, deploy 64cc2e8 (Vercel success).
 To take access away: `SUPABASE_PROJECT_REF=… node scripts/client-demo-tenant.mjs revoke` (open sessions end
