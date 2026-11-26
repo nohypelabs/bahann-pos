@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
+import Link from 'next/link'
 import { trpc } from '@/lib/trpc/client'
 import { BUSINESS_TYPE_OPTIONS } from '@/lib/business/business-type-options'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { friendlyError } from '@/lib/errors/friendlyError'
-import { Check, CheckCircle2, Eye, EyeOff, X, XCircle } from 'lucide-react'
+import { Check, CheckCircle2, Eye, EyeOff, Plus, X, XCircle } from 'lucide-react'
+import { AuthHeading, AuthShell, AuthTabs, authFieldClass, authLabelClass, authLinkClass, authPrimaryButtonClass, authSecondaryButtonClass } from '@/components/auth/AuthShell'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -103,294 +103,176 @@ export default function RegisterPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-3"><img src="/logo.svg" alt="Laku POS" className="w-16 h-16 rounded-[40px] shadow-md" /></div>
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2">Laku POS</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            {isId ? 'Daftar sebagai pemilik warung' : 'Register as a store owner'}
-          </p>
-          {/* Step indicator */}
-          <div className="flex justify-center gap-2 mt-4">
-            <span className={`w-8 h-1 rounded-[20px] ${step === 1 ? 'bg-blue-500' : 'bg-blue-500'}`} />
-            <span className={`w-8 h-1 rounded-[20px] ${step === 2 ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-700'}`} />
-          </div>
-        </div>
+  const errorBox = error && (
+    <p role="alert" className="flex items-start gap-2 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+      <XCircle className="mt-0.5 h-4 w-4 shrink-0" /> <span>{error}</span>
+    </p>
+  )
 
-        <div className="bg-white border border-neutral-200 rounded-[20px] p-6 sm:p-8">
-          <div className="mb-4">
-            <h2 className="text-mobile-base md:text-mobile-xl font-bold text-gray-900 dark:text-gray-100">
-              {step === 1
-                ? (isId ? 'Informasi Akun' : 'Account Information')
-                : (isId ? 'Jenis Usaha' : 'Business Type')}
-            </h2>
-          </div>
-          <div>
-            {success ? (
-              <div className="text-center py-8">
-                <div className="mb-4 flex justify-center"><CheckCircle2 className="w-12 h-12 text-green-500" /></div>
-                <h3 className="text-2xl font-bold text-green-600 mb-2">
-                  {isId ? 'Pendaftaran Berhasil!' : 'Registration Successful!'}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {isId ? 'Mengalihkan ke halaman login...' : 'Redirecting to login...'}
-                </p>
-              </div>
-            ) : step === 1 ? (
-              /* Step 1: Account Info */
-              <form onSubmit={handleNextStep} className="space-y-4">
-                {error && (
-                  <div className="p-4 bg-red-50 border-2 border-red-200 rounded-[20px]">
-                    <p className="flex items-center gap-2 text-sm font-semibold text-red-600"><XCircle className="w-4 h-4 shrink-0" /> {error}</p>
-                  </div>
-                )}
-
-                <Input
-                  pill
-                  type="text"
-                  name="name"
-                  label={isId ? 'Nama Lengkap' : 'Full Name'}
-                  placeholder={isId ? 'Nama Lengkap' : 'Full Name'}
-                  value={formData.name}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                />
-
-                <Input
-                  pill
-                  type="text"
-                  name="storeName"
-                  label={isId ? 'Nama Toko / Warung' : 'Store / Shop Name'}
-                  placeholder={isId ? 'cth: Warung Bu Sari' : 'e.g. My Store'}
-                  value={formData.storeName}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                />
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                        {isId ? 'Outlet Tambahan' : 'Additional Outlets'}
-                      </label>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        {isId ? 'Opsional. Outlet pertama tetap pakai nama toko di atas.' : 'Optional. The first outlet still uses the store name above.'}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={addAdditionalOutlet}
-                      className="text-sm font-semibold text-blue-600 hover:text-blue-700"
-                    >
-                      + {isId ? 'Tambah outlet' : 'Add outlet'}
-                    </button>
-                  </div>
-
-                  {additionalOutlets.map((outlet, index) => (
-                    <div key={`${index}-${additionalOutlets.length}`} className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={outlet}
-                        onChange={e => updateAdditionalOutlet(index, e.target.value)}
-                        placeholder={isId ? `Outlet ${index + 2}` : `Outlet ${index + 2}`}
-                        className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-[40px] focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeAdditionalOutlet(index)}
-                        className="shrink-0 px-3 py-2.5 rounded-[20px] border-2 border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 transition-colors"
-                        aria-label={isId ? 'Hapus outlet tambahan' : 'Remove additional outlet'}
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    {isId ? 'Nomor WhatsApp' : 'WhatsApp Number'} *
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium text-sm select-none">
-                      +62
-                    </span>
-                    <input
-                      type="tel"
-                      name="whatsappNumber"
-                      placeholder="8123456789"
-                      value={formData.whatsappNumber}
-                      onChange={handleChange}
-                      className="w-full pl-14 pr-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-[40px] focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <Input
-                  pill
-                  type="email"
-                  name="email"
-                  label={isId ? 'Email' : 'Email'}
-                  placeholder={isId ? 'Email' : 'Email'}
-                  value={formData.email}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                />
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    {isId ? 'Password' : 'Password'} *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      name="password"
-                      placeholder={isId ? 'Minimal 8 karakter' : 'At least 8 characters'}
-                      value={formData.password}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 pr-12 border-2 border-gray-300 dark:border-gray-600 rounded-[40px] focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      aria-label={showPassword ? (isId ? 'Sembunyikan password' : 'Hide password') : (isId ? 'Tampilkan password' : 'Show password')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    {isId ? 'Konfirmasi Password' : 'Confirm Password'} *
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      name="confirmPassword"
-                      placeholder={isId ? 'Konfirmasi password' : 'Confirm password'}
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 pr-12 border-2 border-gray-300 dark:border-gray-600 rounded-[40px] focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      aria-label={showConfirmPassword ? (isId ? 'Sembunyikan password' : 'Hide password') : (isId ? 'Tampilkan password' : 'Show password')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="pt-2">
-                  <Button type="submit" variant="primary" size="lg" fullWidth>
-                    {isId ? 'Selanjutnya →' : 'Next →'}
-                  </Button>
-                </div>
-
-                <div className="pt-2 text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {isId ? 'Sudah punya akun?' : 'Already have an account?'}{' '}
-                    <a href="/login" className="font-semibold text-gray-900 dark:text-gray-100 hover:underline">
-                      {isId ? 'Masuk' : 'Login'}
-                    </a>
-                  </p>
-                </div>
-              </form>
-            ) : (
-              /* Step 2: Business Type Selection */
-              <div className="space-y-4">
-                {error && (
-                  <div className="p-4 bg-red-50 border-2 border-red-200 rounded-[20px]">
-                    <p className="flex items-center gap-2 text-sm font-semibold text-red-600"><XCircle className="w-4 h-4 shrink-0" /> {error}</p>
-                  </div>
-                )}
-
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {isId
-                    ? 'Pilih jenis usaha Anda untuk mengkonfigurasi sistem secara otomatis'
-                    : 'Select your business type to automatically configure the system'}
-                </p>
-
-                <div className="grid grid-cols-1 gap-3">
-                  {BUSINESS_TYPE_OPTIONS.map((bt) => {
-                    const isSelected = selectedType === bt.type
-                    return (
-                      <button
-                        key={bt.type}
-                        onClick={() => setSelectedType(bt.type)}
-                        className={`relative text-left p-4 rounded-[20px] border-2 transition-all ${
-                          isSelected
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 shadow-md'
-                            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'
-                        }`}
-                      >
-                        {isSelected && (
-                          <div className="absolute top-3 right-3 w-5 h-5 rounded-[20px] bg-blue-500 flex items-center justify-center">
-                            <Check className="w-3.5 h-3.5 text-white" />
-                          </div>
-                        )}
-                        <div className="flex items-center gap-3">
-                          <bt.icon className="w-6 h-6 text-[#0F5F56]" aria-hidden />
-                          <div>
-                            <h3 className={`text-sm font-bold ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>
-                              {t(`businessType.${bt.key}.title`)}
-                            </h3>
-                            <p className={`text-xs ${isSelected ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`}>
-                              {t(`businessType.${bt.key}.description`)}
-                            </p>
-                          </div>
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-
-                <div className="flex gap-3 pt-2">
-                  <Button variant="outline" size="lg" onClick={() => setStep(1)} className="flex-1">
-                    ← {isId ? 'Kembali' : 'Back'}
-                  </Button>
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    onClick={handleRegister}
-                    disabled={!selectedType || isLoading}
-                    className="flex-1"
-                  >
-                    {isLoading
-                      ? (isId ? 'Mendaftar...' : 'Registering...')
-                      : (isId ? 'Daftar' : 'Register')}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {!success && step === 1 && (
-          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-[20px]">
-            <p className="text-sm text-blue-900 dark:text-blue-200 font-semibold mb-2">
-              ℹ️ {isId ? 'Informasi Pendaftaran' : 'Registration Info'}:
-            </p>
-            <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
-              <li>• {isId ? 'Akun ini adalah akun pemilik warung (admin)' : 'This is a store owner (admin) account'}</li>
-              <li>• {isId ? 'Outlet pertama dan outlet tambahan bisa dibuat saat daftar' : 'The first outlet and extra outlets can be created during registration'}</li>
-              <li>• {isId ? 'Kasir bisa ditambahkan dari menu Pengaturan' : 'Cashiers can be added from Settings'}</li>
-            </ul>
-          </div>
-        )}
+  const passwordField = (name: 'password' | 'confirmPassword', label: string, placeholder: string, shown: boolean, toggle: () => void) => (
+    <div className="space-y-1.5">
+      <label htmlFor={`register-${name}`} className={authLabelClass}>{label}</label>
+      <div className="relative">
+        <input
+          id={`register-${name}`}
+          type={shown ? 'text' : 'password'}
+          name={name}
+          placeholder={placeholder}
+          value={formData[name]}
+          onChange={handleChange}
+          autoComplete="new-password"
+          className={`${authFieldClass} pr-12`}
+          required
+        />
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={shown ? (isId ? 'Sembunyikan password' : 'Hide password') : (isId ? 'Tampilkan password' : 'Show password')}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8A9188] hover:text-[#17201D] lg:text-white/55 lg:hover:text-white"
+        >
+          {shown ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+        </button>
       </div>
     </div>
+  )
+
+  return (
+    <AuthShell>
+      <AuthHeading
+        title={isId ? 'Buat akun baru' : 'Create an account'}
+        subtitle={step === 1
+          ? (isId ? 'Langkah 1 dari 2 · data akun dan toko' : 'Step 1 of 2 · account and shop')
+          : (isId ? 'Langkah 2 dari 2 · jenis usaha' : 'Step 2 of 2 · business type')}
+      />
+      <AuthTabs active="register" />
+
+      {/* Two-step progress */}
+      <div className="mb-6 grid grid-cols-2 gap-2 lg:max-w-md" aria-hidden>
+        <span className="h-1 rounded-full bg-[#0F5F56] lg:bg-[#F6C979]" />
+        <span className={`h-1 rounded-full ${step === 2 ? 'bg-[#0F5F56] lg:bg-[#F6C979]' : 'bg-[#E4E6E7] lg:bg-white/15'}`} />
+      </div>
+
+      {success ? (
+        <div className="py-8 text-center lg:max-w-md">
+          <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-[#0F5F56] lg:text-[#F6C979]" />
+          <h2 className="mb-1 text-xl font-bold text-[#17201D] lg:text-white">{isId ? 'Pendaftaran berhasil' : 'Registration complete'}</h2>
+          <p className="text-sm text-[#5F675F] lg:text-white/70">{isId ? 'Mengalihkan ke halaman login…' : 'Redirecting to login…'}</p>
+        </div>
+      ) : step === 1 ? (
+        <form onSubmit={handleNextStep} className="space-y-4 lg:max-w-md">
+          {errorBox}
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <label htmlFor="register-name" className={authLabelClass}>{isId ? 'Nama lengkap' : 'Full name'}</label>
+              <input id="register-name" type="text" name="name" placeholder={isId ? 'Nama Anda' : 'Your name'} value={formData.name}
+                onChange={handleChange} autoComplete="name" className={authFieldClass} required />
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="register-store" className={authLabelClass}>{isId ? 'Nama toko' : 'Shop name'}</label>
+              <input id="register-store" type="text" name="storeName" placeholder={isId ? 'cth: Bengkel Jaya' : 'e.g. My Shop'} value={formData.storeName}
+                onChange={handleChange} autoComplete="organization" className={authFieldClass} required />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="register-wa" className={authLabelClass}>{isId ? 'Nomor WhatsApp' : 'WhatsApp number'}</label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 select-none text-sm font-medium text-[#5F675F] lg:text-white/60">+62</span>
+              <input id="register-wa" type="tel" name="whatsappNumber" placeholder="8123456789" value={formData.whatsappNumber}
+                onChange={handleChange} autoComplete="tel-national" className={`${authFieldClass} pl-14`} required />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="register-email" className={authLabelClass}>Email</label>
+            <input id="register-email" type="email" name="email" placeholder="nama@email.com" value={formData.email}
+              onChange={handleChange} autoComplete="email" autoCapitalize="none" className={authFieldClass} required />
+          </div>
+
+          {passwordField('password', 'Password', isId ? 'Minimal 8 karakter' : 'At least 8 characters', showPassword, () => setShowPassword(!showPassword))}
+          {passwordField('confirmPassword', isId ? 'Ulangi password' : 'Repeat password', isId ? 'Ketik ulang password' : 'Type it again', showConfirmPassword, () => setShowConfirmPassword(!showConfirmPassword))}
+
+          {/* More outlets are optional and rare, so they stay behind a small link */}
+          <div className="space-y-2">
+            {additionalOutlets.map((outlet, index) => (
+              <div key={`${index}-${additionalOutlets.length}`} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={outlet}
+                  onChange={e => updateAdditionalOutlet(index, e.target.value)}
+                  placeholder={`Outlet ${index + 2}`}
+                  aria-label={`Outlet ${index + 2}`}
+                  className={authFieldClass}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeAdditionalOutlet(index)}
+                  className="shrink-0 p-2 text-[#8A9188] hover:text-red-600 lg:text-white/55 lg:hover:text-red-300"
+                  aria-label={isId ? 'Hapus outlet tambahan' : 'Remove additional outlet'}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            <button type="button" onClick={addAdditionalOutlet} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0F5F56] hover:underline lg:text-white/80">
+              <Plus className="h-4 w-4" /> {isId ? 'Punya lebih dari satu outlet? Tambahkan' : 'More than one outlet? Add it'}
+            </button>
+          </div>
+
+          <button type="submit" className={authPrimaryButtonClass}>{isId ? 'Lanjut' : 'Continue'}</button>
+        </form>
+      ) : (
+        <div className="space-y-4 lg:max-w-md">
+          {errorBox}
+          <p className="text-sm text-[#5F675F] lg:text-white/70">
+            {isId ? 'Menu dan fitur akan disesuaikan dengan jenis usaha Anda.' : 'Menus and features follow your business type.'}
+          </p>
+
+          <div className="grid gap-2.5" role="radiogroup">
+            {BUSINESS_TYPE_OPTIONS.map((bt) => {
+              const isSelected = selectedType === bt.type
+              return (
+                <button
+                  key={bt.type}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  onClick={() => setSelectedType(bt.type)}
+                  className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition ${
+                    isSelected
+                      ? 'border-[#0F5F56] bg-[#E3F1EE]/60 lg:border-[#F6C979] lg:bg-white/10'
+                      : 'border-[#E4E6E7] bg-white hover:border-[#CDD1D3] lg:border-white/15 lg:bg-white/[0.04] lg:hover:border-white/30'
+                  }`}
+                >
+                  <bt.icon className="h-6 w-6 shrink-0 stroke-[1.75] text-[#0F5F56] lg:text-[#F6C979]" aria-hidden />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-[#17201D] lg:text-white">{t(`businessType.${bt.key}.title`)}</p>
+                    <p className="text-xs text-[#5F675F] lg:text-white/60">{t(`businessType.${bt.key}.description`)}</p>
+                  </div>
+                  <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${isSelected ? 'border-[#0F5F56] bg-[#0F5F56] text-white lg:border-[#F6C979] lg:bg-[#F6C979] lg:text-[#17201D]' : 'border-[#CDD1D3] lg:border-white/30'}`}>
+                    {isSelected && <Check className="h-3.5 w-3.5" />}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <button type="button" onClick={() => setStep(1)} className={authSecondaryButtonClass}>{isId ? 'Kembali' : 'Back'}</button>
+            <button type="button" onClick={handleRegister} disabled={!selectedType || isLoading} className={authPrimaryButtonClass}>
+              {isLoading ? (isId ? 'Mendaftar…' : 'Signing up…') : (isId ? 'Daftar' : 'Sign up')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!success && (
+        <p className="mt-6 text-center text-sm text-[#5F675F] lg:max-w-md lg:text-white/70">
+          {isId ? 'Sudah punya akun?' : 'Already have an account?'}{' '}
+          <Link href="/login" className={authLinkClass}>{isId ? 'Masuk' : 'Log in'}</Link>
+        </p>
+      )}
+    </AuthShell>
   )
 }
