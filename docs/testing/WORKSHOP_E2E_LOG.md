@@ -20,6 +20,18 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-27 · Label preview dialog and smaller corner radii (local app → production DB)
+
+Headless Chromium as `pemilik@mrbengkel.test`, screenshots checked by eye.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 20.1 | `/login` | Card and button with the smaller radius; email and password fields still fully rounded | ✅ |
+| 20.2 | `/products` | Stat cards, search, buttons and table card at half the old radius | ✅ |
+| 20.3 | Produk → select all → Cetak Label → Pratinjau | Dialog with sheet 1 at 70 % of A4, 15 labels | ✅ |
+
+---
+
 ## 2026-11-27 · Label sheets as a PDF (local app → production DB)
 
 `/products/labels` printed A4 sticker sheets through the browser only. "Unduh PDF" now builds the same millimetre
