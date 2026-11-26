@@ -152,7 +152,29 @@ export default function SalesHistoryPage() {
       {/* Per-Product Summary — top report */}
       {productSummary.length > 0 && (
         <SectionCard title="Laporan Per Produk">
-          <div className="overflow-x-auto">
+          {/* Phones: one block per product instead of a seven-column table */}
+          <ul className="-mx-4 -my-4 divide-y divide-gray-100 md:hidden">
+            {productSummary.map(p => (
+              <li key={p.name} className={`px-4 py-3 ${p.totalQty === 0 ? 'opacity-60' : ''}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">{p.name}</p>
+                    <p className="font-mono text-[11px] text-gray-400">{p.sku}{p.totalQty === 0 && ' · Tidak Terjual'}</p>
+                  </div>
+                  <p className="shrink-0 text-sm font-bold text-green-600 tabular-nums">{formatCurrency(p.totalRevenue)}</p>
+                </div>
+                <p className="mt-1 text-xs text-gray-500 tabular-nums">
+                  Awal {(p.currentStock + p.totalQty).toLocaleString()} · Terjual <span className="font-semibold text-blue-700">{p.totalQty.toLocaleString()}</span> ·{' '}
+                  Sisa <span className={`font-semibold ${p.currentStock <= 0 ? 'text-red-600' : p.currentStock <= 5 ? 'text-yellow-700' : 'text-green-700'}`}>{p.currentStock.toLocaleString()}</span> · {p.transactionCount}x
+                </p>
+              </li>
+            ))}
+            <li className="flex items-center justify-between gap-3 bg-gray-900 px-4 py-3 text-sm font-bold text-white">
+              <span>Total · {productSummary.reduce((s, p) => s + p.totalQty, 0).toLocaleString()} unit</span>
+              <span className="tabular-nums">{formatCurrency(productSummary.reduce((s, p) => s + p.totalRevenue, 0))}</span>
+            </li>
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
@@ -259,7 +281,31 @@ export default function SalesHistoryPage() {
                 : <Button variant="primary" onClick={() => window.location.href = '/pos/sales'}>Buka POS</Button>
             } />
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Phones: one block per line instead of a seven-column table */}
+          <ul className="divide-y divide-gray-100 md:hidden">
+            {filteredTransactions.map(tx => (
+              <li key={tx.id} className="px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">{tx.productName}</p>
+                    <p className="truncate font-mono text-[11px] text-gray-400">{tx.transactionId || 'N/A'}</p>
+                  </div>
+                  <p className="shrink-0 text-sm font-bold text-green-600 tabular-nums">{formatCurrency(tx.revenue)}</p>
+                </div>
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500">
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_BADGE[tx.status] || 'bg-gray-100 text-gray-600'}`}>
+                    {STATUS_ICON[tx.status]}
+                    {STATUS_LABEL[tx.status] || tx.status}
+                  </span>
+                  <span className="font-semibold text-blue-700">{tx.quantity} unit</span>
+                  <span className="tabular-nums">{fmtDateTime(tx.date)}</span>
+                </div>
+                <p className="mt-0.5 truncate text-xs text-gray-400">{tx.outletName}{tx.cashierName && ` · Kasir: ${tx.cashierName}`}</p>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
@@ -300,6 +346,7 @@ export default function SalesHistoryPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
