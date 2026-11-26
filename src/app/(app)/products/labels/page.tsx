@@ -3,11 +3,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import JsBarcode from 'jsbarcode'
-import { ArrowLeft, Download, Printer, Search, Trash2 } from 'lucide-react'
+import { ArrowLeft, Download, Eye, Printer, Search, Trash2 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { Button } from '@/components/ui/Button'
 import { Input, Select } from '@/components/ui/Input'
+import { Modal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
 import { trpc } from '@/lib/trpc/client'
 import { formatCurrency } from '@/lib/utils'
@@ -106,12 +107,13 @@ export default function ProductLabelsPage() {
   const sheets = total ? Math.ceil((total + Math.min(skip, perSheet - 1)) / perSheet) : 0
   const withoutBarcode = products.filter((p) => !p.barcode).length
 
-  // Barcodes are drawn as SVG through the DOM, so the preview only exists in the browser.
-  const previewHtml = useMemo(
-    () => (typeof document === 'undefined' || !fits || products.length === 0
-      ? ''
-      : renderPages(products, counts, sheet, skip, showPrice, true)[0] ?? ''),
-    [products, counts, sheet, skip, showPrice, fits],
+  const [previewOpen, setPreviewOpen] = useState(false)
+  // Barcodes are drawn as SVG through the DOM, so the preview is built only when it is opened.
+  const previewPages = useMemo(
+    () => (!previewOpen || typeof document === 'undefined' || !fits || products.length === 0
+      ? []
+      : renderPages(products, counts, sheet, skip, showPrice, true)),
+    [previewOpen, products, counts, sheet, skip, showPrice, fits],
   )
 
   const add = (id: string) => {
@@ -175,6 +177,9 @@ export default function ProductLabelsPage() {
         subtitle={t('products.labels.subtitle')}
         action={
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setPreviewOpen(true)} disabled={!total || !fits}>
+              <Eye className="w-4 h-4 mr-1" /> {t('products.labels.preview')}
+            </Button>
             <Button variant="secondary" onClick={downloadPdf} disabled={!total || !fits || pdfBusy}>
               <Download className="w-4 h-4 mr-1" /> {pdfBusy ? t('common.loading') : t('products.labels.pdf')}
             </Button>
@@ -247,15 +252,22 @@ export default function ProductLabelsPage() {
         </SectionCard>
       </div>
 
-      {previewHtml && (
-        <SectionCard title={t('products.labels.preview')}>
-          <div className="overflow-auto rounded-xl bg-gray-100 dark:bg-gray-800 p-3">
-            <div style={{ width: `${A4.width * 0.5}mm`, height: `${A4.height * 0.5}mm` }} className="shadow mx-auto bg-white">
-              <div style={{ transform: 'scale(0.5)', transformOrigin: 'top left' }} dangerouslySetInnerHTML={{ __html: previewHtml }} />
+      <Modal isOpen={previewOpen} onClose={() => setPreviewOpen(false)} title={t('products.labels.preview')} size="xl">
+        <p className="mb-3 text-sm text-gray-500">
+          {t('products.labels.summary').replace('{labels}', String(total)).replace('{sheets}', String(sheets))}
+        </p>
+        <div className="space-y-4 rounded-lg bg-gray-100 dark:bg-gray-800 p-3">
+          {previewPages.map((html, i) => (
+            <div key={i}>
+              <p className="mb-1 text-xs font-semibold text-gray-500">{t('products.labels.sheetNo').replace('{n}', String(i + 1))}</p>
+              {/* A4 at 70 %: 147 × 208 mm fits the dialog. */}
+              <div style={{ width: `${A4.width * 0.7}mm`, height: `${A4.height * 0.7}mm` }} className="mx-auto bg-white shadow">
+                <div style={{ transform: 'scale(0.7)', transformOrigin: 'top left' }} dangerouslySetInnerHTML={{ __html: html }} />
+              </div>
             </div>
-          </div>
-        </SectionCard>
-      )}
+          ))}
+        </div>
+      </Modal>
 
     </div>
   )
