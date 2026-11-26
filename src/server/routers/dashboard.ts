@@ -7,6 +7,7 @@ import { getLimits } from '@/lib/plans'
 import { getRedisClient } from '@/lib/redis-upstash'
 import { container } from '@/infra/container'
 import { businessDate } from '@/lib/business/timezone'
+import { loadDashboardOverview } from '@/infra/repositories/SupabaseDashboardOverview'
 
 const DASHBOARD_CACHE_TTL = 120 // 2 minutes
 
@@ -54,6 +55,19 @@ async function resolveOutletIds(userId: string, tenantId: string, specificOutlet
 }
 
 export const dashboardRouter = router({
+  /**
+   * Everything the dashboard cards and charts show for the last `days` business days, with
+   * the period before it for the change figures. Built from completed sales only.
+   */
+  getOverview: protectedProcedure
+    .input(z.object({ outletId: z.string().uuid().optional(), days: z.number().int().min(1).max(90).default(7) }))
+    .query(async ({ input, ctx }) => {
+      const tenantId = ctx.session.tenantId!
+      const outletIds = await resolveOutletIds(ctx.userId, tenantId, input.outletId)
+      const cacheKey = dashKey('overview', tenantId, outletIds, `${input.days}:${businessDate()}`)
+      return withCache(cacheKey, 60, () => loadDashboardOverview(tenantId, outletIds, input.days))
+    }),
+
   getStats: protectedProcedure
     .input(
       z.object({
