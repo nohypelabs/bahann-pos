@@ -20,6 +20,22 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-27 · Label sheets as a PDF (local app → production DB)
+
+`/products/labels` printed A4 sticker sheets through the browser only. "Unduh PDF" now builds the same millimetre
+layout with jsPDF (`src/lib/labels/labelPdf.ts`): name (bold, up to two lines), price, and the barcode drawn as
+vector bars (EAN-13, or Code 128 for a SKU) with equal quiet zones, then the code under the bars.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 19.1 | Unit tests: EAN-13 and Code 128 patterns, page breaks, skipped positions, every preset sheet with/without price and guides | Pass | ✅ 9/9 |
+| 19.2 | Sample PDFs (3×7 and 5×13) of the try-out tenant's products, rendered to PNG | Labels inside their cells, bars centred, text readable at 5×13 | ✅ first render had EAN bars shifted right (JsBarcode's white leading-digit area); trimmed |
+| 19.3 | Headless Chromium as `pemilik@mrbengkel.test`: Produk → select all → Cetak Label → Unduh PDF | A4 PDF downloads with every product | ✅ `label-produk-….pdf`, 1 page A4, all 15 products |
+
+Not yet done: printing the PDF on A4 paper and scanning the printed bars.
+
+---
+
 ## 2026-11-27 · Barcode scanner, cart in checkout, receipt text, member list, single outlet (local app → production DB)
 
 Scanner: Metrologic USB (`0c2e:0901`), a HID keyboard. Test barcodes printed on the XS80 with its own ESC/POS barcode
