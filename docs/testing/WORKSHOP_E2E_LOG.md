@@ -20,6 +20,24 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-27 · Landing page rebuilt section by section (local dev server, public page)
+
+The first version only borrowed the reference's mood; the owner wanted its structure. The reference was captured full
+page with an element outline (sizes, fonts, colours, paddings) and the landing page rebuilt to the same 13 sections:
+glass header, wordmark hero with a bleeding image, "problem" with two label rows, full-width photo, "what sets it
+apart" with an illustration, three numbered step cards (middle one dark), centred statement, navy band with a device
+shot, platform cards, second navy band with a bleeding screenshot, pricing as news-style cards, FAQ, contact form
+(tabs, underlined fields; it opens WhatsApp with the message filled in), dark green footer with a white wordmark.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 23.1 | Full-page screenshot at 1440 px, compared with the reference capture section by section | Same order, proportions, type scale | ✅ 13 sections in order; DM Sans; 65 px headings, 17.5 px body, 13 px labels |
+| 23.2 | Full page at 390 px | No horizontal scroll | ✅ |
+
+Not yet done: real photos (all images are 1920×1080 placeholders); sending the contact form from a phone.
+
+---
+
 ## 2026-11-27 · New landing page (local dev server, public page)
 
 Rebuilt `/` in the style of a reference the owner liked (big wordmark, full-width photo, two-column sections, a dark
