@@ -58,7 +58,7 @@
   "sidebar.operations.payments": "Pembayaran",
   "sidebar.operations.expenses": "Pengeluaran",
   "sidebar.operations.promotions": "Promosi",
-  "sidebar.operations.eod": "Tutup Hari",
+  "sidebar.operations.eod": "Shift & Tutup Hari",
   "sidebar.operations.alerts": "Alert Stok",
   "sidebar.reports": "Laporan",
   "sidebar.settingsHelp": "Pengaturan & Bantuan",
@@ -634,7 +634,7 @@
   "workshop.voucher.freeService": "1x jasa servis gratis",
   "workshop.note.useVoucher": "Pakai voucher",
   "workshop.note.noVoucher": "Tanpa voucher",
-  "workshop.note.needShift": "Buka shift kasir dulu di halaman Penjualan sebelum menerima pembayaran.",
+  "workshop.note.needShift": "Shift kasir belum dibuka. Tekan Buka Shift sebelum menerima pembayaran.",
   "workshop.note.voucherEarned": "Kartu servis penuh! Voucher baru: {code}",
   "sidebar.pos.members": "Member",
   "workshop.loyalty.title": "Kartu Servis (stempel)",
@@ -871,5 +871,13 @@
   "sidebar.operations.approvals": "Persetujuan",
 
   "resetPassword.forAccount": "Password baru untuk akun:",
-  "resetPassword.checkAccount": "Pastikan ini akun yang ingin Anda reset. Kalau salah, minta link baru dengan email yang benar."
+  "resetPassword.checkAccount": "Pastikan ini akun yang ingin Anda reset. Kalau salah, minta link baru dengan email yang benar.",
+
+  "shift.open.title": "Buka Shift",
+  "shift.open.hint": "Hitung uang di laci kasir, lalu isi jumlahnya sebagai kas awal",
+  "shift.open.cashLabel": "Kas awal (Rp)",
+  "shift.open.submit": "Buka Shift",
+  "shift.open.failed": "Gagal membuka shift. Periksa koneksi dan coba lagi.",
+  "shift.open.button": "Buka Shift",
+  "shift.banner": "Shift kasir belum dibuka. Buka shift dulu agar bisa menerima pembayaran."
 }

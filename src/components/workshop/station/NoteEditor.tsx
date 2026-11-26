@@ -23,6 +23,7 @@ import { lineTotal } from '@/lib/offline/workshop/reducer'
 import { enqueue, flush, newId, sync } from '@/lib/offline/workshop/station'
 import type { StationCatalog, StationNotes } from '@/lib/offline/workshop/useStation'
 import { OfflineCashModal } from './OfflineCashModal'
+import { OpenShiftModal } from '@/components/shift/OpenShiftModal'
 import { PriceOverrideModal, type PriceChange } from '@/components/discount/PriceOverrideModal'
 import { ManualDiscountModal } from '@/components/discount/ManualDiscountModal'
 import type { DiscountJustification, ManualDiscount } from '@/domain/sales/manualDiscount'
@@ -72,6 +73,7 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
   /** The line whose price is being changed, and the price typed so far. */
   const [priceEdit, setPriceEdit] = useState<{ productId: string; price: number } | null>(null)
   const [discountOpen, setDiscountOpen] = useState(false)
+  const [shiftOpen, setShiftOpen] = useState(false)
 
   useEffect(() => {
     const timer = setTimeout(() => setTerm(search.trim().toLowerCase()), 150)
@@ -498,9 +500,13 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
         </div>
       )}
 
-      {isOpen && !shift && n.items.length > 0 && (
-        <p className="text-sm text-amber-700">{online ? t('workshop.note.needShift') : t('workshop.offline.needShift')}</p>
+      {isOpen && !shift && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+          <p className="flex-1 text-sm text-amber-800">{online ? t('workshop.note.needShift') : t('workshop.offline.needShift')}</p>
+          {online && outletId && <Button size="sm" onClick={() => setShiftOpen(true)}>{t('shift.open.button')}</Button>}
+        </div>
       )}
+      {shiftOpen && <OpenShiftModal outletId={outletId} outletName={outlet?.name} onClose={() => setShiftOpen(false)} />}
 
       {payOpen && shift && (
         <PaymentModal

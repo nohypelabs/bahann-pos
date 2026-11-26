@@ -58,7 +58,7 @@
   "sidebar.operations.payments": "Payments",
   "sidebar.operations.expenses": "Expenses",
   "sidebar.operations.promotions": "Promotions",
-  "sidebar.operations.eod": "Close Day",
+  "sidebar.operations.eod": "Shift & End of Day",
   "sidebar.operations.alerts": "Stock Alerts",
   "sidebar.reports": "Reports",
   "sidebar.settingsHelp": "Settings & Help",
@@ -634,7 +634,7 @@
   "workshop.voucher.freeService": "1 free service",
   "workshop.note.useVoucher": "Use a voucher",
   "workshop.note.noVoucher": "No voucher",
-  "workshop.note.needShift": "Open a cashier shift on the Sales page before taking payment.",
+  "workshop.note.needShift": "Your cashier shift is not open. Press Open Shift before taking payment.",
   "workshop.note.voucherEarned": "Stamp card full! New voucher: {code}",
   "sidebar.pos.members": "Members",
   "workshop.loyalty.title": "Stamp card",
@@ -871,5 +871,13 @@
   "sidebar.operations.approvals": "Approvals",
 
   "resetPassword.forAccount": "New password for the account:",
-  "resetPassword.checkAccount": "Make sure this is the account you want to reset. If not, ask for a new link with the right email."
+  "resetPassword.checkAccount": "Make sure this is the account you want to reset. If not, ask for a new link with the right email.",
+
+  "shift.open.title": "Open Shift",
+  "shift.open.hint": "Count the money in the cash drawer and enter it as the opening cash",
+  "shift.open.cashLabel": "Opening cash (Rp)",
+  "shift.open.submit": "Open Shift",
+  "shift.open.failed": "Could not open the shift. Check the connection and try again.",
+  "shift.open.button": "Open Shift",
+  "shift.banner": "Your cashier shift is not open yet. Open it to take payments."
 }

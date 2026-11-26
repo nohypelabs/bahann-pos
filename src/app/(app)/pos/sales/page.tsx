@@ -13,12 +13,13 @@ import { printHtmlDocument } from '@/lib/print/printHtmlDocument'
 import { formatCurrency, generateTransactionId } from '@/lib/utils'
 import { offlineDb } from '@/lib/offline/database'
 import { useOffline } from '@/hooks/useOffline'
-import { BadgePercent, Check, CloudOff, LayoutGrid, List, Package, Pencil, RefreshCw, ScanLine, Search, ShoppingCart, Store, WalletCards } from 'lucide-react'
+import { BadgePercent, Check, CloudOff, LayoutGrid, List, Package, Pencil, RefreshCw, ScanLine, Search, ShoppingCart, Store, Sunrise, WalletCards } from 'lucide-react'
 import { PriceOverrideModal, type PriceChange } from '@/components/discount/PriceOverrideModal'
 import { ManualDiscountModal } from '@/components/discount/ManualDiscountModal'
 import type { DiscountReason, ManualDiscount } from '@/domain/sales/manualDiscount'
 import { ProductListSkeleton, ProductGridSkeleton } from '@/components/ui/Skeletons'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { OpenShiftModal } from '@/components/shift/OpenShiftModal'
 
 /** Product cards drawn at once; the rest are reached by searching or scanning. */
 const MAX_VISIBLE_PRODUCTS = 120
@@ -107,6 +108,7 @@ export default function SalesTransactionPage() {
   const [selectedCategory, setSelectedCategory] = useState('')
   const [outletSearch, setOutletSearch] = useState('')
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false)
   const [manualDiscount, setManualDiscount] = useState<ManualDiscount | null>(null)
   const [isDiscountOpen, setIsDiscountOpen] = useState(false)
   const [priceEditId, setPriceEditId] = useState<string | null>(null)
@@ -249,7 +251,7 @@ export default function SalesTransactionPage() {
     { outletId: selectedOutletId },
     { enabled: !!selectedOutletId }
   )
-  const { data: activeShift } = trpc.shifts.getActive.useQuery(
+  const { data: activeShift, isFetched: shiftChecked } = trpc.shifts.getActive.useQuery(
     { outletId: selectedOutletId },
     { enabled: !!selectedOutletId && !isOffline }
   )
@@ -401,11 +403,13 @@ export default function SalesTransactionPage() {
   const cartTotal = cartSubtotal - totalDiscount
   const discountProblem = manualCut > 0 && manualCut > cartSubtotal - discountAmount
   const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
-  const checkoutDisabled = isPaymentModalOpen || cart.length === 0 || !selectedOutletId || (!isOffline && !activeShift) || discountProblem
+  // No open shift: the checkout buttons open the shift form instead of staying disabled.
+  const needsShift = !!selectedOutletId && !isOffline && shiftChecked && !activeShift
+  const checkoutDisabled = !needsShift && (isPaymentModalOpen || cart.length === 0 || !selectedOutletId || (!isOffline && !activeShift) || discountProblem)
   const checkoutLabel = !selectedOutletId
     ? 'Pilih outlet'
     : (!isOffline && !activeShift)
-      ? 'Buka shift dulu'
+      ? t('shift.open.button')
       : isPaymentModalOpen
         ? 'Memproses...'
         : cart.length === 0
@@ -446,6 +450,7 @@ export default function SalesTransactionPage() {
   const handleCompleteSale = async () => {
     setError('')
     setShowSuccess(false)
+    if (needsShift) { setIsShiftModalOpen(true); return }
     if (cart.length === 0) { setError('Keranjang kosong. Silakan tambahkan item ke keranjang.'); return }
     if (!selectedOutletId) { setError('Silakan pilih outlet'); return }
     if (!isOffline && !activeShift) { setError('Shift kasir belum aktif. Buka shift sebelum checkout.'); return }
@@ -654,6 +659,14 @@ export default function SalesTransactionPage() {
 
         {/* Left: Outlet picker + Product picker */}
         <div className="flex flex-col gap-3 flex-1 overflow-hidden min-w-0">
+
+          {needsShift && (
+            <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3">
+              <Sunrise className="h-5 w-5 shrink-0 text-amber-700" />
+              <p className="flex-1 text-sm font-medium text-amber-900">{t('shift.banner')}</p>
+              <Button size="sm" onClick={() => setIsShiftModalOpen(true)}>{t('shift.open.button')}</Button>
+            </div>
+          )}
 
           {/* Outlet — compact pill once selected */}
           {isKasirLocked && selectedOutlet ? (
@@ -1239,7 +1252,7 @@ export default function SalesTransactionPage() {
               disabled={checkoutDisabled}
               className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:dark:bg-gray-700 text-white rounded-xl font-bold text-sm transition-colors shrink-0"
             >
-              {!selectedOutletId ? 'Pilih outlet' : checkoutDisabled ? checkoutLabel : '💳 Bayar'}
+              {!selectedOutletId ? 'Pilih outlet' : checkoutDisabled || needsShift ? checkoutLabel : '💳 Bayar'}
             </button>
           </>
         ) : (
@@ -1350,6 +1363,10 @@ export default function SalesTransactionPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {isShiftModalOpen && selectedOutletId && (
+        <OpenShiftModal outletId={selectedOutletId} outletName={selectedOutlet?.name} onClose={() => setIsShiftModalOpen(false)} />
       )}
 
       {receiptData && <PrintPreviewModal isOpen={isPrintModalOpen} onClose={() => setIsPrintModalOpen(false)} receiptData={receiptData} />}
