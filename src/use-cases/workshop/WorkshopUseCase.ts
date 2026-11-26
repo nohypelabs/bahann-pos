@@ -1,6 +1,7 @@
 import { DomainException, DomainErrorCode } from '@/domain/errors/DomainException'
 import type {
   Customer,
+  CustomerSummary,
   LoyaltyProgram,
   Mechanic,
   MemberVoucher,
@@ -54,6 +55,27 @@ export class WorkshopUseCase {
   // ─── Customers and members ──────────────────────────────────────────────
   searchCustomers(tenantId: string, query: string): Promise<Customer[]> {
     return this.repo.searchCustomers(tenantId, query, 20)
+  }
+
+  /** The member list: each customer with motors, visits, spending, stamps and vouchers. */
+  async listCustomers(tenantId: string, query: string): Promise<{
+    customers: (Customer & { summary: CustomerSummary })[]
+    stampsRequired: number | null
+  }> {
+    const [customers, program] = await Promise.all([
+      this.repo.searchCustomers(tenantId, query, 50),
+      this.getStampProgram(tenantId),
+    ])
+    const summaries = await this.repo.summarizeCustomers(tenantId, customers.map((c) => c.id), program?.id ?? null)
+    const byId = new Map(summaries.map((s) => [s.customerId, s]))
+    return {
+      customers: customers.map((c) => ({
+        ...c,
+        // A stamp balance only means something on a member's card.
+        summary: { ...byId.get(c.id)!, stampBalance: c.isMember ? byId.get(c.id)!.stampBalance : null },
+      })),
+      stampsRequired: program?.isActive ? program.config.requiredStamps : null,
+    }
   }
 
   async createCustomer(

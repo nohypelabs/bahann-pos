@@ -1,6 +1,22 @@
 // Workshop (bengkel) module entities. Design: docs/BENGKEL_MODULE.md.
 import type { DiscountReason, ManualDiscount } from '@/domain/sales/manualDiscount'
 
+/** What the member list shows next to each customer. */
+export interface CustomerSummary {
+  customerId: string
+  vehicles: { plateNumber: string; brand: string | null; model: string | null }[]
+  /** Paid service notes. */
+  visits: number
+  lastVisitAt: string | null
+  /** Sum of the paid service notes' sales. */
+  totalSpent: number
+  /** Stamps on the card, when the tenant has a stamp program. */
+  stampBalance: number | null
+  /** Issued, unexpired vouchers. */
+  activeVouchers: number
+  hasOpenNote: boolean
+}
+
 export interface Customer {
   id: string
   tenantId: string

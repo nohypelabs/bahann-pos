@@ -2,6 +2,7 @@ import { supabaseAdmin as supabase } from '../supabase/server'
 import { DomainException, DomainErrorCode } from '@/domain/errors/DomainException'
 import type {
   Customer,
+  CustomerSummary,
   LoyaltyProgram,
   LoyaltyProgramType,
   Mechanic,
@@ -141,11 +142,72 @@ export class SupabaseWorkshopRepository implements WorkshopRepository {
       const digits = term.replace(/\D/g, '')
       const filters = [`name.ilike.%${term}%`, `member_code.ilike.%${term}%`]
       if (digits.length >= 4) filters.push(`phone.like.%${digits}%`)
+      // A plate (or part of one) finds the owner of that motor.
+      const plate = term.toUpperCase().replace(/[^A-Z0-9]/g, '')
+      if (plate.length >= 3) {
+        const { data: motors, error: motorError } = await supabase
+          .from('vehicles').select('customer_id').eq('tenant_id', tenantId).ilike('plate_number', `%${plate}%`)
+          .not('customer_id', 'is', null).limit(limit)
+        if (motorError) fail('search vehicles by plate', motorError)
+        const ids = [...new Set((motors as Row[]).map((m) => m.customer_id as string))]
+        if (ids.length) filters.push(`id.in.(${ids.join(',')})`)
+      }
       q = q.or(filters.join(','))
     }
     const { data, error } = await q
     if (error) fail('search customers', error)
     return (data as Row[]).map(toCustomer)
+  }
+
+  async summarizeCustomers(tenantId: string, customerIds: string[], stampProgramId: string | null): Promise<CustomerSummary[]> {
+    if (customerIds.length === 0) return []
+    const [motors, orders, stamps, vouchers] = await Promise.all([
+      supabase.from('vehicles').select('customer_id, plate_number, brand, model')
+        .eq('tenant_id', tenantId).in('customer_id', customerIds).order('created_at'),
+      supabase.from('service_orders').select('customer_id, status, closed_at, sale:transactions!transaction_id(total_amount)')
+        .eq('tenant_id', tenantId).in('customer_id', customerIds).in('status', ['open', 'paid']),
+      stampProgramId
+        ? supabase.from('loyalty_ledger').select('customer_id, delta')
+          .eq('tenant_id', tenantId).eq('program_id', stampProgramId).in('customer_id', customerIds)
+        : Promise.resolve({ data: [] as Row[], error: null }),
+      supabase.from('member_vouchers').select('customer_id, expires_at')
+        .eq('tenant_id', tenantId).in('customer_id', customerIds).eq('status', 'issued'),
+    ])
+    for (const [what, result] of [['vehicles', motors], ['service notes', orders], ['stamps', stamps], ['vouchers', vouchers]] as const) {
+      if (result.error) fail(`summarize customers (${what})`, result.error)
+    }
+
+    const byId = new Map<string, CustomerSummary>(customerIds.map((id) => [id, {
+      customerId: id, vehicles: [], visits: 0, lastVisitAt: null, totalSpent: 0,
+      stampBalance: stampProgramId ? 0 : null, activeVouchers: 0, hasOpenNote: false,
+    }]))
+    for (const m of (motors.data ?? []) as Row[]) {
+      byId.get(m.customer_id as string)?.vehicles.push({
+        plateNumber: m.plate_number as string, brand: (m.brand as string | null) ?? null, model: (m.model as string | null) ?? null,
+      })
+    }
+    for (const o of (orders.data ?? []) as Row[]) {
+      const s = byId.get(o.customer_id as string)
+      if (!s) continue
+      if (o.status === 'open') { s.hasOpenNote = true; continue }
+      s.visits += 1
+      s.totalSpent += Number((o.sale as Row | null)?.total_amount ?? 0)
+      const closed = o.closed_at as string | null
+      if (closed && (!s.lastVisitAt || closed > s.lastVisitAt)) s.lastVisitAt = closed
+    }
+    for (const l of (stamps.data ?? []) as Row[]) {
+      const s = byId.get(l.customer_id as string)
+      if (s && s.stampBalance !== null) s.stampBalance += Number(l.delta)
+    }
+    const now = Date.now()
+    for (const v of (vouchers.data ?? []) as Row[]) {
+      const expires = v.expires_at as string | null
+      if (!expires || new Date(expires).getTime() > now) {
+        const s = byId.get(v.customer_id as string)
+        if (s) s.activeVouchers += 1
+      }
+    }
+    return [...byId.values()].map((s) => ({ ...s, stampBalance: s.stampBalance === null ? null : Math.max(0, s.stampBalance) }))
   }
 
   async getCustomer(tenantId: string, id: string): Promise<Customer | null> {

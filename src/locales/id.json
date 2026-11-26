@@ -601,7 +601,7 @@
   "workshop.newNote.newVehicle": "Motor baru, belum pernah servis di sini.",
   "workshop.newNote.noVehicleDetail": "Merek/tipe belum diisi",
   "workshop.newNote.recent": "Servis terakhir",
-  "workshop.newNote.searchCustomer": "Cari nama, no. HP, atau kode member",
+  "workshop.newNote.searchCustomer": "Cari nama, no. HP, plat nomor, atau kode member",
   "workshop.newNote.newCustomer": "+ Pelanggan baru",
   "workshop.newNote.orWalkIn": "atau lanjut sebagai pelanggan umum",
   "workshop.newNote.makeMember": "Daftarkan sebagai member (kartu servis)",
@@ -888,5 +888,19 @@
   "errors.invalidInput": "Ada isian yang kosong atau tidak sesuai. Periksa lagi lalu simpan ulang.",
   "errors.notFound": "Data tidak ditemukan, mungkin sudah dihapus. Muat ulang halaman lalu coba lagi.",
   "errors.generic": "Terjadi kendala. Coba lagi sebentar. Kalau masih gagal, hubungi admin.",
-  "products.readOnly": "Anda hanya bisa melihat daftar produk dan mencetak label. Untuk menambah, mengubah, atau menghapus produk, minta pemilik atau admin toko."
+  "products.readOnly": "Anda hanya bisa melihat daftar produk dan mencetak label. Untuk menambah, mengubah, atau menghapus produk, minta pemilik atau admin toko.",
+
+  "workshop.members.col.customer": "Pelanggan",
+  "workshop.members.col.vehicles": "Motor",
+  "workshop.members.col.visits": "Servis",
+  "workshop.members.col.loyalty": "Kartu & voucher",
+  "workshop.members.col.spent": "Total belanja",
+  "workshop.members.visitCount": "{n}x servis",
+  "workshop.members.lastVisit": "terakhir {date}",
+  "workshop.members.noVisit": "Belum pernah servis",
+  "workshop.members.inService": "Sedang servis",
+  "workshop.members.stamps": "{n}/{total} stempel",
+  "workshop.members.activeVouchers": "{n} voucher aktif",
+  "workshop.members.whatsapp": "Chat WhatsApp",
+  "workshop.members.count": "{n} pelanggan"
 }

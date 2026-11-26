@@ -601,7 +601,7 @@
   "workshop.newNote.newVehicle": "New motor, not serviced here before.",
   "workshop.newNote.noVehicleDetail": "Make/model not recorded",
   "workshop.newNote.recent": "Recent services",
-  "workshop.newNote.searchCustomer": "Search name, phone, or member code",
+  "workshop.newNote.searchCustomer": "Search name, phone, plate, or member code",
   "workshop.newNote.newCustomer": "+ New customer",
   "workshop.newNote.orWalkIn": "or continue as walk-in",
   "workshop.newNote.makeMember": "Enrol as member (stamp card)",
@@ -888,5 +888,19 @@
   "errors.invalidInput": "Some fields are empty or invalid. Check them and save again.",
   "errors.notFound": "Not found; it may have been deleted. Reload the page and try again.",
   "errors.generic": "Something went wrong. Try again in a moment. If it keeps failing, contact the admin.",
-  "products.readOnly": "You can view products and print labels. To add, change or delete products, ask the owner or a store admin."
+  "products.readOnly": "You can view products and print labels. To add, change or delete products, ask the owner or a store admin.",
+
+  "workshop.members.col.customer": "Customer",
+  "workshop.members.col.vehicles": "Motorbikes",
+  "workshop.members.col.visits": "Services",
+  "workshop.members.col.loyalty": "Card & vouchers",
+  "workshop.members.col.spent": "Total spent",
+  "workshop.members.visitCount": "{n} services",
+  "workshop.members.lastVisit": "last {date}",
+  "workshop.members.noVisit": "No service yet",
+  "workshop.members.inService": "In service now",
+  "workshop.members.stamps": "{n}/{total} stamps",
+  "workshop.members.activeVouchers": "{n} active vouchers",
+  "workshop.members.whatsapp": "WhatsApp chat",
+  "workshop.members.count": "{n} customers"
 }

@@ -41,6 +41,10 @@ const customersRouter = router({
     .input(z.object({ query: z.string().max(100).default('') }))
     .query(({ input, ctx }) => run(() => uc().searchCustomers(ctx.session.tenantId!, input.query))),
 
+  list: protectedProcedure
+    .input(z.object({ query: z.string().max(100).default('') }))
+    .query(({ input, ctx }) => run(() => uc().listCustomers(ctx.session.tenantId!, input.query))),
+
   detail: protectedProcedure
     .input(z.object({ id }))
     .query(({ input, ctx }) => run(() => uc().getCustomerDetail(ctx.session.tenantId!, input.id))),

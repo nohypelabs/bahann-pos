@@ -1,4 +1,5 @@
 import type {
+  CustomerSummary,
   Customer,
   LoyaltyProgram,
   LoyaltyProgramType,
@@ -55,7 +56,10 @@ export interface ServiceOrderInput {
  */
 export interface WorkshopRepository {
   // Customers and members
+  /** By name, member code, phone, or a plate of one of their motors. */
   searchCustomers(tenantId: string, query: string, limit: number): Promise<Customer[]>
+  /** Motors, visits, spending, stamps and vouchers per customer, in a few queries for the whole list. */
+  summarizeCustomers(tenantId: string, customerIds: string[], stampProgramId: string | null): Promise<CustomerSummary[]>
   getCustomer(tenantId: string, id: string): Promise<Customer | null>
   createCustomer(tenantId: string, input: CustomerInput, createdBy: string): Promise<Customer>
   updateCustomer(tenantId: string, id: string, input: CustomerInput): Promise<Customer>
