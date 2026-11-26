@@ -20,6 +20,39 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-26 · Try-out tenant for Mr Bengkel (production)
+
+For the client's progress report: a separate tenant the client can log in to before go-live, so their tries do not
+touch the test tenant above. Created with `scripts/client-demo-tenant.mjs create` (tRPC calls the UI makes, SQL
+only to verify the email, set the plan and set passwords). Passwords and the owner's PIN were generated, written
+to a mode-600 file outside the repo and into the report PDF; they are not in the repo or this log.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 13.1 | Register `pemilik@mrbengkel.test`, store "Mr Bengkel (Uji Coba)", HYBRID; verify email; plan `custom`; workshop module on | Owner can log in, plan custom | ✅ |
+| 13.2 | Set the owner's approval PIN (`users.setPin`) | Accepted | ✅ |
+| 13.3 | `products.importCatalog`: 5 labour items, 10 parts with opening stock, no SKUs given | 15 created, SKUs generated, stock for 10 | ✅ 15 created, stocked 10 |
+| 13.4 | Rerun the script | Nothing duplicated | ✅ 0 created, 15 skipped; mechanics, members and notes reused |
+| 13.5 | `products.assignMissingBarcodes`; label page with 2 parts | EAN-13 barcodes, A4 preview | ✅ (screenshot in the report) |
+| 13.6 | 2 mechanics, stamp card 10 → 1 free service, members M0001/M0002 with motors | Saved | ✅ |
+| 13.7 | Open notes B1234ABC (member, 3 items, Rp150.000) and B9012DEF (walk-in, 2 items) | Both in the queue | ✅ |
+| 13.8 | Create `kasir@mrbengkel.test` (CASHIER, outlet scope) and log in | Login works | ✅ |
+| 13.9 | `transactions.myActions` as cashier and owner | Cashier: request void/refund only. Owner: request and approve | ✅ |
+| 13.10 | Cashier `workshop.notes.listOpen` | Sees both notes | ✅ 2 |
+
+Bugs found:
+- The first run failed to log in after setting the password: the bcrypt hash (`$2b$08$…`) went through a shell
+  argument and `$…` was expanded. Fixed in the script before commit: queries go through a file (`-f`).
+- The default page header still said "Bahann POS" (products, labels, settings, approvals…). Fixed in 64cc2e8.
+- Not fixed, noted: `users.is_suspended` is not checked at login or in the tRPC context, so a tenant suspended by
+  the superadmin can still log in. `revoke` therefore also replaces the password hash and revokes refresh tokens.
+
+Evidence: tenant "Mr Bengkel (Uji Coba)", notes B1234ABC and B9012DEF, deploy 64cc2e8 (Vercel success).
+To take access away: `SUPABASE_PROJECT_REF=… node scripts/client-demo-tenant.mjs revoke` (open sessions end
+within 15 minutes, when their access token expires; the data stays).
+
+---
+
 ## 2026-11-25 · Tenant isolation audit and fixes (production DB, then production)
 
 Asked by the user before onboarding more clients: can one tenant see or change another's data? Three read-only
