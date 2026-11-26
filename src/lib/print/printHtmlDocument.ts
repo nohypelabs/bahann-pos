@@ -1,12 +1,15 @@
 interface PrintHtmlDocumentOptions {
   title: string
   bodyHtml: string
-  /** Page CSS; defaults to an 80 mm receipt roll. Label sheets pass an A4 @page. */
+  /** Page CSS; defaults to a receipt on the printer's own paper. Label sheets pass an A4 @page. */
   pageStyle?: string
 }
 
+// No page size for receipts: the roll printer's paper (80 mm x 3276 mm, blank tail not fed)
+// decides it. A CSS size that differs from the paper makes Chrome centre the page on the roll,
+// metres down in kiosk printing. Zero margins also leave no room for Chrome's header and footer.
 const PRINT_PAGE_STYLE = `
-  @page { size: 80mm auto; margin: 0; }
+  @page { margin: 0; }
   body { margin: 0; padding: 0; background: white; }
 `
 

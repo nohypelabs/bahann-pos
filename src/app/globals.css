@@ -349,60 +349,11 @@ button:not(:disabled) { cursor: pointer; }
   }
 }
 
-/* Print Styles */
+/* Print Styles. Receipts and labels print from an iframe (src/lib/print/printHtmlDocument.ts)
+   that copies this stylesheet, so nothing here may hide the iframe's body content. The page
+   size comes from that helper. */
 @media print {
-  @page {
-    size: 80mm auto;
-    margin: 0;
-  }
-
-  body {
-    margin: 0;
-    padding: 0;
-    background: white;
-    color: black;
-  }
-
-  /* Hide everything except receipt when printing */
-  body > *:not(.modal-overlay) {
-    display: none !important;
-  }
-
-  /* Show only receipt content */
-  .modal-overlay {
-    display: block !important;
-    position: static !important;
-    background: white !important;
-    backdrop-filter: none !important;
-  }
-
-  /* Hide modal UI elements */
-  .modal-header,
-  .modal-footer,
-  .modal-close {
-    display: none !important;
-  }
-
-  .modal-container {
-    box-shadow: none !important;
-    border: none !important;
-    max-width: 80mm !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  .modal-body {
-    padding: 0 !important;
-  }
-
-  .receipt-preview-wrapper {
-    background: white !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-  }
-
-  /* Receipt specific */
+  /* Receipt specific (the roll width and side margins are in receipt.css) */
   .receipt-container {
     max-width: 80mm;
     margin: 0;

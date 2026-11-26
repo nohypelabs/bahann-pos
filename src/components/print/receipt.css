@@ -194,8 +194,10 @@
 /* The page size (80 mm roll) comes from printHtmlDocument; no @page or body rules
    here, since this sheet is global and would change every printed page. */
 @media print {
+  /* 70 mm of content centred on the 80 mm roll: 80 mm printers only print the middle ~70-72 mm. */
   .receipt-container {
-    padding: 0 !important;
+    box-sizing: border-box;
+    padding: 0 5mm !important;
     max-width: 80mm !important;
     width: 80mm !important;
     margin: 0 !important;
@@ -208,6 +210,12 @@
   .receipt {
     font-size: 11px;
     background: white !important;
+  }
+
+  /* The printer already leaves ~13 mm above the first line (cutter to print head), so the
+     store name starts right at the top of the page. */
+  .receipt-logo h1 {
+    line-height: 1;
   }
 
   .receipt-divider,
