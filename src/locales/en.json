@@ -983,5 +983,11 @@
   "login.hero.f3Body": "See profit, busy hours and best sellers.",
   "login.hero.revenueToday": "Revenue today",
   "login.hero.vsYesterday": "vs yesterday",
-  "login.hero.sample": "Example"
+  "login.hero.sample": "Example",
+
+  "auth.footer.tagline": "Cashier & stock for workshops and shops",
+  "auth.footer.features": "Features",
+  "auth.footer.pricing": "Pricing",
+  "auth.footer.faq": "FAQ",
+  "auth.footer.contact": "Contact us"
 }

@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { MotionConfig, motion } from 'framer-motion'
-import { BarChart3, ScanBarcode, Wrench } from 'lucide-react'
+import { BarChart3, MessageCircle, ScanBarcode, Wrench } from 'lucide-react'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 
 // The login and sign-up pages share this frame. Phones get a plain white page (lg:hidden parts);
@@ -114,10 +114,37 @@ function ProductPanel() {
   )
 }
 
-export function AuthShell({ children }: { children: ReactNode }) {
+const SUPPORT_WHATSAPP = 'https://wa.me/6287874415491?text=' + encodeURIComponent('Halo, saya butuh bantuan dengan Laku POS.')
+
+function AuthFooter() {
+  const { t } = useLanguage()
+  const links = [
+    { href: '/#fitur', label: t('auth.footer.features') },
+    { href: '/#harga', label: t('auth.footer.pricing') },
+    { href: '/#faq', label: t('auth.footer.faq') },
+  ]
+  return (
+    <footer className="relative mx-auto mt-10 flex w-full max-w-6xl flex-col items-center gap-3 text-xs text-[#8A9188] sm:flex-row sm:justify-between lg:mt-6 lg:text-white/50">
+      <p className="text-center sm:text-left">
+        &copy; {new Date().getFullYear()} Laku POS · {t('auth.footer.tagline')}
+      </p>
+      <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+        {links.map((l) => (
+          <Link key={l.href} href={l.href} className="hover:text-[#17201D] lg:hover:text-white">{l.label}</Link>
+        ))}
+        <a href={SUPPORT_WHATSAPP} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-[#0F5F56] hover:underline lg:text-[#F6C979]">
+          <MessageCircle className="h-3.5 w-3.5" /> {t('auth.footer.contact')}
+        </a>
+      </nav>
+    </footer>
+  )
+}
+
+/** `footer` adds copyright, product links and a WhatsApp contact under the card (login only; sign-up is too tall). */
+export function AuthShell({ children, footer = false }: { children: ReactNode; footer?: boolean }) {
   return (
     <MotionConfig reducedMotion="user">
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-white px-5 py-10 lg:bg-[#062925] lg:p-8">
+      <div className="relative flex min-h-screen flex-col overflow-hidden bg-white px-5 py-10 lg:bg-[#062925] lg:p-8">
         {/* Phone: a faint grid behind the heading */}
         <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[linear-gradient(#EEF0F0_1px,transparent_1px),linear-gradient(90deg,#EEF0F0_1px,transparent_1px)] bg-[size:36px_36px] [mask-image:linear-gradient(to_bottom,black,transparent)] lg:hidden" />
 
@@ -129,6 +156,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:48px_48px]" />
         </div>
 
+        <div className="relative flex flex-1 items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -138,10 +166,9 @@ export function AuthShell({ children }: { children: ReactNode }) {
           <div className="flex flex-col justify-center lg:px-8 lg:py-6">{children}</div>
           <ProductPanel />
         </motion.div>
+        </div>
 
-        <p className="absolute bottom-4 left-0 right-0 text-center text-xs text-[#9AA19B] lg:text-white/40">
-          &copy; {new Date().getFullYear()} Laku POS
-        </p>
+        {footer && <AuthFooter />}
       </div>
     </MotionConfig>
   )

@@ -983,5 +983,11 @@
   "login.hero.f3Body": "Lihat laba, jam ramai, dan barang paling laku.",
   "login.hero.revenueToday": "Omzet hari ini",
   "login.hero.vsYesterday": "dari kemarin",
-  "login.hero.sample": "Contoh"
+  "login.hero.sample": "Contoh",
+
+  "auth.footer.tagline": "Kasir & stok untuk bengkel dan toko",
+  "auth.footer.features": "Fitur",
+  "auth.footer.pricing": "Harga",
+  "auth.footer.faq": "FAQ",
+  "auth.footer.contact": "Hubungi kami"
 }

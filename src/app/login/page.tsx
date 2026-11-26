@@ -74,7 +74,7 @@ function LoginContent() {
   }
 
   return (
-    <AuthShell>
+    <AuthShell footer>
       <AuthHeading title={t('login.welcome')} subtitle={t('login.subtitle')} />
       <AuthTabs active="login" />
 
