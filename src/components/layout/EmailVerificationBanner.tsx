@@ -4,6 +4,7 @@ import { trpc } from '@/lib/trpc/client'
 import { useToast } from '@/components/ui/Toast'
 import { Mail, Send, CheckCircle, X } from 'lucide-react'
 import { useState } from 'react'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 export function EmailVerificationBanner() {
   const { showToast } = useToast()
@@ -17,7 +18,7 @@ export function EmailVerificationBanner() {
     onSuccess: () => showToast('Email verifikasi terkirim! Cek inbox kamu.', 'success'),
     // Show the server's reason; a fixed message hid that the real failure was an
     // expired session, not email delivery.
-    onError: (err) => showToast(err.message || 'Gagal mengirim email. Coba lagi beberapa saat.', 'error'),
+    onError: (err) => showToast(friendlyError(err, 'Gagal mengirim email. Coba lagi beberapa saat.'), 'error'),
   })
 
   if (isLoading || dismissed || data?.verified) return null

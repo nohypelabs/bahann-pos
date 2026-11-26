@@ -13,6 +13,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { getLimits } from '@/lib/plans'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import type { TransactionStatus } from '@/types'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 // Upper bound for one export request; larger ranges should be narrowed by date.
 const EXPORT_LIMIT = 5000
@@ -92,7 +93,7 @@ export default function TransactionsPage() {
     try {
       await voidMutation.mutateAsync({ transactionId: selectedTx, reason: voidReason })
       showToast(t('transactions.voidRequested'), 'success')
-    } catch (err) { showToast(err instanceof Error ? err.message : 'Gagal void transaksi. Periksa koneksi dan coba lagi.', 'error') }
+    } catch (err) { showToast(friendlyError(err, 'Gagal void transaksi. Periksa koneksi dan coba lagi.'), 'error') }
   }
 
   const handleRefund = async () => {
@@ -100,7 +101,7 @@ export default function TransactionsPage() {
     try {
       await refundMutation.mutateAsync({ transactionId: selectedTx, reason: refundReason })
       showToast('Transaksi berhasil direfund', 'success')
-    } catch (err) { showToast(err instanceof Error ? err.message : 'Gagal refund transaksi. Periksa koneksi dan coba lagi.', 'error') }
+    } catch (err) { showToast(friendlyError(err, 'Gagal refund transaksi. Periksa koneksi dan coba lagi.'), 'error') }
   }
 
   const canVoid = (tx: { status: string; createdAt: string | Date }): boolean =>

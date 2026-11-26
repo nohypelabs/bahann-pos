@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { trpc } from '@/lib/trpc/client'
 import { Package, Store, ShoppingCart, AlertTriangle, CheckCircle2, XCircle, CalendarClock } from 'lucide-react'
 import { businessDate } from '@/lib/business/timezone'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 // ─── Stepper ────────────────────────────────────────────────────────────────
 function Stepper({
@@ -155,7 +156,7 @@ export default function StockManagementPage() {
       setFormData(prev => ({ ...prev, stockIn: 0, stockAkhir: prev.stockAwal }))
       setTimeout(() => setShowSuccess(false), 3000)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Gagal menyimpan stok')
+      setError(friendlyError(err, 'Gagal menyimpan stok'))
     }
   }
 
@@ -571,7 +572,7 @@ export default function StockManagementPage() {
                 refetchLatest()
                 setTimeout(() => setAdjSuccess(false), 3000)
               } catch (err) {
-                setAdjError(err instanceof Error ? err.message : 'Gagal menyimpan penyesuaian')
+                setAdjError(friendlyError(err, 'Gagal menyimpan penyesuaian'))
               }
             }}
             className="!rounded-2xl !border-orange-300 !bg-orange-500 !text-white hover:!bg-orange-600"

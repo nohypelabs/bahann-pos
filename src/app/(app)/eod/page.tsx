@@ -12,6 +12,7 @@ import { offlineDb } from '@/lib/offline/database'
 import { unsentOfflineWork } from '@/lib/offline/unsent'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { Clock, Banknote, User, CheckCircle, Sunrise, Moon, CheckCircle2, XCircle, Info, Hourglass } from 'lucide-react'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 type AlertState = { type: 'success' | 'error' | 'info'; msg: string } | null
 
@@ -49,7 +50,7 @@ export default function EODPage() {
     try {
       await openMutation.mutateAsync({ outletId: selectedOutlet, openingCash })
     } catch (err) {
-      flash('error', err instanceof Error ? err.message : 'Gagal membuka shift. Periksa koneksi dan coba lagi.')
+      flash('error', friendlyError(err, 'Gagal membuka shift. Periksa koneksi dan coba lagi.'))
     }
   }
 
@@ -66,7 +67,7 @@ export default function EODPage() {
       await offlineDb.wsShifts.delete(activeShift.id).catch(() => undefined)
       flash('success', 'Penutupan shift diajukan')
     } catch (err) {
-      flash('error', err instanceof Error ? err.message : 'Gagal menutup shift. Periksa koneksi dan coba lagi.')
+      flash('error', friendlyError(err, 'Gagal menutup shift. Periksa koneksi dan coba lagi.'))
     }
   }
 

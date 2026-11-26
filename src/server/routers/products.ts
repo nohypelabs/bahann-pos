@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { TRPCError } from '@trpc/server'
-import { router, protectedProcedure, adminProcedure } from '../trpc'
+import { router, protectedProcedure, adminProcedure, isTenantAdmin } from '../trpc'
 import { container } from '@/infra/container'
 import { createAuditLog } from '@/lib/audit'
 import { assertProductBelongsToTenant } from '@/server/lib/tenant'
@@ -52,6 +52,11 @@ export const productsRouter = router({
       if (!data) throw new TRPCError({ code: 'NOT_FOUND', message: 'Produk tidak ditemukan' })
       return data
     }),
+
+  /** Whether the user may change the catalogue (the adminProcedure check), so the UI hides what it would refuse. */
+  myActions: protectedProcedure.query(async ({ ctx }) => ({
+    canManage: await isTenantAdmin(ctx.userId, ctx.session),
+  })),
 
   create: adminProcedure
     .input(

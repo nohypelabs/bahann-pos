@@ -879,5 +879,14 @@
   "shift.open.submit": "Buka Shift",
   "shift.open.failed": "Gagal membuka shift. Periksa koneksi dan coba lagi.",
   "shift.open.button": "Buka Shift",
-  "shift.banner": "Shift kasir belum dibuka. Buka shift dulu agar bisa menerima pembayaran."
+  "shift.banner": "Shift kasir belum dibuka. Buka shift dulu agar bisa menerima pembayaran.",
+
+  "errors.noPermission": "Akun Anda tidak punya izin untuk melakukan ini. Minta pemilik atau admin toko untuk melakukannya.",
+  "errors.sessionExpired": "Sesi login Anda sudah berakhir. Silakan login lagi.",
+  "errors.offline": "Tidak ada koneksi internet. Periksa jaringan lalu coba lagi.",
+  "errors.tooManyRequests": "Terlalu banyak percobaan. Tunggu beberapa menit lalu coba lagi.",
+  "errors.invalidInput": "Ada isian yang kosong atau tidak sesuai. Periksa lagi lalu simpan ulang.",
+  "errors.notFound": "Data tidak ditemukan, mungkin sudah dihapus. Muat ulang halaman lalu coba lagi.",
+  "errors.generic": "Terjadi kendala. Coba lagi sebentar. Kalau masih gagal, hubungi admin.",
+  "products.readOnly": "Anda hanya bisa melihat daftar produk dan mencetak label. Untuk menambah, mengubah, atau menghapus produk, minta pemilik atau admin toko."
 }

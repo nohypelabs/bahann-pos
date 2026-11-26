@@ -20,6 +20,27 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-27 · Friendly error messages, product actions for cashiers (local app → production DB)
+
+Found by the user: as the try-out cashier on `/products`, a click on an admin-only action showed the raw server text
+"You do not have permission to access this resource. Admin role required." The page showed Tambah, Edit, Hapus,
+Import Excel and the barcode buttons to everyone, while the server only lets OWNER and ADMIN_TENANT change products.
+
+Fix: `src/lib/errors/friendlyError.ts` turns errors into plain Indonesian (no permission, session ended, no internet,
+too many attempts, invalid input, not found, a list of specific server messages, otherwise the screen's own
+"Gagal …" text); 46 places that showed `err.message` now use it, and error toasts pass through it as a safety net.
+`products.myActions` reports the same check as `adminProcedure`, and the products page hides what the user may not do.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 17.1 | `products.myActions` as `kasir@mrbengkel.test` | `canManage: false` | ✅ |
+| 17.2 | Same as `pemilik@mrbengkel.test` | `canManage: true` | ✅ |
+| 17.3 | Unit tests for `friendlyError` (permission, Indonesian server text kept, session, offline, specific message, Zod, fallback, English users) | Pass | ✅ 9/9; all unit tests 198 passed |
+
+Not yet checked in the browser: the cashier's read-only products page and a real error toast.
+
+---
+
 ## 2026-11-27 · Receipt printer Iware XS80 and scanner on Linux (local app → production DB)
 
 Hardware bought for Mr Bengkel, tested on the laptop (CachyOS) before it goes to the workshop. Tenant: the client

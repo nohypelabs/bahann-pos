@@ -5,6 +5,7 @@ import { Crown, ShieldAlert, X } from 'lucide-react'
 import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { enterImpersonationDisplay } from '@/lib/impersonation/client'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 const REASON_PRESETS = [
   'impersonation.start.reason.ticket',
@@ -46,7 +47,7 @@ export function ImpersonationStartModal({ tenantId, tenantName, onClose }: Imper
       // Full reload so every cached query from the platform view is discarded.
       window.location.href = '/dashboard'
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('common.error'))
+      setError(friendlyError(err, t('common.error')))
     }
   }
 

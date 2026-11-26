@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input'
 import { trpc } from '@/lib/trpc/client'
 import { BUSINESS_TYPE_OPTIONS } from '@/lib/business/business-type-options'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -95,7 +96,7 @@ export default function RegisterPage() {
       setSuccess(true)
       setTimeout(() => router.push('/login?registered=true'), 2000)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : (isId ? 'Pendaftaran gagal. Coba lagi.' : 'Registration failed. Please try again.'))
+      setError(friendlyError(err, (isId ? 'Pendaftaran gagal. Coba lagi.' : 'Registration failed. Please try again.')))
     } finally {
       setIsLoading(false)
     }

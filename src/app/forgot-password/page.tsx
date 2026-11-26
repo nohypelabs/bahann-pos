@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { trpc } from '@/lib/trpc/client'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -23,7 +24,7 @@ export default function ForgotPasswordPage() {
       await requestResetMutation.mutateAsync({ email })
       setSuccess(true)
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Gagal mengirim email reset. Silakan coba lagi.'
+      const errorMessage = friendlyError(err, 'Gagal mengirim email reset. Silakan coba lagi.')
       setError(errorMessage)
     } finally {
       setIsLoading(false)

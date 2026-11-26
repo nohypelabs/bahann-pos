@@ -9,6 +9,7 @@ import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { BUSINESS_TYPE_OPTIONS } from '@/lib/business/business-type-options'
 import type { BusinessType } from '@/domain/catalog/value-objects/business-type'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 /**
  * Business type is what decides the enabled modules and the defaults for new
@@ -30,7 +31,7 @@ export default function BusinessSettingsPage() {
       showToast(t('settings.business.updated'), 'success')
       setSelected(null)
     },
-    onError: (err) => showToast(err.message, 'error'),
+    onError: (err) => showToast(friendlyError(err), 'error'),
   })
 
   const moduleMutation = trpc.businessProfile.setOptionalModule.useMutation({
@@ -38,7 +39,7 @@ export default function BusinessSettingsPage() {
       await utils.businessProfile.getMyProfile.invalidate()
       showToast(t(vars.enabled ? 'settings.business.workshopOn' : 'settings.business.workshopOff'), 'success')
     },
-    onError: (err) => showToast(err.message, 'error'),
+    onError: (err) => showToast(friendlyError(err), 'error'),
   })
   const workshopOn = profile?.enabledModules.includes('workshop') ?? false
 

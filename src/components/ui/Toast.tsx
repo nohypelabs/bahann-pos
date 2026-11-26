@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { friendlyMessage } from '@/lib/errors/friendlyError'
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning'
 
@@ -33,7 +34,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const showToast = useCallback(
     (message: string, type: ToastType = 'info', duration: number = 3000) => {
       const id = `toast-${Date.now()}-${Math.random()}`
-      const newToast: Toast = { id, message, type, duration }
+      // Safety net for screens that still pass a raw server message: no English developer text in toasts.
+      const text = type === 'error' || type === 'warning' ? friendlyMessage(message) : message
+      const newToast: Toast = { id, message: text, type, duration }
 
       setToasts((prev) => [...prev, newToast])
 

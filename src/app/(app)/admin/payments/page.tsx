@@ -7,6 +7,7 @@ import {
   CheckCircle, XCircle, Clock, Image, Eye, ChevronLeft, ChevronRight,
   CreditCard, Search, Filter, ExternalLink, Wallet,
 } from 'lucide-react'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 const PLAN_COLORS: Record<string, string> = {
   free: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400',
@@ -359,7 +360,7 @@ function PaymentsContent() {
 
             {(approveMutation.error || rejectMutation.error) && (
               <p className="text-xs text-red-500 mb-3">
-                {approveMutation.error?.message || rejectMutation.error?.message}
+                {friendlyError(approveMutation.error ?? rejectMutation.error)}
               </p>
             )}
 

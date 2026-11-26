@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { trpc } from '@/lib/trpc/client'
 import { formatCurrency } from '@/lib/utils'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 const EMPTY_FORM = {
   code: '', name: '', type: 'percentage' as 'fixed' | 'percentage',
@@ -35,7 +36,7 @@ export default function PromotionsPage() {
     try {
       await createMutation.mutateAsync(formData)
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Gagal membuat promosi', 'error')
+      showToast(friendlyError(err, 'Gagal membuat promosi'), 'error')
     }
   }
 

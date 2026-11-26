@@ -9,6 +9,7 @@ import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { formatCurrency } from '@/lib/utils'
 import { parseCatalog, type CatalogRow, type ParsedCatalog } from '@/lib/products/catalogImport'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 interface BulkImportModalProps {
   onClose: () => void
@@ -139,7 +140,7 @@ export function BulkImportModal({ onClose, onSuccess }: BulkImportModalProps) {
         setProgress(Math.min(valid.length, i + batch.length))
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : t('products.import.failed'), 'error')
+      showToast(friendlyError(err, t('products.import.failed')), 'error')
     }
     setOutcomes(results.sort((a, b) => a.row - b.row))
     setStocked(stockCount)

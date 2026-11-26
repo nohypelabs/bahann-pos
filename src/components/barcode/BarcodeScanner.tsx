@@ -5,6 +5,7 @@ import { Html5Qrcode } from 'html5-qrcode'
 import { Button } from '@/components/ui/Button'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { X, Camera, RefreshCw } from 'lucide-react'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 interface BarcodeScannerProps {
   onScan: (barcode: string) => void
@@ -49,7 +50,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
       } else if (err.name === 'NotReadableError') {
         setError(t('scanner.cameraInUse'))
       } else {
-        setError(`${t('scanner.cameraError')}: ${err.message || 'Unknown error'}`)
+        setError(`${t('scanner.cameraError')}: ${friendlyError(err, 'Unknown error')}`)
       }
     }
   }

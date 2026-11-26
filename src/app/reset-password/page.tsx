@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 function ResetPasswordContent() {
   const router = useRouter()
@@ -74,7 +75,7 @@ function ResetPasswordContent() {
         router.push('/login')
       }, 3000)
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Gagal reset password'
+      const errorMessage = friendlyError(err, 'Gagal reset password')
       setError(errorMessage)
     } finally {
       setIsLoading(false)

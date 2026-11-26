@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/Toast'
 import {
   User, KeyRound, Shield, CheckCircle, Loader2, Lock,
 } from 'lucide-react'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 export default function ProfilePage() {
   const { showToast } = useToast()
@@ -36,7 +37,7 @@ export default function ProfilePage() {
       utils.users.hasPin.invalidate()
     },
     onError: (err) => {
-      setPinFormError(err.message || 'Gagal mengatur PIN')
+      setPinFormError(friendlyError(err, 'Gagal mengatur PIN'))
     },
   })
 

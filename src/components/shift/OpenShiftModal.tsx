@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 interface Props {
   outletId: string
@@ -31,7 +32,7 @@ export function OpenShiftModal({ outletId, outletName, onClose, onOpened }: Prop
       onOpened?.()
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('shift.open.failed'))
+      setError(friendlyError(err, t('shift.open.failed')))
     }
   }
 

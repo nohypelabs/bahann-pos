@@ -15,6 +15,7 @@ import {
   ShieldAlert, RotateCcw, Percent, Loader2,
   KeyRound,
 } from 'lucide-react'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 type ApprovalStatus = 'pending' | 'approved' | 'rejected'
 type FilterTab = 'all' | ApprovalStatus
@@ -80,7 +81,7 @@ export default function ApprovalsPage() {
       showToast('Permintaan disetujui', 'success')
       utils.transactionApprovals.list.invalidate()
     },
-    onError: (err) => showToast(err.message || 'Gagal menyetujui permintaan. Periksa koneksi lalu coba lagi.', 'error'),
+    onError: (err) => showToast(friendlyError(err, 'Gagal menyetujui permintaan. Periksa koneksi lalu coba lagi.'), 'error'),
   })
 
   const rejectMutation = trpc.transactionApprovals.reject.useMutation({
@@ -90,7 +91,7 @@ export default function ApprovalsPage() {
       setRejectionReason('')
       utils.transactionApprovals.list.invalidate()
     },
-    onError: (err) => showToast(err.message || 'Gagal menolak permintaan. Periksa koneksi lalu coba lagi.', 'error'),
+    onError: (err) => showToast(friendlyError(err, 'Gagal menolak permintaan. Periksa koneksi lalu coba lagi.'), 'error'),
   })
 
   // Filter approvals by tab
@@ -124,7 +125,7 @@ export default function ApprovalsPage() {
       })
       setPinModal({ open: false, approvalId: null })
     } catch (err: any) {
-      setPinError(err.message || 'PIN salah')
+      setPinError(friendlyError(err, 'PIN salah'))
       throw err
     }
   }

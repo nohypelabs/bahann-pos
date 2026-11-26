@@ -229,6 +229,16 @@ export const protectedProcedure = publicProcedure.use(({ ctx, next }) => {
 })
 
 /**
+ * Whether the user passes adminProcedure: the legacy admin role, or the RBAC
+ * permission settings.manage (OWNER, ADMIN_TENANT). Also used to tell the UI which
+ * admin-only actions to show.
+ */
+export async function isTenantAdmin(userId: string, session: { role?: string; tenantId?: string | null }): Promise<boolean> {
+  if (session.role === 'admin' || session.role === 'super_admin') return true
+  return session.tenantId ? userHasPermission(userId, session.tenantId, 'settings.manage') : false
+}
+
+/**
  * Admin procedure - requires authentication AND admin-level role
  * Checks via RBAC: OWNER or ADMIN_TENANT role
  */
@@ -240,17 +250,7 @@ export const adminProcedure = publicProcedure.use(async ({ ctx, next }) => {
     })
   }
 
-  // Legacy role check for backward compatibility
-  const legacyAdmin = ctx.session.role === 'admin' || ctx.session.role === 'super_admin'
-
-  // RBAC check: user has tenant-level access
-  const tenantId = ctx.session.tenantId
-  let rbacAdmin = false
-  if (tenantId) {
-    rbacAdmin = await userHasPermission(ctx.userId, tenantId, 'settings.manage')
-  }
-
-  if (!legacyAdmin && !rbacAdmin) {
+  if (!(await isTenantAdmin(ctx.userId, ctx.session))) {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'You do not have permission to access this resource. Admin role required.',

@@ -7,6 +7,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import {
   Save, Wallet, Building2, MessageCircle, QrCode, CheckCircle, Loader2, Upload,
 } from 'lucide-react'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 function SettingField({ label, value, onChange, placeholder, type = 'text', hint }: {
   label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; hint?: string
@@ -250,7 +251,7 @@ export default function AdminSettingsPage() {
         </button>
 
         {updateMutation.error && (
-          <p className="text-xs text-red-500">{updateMutation.error.message}</p>
+          <p className="text-xs text-red-500">{friendlyError(updateMutation.error)}</p>
         )}
       </div>
     </div>

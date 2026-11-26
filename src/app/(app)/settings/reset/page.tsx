@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { trpc } from '@/lib/trpc/client'
 import { useToast } from '@/components/ui/Toast'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 type Step = 1 | 2 | 3 | 'done'
 
@@ -51,7 +52,7 @@ export default function ResetDataPage() {
       setResult(res.counts)
       setStep('done')
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Reset gagal', 'error')
+      showToast(friendlyError(err, 'Reset gagal'), 'error')
     }
   }
 

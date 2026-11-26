@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { BUSINESS_TYPE_OPTIONS } from '@/lib/business/business-type-options'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 
 export default function SetupPage() {
@@ -37,7 +38,7 @@ export default function SetupPage() {
       await utils.businessProfile.getMyProfile.refetch()
       router.replace('/dashboard')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : t('setup.failed'))
+      setError(friendlyError(err, t('setup.failed')))
     }
   }
 

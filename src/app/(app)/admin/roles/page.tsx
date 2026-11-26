@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { trpc } from '@/lib/trpc/client'
 import { Search, Crown, Users, Shield, ChevronDown, CheckCircle2, XCircle, Info } from 'lucide-react'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 type AlertState = { type: 'success' | 'error' | 'info'; msg: string } | null
 type UserRole = 'admin' | 'super_admin' | 'user' | 'manager' | 'owner'
@@ -61,7 +62,7 @@ export default function AdminRolesPage() {
       setChangingUserId(null)
       utils.superAdmin.listAllUsers.invalidate()
     },
-    onError: (err) => flash('error', err.message || 'Gagal update role'),
+    onError: (err) => flash('error', friendlyError(err, 'Gagal update role')),
   })
 
   const handleRoleChange = (userId: string, newRole: UserRole) => {

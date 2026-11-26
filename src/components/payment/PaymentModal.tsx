@@ -18,6 +18,7 @@ import { CashPaymentDisplay } from './CashPaymentDisplay'
 import { EWalletDisplay } from './EWalletDisplay'
 import { trpc } from '@/lib/trpc/client'
 import type { DiscountReason, ManualDiscount } from '@/domain/sales/manualDiscount'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 type CheckoutItem = {
   productId: string
@@ -87,7 +88,7 @@ interface PaymentModalProps {
 type PaymentStep = 'method' | 'processing' | 'cash' | 'qris' | 'bank_transfer' | 'ewallet' | 'completed'
 
 function getErrorMessage(error: unknown, fallback: string) {
-  return error instanceof Error ? error.message : fallback
+  return friendlyError(error, fallback)
 }
 
 export function PaymentModal({

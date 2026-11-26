@@ -13,6 +13,7 @@ import { trpc } from '@/lib/trpc/client'
 import { getLimits } from '@/lib/plans'
 import type { Outlet } from '@/types'
 import { Store, CheckCircle, MapPin, Plus, Pencil, Trash2 } from 'lucide-react'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 // ─── Modal ───────────────────────────────────────────────────────────────────
 function OutletFormModal({ outlet, onClose, onSuccess }: {
@@ -36,7 +37,7 @@ function OutletFormModal({ outlet, onClose, onSuccess }: {
       }
       onSuccess()
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Operasi gagal', 'error')
+      showToast(friendlyError(err, 'Operasi gagal'), 'error')
     }
   }
 
@@ -94,7 +95,7 @@ export default function OutletsPage() {
       await deleteOutlet.mutateAsync({ id })
       showToast('Outlet berhasil dihapus', 'success')
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Gagal menghapus outlet', 'error')
+      showToast(friendlyError(err, 'Gagal menghapus outlet'), 'error')
     }
   }
 

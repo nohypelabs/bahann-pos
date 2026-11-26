@@ -8,6 +8,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { CONTRACT_PLAN } from '@/lib/plans'
 import { Gift, CreditCard, ClipboardList, CheckCircle, Check, Upload, Clock, XCircle, Image, ChevronDown, Copy, Wallet, ExternalLink, PartyPopper } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 const PLANS = [
   {
@@ -583,7 +584,7 @@ function UserUpgradeView() {
             </div>
 
             {createMutation.error && (
-              <p className="text-xs text-red-500 mt-3 text-center">{createMutation.error.message}</p>
+              <p className="text-xs text-red-500 mt-3 text-center">{friendlyError(createMutation.error)}</p>
             )}
           </div>
         </div>

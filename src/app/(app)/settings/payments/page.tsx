@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { trpc } from '@/lib/trpc/client'
 import { Building2, Wallet, Smartphone, Upload, CheckCircle, XCircle } from 'lucide-react'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 type Section = 'bank' | 'ewallet' | 'qris' | null
 
@@ -44,15 +45,15 @@ export default function PaymentSettingsPage() {
 
   const updateBank = trpc.payments.updateBankTransfer.useMutation({
     onSuccess: () => { refetch(); setActiveSection(null); flash('success', 'Rekening bank disimpan') },
-    onError: (e) => flash('error', e.message),
+    onError: (e) => flash('error', friendlyError(e)),
   })
   const updateEwallet = trpc.payments.updateEWallet.useMutation({
     onSuccess: () => { refetch(); setActiveSection(null); flash('success', 'Nomor e-wallet disimpan') },
-    onError: (e) => flash('error', e.message),
+    onError: (e) => flash('error', friendlyError(e)),
   })
   const updateQRIS = trpc.payments.updateQRIS.useMutation({
     onSuccess: () => { refetch(); setActiveSection(null); flash('success', 'QRIS disimpan') },
-    onError: (e) => flash('error', e.message),
+    onError: (e) => flash('error', friendlyError(e)),
   })
 
   function handleQRISFile(file: File) {

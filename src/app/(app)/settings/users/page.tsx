@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { useToast } from '@/components/ui/Toast'
 import { trpc } from '@/lib/trpc/client'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 const ROLES = [
   { key: 'ADMIN_TENANT', label: '👑 Admin Tenant', desc: 'Akses penuh semua outlet', scope: 'TENANT', icon: '👑' },
@@ -74,7 +75,7 @@ export default function UsersManagementPage() {
       closeEditUser()
       showToast('Role diperbarui', 'success')
     },
-    onError: err => showToast(err.message || 'Gagal memperbarui role. Periksa koneksi dan coba lagi.', 'error'),
+    onError: err => showToast(friendlyError(err, 'Gagal memperbarui role. Periksa koneksi dan coba lagi.'), 'error'),
   })
 
   const closeForm = () => {

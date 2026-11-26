@@ -879,5 +879,14 @@
   "shift.open.submit": "Open Shift",
   "shift.open.failed": "Could not open the shift. Check the connection and try again.",
   "shift.open.button": "Open Shift",
-  "shift.banner": "Your cashier shift is not open yet. Open it to take payments."
+  "shift.banner": "Your cashier shift is not open yet. Open it to take payments.",
+
+  "errors.noPermission": "Your account is not allowed to do this. Ask the owner or a store admin to do it.",
+  "errors.sessionExpired": "Your session has ended. Please log in again.",
+  "errors.offline": "No internet connection. Check the network and try again.",
+  "errors.tooManyRequests": "Too many attempts. Wait a few minutes and try again.",
+  "errors.invalidInput": "Some fields are empty or invalid. Check them and save again.",
+  "errors.notFound": "Not found; it may have been deleted. Reload the page and try again.",
+  "errors.generic": "Something went wrong. Try again in a moment. If it keeps failing, contact the admin.",
+  "products.readOnly": "You can view products and print labels. To add, change or delete products, ask the owner or a store admin."
 }

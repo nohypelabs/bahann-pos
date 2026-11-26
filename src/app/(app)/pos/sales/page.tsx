@@ -20,6 +20,7 @@ import type { DiscountReason, ManualDiscount } from '@/domain/sales/manualDiscou
 import { ProductListSkeleton, ProductGridSkeleton } from '@/components/ui/Skeletons'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { OpenShiftModal } from '@/components/shift/OpenShiftModal'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 /** Product cards drawn at once; the rest are reached by searching or scanning. */
 const MAX_VISIBLE_PRODUCTS = 120
@@ -440,7 +441,7 @@ export default function SalesTransactionPage() {
       setAppliedPromo(result)
       setError('')
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Kode promo tidak valid')
+      setError(friendlyError(err, 'Kode promo tidak valid'))
       setAppliedPromo(null)
     }
   }
@@ -567,7 +568,7 @@ export default function SalesTransactionPage() {
       refetchPlanUsage()
       setTimeout(() => setShowSuccess(false), 3000)
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Gagal mencatat penjualan'
+      const message = friendlyError(err, 'Gagal mencatat penjualan')
       if (message.includes('PLAN_LIMIT_REACHED')) setShowUpgradeModal(true)
       else setError(message)
     }

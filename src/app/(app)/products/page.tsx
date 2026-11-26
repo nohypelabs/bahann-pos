@@ -16,6 +16,7 @@ import { BUSINESS_TYPE_DEFAULTS } from '@/domain/entities/BusinessProfile'
 import type { Product, SelectChangeEvent } from '@/types'
 import { Package, FolderOpen, CheckCircle, AlertTriangle, Tag, Trash2, Download, Pencil, Plus, Barcode, Printer } from 'lucide-react'
 import { LABEL_SELECTION_KEY } from '@/lib/labels/sheets'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 const fmtCurrency = (amount: number | null) =>
   amount ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount) : '—'
@@ -115,7 +116,7 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
       const { code } = await generateCode.mutateAsync({ kind, category: formData.category || undefined })
       setFormData((prev) => ({ ...prev, [kind]: code }))
     } catch (err) {
-      showToast(err instanceof Error ? err.message : t('products.codes.failed'), 'error')
+      showToast(friendlyError(err, t('products.codes.failed')), 'error')
     }
   }
 
@@ -153,7 +154,7 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
       }
       onSuccess()
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Gagal menyimpan produk. Periksa data dan coba lagi.', 'error')
+      showToast(friendlyError(err, 'Gagal menyimpan produk. Periksa data dan coba lagi.'), 'error')
     }
   }
 
@@ -306,7 +307,7 @@ function BatchUpdateCategoryModal({ selectedCount, onClose, onSuccess, productId
       showToast(`${result.count} produk diperbarui`, 'success')
       onSuccess()
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Gagal memperbarui kategori. Periksa koneksi dan coba lagi.', 'error')
+      showToast(friendlyError(err, 'Gagal memperbarui kategori. Periksa koneksi dan coba lagi.'), 'error')
     }
   }
 
@@ -364,7 +365,7 @@ function BatchDeleteModal({ selectedCount, onClose, onSuccess, productIds, produ
         onSuccess()
       }
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Gagal menghapus produk. Coba beberapa saat lagi.', 'error')
+      showToast(friendlyError(err, 'Gagal menghapus produk. Coba beberapa saat lagi.'), 'error')
     }
   }
 
@@ -415,7 +416,7 @@ export default function ProductsPage() {
       showToast(t('products.codes.assigned').replace('{n}', String(count)), count ? 'success' : 'info')
       refetch()
     } catch (err) {
-      showToast(err instanceof Error ? err.message : t('products.codes.failed'), 'error')
+      showToast(friendlyError(err, t('products.codes.failed')), 'error')
     }
   }
 
@@ -436,6 +437,9 @@ export default function ProductsPage() {
     search: searchTerm || undefined, category: categoryFilter || undefined, all: true,
   })
   const { data: categories } = trpc.products.getCategories.useQuery()
+  // Adding, editing, deleting and coding products are admin-only on the server: hide them from cashiers.
+  const { data: myActions } = trpc.products.myActions.useQuery(undefined, { staleTime: 5 * 60 * 1000 })
+  const canManage = myActions?.canManage === true
 
   const products   = productsResponse?.products || []
   const deleteProduct = trpc.products.delete.useMutation({ onSuccess: () => refetch() })
@@ -449,7 +453,7 @@ export default function ProductsPage() {
       await deleteProduct.mutateAsync({ id })
       showToast('Produk dihapus', 'success')
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Gagal menghapus produk. Coba beberapa saat lagi.', 'error')
+      showToast(friendlyError(err, 'Gagal menghapus produk. Coba beberapa saat lagi.'), 'error')
     }
   }
 
@@ -493,10 +497,10 @@ export default function ProductsPage() {
             {selectedProducts.size} produk dipilih
           </p>
           <div className="flex flex-wrap gap-2">
-            <Button variant="primary" size="sm" onClick={handleBatchCategory}><Tag className="w-4 h-4 mr-1" /> Update Kategori</Button>
-            <Button variant="secondary" size="sm" onClick={() => handleAssignBarcodes(true)} disabled={assignBarcodes.isPending}><Barcode className="w-4 h-4 mr-1" /> {t('products.codes.assignSelected')}</Button>
+            {canManage && <Button variant="primary" size="sm" onClick={handleBatchCategory}><Tag className="w-4 h-4 mr-1" /> Update Kategori</Button>}
+            {canManage && <Button variant="secondary" size="sm" onClick={() => handleAssignBarcodes(true)} disabled={assignBarcodes.isPending}><Barcode className="w-4 h-4 mr-1" /> {t('products.codes.assignSelected')}</Button>}
             <Button variant="secondary" size="sm" onClick={handlePrintLabels}><Printer className="w-4 h-4 mr-1" /> {t('products.labels.print')}</Button>
-            <Button variant="danger" size="sm" onClick={handleBatchDelete}><Trash2 className="w-4 h-4 mr-1" /> Hapus</Button>
+            {canManage && <Button variant="danger" size="sm" onClick={handleBatchDelete}><Trash2 className="w-4 h-4 mr-1" /> Hapus</Button>}
             <Button variant="outline" size="sm" onClick={clearSelection}>✕ Batal</Button>
           </div>
         </div>
@@ -520,10 +524,17 @@ export default function ProductsPage() {
           </select>
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">▾</span>
         </div>
-        <Button variant="secondary" size="md" onClick={() => setIsBulkImportOpen(true)}><Download className="w-4 h-4 mr-1" /> Import Excel</Button>
-        <Button variant="secondary" size="md" onClick={() => handleAssignBarcodes(false)} disabled={assignBarcodes.isPending} title={t('products.codes.assignAllHint')}><Barcode className="w-4 h-4 mr-1" /> {t('products.codes.assignAll')}</Button>
-        <Button variant="primary" size="md" onClick={handleAddNew}><Plus className="w-4 h-4 mr-1" /> Tambah</Button>
+        {canManage && (
+          <>
+            <Button variant="secondary" size="md" onClick={() => setIsBulkImportOpen(true)}><Download className="w-4 h-4 mr-1" /> Import Excel</Button>
+            <Button variant="secondary" size="md" onClick={() => handleAssignBarcodes(false)} disabled={assignBarcodes.isPending} title={t('products.codes.assignAllHint')}><Barcode className="w-4 h-4 mr-1" /> {t('products.codes.assignAll')}</Button>
+            <Button variant="primary" size="md" onClick={handleAddNew}><Plus className="w-4 h-4 mr-1" /> Tambah</Button>
+          </>
+        )}
       </div>
+      {myActions && !canManage && (
+        <p className="text-sm text-gray-500 dark:text-gray-400">{t('products.readOnly')}</p>
+      )}
 
       {/* Table */}
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
@@ -541,7 +552,7 @@ export default function ProductsPage() {
             description={searchTerm || categoryFilter ? 'Tidak ada produk yang cocok. Coba ubah filter.' : 'Mulai dengan menambahkan produk pertama kamu.'}
             action={
               !searchTerm && !categoryFilter
-                ? <Button variant="primary" onClick={handleAddNew}>Tambah Produk Pertama</Button>
+                ? (canManage ? <Button variant="primary" onClick={handleAddNew}>Tambah Produk Pertama</Button> : undefined)
                 : <Button variant="secondary" onClick={() => { setSearchTerm(''); setCategoryFilter('') }}>Reset Filter</Button>
             }
           />
@@ -555,7 +566,7 @@ export default function ProductsPage() {
                       checked={selectedProducts.size === products.length && products.length > 0}
                       onChange={toggleSelectAll} />
                   </th>
-                  {['SKU', 'Nama', 'Kategori', 'Harga', 'Aksi'].map(h => (
+                  {['SKU', 'Nama', 'Kategori', 'Harga', ...(canManage ? ['Aksi'] : [])].map(h => (
                     <th key={h} className="px-3 md:px-4 py-2.5 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
@@ -599,7 +610,7 @@ export default function ProductsPage() {
                     <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">
                       {fmtCurrency(product.price)}
                     </td>
-                    <td className="px-3 md:px-4 py-3">
+                    {canManage && <td className="px-3 md:px-4 py-3">
                       <div className="flex items-center gap-1.5">
                         <button onClick={() => handleEdit(product)}
                           className="px-2.5 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors">
@@ -611,7 +622,7 @@ export default function ProductsPage() {
                           <Trash2 className="w-3.5 h-3.5 inline mr-0.5" /> Hapus
                         </button>
                       </div>
-                    </td>
+                    </td>}
                   </tr>
                 ))}
               </tbody>

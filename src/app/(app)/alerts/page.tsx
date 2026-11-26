@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { trpc } from '@/lib/trpc/client'
 import { XCircle, AlertCircle, ClipboardList, CheckCircle, RefreshCw } from 'lucide-react'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 const ALERT_STYLES: Record<string, string> = {
   out_of_stock: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-900 dark:text-red-100',
@@ -32,7 +33,7 @@ export default function AlertsPage() {
     try {
       await acknowledgeMutation.mutateAsync({ alertId })
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Gagal acknowledge alert', 'error')
+      showToast(friendlyError(err, 'Gagal acknowledge alert'), 'error')
     }
   }
 
@@ -41,7 +42,7 @@ export default function AlertsPage() {
       const result = await generateMutation.mutateAsync()
       showToast(`${result.alertsGenerated} alert baru dibuat`, 'success')
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Gagal generate alerts', 'error')
+      showToast(friendlyError(err, 'Gagal generate alerts'), 'error')
     }
   }
 
