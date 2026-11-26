@@ -261,7 +261,7 @@ function UserUpgradeView() {
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 cursor-pointer" onClick={e => e.target === e.currentTarget && setSuccessModal(null)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-default" />
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-100 dark:border-gray-800 flex flex-col items-center text-center">
-            <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
+            <div className="flex items-center justify-center mb-4">
               <PartyPopper className="w-8 h-8 text-green-500" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Pembayaran Diterima!</h3>

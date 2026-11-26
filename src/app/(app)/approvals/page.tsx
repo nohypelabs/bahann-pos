@@ -222,7 +222,7 @@ export default function ApprovalsPage() {
       {!allLoading && sortedApprovals.length === 0 && (
         <SectionCard>
           <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+            <div className="mx-auto mb-4 flex items-center justify-center">
               <CheckCircle className="w-8 h-8 text-green-500" />
             </div>
             <p className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">

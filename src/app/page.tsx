@@ -748,7 +748,7 @@ export default function LandingPage() {
                 : Layers2
               return (
               <div key={i} style={bizTypesReveal.getItemStyle(i)} className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-lg transition-all">
-                <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center mb-3">
+                <div className="flex items-center justify-center mb-3">
                   <IconComponent className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">
@@ -809,7 +809,7 @@ export default function LandingPage() {
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <motion.div
-                        className="w-10 h-10 bg-green-100 dark:bg-green-900/40 text-green-600 rounded-xl flex items-center justify-center"
+                        className="text-green-600 flex items-center justify-center"
                         initial={{ scale: 0.8, rotate: -10 }}
                         animate={{ scale: 1, rotate: 0 }}
                         transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -1069,7 +1069,7 @@ export default function LandingPage() {
           <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-[fadeIn_0.25s_ease-out]" onClick={e => e.stopPropagation()}>
             <button onClick={dismissExitModal} className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-gray-500 dark:text-gray-400" aria-label={lang === 'id' ? 'Tutup' : 'Close'}><X className="w-4 h-4" /></button>
             <div className="bg-gradient-to-br from-green-600 to-emerald-600 p-6 text-center text-white">
-              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+              <div className="flex items-center justify-center mx-auto mb-3">
                 <Zap className="w-7 h-7" />
               </div>
               <h3 className="text-xl font-extrabold mb-1">

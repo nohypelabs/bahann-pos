@@ -412,7 +412,7 @@ export function PaymentModal({
           {/* Step: Completed */}
           {step === 'completed' && (
             <div className="text-center py-4 md:py-8">
-              <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="flex items-center justify-center mx-auto mb-4">
                 <Check className="w-12 h-12 text-green-600" />
               </div>
               <h3 className="text-base md:text-2xl font-bold text-gray-900 mb-2">

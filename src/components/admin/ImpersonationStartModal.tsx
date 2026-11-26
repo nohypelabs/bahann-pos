@@ -56,7 +56,7 @@ export function ImpersonationStartModal({ tenantId, tenantName, onClose }: Imper
       <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/40">
+            <div className="flex items-center justify-center">
               <ShieldAlert className="h-4.5 w-4.5 text-amber-600 dark:text-amber-400" />
             </div>
             <div>

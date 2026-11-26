@@ -280,7 +280,7 @@ function PaymentCard({
         onClick={onToggle}
         className="w-full flex items-center gap-2 md:gap-4 p-5 text-left hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors"
       >
-        <div className="w-12 h-12 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 shrink-0">
+        <div className="flex items-center justify-center text-gray-600 dark:text-gray-300 shrink-0">
           {icon}
         </div>
         <div className="flex-1 min-w-0">

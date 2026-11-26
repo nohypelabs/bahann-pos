@@ -90,7 +90,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <div className="bg-white rounded-2xl shadow-xl border-2 border-red-200 p-4 md:p-8">
               {/* Error Icon */}
               <div className="flex justify-center mb-3 md:mb-6">
-                <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
+                <div className="flex items-center justify-center">
                   <svg
                     className="w-12 h-12 text-red-600"
                     fill="none"

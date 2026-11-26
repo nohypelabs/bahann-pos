@@ -28,7 +28,7 @@ export function EmailVerificationBanner() {
     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b border-blue-200 dark:border-blue-800/50 px-4 py-3 mb-4">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex-shrink-0 w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center">
+          <div className="flex-shrink-0 flex items-center justify-center">
             <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400" />
           </div>
           <div className="min-w-0">

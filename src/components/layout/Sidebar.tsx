@@ -540,7 +540,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
           onClick={e => e.target === e.currentTarget && setShowLogoutModal(false)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div className="relative bg-white dark:bg-gray-900 rounded-[18px] shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-[#E4E6E7] dark:border-gray-800">
-            <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center text-red-500">
+            <div className="flex items-center justify-center text-red-500">
               <LogOut className="w-7 h-7" />
             </div>
             <div className="text-center space-y-1">

@@ -85,7 +85,7 @@ export function PinConfirmModal({
     >
       <div className="space-y-5 py-2">
         <div className="flex justify-center">
-          <div className="w-14 h-14 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+          <div className="flex items-center justify-center">
             <ShieldCheck className="w-7 h-7 text-blue-600 dark:text-blue-400" />
           </div>
         </div>

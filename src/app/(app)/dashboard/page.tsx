@@ -75,10 +75,10 @@ function KpiCard({ label, value, icon, tone, delta, spark, footnote }: {
   delta: ReactNode; spark?: number[]; footnote?: ReactNode
 }) {
   const tones = {
-    brand: { bg: 'bg-[#E3F1EE]', fg: 'text-[#0F5F56]', bar: '#0F5F56' },
-    amber: { bg: 'bg-amber-50', fg: 'text-amber-600', bar: '#E9A23B' },
-    teal: { bg: 'bg-teal-50', fg: 'text-teal-600', bar: '#5FB3A6' },
-    slate: { bg: 'bg-[#F3F4F4]', fg: 'text-[#5F675F]', bar: '#8A9188' },
+    brand: { fg: 'text-[#0F5F56]', bar: '#0F5F56' },
+    amber: { fg: 'text-amber-600', bar: '#E9A23B' },
+    teal: { fg: 'text-teal-600', bar: '#5FB3A6' },
+    slate: { fg: 'text-[#5F675F]', bar: '#8A9188' },
   }[tone]
   return (
     <Panel className="flex flex-col">
@@ -87,7 +87,7 @@ function KpiCard({ label, value, icon, tone, delta, spark, footnote }: {
           <p className="text-sm font-medium text-[#5F675F]">{label}</p>
           <p className="mt-1.5 truncate text-2xl font-bold tracking-tight text-[#17201D] tabular-nums md:text-[26px]">{value}</p>
         </div>
-        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${tones.bg} ${tones.fg} [&>svg]:h-5 [&>svg]:w-5`}>{icon}</span>
+        <span className={`shrink-0 ${tones.fg} [&>svg]:h-5 [&>svg]:w-5 [&>svg]:stroke-[1.75]`}>{icon}</span>
       </div>
       <div className="mt-3 flex items-end justify-between gap-3">
         <div className="min-w-0 space-y-1">
@@ -186,7 +186,7 @@ export default function DashboardPage() {
                   onClick={() => (!q.guarded || inventoryAccess.guard()) && router.push(q.href)}
                   className="group flex items-center gap-3 rounded-[10px] border border-[#E4E6E7] bg-[#F8F9F9] px-3 py-3 text-left transition-colors hover:border-[#0F5F56]/40 hover:bg-[#E3F1EE]/50"
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#0F5F56] shadow-[0_1px_2px_rgba(23,32,29,0.08)] [&>svg]:h-[18px] [&>svg]:w-[18px]">{q.icon}</span>
+                  <span className="shrink-0 text-[#0F5F56] [&>svg]:h-5 [&>svg]:w-5 [&>svg]:stroke-[1.75]">{q.icon}</span>
                   <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[#17201D]">{q.label}</span>
                   <ChevronRight className="h-4 w-4 shrink-0 text-[#8A9188] transition-transform group-hover:translate-x-0.5" />
                 </button>

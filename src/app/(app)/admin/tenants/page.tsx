@@ -413,7 +413,7 @@ function TenantsContent() {
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 cursor-pointer" onClick={e => e.target === e.currentTarget && setShowSuspendModal(false)}>
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-default" />
             <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-gray-100 dark:border-gray-800">
-              <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-4 ${detail.is_suspended ? 'bg-green-50 dark:bg-green-900/30 text-green-500' : 'bg-red-50 dark:bg-red-900/30 text-red-500'}`}>
+              <div className={`mx-auto flex items-center justify-center mb-4 ${detail.is_suspended ? 'text-green-500' : 'text-red-500'}`}>
                 {detail.is_suspended ? <CheckCircle className="w-6 h-6" /> : <Ban className="w-6 h-6" />}
               </div>
               <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 text-center mb-1">

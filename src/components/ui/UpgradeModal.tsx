@@ -93,7 +93,7 @@ export function UpgradeModal({ isOpen, onClose, feature, currentPlan, title, des
         <div className="p-6 space-y-5">
           {/* Icon + title */}
           <div className="text-center space-y-2">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-3xl">
+            <div className="mx-auto flex items-center justify-center text-3xl">
               <Lock className="w-7 h-7 text-amber-600 dark:text-amber-400" />
             </div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">

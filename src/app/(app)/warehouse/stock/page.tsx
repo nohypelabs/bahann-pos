@@ -264,7 +264,7 @@ export default function StockManagementPage() {
 
                 {selectedProduct && (
                   <div className="flex items-start gap-2.5 p-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-                    <div className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-800 flex items-center justify-center shrink-0"><Package className="w-4 h-4 text-blue-600 dark:text-blue-300" /></div>
+                    <div className="flex items-center justify-center shrink-0"><Package className="w-4 h-4 text-blue-600 dark:text-blue-300" /></div>
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-blue-900 dark:text-blue-200 truncate">{selectedProduct.name}</p>
                       <p className="text-[10px] text-blue-600 dark:text-blue-400">
@@ -295,7 +295,7 @@ export default function StockManagementPage() {
 
                 {selectedOutlet && (
                   <div className="flex items-start gap-2.5 p-2.5 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl">
-                    <div className="w-7 h-7 rounded-lg bg-purple-100 dark:bg-purple-800 flex items-center justify-center shrink-0"><Store className="w-4 h-4 text-purple-600 dark:text-purple-300" /></div>
+                    <div className="flex items-center justify-center shrink-0"><Store className="w-4 h-4 text-purple-600 dark:text-purple-300" /></div>
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-purple-900 dark:text-purple-200 truncate">{selectedOutlet.name}</p>
                       {selectedOutlet.address && (

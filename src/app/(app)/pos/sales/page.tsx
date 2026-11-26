@@ -694,7 +694,7 @@ export default function SalesTransactionPage() {
           {isKasirLocked && selectedOutlet ? (
             // Kasir locked: show outlet as read-only pill (no change button)
             <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+              <div className="flex items-center justify-center text-emerald-700">
                 <Store className="h-4 w-4" />
               </div>
               <div className="flex-1 min-w-0">
@@ -729,7 +729,7 @@ export default function SalesTransactionPage() {
             </div>
           ) : (
             <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+              <div className="flex items-center justify-center text-emerald-700">
                 <Store className="h-4 w-4" />
               </div>
               <div className="flex-1 min-w-0">
@@ -838,7 +838,7 @@ export default function SalesTransactionPage() {
                     <div className="py-4 md:py-8 text-center text-sm text-gray-400 dark:text-gray-500">Pilih outlet untuk melihat produk</div>
                   ) : filteredProducts.length === 0 ? (
                     <div className="py-8 text-center">
-                      <div className="w-16 h-16 mx-auto mb-3 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                      <div className="mx-auto mb-3 flex items-center justify-center">
                         <Package className="h-7 w-7 text-gray-400 dark:text-gray-500" aria-hidden="true" />
                       </div>
                       <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -925,7 +925,7 @@ export default function SalesTransactionPage() {
                       <div className="py-8 text-center text-sm text-gray-400 dark:text-gray-500">Pilih outlet untuk melihat produk</div>
                     ) : filteredProducts.length === 0 ? (
                       <div className="py-8 text-center">
-                        <div className="w-16 h-16 mx-auto mb-3 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                        <div className="mx-auto mb-3 flex items-center justify-center">
                           <Package className="h-7 w-7 text-gray-400 dark:text-gray-500" aria-hidden="true" />
                         </div>
                         <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -1327,7 +1327,7 @@ export default function SalesTransactionPage() {
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {cart.length === 0 ? (
                 <div className="py-16 text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                  <div className="mx-auto mb-4 flex items-center justify-center">
                     <ShoppingCart className="w-10 h-10 text-gray-400 dark:text-gray-500" />
                   </div>
                   <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Keranjang kosong</p>
@@ -1402,7 +1402,7 @@ export default function SalesTransactionPage() {
       {showUpgradeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-gray-800 rounded-[18px] shadow-2xl max-w-md w-full p-4 md:p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4"><Ban className="w-8 h-8 text-red-600 dark:text-red-400" /></div>
+            <div className="flex items-center justify-center mx-auto mb-4"><Ban className="w-8 h-8 text-red-600 dark:text-red-400" /></div>
             <h2 className="text-base md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Batas Transaksi Tercapai</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-2">Paket <span className="font-semibold text-blue-600">Gratis</span> hanya mendukung <span className="font-semibold">100 transaksi per bulan</span>.</p>
             <p className="text-gray-600 dark:text-gray-400 mb-3 md:mb-6">Upgrade ke paket <span className="font-semibold text-orange-500">Warung (Rp 99rb/bulan)</span> untuk transaksi tidak terbatas.</p>
