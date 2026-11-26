@@ -20,6 +20,43 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-27 · Receipt printer Iware XS80 and scanner on Linux (local app → production DB)
+
+Hardware bought for Mr Bengkel, tested on the laptop (CachyOS) before it goes to the workshop. Tenant: the client
+try-out tenant "Mr Bengkel (Uji Coba)", cashier account; the test sales below are visible to the client there.
+
+Setup on the laptop:
+- Printer: USB `0418:5011` "POS-80" (`usblp`, `/dev/usb/lp0`). Scanner: USB `0c2e:0901` (Metrologic), a HID
+  keyboard, no driver.
+- CUPS queue `XS80` (default printer), URI `usb://Printer/POS-80?serial=…`, driver zj-58 (`rastertozj` +
+  `zj80.ppd`, github.com/klirichek/zj-58 at 6474356, read before installing). The AUR package does not build with
+  CMake 4 and GCC 15, so it was built by hand (`-DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_C_FLAGS=-std=gnu17`)
+  and the filter and PPD installed with `install`; pacman does not track them.
+- Queue options: `PageSize=X70MMY210MM`, `print-scaling-default=none`, `OptionCutter=True`, `CutMedia=EndOfJob`,
+  `BlankSpace=False` (blank tail of a page is not fed), `FeedDist=3feed12mm` (last line passes the cutter).
+- Browser: Chromium with `--kiosk-printing` and its own profile prints straight to the default printer. The profile
+  needs one print through the dialog first (XS80, margins None, scale Default); kiosk printing reuses those settings.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 16.1 | Raw ESC/POS to `/dev/usb/lp0`, then plain text through CUPS | Both print and cut | ✅ |
+| 16.2 | Cashier opens `/pos/sales` with no shift | Shift can be opened from the page | ❌ only on `/eod` ("Tutup Hari", collapsed in the sidebar); "Buka shift dulu" button disabled. Fixed: banner and checkout button open a shift form in place; same on service notes |
+| 16.3 | Print Struk, Chrome dialog | Receipt in the preview | ❌ blank Letter page: a legacy `globals.css` print rule hid everything but `.modal-overlay`, and the print iframe copies that sheet; `size: 80mm auto` is invalid CSS. Fixed |
+| 16.4 | Print to XS80 (TRX-MWXU1NEO-YEJWG) | Receipt starts at the top of the paper | ❌ ~22 cm blank first: CUPS `pdftopdf` scaled the page to the driver's 70 mm printable width and centred it on the 3276 mm roll. Fixed with `print-scaling=none` |
+| 16.5 | Width on paper | Nothing cut off | ⚠️ text spanned the full 80 mm (`receipt.css` print rule forced `padding: 0 !important`); now 70 mm centred (5 mm sides) |
+| 16.6 | Print again (TRX-MWXUT9OI-GQSG9, 2 lines) | Starts at the top, full width, cut after the barcode | ✅ |
+| 16.7 | Kiosk printing, fresh profile (TRX-MWXV885V-8H1QO) | Prints straight away, like 16.6 | ❌ several metres of blank paper, then the job stalled and CUPS disabled the queue. The PDF had Chrome's date header and "1/1" footer at the bottom of the 3276 mm page, and the receipt in the middle (a CSS page size added in 16.3 that differed from the paper). CSS page size removed; job cancelled, queue re-enabled |
+| 16.8 | Same, after setting the profile once through the dialog (paper 80 × 210 mm, margins None); jobs held and checked before release | PDF: receipt at the top, no header or footer | ✅ PDF and a dry run of the driver: 0.1 mm before the first line, 171 mm receipt, 12 mm feed, cut |
+| 16.9 | Release the held job (TRX-MWXW57SH-EOWSN), then one more kiosk print (job XS80-8) | Prints without a dialog, no waste | ✅ user confirmed both prints |
+
+Remaining blank above the first line is about 13 mm: the gap between the cutter and the print head, which no
+setting can remove.
+
+Not tested yet: scanning into `/pos/sales` and service notes, the cash drawer, A4 label sheets, and the Windows
+setup if the workshop PC runs Windows (paper size and "no scaling" then live in the Windows driver).
+
+---
+
 ## 2026-11-26 · Daily backup installed, restore tested (production DB)
 
 Setup and paths: `deployment/backup/README.md` ("Where it runs").
