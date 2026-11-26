@@ -20,6 +20,27 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-27 · Barcode scanner, cart in checkout, receipt text, member list, single outlet (local app → production DB)
+
+Scanner: Metrologic USB (`0c2e:0901`), a HID keyboard. Test barcodes printed on the XS80 with its own ESC/POS barcode
+commands (EAN-13 of four try-out products, Code128 of the SKU `JAS-00001`). Tenant: "Mr Bengkel (Uji Coba)", cashier.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 18.1 | Record what the scanner sends (read-only from `/dev/input`) | Full code and Enter | ✅ EAN-13: 13 digits + Enter in ~52 ms (4 ms per key); `JAS-00001`: Shift+letters, upper case + Enter in 36 ms |
+| 18.2 | Scan the five codes on `/pos/sales` and pay (TRX-MWXXFL4D-7KX4L, Rp 400.000) | Items in the cart, paid, printed | ✅ (code before this entry's changes): Busi ×2, Oli ×2, Kampas ×3, Filter ×1, Jasa Servis Ringan ×1 |
+| 18.3 | Same receipt on paper | Clear text | ⚠️ SKU and footer lines faint (grey 9 px prints as dots); fake barcode at the bottom wastes paper. Fixed: black text, 10 px minimum, barcode removed (`8ed3e89`) |
+| 18.4 | User: cart not visible while scanning (product list still shows everything) | Scanned items visible next to the total | Fixed: cart one line per item inside the checkout card; the last added line highlighted; total box two rows (`b8c7b19`). User checked the layout in the browser |
+| 18.5 | Scan with no text field focused; human-speed typing; scan into a text field; disabled | Only the fast burst counts, fields keep their input | ✅ unit tests `useBarcodeWedge` 5/5 |
+| 18.6 | `workshop.customers.list` on the try-out tenant; search `b1234`, `5678`, `zzzz` | Motors, phone, open note; plate search finds the owner | ✅ Andi B1234ABC Honda Beat (open note), Siti B5678XYZ Yamaha NMAX; 1, 1, 0 results |
+| 18.7 | Summaries on the workshop test tenant vs direct SQL | Same numbers | ✅ Andi: 42 services, Rp 2.625.000, last 25 Nov, 2 stamps, 4 vouchers; Budi: 10, Rp 275.000, 24 Nov, 0, 1 |
+| 18.8 | One outlet: stock entry, adjustment, shift/EOD, expenses, role assignment | Outlet already chosen | ✅ unit tests `useSoleOutlet` 3/3; pages not yet checked in the browser |
+
+All unit tests: 206 passed. Not yet checked: a receipt printed after `8ed3e89`, the member page and the outlet
+defaults in the browser, and scanning on an open service note.
+
+---
+
 ## 2026-11-27 · Friendly error messages, product actions for cashiers (local app → production DB)
 
 Found by the user: as the try-out cashier on `/products`, a click on an admin-only action showed the raw server text
