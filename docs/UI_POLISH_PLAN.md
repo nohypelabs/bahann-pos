@@ -41,9 +41,10 @@ used in pages any more.
 
 Purple, indigo, emerald-as-decoration and gradients go. Blue stays only as `info`.
 
-Dark mode: there are ~2,300 `dark:` classes, many inconsistent. **Decision needed**: either keep dark mode and map it
-through the same tokens (the tokens switch, the `dark:` classes go away), or ship light-only for now. Recommendation:
-light-only for the Mr Bengkel go-live, tokens ready so dark mode is one stylesheet later.
+Dark mode: **decided 27 Nov 2026 — light only for now.** The app already forces light (`ThemeProvider` removes the
+`dark` class and `dark:` only applies under `.dark`), so an OS in dark mode does not change it. The ~2,300 `dark:`
+classes are dead weight: each page drops them when it is polished. Tokens stay theme-ready, so dark mode can come back
+later as one set of token values instead of per-class overrides.
 
 ### 2.2 Radius, spacing, shadow, type
 
@@ -140,7 +141,7 @@ smoke tests run). Phases 2–3 should land before the Mr Bengkel training so sta
 
 ## 7. Done when
 
-- No raw palette class, hex colour, emoji or `text-[Npx]` in `src/app` (lint passes).
+- No raw palette class, hex colour, emoji, `dark:` class or `text-[Npx]` in `src/app` (lint passes).
 - All 44 pages use `PageHeader` and the shared components; no `alert()`/`confirm()`.
 - One header per page; no eyebrow labels, decorative chips or gradients.
 - Motion only where §4 lists it, and none with reduced motion on.
