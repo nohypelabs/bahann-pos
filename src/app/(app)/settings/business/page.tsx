@@ -10,6 +10,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { BUSINESS_TYPE_OPTIONS } from '@/lib/business/business-type-options'
 import type { BusinessType } from '@/domain/catalog/value-objects/business-type'
 import { friendlyError } from '@/lib/errors/friendlyError'
+import { Check, Wrench } from 'lucide-react'
 
 /**
  * Business type is what decides the enabled modules and the defaults for new
@@ -81,11 +82,11 @@ export default function BusinessSettingsPage() {
                   >
                     {isCurrent && (
                       <span className="absolute right-3 top-3 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-700 dark:bg-green-900/40 dark:text-green-300">
-                        ✓
+                        <Check className="w-3 h-3" />
                       </span>
                     )}
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl">{option.icon}</span>
+                      <option.icon className="w-6 h-6 text-[#0F5F56]" aria-hidden />
                       <div className="min-w-0">
                         <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">
                           {t(`businessType.${option.key}.title`)}
@@ -130,7 +131,7 @@ export default function BusinessSettingsPage() {
       <SectionCard title={t('settings.business.optionalModules')}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100">🔧 {t('settings.business.workshopTitle')}</h3>
+            <h3 className="flex items-center gap-1.5 text-sm font-bold text-gray-900 dark:text-gray-100"><Wrench className="w-4 h-4" /> {t('settings.business.workshopTitle')}</h3>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('settings.business.workshopBody')}</p>
           </div>
           <Button

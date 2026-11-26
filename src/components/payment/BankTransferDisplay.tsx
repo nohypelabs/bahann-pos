@@ -7,6 +7,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { AlertTriangle, Check, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 
 interface BankTransferDisplayProps {
@@ -95,9 +96,9 @@ export function BankTransferDisplay({
               </p>
               <button
                 onClick={() => copyToClipboard(accountNumber, 'account')}
-                className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
               >
-                {copied === 'account' ? '✓ Copied' : '📋 Copy'}
+                {copied === 'account' ? <><Check className="w-4 h-4" /> Copied</> : <><Copy className="w-4 h-4" /> Copy</>}
               </button>
             </div>
           </div>
@@ -123,9 +124,9 @@ export function BankTransferDisplay({
           </p>
           <button
             onClick={() => copyToClipboard(amount.toString(), 'amount')}
-            className="px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-900 rounded-lg transition-colors font-medium"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-900 rounded-lg transition-colors font-medium"
           >
-            {copied === 'amount' ? '✓ Copied' : '📋 Copy'}
+            {copied === 'amount' ? <><Check className="w-4 h-4" /> Copied</> : <><Copy className="w-4 h-4" /> Copy</>}
           </button>
         </div>
         <p className="text-xs text-gray-500 mt-2">
@@ -203,7 +204,7 @@ export function BankTransferDisplay({
 
       {/* Important Notice */}
       <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
-        <h4 className="font-semibold text-red-900 mb-2">⚠️ Penting:</h4>
+        <h4 className="flex items-center gap-1.5 font-semibold text-red-900 mb-2"><AlertTriangle className="w-4 h-4" /> Penting:</h4>
         <ul className="space-y-1 text-sm text-red-700">
           <li>• Transfer harus EXACT sesuai nominal yang tertera</li>
           <li>• Sertakan ID transaksi di berita transfer</li>

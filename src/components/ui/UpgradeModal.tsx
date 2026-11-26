@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { ArrowUpRight, CheckCircle2, Lock } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { getLimits, isUnlimited, type PlanId } from '@/lib/plans'
 
@@ -93,7 +94,7 @@ export function UpgradeModal({ isOpen, onClose, feature, currentPlan, title, des
           {/* Icon + title */}
           <div className="text-center space-y-2">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-3xl">
-              🔒
+              <Lock className="w-7 h-7 text-amber-600 dark:text-amber-400" />
             </div>
             <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
               {title ?? defaultTitles[feature]}
@@ -138,15 +139,15 @@ export function UpgradeModal({ isOpen, onClose, feature, currentPlan, title, des
                   {suggestDisplay.label}
                 </span>
               </div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">✅ {suggestion.benefit}</p>
+              <p className="flex items-start gap-1.5 text-sm font-semibold text-gray-900 dark:text-gray-100"><CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-green-600 dark:text-green-400" /> {suggestion.benefit}</p>
             </div>
           )}
 
           {/* Actions */}
           <div className="flex gap-2 pt-1">
             <Button variant="secondary" onClick={onClose} fullWidth>Nanti Saja</Button>
-            <Button variant="primary" onClick={() => { onClose(); router.push('/settings/subscriptions') }} fullWidth>
-              🚀 Upgrade Plan
+            <Button variant="primary" onClick={() => { onClose(); router.push('/settings/subscriptions') }} fullWidth className="gap-1.5">
+              <ArrowUpRight className="w-4 h-4" /> Upgrade Plan
             </Button>
           </div>
         </div>

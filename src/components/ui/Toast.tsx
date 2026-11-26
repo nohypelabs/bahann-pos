@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-react'
 import { friendlyMessage } from '@/lib/errors/friendlyError'
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning'
@@ -101,29 +102,34 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
       bg: 'bg-green-50',
       border: 'border-green-200',
       text: 'text-green-900',
-      icon: '✅',
+      icon: CheckCircle2,
+      iconColor: 'text-green-600',
     },
     error: {
       bg: 'bg-red-50',
       border: 'border-red-200',
       text: 'text-red-900',
-      icon: '❌',
+      icon: XCircle,
+      iconColor: 'text-red-600',
     },
     warning: {
       bg: 'bg-yellow-50',
       border: 'border-yellow-200',
       text: 'text-yellow-900',
-      icon: '⚠️',
+      icon: AlertTriangle,
+      iconColor: 'text-yellow-600',
     },
     info: {
       bg: 'bg-blue-50',
       border: 'border-blue-200',
       text: 'text-blue-900',
-      icon: 'ℹ️',
+      icon: Info,
+      iconColor: 'text-blue-600',
     },
   }
 
   const style = styles[toast.type]
+  const Icon = style.icon
 
   return (
     <div
@@ -137,7 +143,7 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
       `}
       role="alert"
     >
-      <span className="text-base md:text-2xl flex-shrink-0">{style.icon}</span>
+      <Icon className={`w-5 h-5 md:w-6 md:h-6 flex-shrink-0 ${style.iconColor}`} />
       <p className="flex-1 font-semibold text-mobile-sm">{toast.message}</p>
       <button
         onClick={onClose}
@@ -149,7 +155,7 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
         `}
         aria-label="Close"
       >
-        <span className="text-base md:text-2xl">×</span>
+        <X className="w-5 h-5" />
       </button>
     </div>
   )

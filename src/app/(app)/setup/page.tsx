@@ -7,6 +7,7 @@ import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { BUSINESS_TYPE_OPTIONS } from '@/lib/business/business-type-options'
 import { friendlyError } from '@/lib/errors/friendlyError'
+import { Check, XCircle } from 'lucide-react'
 
 
 export default function SetupPage() {
@@ -61,7 +62,7 @@ export default function SetupPage() {
         {/* Error */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border-2 border-red-200 dark:border-red-800 rounded-xl">
-            <p className="text-sm font-semibold text-red-600 dark:text-red-400">❌ {error}</p>
+            <p className="flex items-center gap-2 text-sm font-semibold text-red-600 dark:text-red-400"><XCircle className="w-4 h-4 shrink-0" /> {error}</p>
           </div>
         )}
 
@@ -82,13 +83,13 @@ export default function SetupPage() {
                 {/* Checkmark */}
                 {isSelected && (
                   <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">✓</span>
+                    <Check className="w-3.5 h-3.5 text-white" />
                   </div>
                 )}
 
                 {/* Icon + Title */}
                 <div className="flex items-center gap-3 mb-3">
-                  <span className="text-3xl">{bt.icon}</span>
+                  <bt.icon className="w-7 h-7 text-[#0F5F56]" aria-hidden />
                   <div>
                     <h3 className={`text-lg font-bold ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>
                       {t(`businessType.${bt.key}.title`)}

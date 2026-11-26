@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { trpc } from '@/lib/trpc/client'
+import { Loader2, CheckCircle2, XCircle, Gift } from 'lucide-react'
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams()
@@ -28,11 +29,11 @@ function VerifyEmailContent() {
 
   return (
     <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 text-center">
-      <div className="text-6xl mb-4">
-        {status === 'loading' && '⏳'}
-        {status === 'success' && '🎉'}
-        {status === 'already' && '✅'}
-        {status === 'error' && '❌'}
+      <div className="flex justify-center mb-4">
+        {status === 'loading' && <Loader2 className="w-12 h-12 text-gray-400 animate-spin" />}
+        {status === 'success' && <CheckCircle2 className="w-12 h-12 text-green-500" />}
+        {status === 'already' && <CheckCircle2 className="w-12 h-12 text-green-500" />}
+        {status === 'error' && <XCircle className="w-12 h-12 text-red-500" />}
       </div>
 
       {status === 'loading' && (
@@ -48,8 +49,8 @@ function VerifyEmailContent() {
           <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
             Trial <strong>14 hari Starter</strong> kamu sudah aktif. Kamu akan diarahkan ke halaman login...
           </p>
-          <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-sm text-green-700 dark:text-green-300">
-            🎁 Nikmati semua fitur Starter gratis selama 14 hari!
+          <div className="flex items-center justify-center gap-2 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl text-sm text-green-700 dark:text-green-300">
+            <Gift className="w-4 h-4 shrink-0" /> Nikmati semua fitur Starter gratis selama 14 hari!
           </div>
         </>
       )}
@@ -84,7 +85,7 @@ export default function VerifyEmailPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <Suspense fallback={
         <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 text-center">
-          <div className="text-6xl mb-4">⏳</div>
+          <div className="flex justify-center mb-4"><Loader2 className="w-12 h-12 text-gray-400 animate-spin" /></div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Memverifikasi email...</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm">Mohon tunggu sebentar.</p>
         </div>

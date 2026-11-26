@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/Input'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { trpc } from '@/lib/trpc/client'
 import { friendlyError } from '@/lib/errors/friendlyError'
+import { Mail, Info, XCircle, AlertTriangle } from 'lucide-react'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -49,7 +50,7 @@ export default function ForgotPasswordPage() {
           <CardBody>
             {success ? (
               <div className="text-center py-8">
-                <div className="mb-4 text-6xl">📧</div>
+                <div className="mb-4 flex justify-center"><Mail className="w-12 h-12 text-green-500" /></div>
                 <h3 className="text-2xl font-bold text-green-600 mb-2">
                   Email Terkirim!
                 </h3>
@@ -67,15 +68,18 @@ export default function ForgotPasswordPage() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
-                  <p className="text-sm text-blue-900">
-                    💡 Masukkan email Anda dan kami akan mengirimkan instruksi untuk
-                    mereset password.
+                  <p className="flex items-start gap-2 text-sm text-blue-900">
+                    <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>
+                      Masukkan email Anda dan kami akan mengirimkan instruksi untuk
+                      mereset password.
+                    </span>
                   </p>
                 </div>
 
                 {error && (
                   <div className="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
-                    <p className="text-sm font-semibold text-red-600">❌ {error}</p>
+                    <p className="flex items-center gap-2 text-sm font-semibold text-red-600"><XCircle className="w-4 h-4 shrink-0" /> {error}</p>
                   </div>
                 )}
 
@@ -96,7 +100,7 @@ export default function ForgotPasswordPage() {
                   fullWidth
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Mengirim...' : '📧 Kirim Link Reset'}
+                  {isLoading ? 'Mengirim...' : <><Mail className="w-4 h-4 mr-2" /> Kirim Link Reset</>}
                 </Button>
 
                 <div className="text-center">
@@ -114,7 +118,7 @@ export default function ForgotPasswordPage() {
 
         {/* Info Box */}
         <div className="mt-6 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
-          <p className="text-sm text-yellow-900 font-semibold mb-2">⚠️ Catatan:</p>
+          <p className="flex items-center gap-1.5 text-sm text-yellow-900 font-semibold mb-2"><AlertTriangle className="w-4 h-4 shrink-0" /> Catatan:</p>
           <ul className="text-xs text-yellow-800 space-y-1">
             <li>• Jika email tidak masuk, cek folder spam</li>
             <li>• Link reset berlaku selama 1 jam</li>

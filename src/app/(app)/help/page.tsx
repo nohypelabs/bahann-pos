@@ -6,7 +6,7 @@ import {
   Target, Lock, Store, Package, BarChart3, ShoppingCart,
   TrendingUp, Settings, Smartphone, HelpCircle, Crown,
   Briefcase, UserCheck, Rocket, BookOpen, ListOrdered,
-  Info, LayoutDashboard, Search, X
+  Info, LayoutDashboard, Search, X, Check
 } from 'lucide-react'
 
 interface Section {
@@ -491,9 +491,10 @@ export default function HelpPage() {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 text-sm md:text-xl md:text-2xl"
+                  className="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400"
+                  aria-label="Hapus pencarian"
                 >
-                  ✕
+                  <X className="w-4 h-4 md:w-5 md:h-5" />
                 </button>
               )}
             </div>
@@ -592,7 +593,7 @@ export default function HelpPage() {
                       <ul className="space-y-2 md:space-y-3">
                         {subsection.items.map((item, itemIdx) => (
                           <li key={itemIdx} className="flex items-start gap-2 md:gap-3 text-gray-700 dark:text-gray-300">
-                            <span className="text-purple-500 font-bold text-base md:text-lg mt-1">✓</span>
+                            <Check className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-purple-500 mt-0.5 md:mt-1" />
                             <span className="flex-1 text-sm md:text-base leading-relaxed">{item}</span>
                           </li>
                         ))}

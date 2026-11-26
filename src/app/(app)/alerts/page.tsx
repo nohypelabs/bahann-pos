@@ -7,7 +7,7 @@ import { StatCard } from '@/components/ui/StatCard'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { trpc } from '@/lib/trpc/client'
-import { XCircle, AlertCircle, ClipboardList, CheckCircle, RefreshCw } from 'lucide-react'
+import { XCircle, AlertCircle, ClipboardList, CheckCircle, RefreshCw, Check } from 'lucide-react'
 import { friendlyError } from '@/lib/errors/friendlyError'
 
 const ALERT_STYLES: Record<string, string> = {
@@ -95,8 +95,9 @@ export default function AlertsPage() {
                       variant="secondary"
                       onClick={() => handleAcknowledge(alert.id)}
                       disabled={acknowledgeMutation.isPending}
+                      className="gap-1.5"
                     >
-                      ✓ Acknowledge
+                      <Check className="w-4 h-4" /> Acknowledge
                     </Button>
                   </div>
                 </div>

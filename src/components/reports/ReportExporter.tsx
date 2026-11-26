@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Lock } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Input'
 import { trpc } from '@/lib/trpc/client'
@@ -45,8 +46,8 @@ export default function ReportExporter({ outletId, days, onClose }: ReportExport
   if (fetchError) {
     return (
       <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
-        <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-          🔒 {fetchError.message}
+        <p className="flex items-center gap-1.5 text-sm font-medium text-amber-800 dark:text-amber-200">
+          <Lock className="w-4 h-4 shrink-0" /> {fetchError.message}
         </p>
         <a
           href="/settings/subscriptions"
@@ -70,8 +71,8 @@ export default function ReportExporter({ outletId, days, onClose }: ReportExport
               value={format}
               onChange={(e) => setFormat(e.target.value as 'pdf' | 'csv')}
               options={[
-                { value: 'pdf', label: '📄 PDF Document' },
-                { value: 'csv', label: '📊 CSV Spreadsheet' },
+                { value: 'pdf', label: 'PDF Document' },
+                { value: 'csv', label: 'CSV Spreadsheet' },
               ]}
             />
           </div>

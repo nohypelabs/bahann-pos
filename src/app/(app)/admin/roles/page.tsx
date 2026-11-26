@@ -5,17 +5,17 @@ import { useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { trpc } from '@/lib/trpc/client'
-import { Search, Crown, Users, Shield, ChevronDown, CheckCircle2, XCircle, Info } from 'lucide-react'
+import { Search, Crown, Users, Shield, ChevronDown, CheckCircle2, XCircle, Info, User, Briefcase, Zap, Store } from 'lucide-react'
 import { friendlyError } from '@/lib/errors/friendlyError'
 
 type AlertState = { type: 'success' | 'error' | 'info'; msg: string } | null
 type UserRole = 'admin' | 'super_admin' | 'user' | 'manager' | 'owner'
 
 const ROLES = [
-  { value: 'user', label: 'Kasir', icon: '👤', color: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300', desc: 'Transaksi sesuai permission' },
-  { value: 'manager', label: 'Manager', icon: '👔', color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300', desc: 'Lihat laporan, kelola operasional' },
-  { value: 'admin', label: 'Admin', icon: '👑', color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300', desc: 'Akses penuh tenant' },
-  { value: 'super_admin', label: 'Super Admin', icon: '⚡', color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300', desc: 'Platform operator' },
+  { value: 'user', label: 'Kasir', icon: User, color: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300', desc: 'Transaksi sesuai permission' },
+  { value: 'manager', label: 'Manager', icon: Briefcase, color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300', desc: 'Lihat laporan, kelola operasional' },
+  { value: 'admin', label: 'Admin', icon: Crown, color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300', desc: 'Akses penuh tenant' },
+  { value: 'super_admin', label: 'Super Admin', icon: Zap, color: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300', desc: 'Platform operator' },
 ] as const
 
 const ROLE_COLORS: Record<string, string> = {
@@ -98,7 +98,7 @@ export default function AdminRolesPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {ROLES.map(r => (
             <div key={r.value} className={`p-3 rounded-xl border ${r.color}`}>
-              <p className="text-sm font-bold">{r.icon} {r.label}</p>
+              <p className="flex items-center gap-1.5 text-sm font-bold"><r.icon className="w-4 h-4 shrink-0" /> {r.label}</p>
               <p className="text-[11px] opacity-75 mt-0.5">{r.desc}</p>
             </div>
           ))}
@@ -190,7 +190,7 @@ export default function AdminRolesPage() {
                                 onChange={e => handleRoleChange(u.id, e.target.value as UserRole)}
                                 className="appearance-none px-2 py-1.5 pr-7 text-xs border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400"
                               >
-                                {ROLES.map(r => <option key={r.value} value={r.value}>{r.icon} {r.label}</option>)}
+                                {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                               </select>
                               <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
                             </div>
@@ -244,13 +244,13 @@ export default function AdminRolesPage() {
                         onChange={e => handleRoleChange(u.id, e.target.value as UserRole)}
                         className="w-full appearance-none px-2 py-1.5 pr-7 text-xs border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400"
                       >
-                        {ROLES.map(r => <option key={r.value} value={r.value}>{r.icon} {r.label}</option>)}
+                        {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                       </select>
                       <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
                     </div>
                   </div>
                   {u.outlet?.name && (
-                    <p className="text-[11px] text-gray-400 mt-1.5">🏪 {u.outlet.name}</p>
+                    <p className="flex items-center gap-1 text-[11px] text-gray-400 mt-1.5"><Store className="w-3 h-3 shrink-0" /> {u.outlet.name}</p>
                   )}
                 </div>
               ))}

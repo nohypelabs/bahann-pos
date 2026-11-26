@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { trpc } from '@/lib/trpc/client'
 import { getLimits } from '@/lib/plans'
 import { formatCurrency } from '@/lib/utils'
-import { DollarSign, Receipt, Package, CreditCard, History, BarChart3, FileText, Lock } from 'lucide-react'
+import { DollarSign, Receipt, Package, CreditCard, History, BarChart3, FileText, Lock, Check, X, Undo2 } from 'lucide-react'
 
 function fmtDateTime(d: string) {
   return new Date(d).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
@@ -27,9 +27,14 @@ const STATUS_BADGE: Record<string, string> = {
   refunded:  'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300',
 }
 const STATUS_LABEL: Record<string, string> = {
-  completed: '✓ Completed',
-  voided:    '✕ Voided',
-  refunded:  '↩ Refunded',
+  completed: 'Completed',
+  voided:    'Voided',
+  refunded:  'Refunded',
+}
+const STATUS_ICON: Record<string, ReactNode> = {
+  completed: <Check className="w-3 h-3" />,
+  voided:    <X className="w-3 h-3" />,
+  refunded:  <Undo2 className="w-3 h-3" />,
 }
 
 export default function SalesHistoryPage() {
@@ -277,7 +282,8 @@ export default function SalesHistoryPage() {
                       {tx.cashierName && <p className="text-xs text-gray-400">Kasir: {tx.cashierName}</p>}
                     </td>
                     <td className="px-3 md:px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_BADGE[tx.status] || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${STATUS_BADGE[tx.status] || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'}`}>
+                        {STATUS_ICON[tx.status]}
                         {STATUS_LABEL[tx.status] || tx.status}
                       </span>
                     </td>

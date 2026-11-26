@@ -10,7 +10,7 @@ import {
   MessageCircle, Check, Zap, DollarSign, Headphones,
   Store, UtensilsCrossed, Coffee, Shirt, Pill, ShoppingBag,
   ArrowRight, Scissors, Car, Wrench, Fish, WashingMachine,
-  ChefHat, BriefcaseBusiness, Layers2,
+  ChefHat, BriefcaseBusiness, Layers2, X,
 } from 'lucide-react'
 
 type Lang = 'id' | 'en'
@@ -1012,7 +1012,7 @@ export default function LandingPage() {
                   <p className="text-[11px] opacity-80">{T.chat.subtitle[lang]}</p>
                 </div>
               </div>
-              <button onClick={() => setChatOpen(false)} className="hover:bg-white/20 rounded-full p-1.5 transition-colors text-lg">✕</button>
+              <button onClick={() => setChatOpen(false)} aria-label={lang === 'id' ? 'Tutup' : 'Close'} className="hover:bg-white/20 rounded-full p-1.5 transition-colors"><X className="w-5 h-5" /></button>
             </div>
             <div className="h-72 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-900 flex flex-col gap-3">
               <div className="flex gap-3">
@@ -1067,7 +1067,7 @@ export default function LandingPage() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 cursor-pointer" onClick={dismissExitModal}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-default" />
           <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-[fadeIn_0.25s_ease-out]" onClick={e => e.stopPropagation()}>
-            <button onClick={dismissExitModal} className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-gray-500 dark:text-gray-400 text-lg" aria-label="Close">✕</button>
+            <button onClick={dismissExitModal} className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-gray-500 dark:text-gray-400" aria-label={lang === 'id' ? 'Tutup' : 'Close'}><X className="w-4 h-4" /></button>
             <div className="bg-gradient-to-br from-green-600 to-emerald-600 p-6 text-center text-white">
               <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
                 <Zap className="w-7 h-7" />

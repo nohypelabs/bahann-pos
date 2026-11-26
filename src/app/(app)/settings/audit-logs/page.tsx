@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { ClipboardList } from 'lucide-react'
+import { ClipboardList, X } from 'lucide-react'
 import { Input, Select } from '@/components/ui/Input'
 import { trpc } from '@/lib/trpc/client'
 
@@ -355,10 +355,11 @@ export default function AuditLogsPage() {
             <div className="flex items-center justify-between mb-3 md:mb-6">
               <h2 className="text-base md:text-2xl font-bold text-gray-900 dark:text-gray-100">Audit Log Details</h2>
               <button
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300 text-base md:text-2xl"
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:text-gray-300"
                 onClick={() => setSelectedLog(null)}
+                aria-label="Tutup"
               >
-                ✕
+                <X className="w-4 h-4 md:w-5 md:h-5" />
               </button>
             </div>
 

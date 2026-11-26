@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useRef, useState } from 'react'
+import { X } from 'lucide-react'
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Select } from '@/components/ui/Input'
@@ -169,7 +170,7 @@ export function BulkImportModal({ onClose, onSuccess }: BulkImportModalProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>{t('products.import.title')}</CardTitle>
-            <button onClick={onClose} aria-label={t('common.close')} className="text-base md:text-2xl text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">✕</button>
+            <button onClick={onClose} aria-label={t('common.close')} className="text-base md:text-2xl text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"><X className="w-5 h-5 md:w-6 md:h-6" /></button>
           </div>
         </CardHeader>
 

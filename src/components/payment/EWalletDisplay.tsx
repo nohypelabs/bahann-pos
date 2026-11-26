@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Check, Copy } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { trpc } from '@/lib/trpc/client'
 
@@ -13,8 +14,8 @@ interface EWalletDisplayProps {
 }
 
 const WALLETS = [
-  { name: 'GoPay', icon: '🟢', color: 'from-green-500 to-green-600' },
-  { name: 'DANA', icon: '🔵', color: 'from-blue-500 to-blue-600' },
+  { name: 'GoPay', dot: 'bg-green-500', color: 'from-green-500 to-green-600' },
+  { name: 'DANA', dot: 'bg-blue-500', color: 'from-blue-500 to-blue-600' },
 ]
 
 export function EWalletDisplay({
@@ -69,13 +70,13 @@ export function EWalletDisplay({
           <button
             key={w.name}
             onClick={() => setSelectedWallet(w.name)}
-            className={`flex-1 py-3 rounded-xl border-2 font-semibold text-sm transition-all ${
+            className={`flex flex-1 items-center justify-center gap-2 py-3 rounded-xl border-2 font-semibold text-sm transition-all ${
               selectedWallet === w.name
                 ? 'border-blue-500 bg-blue-50 text-blue-700'
                 : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
             }`}
           >
-            {w.icon} {w.name}
+            <span className={`h-2.5 w-2.5 rounded-full ${w.dot}`} /> {w.name}
           </button>
         ))}
       </div>
@@ -89,9 +90,9 @@ export function EWalletDisplay({
               <p className="text-base md:text-2xl font-mono font-bold tracking-wider">{ewalletPhone}</p>
               <button
                 onClick={() => copyToClipboard(ewalletPhone, 'phone')}
-                className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm"
+                className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-sm"
               >
-                {copied === 'phone' ? '✓ Copied' : '📋 Copy'}
+                {copied === 'phone' ? <><Check className="w-4 h-4" /> Copied</> : <><Copy className="w-4 h-4" /> Copy</>}
               </button>
             </div>
           </div>
@@ -111,9 +112,9 @@ export function EWalletDisplay({
           </p>
           <button
             onClick={() => copyToClipboard(amount.toString(), 'amount')}
-            className="px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-900 rounded-lg transition-colors font-medium"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-900 rounded-lg transition-colors font-medium"
           >
-            {copied === 'amount' ? '✓ Copied' : '📋 Copy'}
+            {copied === 'amount' ? <><Check className="w-4 h-4" /> Copied</> : <><Copy className="w-4 h-4" /> Copy</>}
           </button>
         </div>
         <p className="text-xs text-gray-500 mt-2">Transfer dengan nominal EXACT</p>

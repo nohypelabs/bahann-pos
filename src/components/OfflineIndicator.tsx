@@ -7,6 +7,7 @@
  * Auto-hides when online and all synced.
  */
 
+import { CheckCircle2, Clock, RefreshCw, Wifi, WifiOff, XCircle } from 'lucide-react'
 import { useOffline } from '@/hooks/useOffline'
 
 export function OfflineIndicator() {
@@ -25,7 +26,7 @@ export function OfflineIndicator() {
       return {
         color: 'bg-red-500',
         textColor: 'text-white',
-        icon: '📡',
+        icon: WifiOff,
         message: 'Mode Offline',
         pulse: true
       }
@@ -35,7 +36,7 @@ export function OfflineIndicator() {
       return {
         color: 'bg-yellow-500',
         textColor: 'text-white',
-        icon: '🔄',
+        icon: RefreshCw,
         message: 'Menyinkronkan...',
         pulse: false
       }
@@ -45,7 +46,7 @@ export function OfflineIndicator() {
       return {
         color: 'bg-green-500',
         textColor: 'text-white',
-        icon: '✅',
+        icon: CheckCircle2,
         message: 'Tersinkronisasi',
         pulse: false
       }
@@ -55,7 +56,7 @@ export function OfflineIndicator() {
       return {
         color: 'bg-red-500',
         textColor: 'text-white',
-        icon: '❌',
+        icon: XCircle,
         message: 'Gagal Sinkronisasi',
         pulse: true
       }
@@ -66,7 +67,7 @@ export function OfflineIndicator() {
       return {
         color: 'bg-blue-500',
         textColor: 'text-white',
-        icon: '⏳',
+        icon: Clock,
         message: 'Menunggu Sinkronisasi',
         pulse: false
       }
@@ -75,13 +76,14 @@ export function OfflineIndicator() {
     return {
       color: 'bg-gray-500',
       textColor: 'text-white',
-      icon: '📶',
+      icon: Wifi,
       message: 'Online',
       pulse: false
     }
   }
 
   const status = getStatusConfig()
+  const StatusIcon = status.icon
 
   return (
     <div className="fixed bottom-4 right-4 z-50 max-w-xs">
@@ -93,9 +95,7 @@ export function OfflineIndicator() {
       `}>
         <div className="flex items-center gap-3">
           {/* Icon */}
-          <span className={`text-sm md:text-xl ${syncStatus === 'syncing' ? 'animate-spin' : ''}`}>
-            {status.icon}
-          </span>
+          <StatusIcon className={`w-4 h-4 md:w-5 md:h-5 shrink-0 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
 
           {/* Message */}
           <div className="flex-1">

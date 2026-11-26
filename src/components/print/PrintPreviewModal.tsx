@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useEffect } from 'react'
+import { Printer, X } from 'lucide-react'
 import { PrintReceipt, ReceiptData } from './PrintReceipt'
 import { Button } from '@/components/ui/Button'
 import { printHtmlDocument } from '@/lib/print/printHtmlDocument'
@@ -61,7 +62,7 @@ export function PrintPreviewModal({ isOpen, onClose, receiptData }: PrintPreview
             aria-label="Tutup"
             className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-gray-300 bg-gray-100 text-2xl text-gray-500 transition hover:bg-gray-200"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -75,8 +76,8 @@ export function PrintPreviewModal({ isOpen, onClose, receiptData }: PrintPreview
           <Button variant="secondary" onClick={onClose}>
             Batal
           </Button>
-          <Button variant="primary" onClick={handlePrint}>
-            🖨️ Print Struk
+          <Button variant="primary" onClick={handlePrint} className="gap-2">
+            <Printer className="w-4 h-4" /> Print Struk
           </Button>
         </div>
       </div>

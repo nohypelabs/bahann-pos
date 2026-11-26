@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { Receipt, FileSpreadsheet, FileText, Lock } from 'lucide-react'
+import { Receipt, FileSpreadsheet, FileText, Lock, X } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { SectionCard } from '@/components/ui/SectionCard'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -300,7 +300,7 @@ export default function TransactionsPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="w-full max-w-md">
             <SectionCard title="Void Transaksi"
-              action={<button onClick={closeVoid} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">✕</button>}
+              action={<button onClick={closeVoid} aria-label={t('common.close')} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none"><X className="w-5 h-5" /></button>}
             >
               <div className="space-y-3">
                 <p className="text-sm text-gray-500 dark:text-gray-400">Berikan alasan void (minimal 10 karakter):</p>
@@ -323,7 +323,7 @@ export default function TransactionsPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="w-full max-w-md">
             <SectionCard title="Refund Transaksi"
-              action={<button onClick={closeRefund} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">✕</button>}
+              action={<button onClick={closeRefund} aria-label={t('common.close')} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none"><X className="w-5 h-5" /></button>}
             >
               <div className="space-y-3">
                 <p className="text-sm text-gray-500 dark:text-gray-400">Berikan alasan refund (minimal 10 karakter):</p>

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { CheckCircle2, Eye, EyeOff } from 'lucide-react'
 
 function LoginContent() {
   const router = useRouter()
@@ -97,8 +98,9 @@ function LoginContent() {
             <form onSubmit={handleLogin} className="space-y-3 sm:space-y-6">
               {showRegisteredMessage && (
                 <div className="p-3 bg-green-50 border-2 border-green-200 rounded-[18px]">
-                  <p className="text-sm font-semibold text-green-600">
-                    ✅ {t('register.success')} Cek email Anda untuk verifikasi sebelum login.
+                  <p className="flex items-start gap-2 text-sm font-semibold text-green-600">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{t('register.success')} Cek email Anda untuk verifikasi sebelum login.</span>
                   </p>
                 </div>
               )}
@@ -147,9 +149,10 @@ function LoginContent() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
                   >
-                    {showPassword ? '🙈' : '👁️'}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>

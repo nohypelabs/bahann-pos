@@ -12,7 +12,7 @@ import { useToast } from '@/components/ui/Toast'
 import { trpc } from '@/lib/trpc/client'
 import { getLimits } from '@/lib/plans'
 import type { Outlet } from '@/types'
-import { Store, CheckCircle, MapPin, Plus, Pencil, Trash2 } from 'lucide-react'
+import { Store, CheckCircle, MapPin, Plus, Pencil, Trash2, X } from 'lucide-react'
 import { friendlyError } from '@/lib/errors/friendlyError'
 
 // ─── Modal ───────────────────────────────────────────────────────────────────
@@ -46,7 +46,7 @@ function OutletFormModal({ outlet, onClose, onSuccess }: {
       <div className="w-full max-w-md">
         <SectionCard
           title={outlet ? 'Edit Outlet' : 'Tambah Outlet Baru'}
-          action={<button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none transition-colors">✕</button>}
+          action={<button onClick={onClose} aria-label="Tutup" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"><X className="w-5 h-5" /></button>}
         >
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input label="Nama Outlet *" type="text" value={name}

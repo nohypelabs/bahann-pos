@@ -9,16 +9,26 @@ import { useToast } from '@/components/ui/Toast'
 import { trpc } from '@/lib/trpc/client'
 import { friendlyError } from '@/lib/errors/friendlyError'
 import { useSoleOutlet } from '@/hooks/useSoleOutlet'
+import { Crown, MapPin, Store, User, Search, Briefcase, X, XCircle, Check, ChevronDown, type LucideIcon } from 'lucide-react'
 
 const ROLES = [
-  { key: 'ADMIN_TENANT', label: '👑 Admin Tenant', desc: 'Akses penuh semua outlet', scope: 'TENANT', icon: '👑' },
-  { key: 'AREA_MANAGER', label: '📍 Area Manager', desc: 'Akses beberapa outlet (group)', scope: 'OUTLET_GROUP', icon: '📍' },
-  { key: 'STORE_MANAGER', label: '🏪 Store Manager', desc: 'Kelola 1 outlet', scope: 'OUTLET', icon: '🏪' },
-  { key: 'CASHIER', label: '👤 Kasir', desc: 'POS transaksi di 1 outlet', scope: 'OUTLET', icon: '👤' },
-  { key: 'AUDITOR', label: '🔍 Auditor', desc: 'Read-only laporan & audit log', scope: 'TENANT', icon: '🔍' },
+  { key: 'ADMIN_TENANT', label: 'Admin Tenant', desc: 'Akses penuh semua outlet', scope: 'TENANT', icon: Crown },
+  { key: 'AREA_MANAGER', label: 'Area Manager', desc: 'Akses beberapa outlet (group)', scope: 'OUTLET_GROUP', icon: MapPin },
+  { key: 'STORE_MANAGER', label: 'Store Manager', desc: 'Kelola 1 outlet', scope: 'OUTLET', icon: Store },
+  { key: 'CASHIER', label: 'Kasir', desc: 'POS transaksi di 1 outlet', scope: 'OUTLET', icon: User },
+  { key: 'AUDITOR', label: 'Auditor', desc: 'Read-only laporan & audit log', scope: 'TENANT', icon: Search },
 ] as const
 
 type RoleKey = typeof ROLES[number]['key']
+
+function RoleBadgeContent({ label, icon: Icon }: { label: string; icon?: LucideIcon }) {
+  return (
+    <>
+      {Icon && <Icon className="w-3 h-3 shrink-0" />}
+      {label}
+    </>
+  )
+}
 
 function StyledSelect<T extends string>({ label, value, onChange, options }: {
   label: string; value: T; onChange: (v: T) => void
@@ -33,7 +43,7 @@ function StyledSelect<T extends string>({ label, value, onChange, options }: {
         >
           {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
-        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">▾</span>
+        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
       </div>
     </div>
   )
@@ -185,17 +195,17 @@ export default function UsersManagementPage() {
     )
   }
 
-  const getRoleBadge = (user: any) => {
+  const getRoleBadge = (user: any): { label: string; icon?: LucideIcon } => {
     const rbacRole = user.rbac_roles?.[0]
     if (rbacRole) {
       const role = ROLES.find(r => r.key === rbacRole.role_key)
-      return role ? `${role.icon} ${rbacRole.role_name}` : rbacRole.role_name
+      return { label: rbacRole.role_name, icon: role?.icon }
     }
     // Legacy fallback
     switch (user.role) {
-      case 'admin': return '👑 Admin'
-      case 'manager': return '👔 Manager'
-      default: return '👤 Kasir'
+      case 'admin': return { label: 'Admin', icon: Crown }
+      case 'manager': return { label: 'Manager', icon: Briefcase }
+      default: return { label: 'Kasir', icon: User }
     }
   }
 
@@ -242,8 +252,8 @@ export default function UsersManagementPage() {
                   <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">{user.name}</td>
                   <td className="px-3 md:px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{user.email}</td>
                   <td className="px-3 md:px-4 py-3">
-                    <span className="px-2 py-0.5 text-[10px] rounded-full font-bold bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
-                      {getRoleBadge(user)}
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full font-bold bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
+                      <RoleBadgeContent {...getRoleBadge(user)} />
                     </span>
                   </td>
                   <td className="px-3 md:px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{getScopeInfo(user)}</td>
@@ -267,12 +277,12 @@ export default function UsersManagementPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <SectionCard title="Tambah Pengguna"
-              action={<button onClick={closeForm} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">✕</button>}
+              action={<button onClick={closeForm} aria-label="Tutup" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X className="w-5 h-5" /></button>}
             >
               <form onSubmit={handleSubmit} className="space-y-4">
                 {formError && (
                   <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
-                    <span>❌</span>
+                    <XCircle className="w-4 h-4 shrink-0 text-red-500" />
                     <p className="text-xs font-semibold text-red-700 dark:text-red-300">{formError}</p>
                   </div>
                 )}
@@ -297,7 +307,7 @@ export default function UsersManagementPage() {
                             : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                         }`}
                       >
-                        <span className="text-xl">{role.icon}</span>
+                        <role.icon className="w-5 h-5 shrink-0 text-gray-500 dark:text-gray-400" />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold text-gray-900 dark:text-white">{role.label}</p>
                           <p className="text-[11px] text-gray-500 dark:text-gray-400">{role.desc}</p>
@@ -395,7 +405,7 @@ export default function UsersManagementPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <SectionCard title={`Edit: ${editingUser.name}`}
-              action={<button onClick={closeEditUser} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none">✕</button>}
+              action={<button onClick={closeEditUser} aria-label="Tutup" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X className="w-5 h-5" /></button>}
             >
               <div className="space-y-4">
                 <div>
@@ -420,12 +430,12 @@ export default function UsersManagementPage() {
                               : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
                           }`}
                         >
-                          <span className="text-xl">{role.icon}</span>
+                          <role.icon className="w-5 h-5 shrink-0 text-gray-500 dark:text-gray-400" />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-gray-900 dark:text-white">{role.label}</p>
                             <p className="text-[11px] text-gray-500 dark:text-gray-400">{role.desc}</p>
                           </div>
-                          {isCurrentRole && <span className="text-xs text-blue-500 font-semibold">✓ Aktif</span>}
+                          {isCurrentRole && <span className="inline-flex items-center gap-1 text-xs text-blue-500 font-semibold"><Check className="w-3.5 h-3.5" /> Aktif</span>}
                         </button>
                       )
                     })}

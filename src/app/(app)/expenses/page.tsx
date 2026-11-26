@@ -12,7 +12,7 @@ import { businessDate } from '@/lib/business/timezone'
 import {
   Plus, Minus, Receipt, TrendingDown, Tag, X, Upload,
   CheckCircle2, XCircle, Info, Camera, Trash2, ChevronDown,
-  Zap, Droplets, Users, ShoppingCart, Wrench, Car, Home, FileText,
+  Zap, Droplets, Users, ShoppingCart, Wrench, Car, Home, FileText, Paperclip,
 } from 'lucide-react'
 import { friendlyError } from '@/lib/errors/friendlyError'
 import { useSoleOutlet } from '@/hooks/useSoleOutlet'
@@ -350,7 +350,7 @@ export default function ExpensesPage() {
                       </div>
                       <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
                         {exp.user?.name || '—'} • {exp.category.replace('_', ' ')}
-                        {exp.receipt_url && ' • 📎'}
+                        {exp.receipt_url && <> • <Paperclip className="inline w-3 h-3 -mt-0.5" /></>}
                       </p>
                     </div>
 

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/Button'
 import { trpc } from '@/lib/trpc/client'
-import { Package, Store, ShoppingCart, AlertTriangle, CheckCircle2, XCircle, CalendarClock } from 'lucide-react'
+import { Package, Store, ShoppingCart, AlertTriangle, CheckCircle2, XCircle, CalendarClock, Check } from 'lucide-react'
 import { businessDate } from '@/lib/business/timezone'
 import { friendlyError } from '@/lib/errors/friendlyError'
 import { useSoleOutlet } from '@/hooks/useSoleOutlet'
@@ -331,8 +331,8 @@ export default function StockManagementPage() {
                 </button>
               )}
               {formData.stockDate === today && (
-                <span className="px-3 py-2.5 text-xs font-semibold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl whitespace-nowrap">
-                  ✓ Hari ini
+                <span className="inline-flex items-center gap-1 px-3 py-2.5 text-xs font-semibold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl whitespace-nowrap">
+                  <Check className="w-3.5 h-3.5" /> Hari ini
                 </span>
               )}
             </div>

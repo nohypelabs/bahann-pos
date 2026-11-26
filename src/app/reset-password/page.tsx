@@ -7,6 +7,7 @@ import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card'
 import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { friendlyError } from '@/lib/errors/friendlyError'
+import { XCircle, Clock, CheckCircle2, Info, Eye, EyeOff, KeyRound, Lock } from 'lucide-react'
 
 function ResetPasswordContent() {
   const router = useRouter()
@@ -95,7 +96,7 @@ function ResetPasswordContent() {
           <Card variant="elevated" padding="lg">
             <CardBody>
               <div className="text-center py-8">
-                <div className="mb-4 text-6xl">❌</div>
+                <div className="mb-4 flex justify-center"><XCircle className="w-12 h-12 text-red-500" /></div>
                 <h3 className="text-2xl font-bold text-red-600 mb-2">Link Tidak Valid</h3>
                 <p className="text-gray-600 mb-6">
                   Link reset password tidak valid. Silakan request ulang reset password.
@@ -136,7 +137,7 @@ function ResetPasswordContent() {
           <Card variant="elevated" padding="lg">
             <CardBody>
               <div className="text-center py-8">
-                <div className="mb-4 text-6xl">⏰</div>
+                <div className="mb-4 flex justify-center"><Clock className="w-12 h-12 text-red-500" /></div>
                 <h3 className="text-2xl font-bold text-red-600 mb-2">Token Tidak Valid</h3>
                 <p className="text-gray-600 mb-6">{error}</p>
                 <a href="/forgot-password" className="text-blue-600 hover:underline font-semibold">
@@ -168,7 +169,7 @@ function ResetPasswordContent() {
           <CardBody>
             {success ? (
               <div className="text-center py-8">
-                <div className="mb-4 text-6xl">✅</div>
+                <div className="mb-4 flex justify-center"><CheckCircle2 className="w-12 h-12 text-green-500" /></div>
                 <h3 className="text-2xl font-bold text-green-600 mb-2">Password Berhasil Direset!</h3>
                 <p className="text-gray-600 mb-4">
                   Password Anda telah berhasil diubah. Anda akan dialihkan ke halaman login...
@@ -187,14 +188,15 @@ function ResetPasswordContent() {
                   </div>
                 )}
                 <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
-                  <p className="text-sm text-blue-900">
-                    💡 Masukkan password baru Anda (minimal 8 karakter)
+                  <p className="flex items-start gap-2 text-sm text-blue-900">
+                    <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>Masukkan password baru Anda (minimal 8 karakter)</span>
                   </p>
                 </div>
 
                 {error && (
                   <div className="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
-                    <p className="text-sm font-semibold text-red-600">❌ {error}</p>
+                    <p className="flex items-center gap-2 text-sm font-semibold text-red-600"><XCircle className="w-4 h-4 shrink-0" /> {error}</p>
                   </div>
                 )}
 
@@ -213,9 +215,10 @@ function ResetPasswordContent() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                     >
-                      {showPassword ? '🙈' : '👁️'}
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                   <p className="text-xs text-gray-500">Gunakan kombinasi huruf, angka, dan simbol</p>
@@ -236,15 +239,16 @@ function ResetPasswordContent() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? 'Sembunyikan password' : 'Tampilkan password'}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                     >
-                      {showConfirmPassword ? '🙈' : '👁️'}
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
 
                 <Button type="submit" variant="primary" size="lg" fullWidth disabled={isLoading}>
-                  {isLoading ? 'Memproses...' : '🔐 Reset Password'}
+                  {isLoading ? 'Memproses...' : <><KeyRound className="w-4 h-4 mr-2" /> Reset Password</>}
                 </Button>
 
                 <div className="text-center">
@@ -260,7 +264,7 @@ function ResetPasswordContent() {
         {/* Info Box */}
         {!success && (
           <div className="mt-6 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
-            <p className="text-sm text-yellow-900 font-semibold mb-2">🔒 Keamanan:</p>
+            <p className="flex items-center gap-1.5 text-sm text-yellow-900 font-semibold mb-2"><Lock className="w-4 h-4 shrink-0" /> Keamanan:</p>
             <ul className="text-xs text-yellow-800 space-y-1">
               <li>• Password minimal 8 karakter</li>
               <li>• Gunakan kombinasi huruf besar, kecil, angka, dan simbol</li>

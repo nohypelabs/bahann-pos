@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback, type ReactNode } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { trpc } from '@/lib/trpc/client'
-import { Building2, Wallet, Smartphone, Upload, CheckCircle, XCircle } from 'lucide-react'
+import { Building2, Wallet, Smartphone, Upload, CheckCircle, XCircle, Check, ChevronDown } from 'lucide-react'
 import { friendlyError } from '@/lib/errors/friendlyError'
 
 type Section = 'bank' | 'ewallet' | 'qris' | null
@@ -288,14 +288,14 @@ function PaymentCard({
           <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{subtitle}</p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
-          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
             configured
               ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
               : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
           }`}>
-            {configured ? '✓ Aktif' : 'Belum diisi'}
+            {configured ? <><Check className="w-3.5 h-3.5" /> Aktif</> : 'Belum diisi'}
           </span>
-          <span className={`text-gray-400 dark:text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}>▾</span>
+          <ChevronDown className={`w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </div>
       </button>
 

@@ -8,6 +8,7 @@ import { SectionCard } from '@/components/ui/SectionCard'
 import { trpc } from '@/lib/trpc/client'
 import { useToast } from '@/components/ui/Toast'
 import { friendlyError } from '@/lib/errors/friendlyError'
+import { Check, CheckCircle2, AlertTriangle, Trash2, Loader2 } from 'lucide-react'
 
 type Step = 1 | 2 | 3 | 'done'
 
@@ -22,7 +23,7 @@ function StepIndicator({ current }: { current: Step }) {
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
               active ? 'bg-red-600 text-white' : done ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
             }`}>
-              {done ? '✓' : s}
+              {done ? <Check className="w-4 h-4" /> : s}
             </div>
             {s < 3 && (
               <div className={`h-1 w-10 rounded transition-colors ${done ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700'}`} />
@@ -63,7 +64,7 @@ export default function ResetDataPage() {
       <div className="max-w-xl mx-auto space-y-4 md:space-y-6">
         <PageHeader title="Reset Selesai" subtitle="Data sistem berhasil dihapus. Siap untuk setup pelanggan baru." />
 
-        <SectionCard title="✅ Reset Berhasil">
+        <SectionCard title="Reset Berhasil" action={<CheckCircle2 className="w-5 h-5 text-green-500" />}>
           <div className="space-y-2 mb-4">
             <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Data yang dihapus:</p>
             {Object.entries(result).map(([key, count]) => (
@@ -87,7 +88,7 @@ export default function ResetDataPage() {
 
       {/* Warning banner */}
       <div className="flex gap-3 p-3.5 bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 rounded-xl">
-        <span className="text-base shrink-0">⚠️</span>
+        <AlertTriangle className="w-5 h-5 shrink-0 text-red-600 dark:text-red-400" />
         <div>
           <p className="text-sm font-bold text-red-700 dark:text-red-300 mb-0.5">Aksi ini tidak bisa dibatalkan!</p>
           <p className="text-xs text-red-600 dark:text-red-400">
@@ -144,7 +145,7 @@ export default function ResetDataPage() {
               ...(!keepOutlets ? ['Semua outlets'] : []),
             ].map(item => (
               <div key={item} className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400">
-                <span>🗑️</span><span>{item}</span>
+                <Trash2 className="w-4 h-4 shrink-0" /><span>{item}</span>
               </div>
             ))}
 
@@ -152,7 +153,7 @@ export default function ResetDataPage() {
               <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Yang dipertahankan:</p>
               {['User accounts & passwords', ...(keepOutlets ? ['Outlets'] : [])].map(item => (
                 <div key={item} className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
-                  <span>✅</span><span>{item}</span>
+                  <CheckCircle2 className="w-4 h-4 shrink-0" /><span>{item}</span>
                 </div>
               ))}
             </div>
@@ -182,7 +183,9 @@ export default function ResetDataPage() {
               <Button variant="outline" fullWidth onClick={() => setStep(2)} disabled={resetMutation.isPending}>← Kembali</Button>
               <Button variant="danger" fullWidth onClick={handleReset}
                 disabled={confirmText !== 'RESET ALL DATA' || resetMutation.isPending}>
-                {resetMutation.isPending ? '⏳ Menghapus…' : '🗑️ RESET SEMUA DATA'}
+                {resetMutation.isPending
+                  ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Menghapus…</>
+                  : <><Trash2 className="w-4 h-4 mr-2" /> RESET SEMUA DATA</>}
               </Button>
             </div>
           </div>

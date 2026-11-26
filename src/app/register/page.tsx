@@ -8,6 +8,7 @@ import { trpc } from '@/lib/trpc/client'
 import { BUSINESS_TYPE_OPTIONS } from '@/lib/business/business-type-options'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { friendlyError } from '@/lib/errors/friendlyError'
+import { Check, CheckCircle2, Eye, EyeOff, X, XCircle } from 'lucide-react'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -129,7 +130,7 @@ export default function RegisterPage() {
           <div>
             {success ? (
               <div className="text-center py-8">
-                <div className="mb-4 text-6xl">✅</div>
+                <div className="mb-4 flex justify-center"><CheckCircle2 className="w-12 h-12 text-green-500" /></div>
                 <h3 className="text-2xl font-bold text-green-600 mb-2">
                   {isId ? 'Pendaftaran Berhasil!' : 'Registration Successful!'}
                 </h3>
@@ -142,7 +143,7 @@ export default function RegisterPage() {
               <form onSubmit={handleNextStep} className="space-y-4">
                 {error && (
                   <div className="p-4 bg-red-50 border-2 border-red-200 rounded-[20px]">
-                    <p className="text-sm font-semibold text-red-600">❌ {error}</p>
+                    <p className="flex items-center gap-2 text-sm font-semibold text-red-600"><XCircle className="w-4 h-4 shrink-0" /> {error}</p>
                   </div>
                 )}
 
@@ -204,7 +205,7 @@ export default function RegisterPage() {
                         className="shrink-0 px-3 py-2.5 rounded-[20px] border-2 border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 transition-colors"
                         aria-label={isId ? 'Hapus outlet tambahan' : 'Remove additional outlet'}
                       >
-                        ✕
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
                   ))}
@@ -259,9 +260,10 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? (isId ? 'Sembunyikan password' : 'Hide password') : (isId ? 'Tampilkan password' : 'Show password')}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
                     >
-                      {showPassword ? '🙈' : '👁️'}
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
@@ -283,9 +285,10 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? (isId ? 'Sembunyikan password' : 'Hide password') : (isId ? 'Tampilkan password' : 'Show password')}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
                     >
-                      {showConfirmPassword ? '🙈' : '👁️'}
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
@@ -310,7 +313,7 @@ export default function RegisterPage() {
               <div className="space-y-4">
                 {error && (
                   <div className="p-4 bg-red-50 border-2 border-red-200 rounded-[20px]">
-                    <p className="text-sm font-semibold text-red-600">❌ {error}</p>
+                    <p className="flex items-center gap-2 text-sm font-semibold text-red-600"><XCircle className="w-4 h-4 shrink-0" /> {error}</p>
                   </div>
                 )}
 
@@ -335,11 +338,11 @@ export default function RegisterPage() {
                       >
                         {isSelected && (
                           <div className="absolute top-3 right-3 w-5 h-5 rounded-[20px] bg-blue-500 flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">✓</span>
+                            <Check className="w-3.5 h-3.5 text-white" />
                           </div>
                         )}
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl">{bt.icon}</span>
+                          <bt.icon className="w-6 h-6 text-[#0F5F56]" aria-hidden />
                           <div>
                             <h3 className={`text-sm font-bold ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>
                               {t(`businessType.${bt.key}.title`)}
@@ -367,7 +370,7 @@ export default function RegisterPage() {
                   >
                     {isLoading
                       ? (isId ? 'Mendaftar...' : 'Registering...')
-                      : (isId ? '🚀 Daftar' : '🚀 Register')}
+                      : (isId ? 'Daftar' : 'Register')}
                   </Button>
                 </div>
               </div>

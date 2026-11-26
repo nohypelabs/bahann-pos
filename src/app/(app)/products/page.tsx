@@ -14,7 +14,7 @@ import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
 import { BUSINESS_TYPE_DEFAULTS } from '@/domain/entities/BusinessProfile'
 import type { Product, SelectChangeEvent } from '@/types'
-import { Package, FolderOpen, CheckCircle, AlertTriangle, Tag, Trash2, Download, Pencil, Plus, Barcode, Printer } from 'lucide-react'
+import { Package, FolderOpen, CheckCircle, AlertTriangle, Tag, Trash2, Download, Pencil, Plus, Barcode, Printer, X, ChefHat, ChevronDown } from 'lucide-react'
 import { LABEL_SELECTION_KEY } from '@/lib/labels/sheets'
 import { friendlyError } from '@/lib/errors/friendlyError'
 
@@ -23,11 +23,12 @@ const fmtCurrency = (amount: number | null) =>
 
 // ─── Modal shell ─────────────────────────────────────────────────────────────
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  const { t } = useLanguage()
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="w-full max-w-md max-h-[90vh] overflow-y-auto">
         <SectionCard title={title}
-          action={<button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none transition-colors">✕</button>}
+          action={<button onClick={onClose} aria-label={t('common.close')} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"><X className="w-5 h-5" /></button>}
         >
           {children}
         </SectionCard>
@@ -66,7 +67,7 @@ function PricingTierBuilder({ tiers, onChange }: { tiers: PricingTierData[]; onC
             <input type="number" min="0" step="1" value={tier.pricePerUnit} onChange={e => updateTier(idx, 'pricePerUnit', parseInt(e.target.value) || 0)}
               className="w-full px-2 py-1.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none" />
           </div>
-          <button type="button" onClick={() => removeTier(idx)} className="mt-4 text-red-400 hover:text-red-600 text-sm font-bold">✕</button>
+          <button type="button" onClick={() => removeTier(idx)} aria-label="Hapus" className="mt-4 text-red-400 hover:text-red-600"><X className="w-4 h-4" /></button>
         </div>
       ))}
       <button type="button" onClick={addTier}
@@ -182,10 +183,10 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
           <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Tipe Item</label>
           <select value={formData.itemType} onChange={handleItemTypeChange}
             className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors">
-            <option value="PRODUCT">📦 Produk Fisik</option>
-            <option value="MENU">🍜 Menu / Makanan</option>
-            <option value="SERVICE">✂️ Jasa / Layanan</option>
-            <option value="PACKAGE">📦 Paket / Bundle</option>
+            <option value="PRODUCT">Produk Fisik</option>
+            <option value="MENU">Menu / Makanan</option>
+            <option value="SERVICE">Jasa / Layanan</option>
+            <option value="PACKAGE">Paket / Bundle</option>
           </select>
         </div>
 
@@ -246,9 +247,9 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
           <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Perilaku Stok</label>
           <select value={formData.stockBehavior} onChange={f('stockBehavior')}
             className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors">
-            <option value="TRACKED">📊 Stok Terlacak</option>
-            <option value="UNTRACKED">♾️ Tanpa Stok</option>
-            <option value="CONSUMED">🍳 Stok Bahan Baku (Resep)</option>
+            <option value="TRACKED">Stok Terlacak</option>
+            <option value="UNTRACKED">Tanpa Stok</option>
+            <option value="CONSUMED">Stok Bahan Baku (Resep)</option>
           </select>
           <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
             {formData.stockBehavior === 'TRACKED' && 'Stok dipotong otomatis setiap transaksi'}
@@ -262,9 +263,9 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
           <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Model Harga</label>
           <select value={formData.pricingModel} onChange={f('pricingModel')}
             className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors">
-            <option value="FIXED">💰 Harga Tetap</option>
-            <option value="TIERED">📊 Harga Grosir (Tiered)</option>
-            <option value="TIME_BASED">⏱️ Harga Per Durasi</option>
+            <option value="FIXED">Harga Tetap</option>
+            <option value="TIERED">Harga Grosir (Tiered)</option>
+            <option value="TIME_BASED">Harga Per Durasi</option>
           </select>
         </div>
 
@@ -501,7 +502,7 @@ export default function ProductsPage() {
             {canManage && <Button variant="secondary" size="sm" onClick={() => handleAssignBarcodes(true)} disabled={assignBarcodes.isPending}><Barcode className="w-4 h-4 mr-1" /> {t('products.codes.assignSelected')}</Button>}
             <Button variant="secondary" size="sm" onClick={handlePrintLabels}><Printer className="w-4 h-4 mr-1" /> {t('products.labels.print')}</Button>
             {canManage && <Button variant="danger" size="sm" onClick={handleBatchDelete}><Trash2 className="w-4 h-4 mr-1" /> Hapus</Button>}
-            <Button variant="outline" size="sm" onClick={clearSelection}>✕ Batal</Button>
+            <Button variant="outline" size="sm" onClick={clearSelection}><X className="w-4 h-4 mr-1" /> Batal</Button>
           </div>
         </div>
       )}
@@ -522,7 +523,7 @@ export default function ProductsPage() {
             <option value="">Semua Kategori</option>
             {categories?.map(cat => <option key={cat} value={cat}>{cat}</option>)}
           </select>
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">▾</span>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         </div>
         {canManage && (
           <>
@@ -592,8 +593,8 @@ export default function ProductsPage() {
                           </span>
                         )}
                         {(product as any).stock_behavior && (product as any).stock_behavior !== 'TRACKED' && (
-                          <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
-                            {(product as any).stock_behavior === 'UNTRACKED' ? '∞' : '🍳'}
+                          <span className="shrink-0 inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                            {(product as any).stock_behavior === 'UNTRACKED' ? '∞' : <ChefHat className="w-3 h-3" />}
                           </span>
                         )}
                       </div>

@@ -7,7 +7,7 @@ import {
   BarChart3, Package, ShoppingCart, TrendingUp, Tag, Users,
   Smartphone, Palette, Settings, Lock, Radio, Wifi,
   Telescope, Building, Rocket, ScrollText, Heart,
-  Handshake, MessageCircle, Star, ExternalLink, Mail, Phone
+  Handshake, MessageCircle, Star, ExternalLink, Mail, Phone, Check
 } from 'lucide-react'
 
 export default function AboutPage() {
@@ -220,7 +220,7 @@ export default function AboutPage() {
                 <ul className="space-y-1.5">
                   {feature.items.map((item, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                      <span className="text-emerald-600 dark:text-emerald-400 font-bold mt-0.5">✓</span>
+                      <Check className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
                       <span>{item}</span>
                     </li>
                   ))}

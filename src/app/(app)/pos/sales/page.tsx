@@ -13,7 +13,7 @@ import { printHtmlDocument } from '@/lib/print/printHtmlDocument'
 import { formatCurrency, generateTransactionId } from '@/lib/utils'
 import { offlineDb } from '@/lib/offline/database'
 import { useOffline } from '@/hooks/useOffline'
-import { BadgePercent, Check, CloudOff, LayoutGrid, List, Package, Pencil, RefreshCw, ScanLine, Search, ShoppingCart, Store, Sunrise, WalletCards } from 'lucide-react'
+import { AlertTriangle, BadgePercent, Ban, Check, CloudOff, CreditCard, Eye, LayoutGrid, List, MessageCircle, Package, Pencil, Printer, RefreshCw, ScanLine, Search, ShoppingCart, Store, Sunrise, Trash2, WalletCards, X } from 'lucide-react'
 import { PriceOverrideModal, type PriceChange } from '@/components/discount/PriceOverrideModal'
 import { ManualDiscountModal } from '@/components/discount/ManualDiscountModal'
 import type { DiscountReason, ManualDiscount } from '@/domain/sales/manualDiscount'
@@ -632,7 +632,7 @@ export default function SalesTransactionPage() {
           <div className="flex items-center gap-2 shrink-0">
             {planUsage && planUsage.limit !== null && !planUsage.isAtLimit && planUsage.count >= 80 && (
               <button onClick={() => setShowUpgradeModal(true)} className="hidden rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 sm:block">
-                ⚠️ {planUsage.count}/{planUsage.limit}
+                <AlertTriangle className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />{planUsage.count}/{planUsage.limit}
               </button>
             )}
 
@@ -761,7 +761,7 @@ export default function SalesTransactionPage() {
             <div className="flex flex-col flex-1 overflow-hidden p-3 gap-2">
               {!selectedOutletId && (
                 <div className="p-2 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg shrink-0">
-                  <p className="text-xs text-yellow-800 dark:text-yellow-300 font-semibold">⚠️ Pilih outlet terlebih dahulu</p>
+                  <p className="flex items-center gap-1.5 text-xs text-yellow-800 dark:text-yellow-300 font-semibold"><AlertTriangle className="w-3.5 h-3.5 shrink-0" /> Pilih outlet terlebih dahulu</p>
                 </div>
               )}
 
@@ -770,7 +770,7 @@ export default function SalesTransactionPage() {
                 <div className="relative flex-1 min-w-0">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
                   <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearchEnter() } }} placeholder="Cari produk / scan barcode..." disabled={!selectedOutletId} className="w-full pl-10 pr-8 py-2.5 border border-stone-200 rounded-xl bg-[#fcfbf7] text-sm text-stone-900 focus:border-emerald-500 focus:outline-none disabled:opacity-50" />
-                  {productSearch && <button onClick={() => setProductSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 hover:bg-stone-200 rounded-full w-6 h-6 flex items-center justify-center transition-colors">✕</button>}
+                  {productSearch && <button onClick={() => setProductSearch('')} aria-label="Hapus pencarian" className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 hover:bg-stone-200 rounded-full w-6 h-6 flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>}
                 </div>
                 {categories.length > 0 && (
                   <select
@@ -879,7 +879,7 @@ export default function SalesTransactionPage() {
                             )}
                           </div>
                           <div className="col-span-2 flex items-center justify-center">
-                            {isSelected ? <span className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs">✓</span> : <span className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600" />}
+                            {isSelected ? <span className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs"><Check className="w-3 h-3" /></span> : <span className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600" />}
                           </div>
                         </div>
                         {/* Mobile row — bigger touch target, 3 cols */}
@@ -898,10 +898,10 @@ export default function SalesTransactionPage() {
                           </div>
                           <div className="col-span-2 flex items-center justify-end">
                             {isSelected
-                              ? <span className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs shrink-0">✓</span>
+                              ? <span className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs shrink-0"><Check className="w-3.5 h-3.5" /></span>
                               : isUntrackedItem
                                 ? <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">∞</span>
-                                : <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap ${stock === 0 ? 'bg-red-100 text-red-700' : stock <= 10 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>{stock === 0 ? '✕' : stock}</span>
+                                : <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap ${stock === 0 ? 'bg-red-100 text-red-700' : stock <= 10 ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>{stock === 0 ? <X className="inline w-3 h-3" /> : stock}</span>
                             }
                           </div>
                         </div>
@@ -1101,7 +1101,7 @@ export default function SalesTransactionPage() {
                     <span className="w-5 shrink-0 text-center font-semibold text-white">{item.quantity}</span>
                     <button onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)} aria-label={`Tambah ${item.productName}`} className="h-5 w-5 shrink-0 rounded border border-white/20 leading-none text-stone-300 hover:border-emerald-400">+</button>
                     <span className="w-[4.75rem] shrink-0 text-right font-semibold text-white">{formatCurrency(item.total)}</span>
-                    <button onClick={() => handleRemoveFromCart(item.productId)} aria-label={`Hapus ${item.productName}`} className="shrink-0 px-0.5 text-stone-500 hover:text-red-400">✕</button>
+                    <button onClick={() => handleRemoveFromCart(item.productId)} aria-label={`Hapus ${item.productName}`} className="shrink-0 px-0.5 text-stone-500 hover:text-red-400"><X className="w-3.5 h-3.5" /></button>
                   </div>
                 ))}
               </div>
@@ -1146,7 +1146,7 @@ export default function SalesTransactionPage() {
                     <p className="text-xs text-green-600 dark:text-green-400 font-semibold">{appliedPromo.promoName}</p>
                     <p className="text-xs text-green-700 dark:text-green-300">Hemat {formatCurrency(appliedPromo.discountAmount)}</p>
                   </div>
-                  <Button variant="outline" size="sm" onClick={handleRemovePromo}>✕</Button>
+                  <Button variant="outline" size="sm" onClick={handleRemovePromo} aria-label="Hapus promo"><X className="w-4 h-4" /></Button>
                 </div>
               )}
             </div>
@@ -1232,16 +1232,17 @@ export default function SalesTransactionPage() {
                   <div className="flex gap-1">
                     <button
                       onClick={handleDirectPrint}
-                      className="px-2.5 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg transition-colors"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-semibold rounded-lg transition-colors"
                     >
-                      🖨️ Print
+                      <Printer className="w-3.5 h-3.5" /> Print
                     </button>
                     <button
                       onClick={() => setIsPrintModalOpen(true)}
                       className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-semibold rounded-lg transition-colors"
                       title="Preview struk"
+                      aria-label="Preview struk"
                     >
-                      👁
+                      <Eye className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -1278,15 +1279,15 @@ export default function SalesTransactionPage() {
             </div>
             <button
               onClick={() => setIsPrintModalOpen(true)}
-              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold text-sm transition-colors shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold text-sm transition-colors shrink-0"
             >
-              👁 Preview
+              <Eye className="w-4 h-4" /> Preview
             </button>
             <button
               onClick={handleDirectPrint}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-colors shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-colors shrink-0"
             >
-              🖨️ Print
+              <Printer className="w-4 h-4" /> Print
             </button>
           </>
         ) : cart.length > 0 ? (
@@ -1300,7 +1301,7 @@ export default function SalesTransactionPage() {
               disabled={checkoutDisabled}
               className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:dark:bg-gray-700 text-white rounded-xl font-bold text-sm transition-colors shrink-0"
             >
-              {!selectedOutletId ? 'Pilih outlet' : checkoutDisabled || needsShift ? checkoutLabel : '💳 Bayar'}
+              {!selectedOutletId ? 'Pilih outlet' : checkoutDisabled || needsShift ? checkoutLabel : <span className="inline-flex items-center gap-1.5"><CreditCard className="w-4 h-4" /> Bayar</span>}
             </button>
           </>
         ) : (
@@ -1314,12 +1315,12 @@ export default function SalesTransactionPage() {
           <div className="absolute inset-0 bg-black/40 cursor-pointer" onClick={() => setIsCartOpen(false)} />
           <div className="relative w-96 bg-white dark:bg-gray-900 shadow-2xl flex flex-col h-full">
             <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 shrink-0">
-              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">🛒 Keranjang</h2>
+              <h2 className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-gray-100"><ShoppingCart className="w-4 h-4" /> Keranjang</h2>
               <div className="flex items-center gap-2">
                 {cart.length > 0 && (
                   <button onClick={() => setCart([])} className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 rounded-lg hover:bg-red-50">Kosongkan</button>
                 )}
-                <button onClick={() => setIsCartOpen(false)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500">✕</button>
+                <button onClick={() => setIsCartOpen(false)} aria-label={t('common.close')} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500"><X className="w-5 h-5" /></button>
               </div>
             </div>
 
@@ -1327,7 +1328,7 @@ export default function SalesTransactionPage() {
               {cart.length === 0 ? (
                 <div className="py-16 text-center">
                   <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-                    <span className="text-4xl">🛒</span>
+                    <ShoppingCart className="w-10 h-10 text-gray-400 dark:text-gray-500" />
                   </div>
                   <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Keranjang kosong</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Pilih produk untuk menambah item</p>
@@ -1353,7 +1354,7 @@ export default function SalesTransactionPage() {
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
-                    <button onClick={() => handleRemoveFromCart(item.productId)} className="ml-2 text-gray-400 hover:text-red-500 text-sm shrink-0">🗑️</button>
+                    <button onClick={() => handleRemoveFromCart(item.productId)} aria-label={`Hapus ${item.productName}`} className="ml-2 text-gray-400 hover:text-red-500 text-sm shrink-0"><Trash2 className="w-4 h-4" /></button>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -1401,12 +1402,12 @@ export default function SalesTransactionPage() {
       {showUpgradeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-gray-800 rounded-[18px] shadow-2xl max-w-md w-full p-4 md:p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4"><span className="text-xs md:text-lg md:text-3xl">🚫</span></div>
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4"><Ban className="w-8 h-8 text-red-600 dark:text-red-400" /></div>
             <h2 className="text-base md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Batas Transaksi Tercapai</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-2">Paket <span className="font-semibold text-blue-600">Gratis</span> hanya mendukung <span className="font-semibold">100 transaksi per bulan</span>.</p>
             <p className="text-gray-600 dark:text-gray-400 mb-3 md:mb-6">Upgrade ke paket <span className="font-semibold text-orange-500">Warung (Rp 99rb/bulan)</span> untuk transaksi tidak terbatas.</p>
             <div className="flex flex-col gap-3">
-              <a href={`https://wa.me/6287874415491?text=${encodeURIComponent('Halo, saya ingin upgrade dari paket Gratis ke paket Warung Laku POS (Rp 99rb/bulan). Mohon bantuannya.')}`} target="_blank" rel="noopener noreferrer" className="block w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-xs md:text-lg transition-colors">💬 Upgrade via WhatsApp</a>
+              <a href={`https://wa.me/6287874415491?text=${encodeURIComponent('Halo, saya ingin upgrade dari paket Gratis ke paket Warung Laku POS (Rp 99rb/bulan). Mohon bantuannya.')}`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-xs md:text-lg transition-colors"><MessageCircle className="w-4 h-4 md:w-5 md:h-5" /> Upgrade via WhatsApp</a>
               <button onClick={() => setShowUpgradeModal(false)} className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 transition-colors">Tutup</button>
             </div>
           </div>

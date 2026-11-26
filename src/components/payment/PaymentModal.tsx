@@ -11,6 +11,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Check, X, XCircle } from 'lucide-react'
 import { PaymentMethodSelector, type PaymentMethod } from './PaymentMethodSelector'
 import { QRISDisplay } from './QRISDisplay'
 import { BankTransferDisplay } from './BankTransferDisplay'
@@ -306,16 +307,17 @@ export function PaymentModal({
             </h2>
             <button
               onClick={handleClose}
+              aria-label="Tutup"
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <span className="text-base md:text-2xl">✕</span>
+              <X className="w-5 h-5 md:w-6 md:h-6" />
             </button>
           </div>
 
           {/* Error Message */}
           {error && (
             <div className="mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl">
-              <p className="text-red-700 font-medium">❌ {error}</p>
+              <p className="flex items-start gap-2 text-red-700 font-medium"><XCircle className="w-5 h-5 shrink-0 mt-0.5" /> {error}</p>
             </div>
           )}
 
@@ -411,7 +413,7 @@ export function PaymentModal({
           {step === 'completed' && (
             <div className="text-center py-4 md:py-8">
               <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-6xl">✓</span>
+                <Check className="w-12 h-12 text-green-600" />
               </div>
               <h3 className="text-base md:text-2xl font-bold text-gray-900 mb-2">
                 Pembayaran Berhasil!
