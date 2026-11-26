@@ -3,10 +3,12 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, MotionConfig, motion, useScroll, useTransform } from 'framer-motion'
-import { Mail, Menu, MessageCircle, Minus, Plus, X } from 'lucide-react'
+import { Check, CheckCircle2, Mail, Menu, MessageCircle, Minus, Plus, X } from 'lucide-react'
 import { LANDING as L, type Plan } from '@/components/landing/content'
 import { SUPPORT_WHATSAPP_DISPLAY, supportWhatsAppLink } from '@/lib/contact'
 import { landingFont } from '@/components/landing/fonts'
+import { trpc } from '@/lib/trpc/client'
+import { friendlyError } from '@/lib/errors/friendlyError'
 
 // Measured type scale: display 65 px / 1.06 / -0.02em, lead 21 px bold, body 17.5 px / 1.6,
 // labels 13 px bold upper case. Gutters 54 px (34 px in the dark bands) at desktop width.
@@ -335,39 +337,81 @@ function Ready() {
 
 // ─── 11. Pricing and FAQ ───────────────────────────────────────────────────────
 function PlanCard({ plan }: { plan: Plan }) {
+  const dark = plan.highlight
   const href = plan.href ?? supportWhatsAppLink(plan.waMessage)
+  const external = !plan.href
   return (
-    <article className="flex h-full flex-col rounded-[16px] border border-[#E6E8E7] bg-white px-7 pb-8 pt-7">
-      <div className="flex flex-wrap gap-2">
+    <motion.article whileHover={{ y: -4 }} transition={{ duration: 0.25, ease: 'easeOut' }}
+      className={`relative flex h-full flex-col rounded-[22px] p-8 md:p-9 ${dark ? 'bg-[#0C1F1B] text-white shadow-[0_30px_60px_-30px_rgba(4,28,21,0.6)]' : 'border border-[#E6E8E7] bg-white text-[#07110B]'}`}>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className={H3}>{plan.name}</h3>
         {plan.tag && (
-          <span className="inline-flex items-center gap-1.5 rounded-md bg-[#E3F1EE] px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-[#0F5F56]">
-            <span className="h-1 w-1 rounded-full bg-current" />{plan.tag}
+          <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] ${dark ? 'bg-[#F6C979] text-[#07110B]' : 'bg-[#E3F1EE] text-[#0F5F56]'}`}>
+            {plan.tag}
           </span>
         )}
-        {plan.period && <span className="rounded-md bg-[#F3F5F4] px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] text-[#07110B]">{plan.period}</span>}
       </div>
-      <h3 className="mt-6 text-[21px] font-bold leading-[1.25] tracking-[-0.025em] text-[#07110B]">{plan.name} · {plan.price}</h3>
-      <p className="mt-3 flex-1 text-[17.5px] leading-[1.6] text-[#565C59]">{plan.note}</p>
-      <a href={href} target={plan.href ? undefined : '_blank'} rel={plan.href ? undefined : 'noopener noreferrer'} className={`mt-8 w-fit ${LABEL} text-[#07110B] hover:opacity-70`}>{plan.cta}</a>
-    </article>
+      <p className={`mt-1.5 text-[15px] ${dark ? 'text-[#BCC2C0]' : 'text-[#565C59]'}`}>{plan.note}</p>
+
+      <p className="mt-8 flex items-baseline gap-1.5">
+        <span className="text-[44px] font-bold leading-none tracking-[-0.03em] tabular-nums">{plan.price}</span>
+        {plan.period && <span className={`text-[15px] ${dark ? 'text-[#BCC2C0]' : 'text-[#565C59]'}`}>{plan.period}</span>}
+      </p>
+
+      <div className={`my-8 h-px ${dark ? 'bg-white/12' : 'bg-[#E6E8E7]'}`} />
+
+      <ul className="flex-1 space-y-3.5">
+        {plan.features.map((f) => (
+          <li key={f} className="flex items-start gap-3 text-[15.5px] leading-snug">
+            <Check className={`mt-0.5 h-[18px] w-[18px] shrink-0 stroke-[2.25] ${dark ? 'text-[#F6C979]' : 'text-[#0F5F56]'}`} />
+            {f}
+          </li>
+        ))}
+      </ul>
+
+      <a href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}
+        className={`mt-10 inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3.5 ${LABEL} tracking-[0.02em] transition-colors ${
+          dark ? 'bg-white text-[#07110B] hover:bg-[#E3F1EE]' : 'bg-[#041C15] text-white hover:bg-[#0F5F56]'}`}>
+        {plan.cta}
+      </a>
+    </motion.article>
   )
 }
 
 function Pricing() {
-  const [once, setOnce] = useState(false)
-  const plans = once ? L.pricing.once : L.pricing.sub
+  const [mode, setMode] = useState<'sub' | 'once'>('sub')
+  const plans = mode === 'sub' ? L.pricing.sub : L.pricing.once
   return (
     <section id="harga" className={`scroll-mt-24 ${GUTTER} pb-10 pt-24 md:pt-[150px]`}>
-      <Reveal><h2 className={`${H2} text-[#07110B]`}>{L.pricing.title}</h2></Reveal>
+      <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+        <Reveal>
+          <h2 className={`${H2} text-[#07110B]`}>{L.pricing.title}</h2>
+          <p className={`mt-6 max-w-[520px] ${BODY} text-[#565C59]`}>{L.pricing.body}</p>
+        </Reveal>
+        <Reveal delay={0.1}>
+          <div className="inline-flex gap-1 rounded-full border border-[#E4EAE6] bg-white p-1" role="tablist">
+            {(['sub', 'once'] as const).map((m) => (
+              <button key={m} role="tab" aria-selected={mode === m} onClick={() => setMode(m)}
+                className={`relative rounded-full px-5 py-2.5 ${LABEL} transition-colors ${mode === m ? 'text-white' : 'text-[#565C59] hover:text-[#07110B]'}`}>
+                {mode === m && <motion.span layoutId="plan-mode" className="absolute inset-0 rounded-full bg-[#041C15]" transition={{ duration: 0.25 }} />}
+                <span className="relative">{m === 'sub' ? L.pricing.subscription : L.pricing.oneTime}</span>
+              </button>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+
       <AnimatePresence mode="wait">
-        <motion.div key={once ? 'once' : 'sub'} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }}
-          className={`mt-14 grid gap-6 ${plans.length === 4 ? 'md:grid-cols-2 xl:grid-cols-4' : 'md:grid-cols-3'}`}>
+        <motion.div key={mode} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3, ease: 'easeOut' }}
+          className={`mt-14 grid items-stretch gap-6 ${plans.length === 4 ? 'md:grid-cols-2 xl:grid-cols-4' : 'md:grid-cols-3'}`}>
           {plans.map((p) => <PlanCard key={p.name} plan={p} />)}
         </motion.div>
       </AnimatePresence>
-      <div className="mt-14 text-center">
-        <button onClick={() => setOnce(!once)} className={`${LABEL} text-[#07110B] hover:opacity-70`}>{once ? L.pricing.showSub : L.pricing.showOnce}</button>
-      </div>
+
+      <Reveal className="mt-12 flex flex-col items-start justify-between gap-5 rounded-[22px] bg-[#E7EAE9] px-8 py-7 md:flex-row md:items-center">
+        <p className={`${BODY} max-w-[680px] text-[#07110B]`}>{L.pricing.footnote}</p>
+        <Pill href="#kontak">{L.pricing.contact}</Pill>
+      </Reveal>
     </section>
   )
 }
@@ -400,20 +444,30 @@ function Faq() {
   )
 }
 
-// ─── 12. Contact: the form opens WhatsApp with the message filled in ──────────
+// ─── 12. Contact: saved for the team (superadmin → Pesan Masuk) ────────────────
+const TOPIC_KEYS = ['general', 'workshop', 'shop', 'partner'] as const
+
 function Contact() {
   const [tab, setTab] = useState(0)
-  const [form, setForm] = useState({ name: '', phone: '', business: '', message: '', agree: false })
+  const [form, setForm] = useState({ name: '', phone: '', business: '', message: '', agree: false, website: '' })
+  const [error, setError] = useState('')
+  const send = trpc.contact.submit.useMutation()
   const field = 'w-full border-0 border-b border-[#565C59] bg-transparent pb-2 pt-1 text-[16px] text-[#07110B] outline-none placeholder:text-[#565C59] focus:border-[#07110B]'
-  const submit = (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault()
-    const text = [
-      `Halo, saya ${form.name}${form.business ? ` dari ${form.business}` : ''}.`,
-      `Topik: ${L.contact.tabs[tab]}.`,
-      form.message,
-      form.phone ? `WhatsApp saya: ${form.phone}` : '',
-    ].filter(Boolean).join('\n')
-    window.open(supportWhatsAppLink(text), '_blank', 'noopener,noreferrer')
+    setError('')
+    try {
+      await send.mutateAsync({
+        topic: TOPIC_KEYS[tab],
+        name: form.name,
+        phone: form.phone || undefined,
+        businessName: form.business || undefined,
+        message: form.message,
+        website: form.website || undefined,
+      })
+    } catch (err) {
+      setError(friendlyError(err, L.contact.failed))
+    }
   }
   return (
     <section id="kontak" className={`scroll-mt-24 ${GUTTER} pb-[54px] pt-10`}>
@@ -429,26 +483,47 @@ function Contact() {
           </ul>
         </Reveal>
         <Reveal delay={0.1}>
-          <div className="inline-flex flex-wrap gap-1 rounded-full border border-[#E4EAE6] bg-white/70 p-0.5" role="tablist">
-            {L.contact.tabs.map((t, i) => (
-              <button key={t} role="tab" aria-selected={tab === i} onClick={() => setTab(i)}
-                className={`relative rounded-full px-4 py-1.5 ${LABEL} transition-colors ${tab === i ? 'text-white' : 'text-[#565C59] hover:text-[#07110B]'}`}>
-                {tab === i && <motion.span layoutId="contact-tab" className="absolute inset-0 rounded-full bg-[#041C15]" transition={{ duration: 0.25 }} />}
-                <span className="relative">{t}</span>
-              </button>
-            ))}
-          </div>
-          <form onSubmit={submit} className="mt-10 flex flex-col gap-10">
-            <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={L.contact.name} aria-label={L.contact.name} className={field} />
-            <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder={L.contact.phone} aria-label={L.contact.phone} inputMode="tel" className={field} />
-            <input value={form.business} onChange={(e) => setForm({ ...form, business: e.target.value })} placeholder={L.contact.business} aria-label={L.contact.business} className={field} />
-            <input required value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder={L.contact.message} aria-label={L.contact.message} className={field} />
-            <label className="flex items-center gap-3 text-[15px] text-[#07110B]">
-              <input type="checkbox" required checked={form.agree} onChange={(e) => setForm({ ...form, agree: e.target.checked })} className="h-[18px] w-[18px] rounded border-[#565C59] accent-[#041C15]" />
-              {L.contact.agree}
-            </label>
-            <button type="submit" className={`w-fit rounded-full bg-[#041C15] px-8 py-3.5 ${LABEL} tracking-[0.02em] text-white transition hover:bg-[#0F5F56]`}>{L.contact.submit}</button>
-          </form>
+          <AnimatePresence mode="wait">
+            {send.isSuccess ? (
+              <motion.div key="sent" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="rounded-[22px] bg-[#E7EAE9] p-8 md:p-12">
+                <CheckCircle2 className="h-8 w-8 stroke-[1.75] text-[#0F5F56]" />
+                <h3 className={`mt-5 ${H3} text-[#07110B]`}>{L.contact.sentTitle}</h3>
+                <p className={`mt-2 ${BODY} text-[#565C59]`}>{L.contact.sentBody}</p>
+                <div className="mt-8 flex flex-wrap items-center gap-7">
+                  <Pill href={supportWhatsAppLink(`Halo, saya ${form.name}. Saya baru mengirim pesan lewat website Laku POS.`)} external>{L.contact.sentWhatsapp}</Pill>
+                  <button onClick={() => { send.reset(); setForm({ name: '', phone: '', business: '', message: '', agree: false, website: '' }) }} className={`${LABEL} text-[#07110B] hover:opacity-70`}>{L.contact.sendAnother}</button>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div key="form" exit={{ opacity: 0, y: -8 }}>
+                <div className="inline-flex flex-wrap gap-1 rounded-full border border-[#E4EAE6] bg-white/70 p-0.5" role="tablist">
+                  {L.contact.tabs.map((t, i) => (
+                    <button key={t} type="button" role="tab" aria-selected={tab === i} onClick={() => setTab(i)}
+                      className={`relative rounded-full px-4 py-1.5 ${LABEL} transition-colors ${tab === i ? 'text-white' : 'text-[#565C59] hover:text-[#07110B]'}`}>
+                      {tab === i && <motion.span layoutId="contact-tab" className="absolute inset-0 rounded-full bg-[#041C15]" transition={{ duration: 0.25 }} />}
+                      <span className="relative">{t}</span>
+                    </button>
+                  ))}
+                </div>
+                <form onSubmit={submit} className="mt-10 flex flex-col gap-10">
+                  <input required maxLength={100} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={L.contact.name} aria-label={L.contact.name} autoComplete="name" className={field} />
+                  <input maxLength={30} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder={L.contact.phone} aria-label={L.contact.phone} inputMode="tel" autoComplete="tel" className={field} />
+                  <input maxLength={120} value={form.business} onChange={(e) => setForm({ ...form, business: e.target.value })} placeholder={L.contact.business} aria-label={L.contact.business} autoComplete="organization" className={field} />
+                  <textarea required maxLength={2000} rows={1} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder={L.contact.message} aria-label={L.contact.message} className={`${field} resize-none`} />
+                  {/* Honeypot: off-screen for people, filled in by bots */}
+                  <input tabIndex={-1} autoComplete="off" aria-hidden value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} className="absolute left-[-9999px] h-0 w-0 opacity-0" name="website" />
+                  <label className="flex items-center gap-3 text-[15px] text-[#07110B]">
+                    <input type="checkbox" required checked={form.agree} onChange={(e) => setForm({ ...form, agree: e.target.checked })} className="h-[18px] w-[18px] rounded border-[#565C59] accent-[#041C15]" />
+                    {L.contact.agree}
+                  </label>
+                  {error && <p role="alert" className="text-[15px] text-red-700">{error}</p>}
+                  <button type="submit" disabled={send.isPending} className={`w-fit rounded-full bg-[#041C15] px-8 py-3.5 ${LABEL} tracking-[0.02em] text-white transition hover:bg-[#0F5F56] disabled:opacity-60`}>
+                    {send.isPending ? L.contact.sending : L.contact.submit}
+                  </button>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Reveal>
       </div>
     </section>

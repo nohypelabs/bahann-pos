@@ -20,6 +20,24 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-27 · Landing contact form saved to the database (local app → production DB)
+
+Migration `060_contact_requests.sql` applied to production by hand and recorded in `_migrations`. `contact.submit`
+(public, 5 per 15 min per IP, honeypot field), `contact.list` / `contact.update` (superadmin only), page `/admin/leads`.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 24.1 | After 060: RLS and grants on `contact_requests` | RLS on, no access for anon/authenticated | ✅ rls true, anon SELECT false, authenticated INSERT false |
+| 24.2 | `contact.submit` without login, topic Bengkel, phone and business filled | Row saved with status new and the sender's IP | ✅ |
+| 24.3 | Same with the honeypot field filled | `{ ok: true }` returned, nothing saved | ✅ only the 24.2 row existed |
+| 24.4 | Empty name and message | Rejected | ✅ 400 |
+| 24.5 | `contact.list` without login | Refused | ✅ 401 |
+| 24.6 | Clean-up | Test rows deleted | ✅ 0 left |
+
+Not checked: `/admin/leads` in a browser as the superadmin (the superadmin account is the owner's own, not a test login).
+
+---
+
 ## 2026-11-27 · Landing page rebuilt section by section (local dev server, public page)
 
 The first version only borrowed the reference's mood; the owner wanted its structure. The reference was captured full

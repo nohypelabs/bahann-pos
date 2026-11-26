@@ -12,6 +12,7 @@ export interface Plan {
   href?: string
   waMessage?: string
   tag?: string
+  highlight?: boolean
 }
 
 export const LANDING = {
@@ -77,16 +78,19 @@ export const LANDING = {
     oneTime: 'Sekali bayar',
     showOnce: 'Lihat paket sekali bayar',
     showSub: 'Lihat paket berlangganan',
+    body: 'Mulai gratis, naik paket kapan saja. Semua harga dalam rupiah, tanpa biaya tersembunyi.',
+    footnote: 'Butuh paket khusus untuk beberapa cabang? Hubungi kami, kami siapkan penawarannya.',
+    contact: 'Hubungi kami',
     sub: [
-      { name: 'Gratis', price: 'Rp 0', note: 'Untuk mulai mencoba: 1 outlet, 1 kasir, 100 transaksi per bulan, laporan harian.', features: [], cta: 'Daftar gratis', href: '/register', tag: 'Selamanya' },
-      { name: 'Warung', price: 'Rp 99rb', period: 'per bulan', note: 'Transaksi tanpa batas, POS dan inventori, mode offline, dukungan WhatsApp.', features: [], cta: 'Pilih paket', waMessage: 'Halo, saya tertarik paket Warung Laku POS (Rp 99rb/bulan).', tag: 'Terjangkau' },
-      { name: 'Starter', price: 'Rp 299rb', period: 'per bulan', note: '3 pengguna, inventori lanjutan, ekspor PDF dan Excel, backup cloud.', features: [], cta: 'Pilih paket', waMessage: 'Halo, saya tertarik paket Starter Laku POS (Rp 299rb/bulan).', tag: 'Berkembang' },
-      { name: 'Professional', price: 'Rp 1,2jt', period: 'per bulan', note: '3 outlet dan 10 pengguna, audit log dan API, laporan kustom, dukungan prioritas.', features: [], cta: 'Pilih paket', waMessage: 'Halo, saya tertarik paket Professional Laku POS (Rp 1,2jt/bulan).', tag: 'Populer' },
+      { name: 'Gratis', price: 'Rp 0', note: 'Untuk mulai mencoba.', features: ['1 outlet, 1 kasir', 'POS dasar', '100 transaksi per bulan', 'Laporan harian'], cta: 'Daftar gratis', href: '/register', tag: 'Selamanya' },
+      { name: 'Warung', price: 'Rp 99rb', period: '/bulan', note: 'Toko yang aktif setiap hari.', features: ['Transaksi tanpa batas', 'POS + inventori', 'Mode offline', 'Dukungan WhatsApp'], cta: 'Pilih paket', waMessage: 'Halo, saya tertarik paket Warung Laku POS (Rp 99rb/bulan).', tag: 'Terjangkau' },
+      { name: 'Starter', price: 'Rp 299rb', period: '/bulan', note: 'Usaha yang mulai berkembang.', features: ['3 pengguna', 'Inventori lanjutan', 'Ekspor PDF & Excel', 'Backup cloud'], cta: 'Pilih paket', waMessage: 'Halo, saya tertarik paket Starter Laku POS (Rp 299rb/bulan).', tag: 'Berkembang' },
+      { name: 'Professional', price: 'Rp 1,2jt', period: '/bulan', note: 'Usaha dengan beberapa outlet.', features: ['3 outlet, 10 pengguna', 'Audit log & API', 'Laporan kustom', 'Dukungan prioritas'], cta: 'Pilih paket', waMessage: 'Halo, saya tertarik paket Professional Laku POS (Rp 1,2jt/bulan).', tag: 'Populer', highlight: true },
     ] as Plan[],
     once: [
-      { name: 'SME', price: 'Rp 75jt', period: 'sekali bayar', note: '1–3 outlet, setup dan pelatihan, update 1 tahun. Source code +30%.', features: [], cta: 'Minta penawaran', waMessage: 'Halo, saya tertarik paket sekali bayar SME Laku POS (Rp 75jt).', tag: 'Seumur hidup' },
-      { name: 'Business', price: 'Rp 150jt', period: 'sekali bayar', note: '5–10 outlet, termasuk source code, bisa self-host, update 2 tahun.', features: [], cta: 'Minta penawaran', waMessage: 'Halo, saya tertarik paket sekali bayar Business Laku POS (Rp 150jt).', tag: 'Terlengkap' },
-      { name: 'Enterprise', price: 'Rp 300jt', period: 'sekali bayar', note: 'Outlet tanpa batas, fitur kustom, jaminan SLA, account manager, white-label.', features: [], cta: 'Hubungi kami', waMessage: 'Halo, saya tertarik paket Enterprise Laku POS (Rp 300jt).', tag: 'White-label' },
+      { name: 'SME', price: 'Rp 75jt', period: 'sekali bayar', note: 'UKM, bayar sekali.', features: ['1–3 outlet', 'Setup & pelatihan', 'Update 1 tahun', 'Source code (+30%)'], cta: 'Minta penawaran', waMessage: 'Halo, saya tertarik paket sekali bayar SME Laku POS (Rp 75jt).', tag: 'Seumur hidup' },
+      { name: 'Business', price: 'Rp 150jt', period: 'sekali bayar', note: 'Termasuk source code.', features: ['5–10 outlet', 'Termasuk source code', 'Bisa self-host', 'Update 2 tahun'], cta: 'Minta penawaran', waMessage: 'Halo, saya tertarik paket sekali bayar Business Laku POS (Rp 150jt).', tag: 'Terlengkap', highlight: true },
+      { name: 'Enterprise', price: 'Rp 300jt', period: 'sekali bayar', note: 'Skala besar dan white-label.', features: ['Outlet tanpa batas', 'Fitur kustom', 'Jaminan SLA', 'Account manager & white-label'], cta: 'Hubungi kami', waMessage: 'Halo, saya tertarik paket Enterprise Laku POS (Rp 300jt).', tag: 'White-label' },
     ] as Plan[],
   },
   faq: {
@@ -110,6 +114,12 @@ export const LANDING = {
     message: 'Ceritakan kebutuhan Anda',
     agree: 'Saya setuju dihubungi lewat WhatsApp',
     submit: 'Mulai percakapan',
+    sending: 'Mengirim…',
+    failed: 'Pesan gagal terkirim. Coba lagi atau hubungi kami lewat WhatsApp.',
+    sentTitle: 'Pesan Anda sudah kami terima.',
+    sentBody: 'Tim Laku POS akan menghubungi Anda lewat WhatsApp. Kalau mendesak, langsung chat kami saja.',
+    sentWhatsapp: 'Chat sekarang',
+    sendAnother: 'Kirim pesan lain',
   },
   footer: {
     company: 'Perusahaan',
