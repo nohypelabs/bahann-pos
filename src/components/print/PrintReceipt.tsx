@@ -246,19 +246,6 @@ export const PrintReceipt = forwardRef<HTMLDivElement, PrintReceiptProps>(
             <p className="receipt-thank-you">Terima Kasih Atas Kunjungan Anda</p>
             <p className="receipt-footer-text">Barang yang sudah dibeli tidak dapat dikembalikan</p>
             <p className="receipt-footer-text">Simpan struk ini sebagai bukti pembayaran</p>
-            <div className="receipt-barcode">
-              <div className="receipt-barcode-lines">
-                {/* Simple barcode representation */}
-                <span>||||</span>
-                <span>||</span>
-                <span>||||</span>
-                <span>||</span>
-                <span>||||</span>
-                <span>||</span>
-                <span>||||</span>
-              </div>
-              <div className="receipt-barcode-text">{data.transactionId}</div>
-            </div>
           </div>
         </div>
       </div>

@@ -172,24 +172,6 @@
   color: #666;
 }
 
-.receipt-barcode {
-  margin-top: 15px;
-}
-
-.receipt-barcode-lines {
-  display: flex;
-  justify-content: center;
-  gap: 2px;
-  font-size: 20px;
-  letter-spacing: 1px;
-  margin-bottom: 4px;
-}
-
-.receipt-barcode-text {
-  font-size: 10px;
-  color: #666;
-}
-
 /* Print Styles */
 /* The page size (80 mm roll) comes from printHtmlDocument; no @page or body rules
    here, since this sheet is global and would change every printed page. */
@@ -210,6 +192,22 @@
   .receipt {
     font-size: 11px;
     background: white !important;
+  }
+
+  /* Thermal printers have no grey: grey text comes out as faint dots, and 9 px is below what the
+     203 dpi head prints cleanly. Everything is black and at least 10 px on paper. */
+  .receipt, .receipt * {
+    color: #000 !important;
+  }
+
+  .receipt-item-sku,
+  .receipt-footer-text {
+    font-size: 10px;
+  }
+
+  /* Light grey dots between lines printed as broken specks; a black dashed rule reads cleanly. */
+  .receipt-items-table td {
+    border-bottom: 1px dashed #000;
   }
 
   /* The printer already leaves ~13 mm above the first line (cutter to print head), so the
