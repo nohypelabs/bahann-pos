@@ -340,48 +340,6 @@ export class SupabaseUserRepository implements UserRepository {
     }
   }
 
-  async getSuspensionStatus(userId: string): Promise<{ isSuspended: boolean; outletId: string | null; role: string | null }> {
-    const { data, error } = await supabaseAdmin
-      .from('users')
-      .select('is_suspended, outlet_id, role')
-      .eq('id', userId)
-      .single()
-
-    if (error) {
-      throw new Error(`Failed to get suspension status: ${error.message}`)
-    }
-
-    return {
-      isSuspended: data?.is_suspended ?? false,
-      outletId: data?.outlet_id ?? null,
-      role: data?.role ?? null,
-    }
-  }
-
-  async isOwnerSuspended(outletId: string): Promise<boolean> {
-    const { data: outlet, error: outletError } = await supabaseAdmin
-      .from('outlets')
-      .select('owner_id')
-      .eq('id', outletId)
-      .single()
-
-    if (outletError || !outlet?.owner_id) {
-      return false
-    }
-
-    const { data: owner, error: ownerError } = await supabaseAdmin
-      .from('users')
-      .select('is_suspended')
-      .eq('id', outlet.owner_id)
-      .single()
-
-    if (ownerError) {
-      return false
-    }
-
-    return owner?.is_suspended ?? false
-  }
-
   async findAll(params: { page: number; limit: number; search?: string; tenantId?: string }): Promise<{ users: UserSummary[]; total: number }> {
     const { page, limit, search, tenantId } = params
     const offset = (page - 1) * limit

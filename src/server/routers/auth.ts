@@ -9,7 +9,7 @@ import { BUSINESS_TYPES } from '@/domain/catalog/value-objects/business-type'
 import { setAuthCookie, deleteAuthCookie, setRefreshCookie, deleteRefreshCookie, getRefreshCookie } from '@/lib/cookies'
 import { deleteImpersonationCookie } from '@/lib/impersonation/sessionCookie'
 import { createAuditLog } from '@/lib/audit'
-import { createRefreshToken, revokeRefreshToken, revokeAllUserTokens } from '@/lib/refreshToken'
+import { AccountSuspendedError, createRefreshToken, revokeRefreshToken, revokeAllUserTokens } from '@/lib/refreshToken'
 import { generateResetToken, sendNewUserNotification, sendWelcomeEmail, sendVerificationEmail } from '@/lib/email'
 import { AppError } from '@/shared/exceptions/AppError'
 import { checkRateLimit, RateLimitPresets } from '@/lib/security/rateLimiter'
@@ -235,24 +235,16 @@ export const authRouter = router({
       const useCase = new LoginUserUseCase(container.userRepository())
       const result = await useCase.execute(input)
 
-      // Check if tenant (or tenant's admin) is suspended
-      const userRepo = container.userRepository()
-      const suspension = await userRepo.getSuspensionStatus(result.user.id)
-
-      if (suspension.isSuspended) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Akun Anda telah dinonaktifkan. Hubungi admin.' })
-      }
-
-      // If cashier, check if their admin (outlet owner) is suspended
-      if (suspension.role === 'user' && suspension.outletId) {
-        const ownerSuspended = await userRepo.isOwnerSuspended(suspension.outletId)
-        if (ownerSuspended) {
-          throw new TRPCError({ code: 'FORBIDDEN', message: 'Akun bisnis Anda telah dinonaktifkan. Hubungi pemilik.' })
-        }
-      }
-
-      // Create refresh token and set cookies in parallel
-      const { refreshToken, accessToken } = await createRefreshToken(result.user.id)
+      // Refuses suspended accounts and staff of a suspended tenant.
+      const { refreshToken, accessToken } = await createRefreshToken(result.user.id).catch((error) => {
+        if (!(error instanceof AccountSuspendedError)) throw error
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: error.reason === 'USER'
+            ? 'Akun Anda telah dinonaktifkan. Hubungi admin.'
+            : 'Akun bisnis Anda telah dinonaktifkan. Hubungi pemilik.',
+        })
+      })
       await Promise.all([setAuthCookie(accessToken), setRefreshCookie(refreshToken)])
 
       // Fire-and-forget audit log (non-critical, don't block response)

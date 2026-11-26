@@ -26,6 +26,28 @@ export interface RefreshTokenData {
   ipAddress?: string
 }
 
+/** Why a session may not be issued: the account itself, or the tenant it belongs to, is suspended. */
+export type SuspensionReason = 'USER' | 'TENANT'
+
+export class AccountSuspendedError extends Error {
+  constructor(readonly reason: SuspensionReason) {
+    super(reason === 'USER' ? 'Account suspended' : 'Tenant suspended')
+    this.name = 'AccountSuspendedError'
+  }
+}
+
+/**
+ * A superadmin suspends a tenant by flagging its owner (users.id = tenant_id), so
+ * staff are checked against the owner's flag as well as their own.
+ */
+async function suspensionOf(user: { id: string; tenant_id: string | null; is_suspended: boolean | null }): Promise<SuspensionReason | null> {
+  if (user.is_suspended) return 'USER'
+  if (!user.tenant_id || user.tenant_id === user.id) return null
+  const { data: owner, error } = await supabase.from('users').select('is_suspended').eq('id', user.tenant_id).single()
+  if (error) throw new Error(`Failed to check tenant suspension: ${error.message}`)
+  return owner?.is_suspended ? 'TENANT' : null
+}
+
 /**
  * Generate a secure random refresh token
  *
@@ -65,13 +87,18 @@ export async function createRefreshToken(
     // Get user data for JWT payload
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('id, email, name, outlet_id, role, tenant_id')
+      .select('id, email, name, outlet_id, role, tenant_id, is_suspended')
       .eq('id', userId)
       .single()
 
     if (userError || !user) {
       throw new Error('User not found')
     }
+
+    // Every session starts here, at login and at each refresh, so a suspension
+    // ends open sessions within one access-token lifetime.
+    const suspension = await suspensionOf(user)
+    if (suspension) throw new AccountSuspendedError(suspension)
 
     // No server-side session record is created: the signed access token below is
     // the single source of truth, and this row in refresh_tokens is what makes
