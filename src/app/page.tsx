@@ -6,8 +6,9 @@ import { AnimatePresence, MotionConfig, motion, useScroll, useTransform } from '
 import { ArrowRight, Check, Menu, MessageCircle, Minus, Plus, X } from 'lucide-react'
 import { LANDING as L, type Plan } from '@/components/landing/content'
 import { supportWhatsAppLink } from '@/lib/contact'
+import { landingFont } from '@/components/landing/fonts'
 
-const INK = '#0B1A17'
+const INK = '#07110B'
 
 /**
  * Image slot. Without `src` it shows a 1920×1080 placeholder with its size, to be swapped for a
@@ -39,11 +40,11 @@ function Reveal({ children, delay = 0, className = '' }: { children: ReactNode; 
 
 function Pill({ href, children, tone = 'dark', external = false }: { href: string; children: ReactNode; tone?: 'dark' | 'light' | 'outline'; external?: boolean }) {
   const cls = {
-    dark: 'bg-[#0B1A17] text-white hover:bg-[#0F5F56]',
-    light: 'bg-white text-[#0B1A17] hover:bg-[#E3F1EE]',
-    outline: 'border border-[#0B1A17]/25 text-[#0B1A17] hover:border-[#0B1A17]',
+    dark: 'bg-[#07110B] text-white hover:bg-[#0F5F56]',
+    light: 'bg-white text-[#07110B] hover:bg-[#E3F1EE]',
+    outline: 'border border-[#07110B]/25 text-[#07110B] hover:border-[#07110B]',
   }[tone]
-  const className = `inline-flex items-center gap-2 rounded-full px-6 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-colors ${cls}`
+  const className = `inline-flex items-center gap-2 rounded-full px-7 py-3 text-[13px] font-bold uppercase tracking-[0.02em] transition-colors ${cls}`
   return external
     ? <a href={href} target="_blank" rel="noopener noreferrer" className={className}>{children}</a>
     : <Link href={href} className={className}>{children}</Link>
@@ -51,9 +52,17 @@ function Pill({ href, children, tone = 'dark', external = false }: { href: strin
 
 function Header() {
   const [scrolled, setScrolled] = useState(false)
+  const [hidden, setHidden] = useState(false)
   const [open, setOpen] = useState(false)
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24)
+    let last = window.scrollY
+    const onScroll = () => {
+      const y = window.scrollY
+      setScrolled(y > 8)
+      // Out of the way while reading down, back as soon as the reader scrolls up.
+      setHidden(y > 240 && y > last)
+      last = y
+    }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
@@ -64,32 +73,34 @@ function Header() {
     { href: '#faq', label: L.nav.faq },
   ]
   return (
-    <header className={`fixed inset-x-0 top-0 z-50 transition-colors duration-300 ${scrolled || open ? 'bg-[#F3F5F4]/90 backdrop-blur-md' : ''}`}>
-      <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-5 md:px-10">
+    <header className={`fixed inset-x-0 top-0 z-50 border-b backdrop-blur-[12px] backdrop-saturate-150 transition-[background-color,border-color,transform] duration-300 ${
+      scrolled || open ? 'border-[#07110B]/[0.06] bg-[#F3F5F4]/[0.82]' : 'border-transparent bg-[#F3F5F4]/40'
+    } ${hidden && !open ? '-translate-y-full' : 'translate-y-0'}`}>
+      <div className="mx-auto flex h-[84px] max-w-[1400px] items-center justify-between px-5 md:px-8">
         <Link href="/" className="flex items-center gap-2.5">
           <img src="/logo.svg" alt="" className="h-8 w-8" />
-          <span className="text-lg font-bold tracking-tight text-[#0B1A17]">Laku POS</span>
+          <span className="text-lg font-bold tracking-tight text-[#07110B]">Laku POS</span>
         </Link>
         <nav className="hidden items-center gap-10 md:flex">
           {links.map((l) => (
-            <a key={l.href} href={l.href} className="text-xs font-bold uppercase tracking-[0.12em] text-[#0B1A17] hover:text-[#0F5F56]">{l.label}</a>
+            <a key={l.href} href={l.href} className="text-[13px] font-bold uppercase tracking-[0.04em] text-[#07110B] hover:text-[#0F5F56]">{l.label}</a>
           ))}
         </nav>
         <div className="hidden items-center gap-6 md:flex">
-          <Link href="/login" className="text-xs font-bold uppercase tracking-[0.12em] text-[#0B1A17] hover:text-[#0F5F56]">{L.nav.login}</Link>
+          <Link href="/login" className="text-[13px] font-bold uppercase tracking-[0.04em] text-[#07110B] hover:text-[#0F5F56]">{L.nav.login}</Link>
           <Pill href="/register">{L.nav.register}</Pill>
         </div>
-        <button className="p-2 text-[#0B1A17] md:hidden" onClick={() => setOpen(!open)} aria-label={open ? 'Tutup menu' : 'Buka menu'} aria-expanded={open}>
+        <button className="p-2 text-[#07110B] md:hidden" onClick={() => setOpen(!open)} aria-label={open ? 'Tutup menu' : 'Buka menu'} aria-expanded={open}>
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
       <AnimatePresence>
         {open && (
           <motion.nav initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }} className="overflow-hidden border-t border-[#0B1A17]/10 md:hidden">
+            transition={{ duration: 0.2 }} className="overflow-hidden border-t border-[#07110B]/10 md:hidden">
             <div className="flex flex-col gap-1 px-5 py-4">
               {links.map((l) => (
-                <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="py-2.5 text-sm font-bold uppercase tracking-[0.12em] text-[#0B1A17]">{l.label}</a>
+                <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="py-2.5 text-[15px] font-bold uppercase tracking-[0.04em] text-[#07110B]">{l.label}</a>
               ))}
               <div className="mt-3 flex gap-3">
                 <Pill href="/login" tone="outline">{L.nav.login}</Pill>
@@ -106,9 +117,9 @@ function Header() {
 function Hero() {
   const word = 'LAKU POS'
   return (
-    <section className="relative overflow-hidden px-5 pb-16 pt-32 md:px-10 md:pb-24 md:pt-36">
+    <section className="relative overflow-hidden px-5 pb-16 pt-32 md:px-8 md:pb-24 md:pt-36">
       <div className="mx-auto max-w-[1400px]">
-        <h1 aria-label="Laku POS" className="flex justify-center overflow-hidden whitespace-nowrap text-[19vw] font-bold leading-[0.85] tracking-[-0.06em] text-[#0B1A17] xl:text-[260px]">
+        <h1 aria-label="Laku POS" className="flex justify-center overflow-hidden whitespace-nowrap text-[13.5vw] font-bold leading-[0.94] tracking-[-0.022em] text-[#07110B]">
           {word.split('').map((ch, i) => (
             <motion.span key={i} aria-hidden initial={{ y: '105%' }} animate={{ y: 0 }}
               transition={{ duration: 0.8, delay: 0.05 * i, ease: [0.22, 1, 0.36, 1] }} className="inline-block">
@@ -119,8 +130,8 @@ function Hero() {
 
         <div className="mt-14 grid items-center gap-10 md:mt-20 lg:grid-cols-[1fr_1.35fr] lg:gap-16">
           <Reveal>
-            <h2 className="max-w-md text-3xl font-bold leading-[1.1] tracking-tight text-[#0B1A17] md:text-[40px]">{L.hero.title}</h2>
-            <p className="mt-5 max-w-md text-base leading-relaxed text-[#33423E] md:text-lg">{L.hero.body}</p>
+            <h2 className="max-w-md text-3xl font-bold leading-[1.1] tracking-tight text-[#07110B] md:text-[40px]">{L.hero.title}</h2>
+            <p className="mt-5 max-w-md text-base leading-relaxed text-[#565C59] md:text-lg">{L.hero.body}</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Pill href="/register">{L.hero.primary} <ArrowRight className="h-4 w-4" /></Pill>
               <Pill href="#fitur" tone="outline">{L.hero.secondary}</Pill>
@@ -151,16 +162,16 @@ function WidePhoto() {
 
 function Why() {
   return (
-    <section className="px-5 py-20 md:px-10 md:py-32">
+    <section className="px-5 py-20 md:px-8 md:py-32">
       <div className="mx-auto grid max-w-[1400px] gap-12 lg:grid-cols-2 lg:gap-20">
         <Reveal>
-          <h2 className="max-w-xl text-5xl font-bold leading-[0.98] tracking-[-0.04em] text-[#0B1A17] md:text-7xl">{L.why.title}</h2>
+          <h2 className="max-w-xl text-[44px] font-bold leading-[1.06] tracking-[-0.02em] text-[#07110B] md:text-[65px]">{L.why.title}</h2>
         </Reveal>
-        <div className="divide-y divide-[#0B1A17]/12">
+        <div className="divide-y divide-[#07110B]/12">
           {L.why.items.map((item, i) => (
             <Reveal key={item.title} delay={i * 0.06} className="py-7 first:pt-0">
-              <h3 className="text-xl font-bold tracking-tight text-[#0B1A17]">{item.title}</h3>
-              <p className="mt-2 text-base leading-relaxed text-[#33423E]">{item.body}</p>
+              <h3 className="text-[21px] font-bold tracking-[-0.025em] text-[#07110B]">{item.title}</h3>
+              <p className="mt-2 max-w-[68ch] text-[15px] leading-[1.6] text-[#565C59]">{item.body}</p>
             </Reveal>
           ))}
         </div>
@@ -171,11 +182,11 @@ function Why() {
 
 function DarkBand() {
   return (
-    <section className="bg-[#071A17] px-5 py-20 text-white md:px-10 md:py-32">
+    <section className="bg-[#041C15] px-5 py-20 text-white md:px-8 md:py-32">
       <div className="mx-auto max-w-[1400px]">
         <div className="grid gap-10 lg:grid-cols-2 lg:items-end">
           <Reveal>
-            <h2 className="max-w-2xl text-5xl font-bold leading-[0.98] tracking-[-0.04em] md:text-7xl">{L.dark.title}</h2>
+            <h2 className="max-w-2xl text-[44px] font-bold leading-[1.06] tracking-[-0.02em] md:text-[65px]">{L.dark.title}</h2>
             <p className="mt-8 max-w-lg text-base leading-relaxed text-white/70 md:text-lg">{L.dark.body}</p>
           </Reveal>
           <Reveal delay={0.1} className="flex flex-col items-start gap-6 lg:items-end lg:text-right">
@@ -195,19 +206,19 @@ function DarkBand() {
 
 function Features() {
   return (
-    <section id="fitur" className="scroll-mt-24 px-5 py-20 md:px-10 md:py-32">
+    <section id="fitur" className="scroll-mt-24 px-5 py-20 md:px-8 md:py-32">
       <div className="mx-auto max-w-[1400px]">
         <Reveal>
-          <h2 className="text-5xl font-bold leading-[0.98] tracking-[-0.04em] text-[#0B1A17] md:text-7xl">{L.features.title}</h2>
+          <h2 className="text-[44px] font-bold leading-[1.06] tracking-[-0.02em] text-[#07110B] md:text-[65px]">{L.features.title}</h2>
         </Reveal>
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 md:mt-16">
           {L.features.items.map((f, i) => (
             <Reveal key={f.title} delay={i * 0.07}>
-              <article className="flex h-full flex-col rounded-[18px] border border-[#0B1A17]/10 bg-white p-6 transition-shadow hover:shadow-[0_20px_50px_-30px_rgba(11,26,23,0.45)]">
-                <span className="w-fit rounded-md bg-[#E3F1EE] px-2 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-[#0F5F56]">{f.tag}</span>
-                <h3 className="mt-5 text-xl font-bold leading-snug tracking-tight text-[#0B1A17]">{f.title}</h3>
-                <p className="mt-3 flex-1 text-[15px] leading-relaxed text-[#4A5753]">{f.body}</p>
-                <Link href="/register" className="mt-6 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.12em] text-[#0B1A17] hover:text-[#0F5F56]">
+              <article className="flex h-full flex-col rounded-[16px] border border-[#E6E8E7] bg-white px-7 pb-8 pt-7 transition-shadow hover:border-[#CDD3D0]">
+                <span className="w-fit rounded-md bg-[#E3F1EE] px-2 py-1 text-[11px] font-bold uppercase tracking-[0.06em] text-[#0F5F56]">{f.tag}</span>
+                <h3 className="mt-5 text-xl font-bold leading-snug tracking-tight text-[#07110B]">{f.title}</h3>
+                <p className="mt-3 flex-1 text-[15px] leading-relaxed text-[#565C59]">{f.body}</p>
+                <Link href="/register" className="mt-6 inline-flex items-center gap-1.5 text-[13px] font-bold uppercase tracking-[0.04em] text-[#07110B] hover:text-[#0F5F56]">
                   {L.features.more} <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </article>
@@ -223,10 +234,10 @@ function PlanCard({ plan }: { plan: Plan }) {
   const dark = plan.highlight
   const href = plan.href ?? supportWhatsAppLink(plan.waMessage)
   return (
-    <div className={`flex h-full flex-col rounded-[18px] p-7 ${dark ? 'bg-[#071A17] text-white' : 'border border-[#0B1A17]/10 bg-white text-[#0B1A17]'}`}>
+    <div className={`flex h-full flex-col rounded-[18px] p-7 ${dark ? 'bg-[#041C15] text-white' : 'border border-[#E6E8E7] bg-white text-[#07110B]'}`}>
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-lg font-bold">{plan.name}</h3>
-        {plan.tag && <span className={`rounded-md px-2 py-1 text-[11px] font-bold uppercase tracking-[0.12em] ${dark ? 'bg-white/10 text-[#F6C979]' : 'bg-[#E3F1EE] text-[#0F5F56]'}`}>{plan.tag}</span>}
+        {plan.tag && <span className={`rounded-md px-2 py-1 text-[11px] font-bold uppercase tracking-[0.06em] ${dark ? 'bg-white/10 text-[#F6C979]' : 'bg-[#E3F1EE] text-[#0F5F56]'}`}>{plan.tag}</span>}
       </div>
       <p className={`mt-1 text-sm ${dark ? 'text-white/60' : 'text-[#5F6B67]'}`}>{plan.note}</p>
       <p className="mt-6 text-4xl font-bold tracking-tight tabular-nums">
@@ -240,7 +251,7 @@ function PlanCard({ plan }: { plan: Plan }) {
         ))}
       </ul>
       <a href={href} target={plan.href ? undefined : '_blank'} rel={plan.href ? undefined : 'noopener noreferrer'}
-        className={`mt-8 inline-flex justify-center rounded-full px-6 py-3 text-xs font-bold uppercase tracking-[0.12em] transition-colors ${dark ? 'bg-white text-[#0B1A17] hover:bg-[#E3F1EE]' : 'bg-[#0B1A17] text-white hover:bg-[#0F5F56]'}`}>
+        className={`mt-8 inline-flex justify-center rounded-full px-6 py-3 text-[13px] font-bold uppercase tracking-[0.04em] transition-colors ${dark ? 'bg-white text-[#07110B] hover:bg-[#E3F1EE]' : 'bg-[#07110B] text-white hover:bg-[#0F5F56]'}`}>
         {plan.cta}
       </a>
     </div>
@@ -251,18 +262,18 @@ function Pricing() {
   const [mode, setMode] = useState<'sub' | 'once'>('sub')
   const plans = mode === 'sub' ? L.pricing.sub : L.pricing.once
   return (
-    <section id="harga" className="scroll-mt-24 bg-[#E9EEEC] px-5 py-20 md:px-10 md:py-32">
+    <section id="harga" className="scroll-mt-24 bg-[#E9EEEC] px-5 py-20 md:px-8 md:py-32">
       <div className="mx-auto max-w-[1400px]">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <Reveal>
-            <h2 className="text-5xl font-bold leading-[0.98] tracking-[-0.04em] text-[#0B1A17] md:text-7xl">{L.pricing.title}</h2>
-            <p className="mt-5 text-lg text-[#33423E]">{L.pricing.body}</p>
+            <h2 className="text-[44px] font-bold leading-[1.06] tracking-[-0.02em] text-[#07110B] md:text-[65px]">{L.pricing.title}</h2>
+            <p className="mt-5 text-lg text-[#565C59]">{L.pricing.body}</p>
           </Reveal>
           <div className="relative flex w-fit rounded-full bg-white p-1" role="tablist">
             {(['sub', 'once'] as const).map((m) => (
               <button key={m} role="tab" aria-selected={mode === m} onClick={() => setMode(m)}
-                className={`relative rounded-full px-5 py-2.5 text-xs font-bold uppercase tracking-[0.12em] transition-colors ${mode === m ? 'text-white' : 'text-[#0B1A17]'}`}>
-                {mode === m && <motion.span layoutId="plan-mode" className="absolute inset-0 rounded-full bg-[#0B1A17]" transition={{ duration: 0.25 }} />}
+                className={`relative rounded-full px-5 py-2.5 text-[13px] font-bold uppercase tracking-[0.04em] transition-colors ${mode === m ? 'text-white' : 'text-[#07110B]'}`}>
+                {mode === m && <motion.span layoutId="plan-mode" className="absolute inset-0 rounded-full bg-[#07110B]" transition={{ duration: 0.25 }} />}
                 <span className="relative">{m === 'sub' ? L.pricing.subscription : L.pricing.oneTime}</span>
               </button>
             ))}
@@ -282,22 +293,22 @@ function Pricing() {
 function Faq() {
   const [open, setOpen] = useState<number | null>(0)
   return (
-    <section id="faq" className="scroll-mt-24 px-5 py-20 md:px-10 md:py-32">
+    <section id="faq" className="scroll-mt-24 px-5 py-20 md:px-8 md:py-32">
       <div className="mx-auto grid max-w-[1400px] gap-12 lg:grid-cols-2 lg:gap-20">
         <Reveal>
-          <h2 className="text-5xl font-bold leading-[0.98] tracking-[-0.04em] text-[#0B1A17] md:text-7xl">{L.faq.title}</h2>
+          <h2 className="text-[44px] font-bold leading-[1.06] tracking-[-0.02em] text-[#07110B] md:text-[65px]">{L.faq.title}</h2>
         </Reveal>
-        <div className="divide-y divide-[#0B1A17]/12 border-y border-[#0B1A17]/12">
+        <div className="divide-y divide-[#07110B]/12 border-y border-[#07110B]/12">
           {L.faq.items.map((item, i) => (
             <div key={item.q}>
               <button className="flex w-full items-center justify-between gap-6 py-6 text-left" onClick={() => setOpen(open === i ? null : i)} aria-expanded={open === i}>
-                <span className="text-lg font-bold tracking-tight text-[#0B1A17]">{item.q}</span>
-                {open === i ? <Minus className="h-5 w-5 shrink-0 text-[#0B1A17]" /> : <Plus className="h-5 w-5 shrink-0 text-[#0B1A17]" />}
+                <span className="text-lg font-bold tracking-tight text-[#07110B]">{item.q}</span>
+                {open === i ? <Minus className="h-5 w-5 shrink-0 text-[#07110B]" /> : <Plus className="h-5 w-5 shrink-0 text-[#07110B]" />}
               </button>
               <AnimatePresence initial={false}>
                 {open === i && (
                   <motion.p initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25 }} className="overflow-hidden pr-10 text-base leading-relaxed text-[#33423E]">
+                    transition={{ duration: 0.25 }} className="overflow-hidden pr-10 text-base leading-relaxed text-[#565C59]">
                     <span className="block pb-6">{item.a}</span>
                   </motion.p>
                 )}
@@ -312,17 +323,17 @@ function Faq() {
 
 function ClosingCta() {
   return (
-    <section className="px-5 pb-20 md:px-10 md:pb-32">
+    <section className="px-5 pb-20 md:px-8 md:pb-32">
       <Reveal className="mx-auto max-w-[1400px] overflow-hidden rounded-[24px] bg-[#0F5F56] px-6 py-16 text-white md:px-16 md:py-24">
         <div className="flex flex-col gap-10 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 className="max-w-2xl text-5xl font-bold leading-[0.98] tracking-[-0.04em] md:text-7xl">{L.cta.title}</h2>
+            <h2 className="max-w-2xl text-[44px] font-bold leading-[1.06] tracking-[-0.02em] md:text-[65px]">{L.cta.title}</h2>
             <p className="mt-5 text-lg text-white/75">{L.cta.body}</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Pill href="/register" tone="light">{L.cta.primary} <ArrowRight className="h-4 w-4" /></Pill>
             <a href={supportWhatsAppLink(L.cta.waMessage)} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-white/40 px-6 py-3 text-xs font-bold uppercase tracking-[0.12em] text-white transition-colors hover:border-white">
+              className="inline-flex items-center gap-2 rounded-full border border-white/40 px-6 py-3 text-[13px] font-bold uppercase tracking-[0.04em] text-white transition-colors hover:border-white">
               <MessageCircle className="h-4 w-4" /> {L.cta.secondary}
             </a>
           </div>
@@ -334,29 +345,29 @@ function ClosingCta() {
 
 function Footer() {
   return (
-    <footer className="border-t border-[#0B1A17]/10 px-5 py-12 md:px-10">
+    <footer className="border-t border-[#07110B]/10 px-5 py-12 md:px-8">
       <div className="mx-auto grid max-w-[1400px] gap-10 md:grid-cols-[2fr_1fr_1fr]">
         <div>
           <div className="flex items-center gap-2.5">
             <img src="/logo.svg" alt="" className="h-7 w-7" />
-            <span className="text-base font-bold text-[#0B1A17]">Laku POS</span>
+            <span className="text-base font-bold text-[#07110B]">Laku POS</span>
           </div>
           <p className="mt-3 max-w-sm text-sm text-[#5F6B67]">{L.footer.tagline}</p>
         </div>
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#0B1A17]">{L.footer.product}</p>
-          <ul className="mt-4 space-y-2 text-sm text-[#4A5753]">
-            <li><a href="#fitur" className="hover:text-[#0B1A17]">{L.nav.features}</a></li>
-            <li><a href="#harga" className="hover:text-[#0B1A17]">{L.nav.pricing}</a></li>
-            <li><a href="#faq" className="hover:text-[#0B1A17]">{L.nav.faq}</a></li>
+          <p className="text-[13px] font-bold uppercase tracking-[0.04em] text-[#07110B]">{L.footer.product}</p>
+          <ul className="mt-4 space-y-2 text-sm text-[#565C59]">
+            <li><a href="#fitur" className="hover:text-[#07110B]">{L.nav.features}</a></li>
+            <li><a href="#harga" className="hover:text-[#07110B]">{L.nav.pricing}</a></li>
+            <li><a href="#faq" className="hover:text-[#07110B]">{L.nav.faq}</a></li>
           </ul>
         </div>
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#0B1A17]">{L.footer.company}</p>
-          <ul className="mt-4 space-y-2 text-sm text-[#4A5753]">
-            <li><Link href="/login" className="hover:text-[#0B1A17]">{L.nav.login}</Link></li>
-            <li><Link href="/register" className="hover:text-[#0B1A17]">{L.nav.register}</Link></li>
-            <li><a href={supportWhatsAppLink('Halo, saya butuh bantuan dengan Laku POS.')} target="_blank" rel="noopener noreferrer" className="hover:text-[#0B1A17]">{L.footer.contact}</a></li>
+          <p className="text-[13px] font-bold uppercase tracking-[0.04em] text-[#07110B]">{L.footer.company}</p>
+          <ul className="mt-4 space-y-2 text-sm text-[#565C59]">
+            <li><Link href="/login" className="hover:text-[#07110B]">{L.nav.login}</Link></li>
+            <li><Link href="/register" className="hover:text-[#07110B]">{L.nav.register}</Link></li>
+            <li><a href={supportWhatsAppLink('Halo, saya butuh bantuan dengan Laku POS.')} target="_blank" rel="noopener noreferrer" className="hover:text-[#07110B]">{L.footer.contact}</a></li>
           </ul>
         </div>
       </div>
@@ -368,7 +379,7 @@ function Footer() {
 export default function LandingPage() {
   return (
     <MotionConfig reducedMotion="user">
-      <div className="min-h-screen bg-[#F3F5F4] font-sans antialiased" style={{ color: INK }}>
+      <div className={`${landingFont.className} min-h-screen bg-[#F3F5F4] antialiased`} style={{ color: INK }}>
         <Header />
         <main>
           <Hero />
