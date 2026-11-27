@@ -31,12 +31,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         hover:bg-[#0B4E48]
       `,
       secondary: `
-        bg-[#F4F5F5] text-[#2F3A35]
+        glass-button bg-[#F4F5F5] text-[#2F3A35]
         border border-[#E4E6E7]
         hover:bg-[#EDEEEE] hover:text-[#17201D]
       `,
       outline: `
-        bg-white text-[#2F3A35]
+        glass-button bg-white text-[#2F3A35]
         border border-[#E4E6E7]
         hover:border-[#B9CBBF] hover:bg-[#F8F9F9] hover:text-[#0F5F56]
       `,

@@ -75,7 +75,7 @@ export default function MembersPage() {
       )}
 
       {list && list.length > 0 && (
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+        <div className="glass-surface rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="hidden lg:grid grid-cols-[1.4fr_1.4fr_1fr_1fr_0.8fr] gap-4 px-4 py-2.5 border-b border-gray-100 dark:border-gray-800 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
             <span>{t('workshop.members.col.customer')} · {t('workshop.members.count').replace('{n}', String(list.length))}</span>
             <span>{t('workshop.members.col.vehicles')}</span>

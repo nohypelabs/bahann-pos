@@ -139,7 +139,7 @@ function TenantsContent() {
         </button>
 
         {/* Tenant Header */}
-        <div className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm ${detailIsFree ? 'border-l-4 border-l-gray-300 dark:border-l-gray-600' : ''}`}>
+        <div className={`glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm ${detailIsFree ? 'border-l-4 border-l-gray-300 dark:border-l-gray-600' : ''}`}>
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
@@ -212,7 +212,7 @@ function TenantsContent() {
             { label: 'Transaksi', value: detail.stats.transactionCount.toLocaleString('id-ID'), icon: <ShoppingCart className="w-4 h-4" /> },
             { label: 'Revenue', value: fmtCurrency(detail.stats.totalRevenue), icon: <ShoppingCart className="w-4 h-4" /> },
           ].map(s => (
-            <div key={s.label} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 shadow-sm">
+            <div key={s.label} className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 shadow-sm">
               <div className="flex items-center gap-2 mb-1 text-gray-400 dark:text-gray-500">{s.icon}<span className="text-[10px] font-medium uppercase">{s.label}</span></div>
               <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{s.value}</p>
             </div>
@@ -220,7 +220,7 @@ function TenantsContent() {
         </div>
 
         {/* Outlets */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+        <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
           <div className="p-4 border-b border-gray-100 dark:border-gray-700">
             <h2 className="text-sm font-bold text-gray-900 dark:text-white">Outlet ({detail.outlets.length})</h2>
           </div>
@@ -236,7 +236,7 @@ function TenantsContent() {
         </div>
 
         {/* Users */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+        <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
           <div className="p-4 border-b border-gray-100 dark:border-gray-700">
             <h2 className="text-sm font-bold text-gray-900 dark:text-white">Pengguna ({detail.users.length} kasir)</h2>
           </div>
@@ -255,7 +255,7 @@ function TenantsContent() {
         </div>
 
         {/* Billing History */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+        <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
           <div className="p-4 border-b border-gray-100 dark:border-gray-700">
             <h2 className="text-sm font-bold text-gray-900 dark:text-white">Riwayat Billing</h2>
           </div>
@@ -519,7 +519,7 @@ function TenantsContent() {
       )}
 
       {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 md:p-4 shadow-sm">
+      <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 md:p-4 shadow-sm">
         <div className="flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -570,7 +570,7 @@ function TenantsContent() {
       </div>
 
       {/* Tenant List */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+      <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {[1, 2, 3, 4, 5].map(i => (

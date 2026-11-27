@@ -216,7 +216,7 @@ export default function AdminRolesPage() {
             {/* Mobile Cards */}
             <div className="md:hidden space-y-2">
               {users.map((u: any) => (
-                <div key={u.id} className="p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                <div key={u.id} className="glass-surface p-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${

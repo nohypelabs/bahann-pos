@@ -411,8 +411,8 @@ button:not(:disabled) { cursor: pointer; }
   }
 }
 
-/* Frosted glass panels (dashboard, cashier, warehouse). Needs a coloured backdrop behind it to read as
-   glass: AppLayout draws it and adds .glass-scope on those routes. .glass-surface only turns to glass
+/* Frosted glass panels on the app pages. Needs a coloured backdrop behind it to read as
+   glass: AppLayout draws it and adds .glass-scope (every page but /setup). .glass-surface only turns to glass
    inside .glass-scope, so shared cards stay plain white elsewhere. Falls back to solid white when the
    user asks for less transparency, and where backdrop-filter is unsupported. */
 .glass-panel,
@@ -435,6 +435,16 @@ button:not(:disabled) { cursor: pointer; }
     backdrop-filter: blur(14px) saturate(140%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 10px 30px -18px rgba(15, 95, 86, 0.6);
   }
+  /* Secondary and outline buttons. Primary and danger buttons stay solid so the main action stands out. */
+  .glass-scope .glass-button {
+    background: rgba(255, 255, 255, 0.55);
+    border-color: rgba(255, 255, 255, 0.85);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    backdrop-filter: blur(8px) saturate(140%);
+  }
+  .glass-scope .glass-button:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.82);
+  }
   /* Bars and sheets that sit over content: lighter blur, mostly opaque. */
   .glass-bar {
     background: rgba(255, 255, 255, 0.84);
@@ -447,5 +457,20 @@ button:not(:disabled) { cursor: pointer; }
   .glass-scope .glass-surface { background: #FFFFFF; border-color: #E4E6E7; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
   .glass-panel-dark { background: #0F5F56; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
   .glass-bar { background: #FFFFFF; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .glass-scope .glass-button { background: #FFFFFF; border-color: #E4E6E7; backdrop-filter: none; -webkit-backdrop-filter: none; }
   .glass-backdrop { display: none; }
+}
+/* Inside a white dialog there is nothing to see through: cards and buttons stay plain there. */
+.glass-scope [role="dialog"] .glass-surface {
+  background: #FFFFFF;
+  border-color: #E4E6E7;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+.glass-scope [role="dialog"] .glass-button {
+  background: #FFFFFF;
+  border-color: #E4E6E7;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }

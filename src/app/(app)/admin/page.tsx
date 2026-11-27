@@ -23,7 +23,7 @@ function StatCard({ label, value, icon, color = 'blue', loading }: {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
+    <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1 space-y-1">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{label}</p>
@@ -108,7 +108,7 @@ export default function AdminDashboardPage() {
 
       <div className="grid md:grid-cols-2 gap-4 md:gap-6">
         {/* Plan Distribution */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm">
+        <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm">
           <h2 className="text-sm font-bold text-gray-900 dark:text-white mb-4">Distribusi Plan</h2>
           {isLoading ? (
             <div className="space-y-3">
@@ -138,7 +138,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Growth Chart (simple text-based) */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm">
+        <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-bold text-gray-900 dark:text-white">Pertumbuhan Tenant (30 Hari)</h2>
             <TrendingUp className="w-4 h-4 text-emerald-500" />
@@ -168,7 +168,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Recent Tenants */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+      <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
         <div className="flex items-center justify-between p-4 md:p-5 border-b border-gray-100 dark:border-gray-700">
           <h2 className="text-sm font-bold text-gray-900 dark:text-white">Tenant Terbaru</h2>
           <button onClick={() => router.push('/admin/tenants')}

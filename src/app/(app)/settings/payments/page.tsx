@@ -232,7 +232,7 @@ export default function PaymentSettingsPage() {
           {/* Preview */}
           {(qrisForm.imageBase64 || (!qrisForm.imageBase64 && settings?.qris.imageBase64)) && (
             <div className="flex flex-col items-center gap-2">
-              <div className="p-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm">
+              <div className="glass-surface p-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qrisForm.imageBase64 || settings?.qris.imageBase64}

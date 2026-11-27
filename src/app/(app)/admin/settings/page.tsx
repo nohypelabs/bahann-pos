@@ -95,7 +95,7 @@ export default function AdminSettingsPage() {
 
       <div className="grid md:grid-cols-2 gap-4 md:gap-6">
         {/* Crypto / Solana */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm space-y-4">
+        <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-2 mb-1">
             <Wallet className="w-5 h-5 text-purple-500" />
             <h2 className="text-sm font-bold text-gray-900 dark:text-white">Solana (Crypto Payment)</h2>
@@ -146,7 +146,7 @@ export default function AdminSettingsPage() {
         </div>
 
         {/* Bank Transfer */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm space-y-4">
+        <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-2 mb-1">
             <Building2 className="w-5 h-5 text-blue-500" />
             <h2 className="text-sm font-bold text-gray-900 dark:text-white">Transfer Bank</h2>
@@ -175,7 +175,7 @@ export default function AdminSettingsPage() {
         </div>
 
         {/* QRIS */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm space-y-4">
+        <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-2 mb-1">
             <QrCode className="w-5 h-5 text-green-500" />
             <h2 className="text-sm font-bold text-gray-900 dark:text-white">QRIS</h2>
@@ -221,7 +221,7 @@ export default function AdminSettingsPage() {
         </div>
 
         {/* Support */}
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm space-y-4">
+        <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-2 mb-1">
             <MessageCircle className="w-5 h-5 text-emerald-500" />
             <h2 className="text-sm font-bold text-gray-900 dark:text-white">Support</h2>

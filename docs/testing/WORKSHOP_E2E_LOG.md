@@ -20,6 +20,22 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-27 · Glass on every app page, PWA splash colour (local app → production DB, try-out tenant)
+
+Playwright, Chromium, signed in as the client try-out owner, 1440×900 and 390 px (iPhone 13). Asked by the owner: the
+same glass look on every page and button, and the PWA splash showed the logo on a different colour than the splash.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 28.1 | `/products`, `/transactions`, `/members`, `/eod`, `/help`, `/outlets`, `/settings/business`, `/expenses` | Glass panels over the coloured light, like the cashier and warehouse | Light now on every page but `/setup`. Shared cards were already glass; 23 hand-made panels on help, admin, members, subscriptions and payment settings got `.glass-surface`. No sideways scroll on the phone |
+| 28.2 | Buttons | Same look | Secondary and outline buttons are glass; primary and danger stay solid so the main action stands out. Cards and buttons inside a dialog stay plain white |
+| 28.3 | PWA splash | Logo background matches the splash | **Bug:** `manifest.json` had `background_color` `#f6f5f0` (cream) while the icons are on white. Set to `#FFFFFF`, `theme_color` too (same as the page `themeColor`). An installed app keeps the old splash until it is reinstalled |
+| 28.4 | `/help` console | No errors | **Bug (older):** an svg icon inside `<option>` broke hydration ("2 issues" badge). The option shows the title only now; console clean |
+
+Lint 0 errors, `tsc` clean, Jest 219 passed / 2 skipped. Splash not yet checked on a real phone.
+
+---
+
 ## 2026-11-27 · Phone cart and payment, glass panels on cashier and warehouse (local app → production DB, try-out tenant)
 
 Playwright, Chromium, signed in as the client try-out owner, at 390×844 (iPhone 13) and 360×780, plus 1440×900 on

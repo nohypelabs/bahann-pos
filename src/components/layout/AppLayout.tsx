@@ -56,8 +56,9 @@ const ROUTE_META = [
   },
 ]
 
-// Pages whose panels are frosted glass; they get the coloured light behind them.
-const GLASS_ROUTES = ['/dashboard', '/pos', '/warehouse']
+// Every app page has frosted glass panels over the coloured light, except the first-run setup,
+// which has its own full-screen design.
+const PLAIN_ROUTES = ['/setup']
 
 /** Soft brand-coloured light behind the glass panels. Static, so it costs one paint.
  * It sticks to the top of the scrolling <main>, takes no room, and stays under the page content. */
@@ -87,7 +88,7 @@ function getRouteMeta(pathname: string) {
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname()
   const isPosSales = pathname === '/pos/sales'
-  const isGlass = GLASS_ROUTES.some((route) => pathname.startsWith(route))
+  const isGlass = !PLAIN_ROUTES.some((route) => pathname.startsWith(route))
   const [mobileOpen, setMobileOpen] = useState(false)
   const sidebar = useSidebarOpen()
   useSidebarShortcut(sidebar.toggle)
