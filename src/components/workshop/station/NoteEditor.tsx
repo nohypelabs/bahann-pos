@@ -357,7 +357,7 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={t('workshop.note.searchItem')}
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm"
                 />
               </div>
               <Button type="button" variant="secondary" onClick={() => setScannerOpen(true)} aria-label={t('workshop.note.scan')}>
@@ -461,7 +461,7 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
       )}
 
       {isOpen && (
-        <div className="sticky bottom-0 z-30 -mx-4 md:mx-0 rounded-none md:rounded-2xl border-t md:border border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur px-4 py-3">
+        <div className="sticky bottom-0 z-30 -mx-4 md:mx-0 rounded-none md:rounded-xl border-t md:border border-gray-200 dark:border-gray-700 glass-bar bg-white/95 dark:bg-gray-900/95 backdrop-blur px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs text-gray-500">{discount > 0 ? `${formatCurrency(subtotal)} − ${formatCurrency(discount)}` : t('workshop.note.subtotal')}</p>
@@ -480,7 +480,7 @@ export function NoteEditor({ noteId, catalog, station, online, onBack }: Props) 
                   value={voucherCode}
                   onChange={(e) => setVoucherCode(e.target.value)}
                   aria-label={t('workshop.note.useVoucher')}
-                  className="w-full px-3 py-2 rounded-xl border border-teal-300 bg-teal-50 dark:bg-teal-900/20 text-sm"
+                  className="w-full px-3 py-2 rounded-lg border border-teal-300 bg-teal-50 dark:bg-teal-900/20 text-sm"
                 >
                   <option value="">{t('workshop.note.noVoucher')}</option>
                   {vouchers.map((v) => <option key={v.id} value={v.code}>{v.code} · {describeReward(v.reward)}</option>)}

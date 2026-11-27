@@ -116,7 +116,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
 
   return (
     <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-lg w-full p-3 md:p-6 space-y-4 border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-900 rounded-xl max-w-lg w-full p-3 md:p-6 space-y-4 border border-gray-200 dark:border-gray-700">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -175,7 +175,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
               value={selectedCamera}
               onChange={(e) => setSelectedCamera(e.target.value)}
               disabled={isScanning}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all disabled:opacity-50"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all disabled:opacity-50"
             >
               {cameras.map((camera, index) => (
                 <option key={`${camera.id}-${index}`} value={camera.id}>

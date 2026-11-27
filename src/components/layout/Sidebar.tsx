@@ -303,7 +303,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
           {!showCollapsed && (
             <div className="mx-3 mt-1 rounded-lg border border-[#E4E6E7]/80 bg-white/80 p-3">
               <div className="mb-3 flex items-start justify-between gap-3">
-                <Link href="/profile" className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-[#0f5f56] text-lg font-bold text-white transition-opacity hover:opacity-90">
+                <Link href="/profile" className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-[#0f5f56] text-lg font-bold text-white transition-opacity hover:opacity-90">
                   {userInitial}
                 </Link>
                 <div className="min-w-0 flex-1">
@@ -313,7 +313,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
                   </Link>
                 </div>
                 <button onClick={() => setShowLogoutModal(true)} title={t('sidebar.logout')}
-                  className="rounded-2xl p-2 text-[#8a9188] transition-colors hover:bg-red-50 hover:text-red-600">
+                  className="rounded-lg p-2 text-[#8a9188] transition-colors hover:bg-red-50 hover:text-red-600">
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
@@ -440,7 +440,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
                     <>
                       {/* Pengaturan sub-group */}
                       <button onClick={() => setSubPengaturan(!subPengaturan)}
-                        className="w-full flex items-center justify-between px-3 py-2 group hover:bg-white/50 rounded-xl transition-colors">
+                        className="w-full flex items-center justify-between px-3 py-2 group hover:bg-white/50 rounded-lg transition-colors">
                         <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8a9188] group-hover:text-[#5f675f] transition-colors">{t('sidebar.settings')}</span>
                         <ChevronDown className={`w-3.5 h-3.5 text-[#a9afa6] transition-transform duration-200 ${subPengaturan ? 'rotate-180' : ''}`} />
                       </button>
@@ -474,7 +474,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
 
                   {/* Bantuan sub-group */}
                   <button onClick={() => setSubBantuan(!subBantuan)}
-                    className="w-full flex items-center justify-between px-3 py-2 group hover:bg-white/50 rounded-xl transition-colors">
+                    className="w-full flex items-center justify-between px-3 py-2 group hover:bg-white/50 rounded-lg transition-colors">
                     <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8a9188] group-hover:text-[#5f675f] transition-colors">{t('sidebar.helpSection')}</span>
                     <ChevronDown className={`w-3.5 h-3.5 text-[#a9afa6] transition-transform duration-200 ${subBantuan ? 'rotate-180' : ''}`} />
                   </button>
@@ -485,7 +485,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
                       <SidebarItem href="/about"   icon={<Info />}       label={t('sidebar.about')}   isCollapsed={false} />
                       {canInstall && !isInstalled && (
                         <button onClick={install}
-                          className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-[#0f5f56] dark:text-green-400 hover:bg-[#e5f3ef] dark:hover:bg-green-900/30 transition-colors">
+                          className="w-full flex items-center gap-3.5 px-3 py-2.5 rounded-lg text-[15px] font-medium text-[#0f5f56] dark:text-green-400 hover:bg-[#e5f3ef] dark:hover:bg-green-900/30 transition-colors">
                           <Download className="w-5 h-5 opacity-80" />
                           <span>{t('sidebar.installApp')}</span>
                         </button>
@@ -542,7 +542,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4"
           onClick={e => e.target === e.currentTarget && setShowLogoutModal(false)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div className="relative bg-white dark:bg-gray-900 rounded-[18px] shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-[#E4E6E7] dark:border-gray-800">
+          <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-[#E4E6E7] dark:border-gray-800">
             <div className="flex items-center justify-center text-red-500">
               <LogOut className="w-7 h-7" />
             </div>
@@ -552,11 +552,11 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
             </div>
             <div className="flex gap-3 w-full">
               <button onClick={() => setShowLogoutModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-[#E4E6E7] dark:border-gray-700 text-sm font-semibold text-[#2f3a35] dark:text-gray-300 hover:bg-[#F4F5F5] dark:hover:bg-gray-800 transition-colors">
+                className="flex-1 py-2.5 rounded-lg border border-[#E4E6E7] dark:border-gray-700 text-sm font-semibold text-[#2f3a35] dark:text-gray-300 hover:bg-[#F4F5F5] dark:hover:bg-gray-800 transition-colors">
                 {t('sidebar.logoutModal.cancel')}
               </button>
               <button onClick={confirmLogout}
-                className="flex-1 py-2.5 rounded-xl bg-[#B42318] hover:bg-[#981B12] text-sm font-semibold text-white transition-colors shadow-sm">
+                className="flex-1 py-2.5 rounded-lg bg-[#B42318] hover:bg-[#981B12] text-sm font-semibold text-white transition-colors shadow-sm">
                 {t('sidebar.logoutModal.confirm')}
               </button>
             </div>

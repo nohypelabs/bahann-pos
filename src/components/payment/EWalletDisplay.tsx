@@ -70,7 +70,7 @@ export function EWalletDisplay({
           <button
             key={w.name}
             onClick={() => setSelectedWallet(w.name)}
-            className={`flex flex-1 items-center justify-center gap-2 py-3 rounded-xl border-2 font-semibold text-sm transition-all ${
+            className={`flex flex-1 items-center justify-center gap-2 py-3 rounded-lg border-2 font-semibold text-sm transition-all ${
               selectedWallet === w.name
                 ? 'border-blue-500 bg-blue-50 text-blue-700'
                 : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
@@ -82,7 +82,7 @@ export function EWalletDisplay({
       </div>
 
       {/* Phone Number Card */}
-      <div className={`bg-gradient-to-br ${wallet.color} rounded-2xl p-3 md:p-6 text-white shadow-lg`}>
+      <div className={`bg-gradient-to-br ${wallet.color} rounded-xl p-3 md:p-6 text-white shadow-lg`}>
         <div className="space-y-4">
           <div>
             <p className="text-sm opacity-80 mb-1">Kirim ke nomor {selectedWallet}</p>

@@ -8,7 +8,7 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ children, variant = 'default', padding = 'md', className = '', ...props }, ref) => {
     const baseStyles = `
-      glass-surface card-mobile bg-white dark:bg-gray-800 rounded-[18px]
+      glass-surface card-mobile bg-white dark:bg-gray-800 rounded-xl
       transition-all duration-200
     `
 

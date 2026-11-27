@@ -118,7 +118,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       href={href}
       title={label}
       aria-label={count > 0 ? `${label}: ${count}` : label}
-      className={`relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border transition-colors ${
+      className={`relative inline-flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${
         pathname.startsWith(href)
           ? 'border-[#0b4e48] bg-[#0f5f56] text-white'
           : 'border-[#E4E6E7] bg-white text-[#5f675f] hover:bg-[#F4F5F5] hover:text-[#17201d]'
@@ -149,14 +149,14 @@ export function AppLayout({ children }: AppLayoutProps) {
         role="main"
       >
         {isGlass && <GlassBackdrop />}
-        <header className="sticky top-0 z-30 border-b border-[#E4E6E7]/90 bg-[#FFFFFF]/95 backdrop-blur-md">
+        <header className="glass-bar sticky top-0 z-30 border-b border-[#E4E6E7]/90 bg-[#FFFFFF]/95 backdrop-blur-md">
           <div className="flex min-h-16 items-center justify-between gap-3 px-3 sm:px-4 lg:px-6">
             <div className="flex min-w-0 items-center gap-3">
               {/* Phones only: opens the drawer. On desktop the toggle lives in the sidebar header. */}
               <button
                 type="button"
                 onClick={() => setMobileOpen(true)}
-                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-[#E4E6E7] bg-white text-[#5f675f] transition-colors hover:bg-[#F4F5F5] hover:text-[#17201d] md:hidden"
+                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-[#E4E6E7] bg-white text-[#5f675f] transition-colors hover:bg-[#F4F5F5] hover:text-[#17201d] md:hidden"
                 aria-label={t('sidebar.openMenu')}
               >
                 <SidebarToggleIcon className="h-5 w-5" />
@@ -186,7 +186,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                       key={href}
                       href={href}
                       onClick={href.startsWith('/warehouse') ? inventoryAccess.guard : undefined}
-                      className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-medium transition-colors ${
+                      className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                         isActive
                           ? 'border-[#0b4e48] bg-[#0f5f56] text-white'
                           : 'border-[#E4E6E7] bg-white text-[#5f675f] hover:bg-[#F4F5F5] hover:text-[#17201d]'
@@ -201,7 +201,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               {attentionLinks}
               <Link
                 href="/settings/payments"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#E4E6E7] bg-white text-[#5f675f] transition-colors hover:bg-[#F4F5F5] hover:text-[#17201d]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#E4E6E7] bg-white text-[#5f675f] transition-colors hover:bg-[#F4F5F5] hover:text-[#17201d]"
                 aria-label="Buka pengaturan"
               >
                 <Settings className="h-5 w-5" />

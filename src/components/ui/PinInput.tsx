@@ -107,7 +107,7 @@ export function PinInput({
             className={`
               w-12 h-14 text-center text-xl font-bold
               bg-white dark:bg-gray-800 text-gray-900 dark:text-white
-              border-2 rounded-2xl
+              border-2 rounded-lg
               focus:outline-none focus:border-gray-400 dark:focus:border-gray-400
               transition-all duration-150
               disabled:opacity-50 disabled:cursor-not-allowed

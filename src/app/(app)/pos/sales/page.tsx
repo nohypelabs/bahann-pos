@@ -438,7 +438,7 @@ export default function SalesTransactionPage() {
         : cart.length === 0
           ? 'Keranjang kosong'
           : `Bayar ${formatCurrency(cartTotal)}`
-  const surfaceClass = 'glass-surface rounded-[14px] border border-neutral-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
+  const surfaceClass = 'glass-surface rounded-xl border border-neutral-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
   const chipClass = 'inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-medium text-neutral-600'
 
   useEffect(() => {
@@ -597,10 +597,10 @@ export default function SalesTransactionPage() {
   }
 
   return (
-    <div className="flex flex-col rounded-[15px] border border-white/70 bg-white/25 shadow-[0_20px_45px_-35px_rgba(28,25,23,0.45)] md:h-[calc(100vh-4rem)] md:overflow-hidden">
+    <div className="flex flex-col rounded-xl border border-white/70 bg-white/25 shadow-[0_20px_45px_-35px_rgba(28,25,23,0.45)] md:h-[calc(100vh-4rem)] md:overflow-hidden">
 
       {/* ── Top Bar ── */}
-      <div className="glass-bar shrink-0 rounded-t-[15px] border-b border-white/70 bg-white px-4 py-3 md:rounded-none">
+      <div className="glass-bar shrink-0 rounded-t-xl border-b border-white/70 bg-white px-4 py-3 md:rounded-none">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-neutral-500">Kasir Aktif</p>
@@ -640,7 +640,7 @@ export default function SalesTransactionPage() {
             <button
               onClick={() => setIsCartOpen(true)}
               aria-label={t('pos.sales.cart')}
-              className="relative inline-flex items-center gap-2 rounded-2xl bg-neutral-950 px-3.5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
+              className="relative inline-flex items-center gap-2 rounded-lg bg-neutral-950 px-3.5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
             >
               <ShoppingCart className="h-4 w-4" />
               <span className="hidden sm:inline">Checkout</span>
@@ -685,7 +685,7 @@ export default function SalesTransactionPage() {
         <div className="flex flex-col gap-3 flex-1 min-w-0 md:overflow-hidden">
 
           {needsShift && (
-            <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 px-3 py-2.5 md:px-4 md:py-3">
+            <div className="flex shrink-0 items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 md:px-4 md:py-3">
               <Sunrise className="h-5 w-5 shrink-0 text-amber-700" />
               <p className="flex-1 text-xs font-medium text-amber-900 md:text-sm">{t('shift.banner')}</p>
               <Button size="sm" onClick={() => setIsShiftModalOpen(true)}>{t('shift.open.button')}</Button>
@@ -695,7 +695,7 @@ export default function SalesTransactionPage() {
           {/* Outlet — compact pill once selected */}
           {isKasirLocked && selectedOutlet ? (
             // Kasir locked: show outlet as read-only pill (no change button)
-            <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+            <div className="flex shrink-0 items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
               <div className="flex items-center justify-center text-emerald-700">
                 <Store className="h-4 w-4" />
               </div>
@@ -713,9 +713,9 @@ export default function SalesTransactionPage() {
               </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                <input type="text" value={outletSearch} onChange={(e) => setOutletSearch(e.target.value)} placeholder="Cari outlet..." className="w-full rounded-2xl border border-neutral-200 bg-[#F8F9F9] py-3 pl-10 pr-4 text-sm text-neutral-900 focus:border-emerald-500 focus:outline-none" />
+                <input type="text" value={outletSearch} onChange={(e) => setOutletSearch(e.target.value)} placeholder="Cari outlet..." className="w-full rounded-lg border border-neutral-200 bg-[#F8F9F9] py-3 pl-10 pr-4 text-sm text-neutral-900 focus:border-emerald-500 focus:outline-none" />
               </div>
-              <div className="max-h-32 overflow-y-auto divide-y divide-neutral-100 rounded-2xl border border-neutral-200 bg-[#F8F9F9]">
+              <div className="max-h-32 overflow-y-auto divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-[#F8F9F9]">
                 {showOutletsLoading ? (
                   <div className="py-4 text-center text-sm text-neutral-400">Memuat...</div>
                 ) : filteredOutlets.map(outlet => (
@@ -730,7 +730,7 @@ export default function SalesTransactionPage() {
               </div>
             </div>
           ) : (
-            <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+            <div className="flex shrink-0 items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
               <div className="flex items-center justify-center text-emerald-700">
                 <Store className="h-4 w-4" />
               </div>
@@ -751,9 +751,9 @@ export default function SalesTransactionPage() {
                 <p className="mt-1 text-xs text-neutral-500">{selectedOutletId ? `${filteredProducts.length} item siap dijual` : 'Pilih outlet sebelum mencari barang'}</p>
               </div>
               <div className="flex gap-1 items-center">
-                <input ref={barcodeInputRef} type="text" value={barcodeInput} onChange={handleBarcodeInputChange} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleBarcodeInputSubmit() } }} placeholder="Scan SKU..." disabled={!selectedOutletId} className="hidden md:block w-32 rounded-2xl border border-neutral-200 bg-[#F8F9F9] px-3 py-2 text-xs uppercase text-neutral-900 focus:border-emerald-500 focus:outline-none disabled:opacity-50" />
-                <Button variant="secondary" size="sm" onClick={handleBarcodeInputSubmit} disabled={!selectedOutletId || !barcodeInput.trim()} className="hidden md:flex !rounded-2xl !border-neutral-200 !bg-[#F8F9F9] !text-neutral-700 hover:!bg-white">OK</Button>
-                <Button variant="secondary" size="sm" onClick={() => setIsScannerOpen(true)} disabled={!selectedOutletId} className="!rounded-2xl !border-neutral-200 !bg-[#F8F9F9] !text-neutral-700 hover:!bg-white">
+                <input ref={barcodeInputRef} type="text" value={barcodeInput} onChange={handleBarcodeInputChange} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleBarcodeInputSubmit() } }} placeholder="Scan SKU..." disabled={!selectedOutletId} className="hidden md:block w-32 rounded-lg border border-neutral-200 bg-[#F8F9F9] px-3 py-2 text-xs uppercase text-neutral-900 focus:border-emerald-500 focus:outline-none disabled:opacity-50" />
+                <Button variant="secondary" size="sm" onClick={handleBarcodeInputSubmit} disabled={!selectedOutletId || !barcodeInput.trim()} className="hidden md:flex !rounded-lg !border-neutral-200 !bg-[#F8F9F9] !text-neutral-700 hover:!bg-white">OK</Button>
+                <Button variant="secondary" size="sm" onClick={() => setIsScannerOpen(true)} disabled={!selectedOutletId} className="!rounded-lg !border-neutral-200 !bg-[#F8F9F9] !text-neutral-700 hover:!bg-white">
                   <ScanLine className="mr-1 h-4 w-4" />
                   <span className="hidden sm:inline">Scan</span>
                 </Button>
@@ -771,7 +771,7 @@ export default function SalesTransactionPage() {
               <div className="flex gap-2 shrink-0">
                 <div className="relative flex-1 min-w-0">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                  <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearchEnter() } }} placeholder="Cari produk / scan barcode..." disabled={!selectedOutletId} className="w-full pl-10 pr-8 py-2.5 border border-neutral-200 rounded-xl bg-[#F8F9F9] text-sm text-neutral-900 focus:border-emerald-500 focus:outline-none disabled:opacity-50" />
+                  <input ref={productSelectRef} type="text" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearchEnter() } }} placeholder="Cari produk / scan barcode..." disabled={!selectedOutletId} className="w-full pl-10 pr-8 py-2.5 border border-neutral-200 rounded-lg bg-[#F8F9F9] text-sm text-neutral-900 focus:border-emerald-500 focus:outline-none disabled:opacity-50" />
                   {productSearch && <button onClick={() => setProductSearch('')} aria-label="Hapus pencarian" className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-200 rounded-full w-6 h-6 flex items-center justify-center transition-colors"><X className="w-4 h-4" /></button>}
                 </div>
                 {categories.length > 0 && (
@@ -779,7 +779,7 @@ export default function SalesTransactionPage() {
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
                     disabled={!selectedOutletId}
-                    className="hidden sm:block px-2 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-xs text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none disabled:opacity-50 cursor-pointer max-w-[140px]"
+                    className="hidden sm:block px-2 py-2 border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-xs text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none disabled:opacity-50 cursor-pointer max-w-[140px]"
                   >
                     <option value="">Semua</option>
                     {categories.map(cat => (
@@ -949,7 +949,7 @@ export default function SalesTransactionPage() {
 
                           return (
                             <button key={product.id} onClick={() => !isOutOfStock && handleProductChange(isSelected ? '' : product.id)} disabled={isOutOfStock}
-                              className={`group text-left rounded-2xl border-2 transition-all duration-200 overflow-hidden flex flex-col cursor-pointer ${
+                              className={`group text-left rounded-lg border-2 transition-all duration-200 overflow-hidden flex flex-col cursor-pointer ${
                                 isSelected ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 shadow-md ring-2 ring-blue-400/30 scale-[1.01]'
                                 : isOutOfStock ? 'border-neutral-200 dark:border-neutral-800 opacity-40 cursor-not-allowed bg-neutral-50 dark:bg-neutral-900'
                                 : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-neutral-300 dark:hover:border-neutral-700 hover:shadow-md active:scale-[0.99]'
@@ -1031,7 +1031,7 @@ export default function SalesTransactionPage() {
 
               {/* Qty + Add */}
               {selectedProduct && (
-                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-[18px] shrink-0">
+                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl shrink-0">
                   {/* Product info row */}
                   <div className="flex items-center gap-2 mb-2.5 min-w-0">
                     <p className="text-xs md:text-sm font-bold text-emerald-950 truncate flex-1">{selectedProduct.name}</p>
@@ -1058,7 +1058,7 @@ export default function SalesTransactionPage() {
                     <input ref={quantityInputRef} type="number" min="1" max={availableStock || 999} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value) || 1)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddToCart() } }} onFocus={(e) => e.target.select()} className="w-14 px-2 py-1.5 text-center border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:outline-none text-sm font-bold shrink-0" />
                   </div>
                   {/* Add button — full width */}
-                  <Button variant="primary" size="md" fullWidth onClick={handleAddToCart} disabled={productsLoading || (!!selectedOutletId && availableStock === 0 && selectedProduct.stock_behavior === 'TRACKED')} className="!rounded-2xl !border-emerald-700 !bg-emerald-600 !text-white hover:!bg-emerald-700 active:scale-95 transition-transform duration-100">
+                  <Button variant="primary" size="md" fullWidth onClick={handleAddToCart} disabled={productsLoading || (!!selectedOutletId && availableStock === 0 && selectedProduct.stock_behavior === 'TRACKED')} className="!rounded-lg !border-emerald-700 !bg-emerald-600 !text-white hover:!bg-emerald-700 active:scale-95 transition-transform duration-100">
                     Tambah ke Keranjang
                   </Button>
                 </div>
@@ -1071,20 +1071,20 @@ export default function SalesTransactionPage() {
         <div className="hidden md:flex flex-col gap-4 w-[22rem] shrink-0 overflow-hidden">
 
           {/* Payment card */}
-          <div className="glass-panel-dark shrink-0 rounded-[18px] bg-[#0F5F56] p-4 text-white shadow-[0_20px_45px_-25px_rgba(28,25,23,0.75)]">
+          <div className="glass-panel-dark shrink-0 rounded-xl bg-[#0F5F56] p-4 text-white shadow-[0_20px_45px_-25px_rgba(28,25,23,0.75)]">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/70">Checkout</p>
                 <p className="mt-1 text-sm font-semibold text-white">Ringkasan pembayaran</p>
               </div>
-              <div className="rounded-2xl bg-white/10 p-2 text-white">
+              <div className="rounded-xl bg-white/10 p-2 text-white">
                 <WalletCards className="h-4 w-4" />
               </div>
             </div>
 
             {/* Cart, one line per item, so every scan shows up next to the total */}
             {cart.length > 0 && (
-              <div className="mt-3 max-h-[38vh] overflow-y-auto rounded-2xl border border-white/10 bg-white/5 divide-y divide-white/10">
+              <div className="mt-3 max-h-[38vh] overflow-y-auto rounded-xl border border-white/10 bg-white/5 divide-y divide-white/10">
                 {cart.map((item) => (
                   <div
                     key={item.productId}
@@ -1110,7 +1110,7 @@ export default function SalesTransactionPage() {
             )}
 
             {/* Total on one line with its label; subtotal and discount share the next line */}
-            <div className="mt-3 rounded-[14px] border border-white/10 bg-white/5 px-4 py-3">
+            <div className="mt-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
               <div className="flex items-end justify-between gap-3">
                 <div className="shrink-0 pb-1">
                   <p className="text-xs text-white/80">Total tagihan</p>
@@ -1132,14 +1132,14 @@ export default function SalesTransactionPage() {
             </div>
             {/* Promo */}
             <div className="mt-4">
-              <button onClick={() => setIsPromoExpanded(!isPromoExpanded)} className="flex items-center justify-between w-full text-left rounded-xl px-2 -mx-2 py-1 hover:bg-white/5 transition-colors">
+              <button onClick={() => setIsPromoExpanded(!isPromoExpanded)} className="flex items-center justify-between w-full text-left rounded-lg px-2 -mx-2 py-1 hover:bg-white/5 transition-colors">
                 <span className="text-xs font-semibold text-neutral-200">Kode Promo</span>
                 <span className="text-white/60 text-xs">{isPromoExpanded ? '▲' : '▼'}</span>
               </button>
               {isPromoExpanded && !appliedPromo && (
                 <div className="flex gap-2 mt-2">
-                  <Input type="text" placeholder="Kode promo" value={promoCode} onChange={(e) => setPromoCode(e.target.value.toUpperCase())} fullWidth className="!rounded-2xl !border-white/15 !bg-white/10 !text-white !placeholder:text-white/50" />
-                  <Button variant="outline" size="sm" onClick={handleApplyPromo} disabled={!promoCode || validatePromoMutation.isPending} className="!rounded-2xl !border-white/15 !bg-white/10 !text-white hover:!bg-white/15">{validatePromoMutation.isPending ? '...' : 'Pakai'}</Button>
+                  <Input type="text" placeholder="Kode promo" value={promoCode} onChange={(e) => setPromoCode(e.target.value.toUpperCase())} fullWidth className="!rounded-lg !border-white/15 !bg-white/10 !text-white !placeholder:text-white/50" />
+                  <Button variant="outline" size="sm" onClick={handleApplyPromo} disabled={!promoCode || validatePromoMutation.isPending} className="!rounded-lg !border-white/15 !bg-white/10 !text-white hover:!bg-white/15">{validatePromoMutation.isPending ? '...' : 'Pakai'}</Button>
                 </div>
               )}
               {appliedPromo && (
@@ -1158,7 +1158,7 @@ export default function SalesTransactionPage() {
               <button
                 onClick={() => setIsDiscountOpen(true)}
                 disabled={cart.length === 0}
-                className="flex w-full items-center justify-between rounded-xl px-2 -mx-2 py-1 text-left text-xs font-semibold text-neutral-200 hover:bg-white/5 disabled:opacity-50"
+                className="flex w-full items-center justify-between rounded-lg px-2 -mx-2 py-1 text-left text-xs font-semibold text-neutral-200 hover:bg-white/5 disabled:opacity-50"
               >
                 <span className="inline-flex items-center gap-1.5"><BadgePercent className="h-3.5 w-3.5" /> {t('discount.total.button')}</span>
                 {manualDiscount && <span className="text-emerald-300">-{formatCurrency(manualDiscount.amount)}</span>}
@@ -1172,7 +1172,7 @@ export default function SalesTransactionPage() {
 
             {/* Summary */}
             {cart.length > 0 && (
-              <div className="p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 space-y-1.5">
+              <div className="p-2.5 bg-white/90 dark:bg-gray-700/50 rounded-xl border border-white/40 dark:border-gray-600 space-y-1.5">
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-500 dark:text-gray-400">Subtotal</span>
                   <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(cartSubtotal)}</span>
@@ -1190,7 +1190,7 @@ export default function SalesTransactionPage() {
               </div>
             )}
 
-            <Button variant="primary" size="lg" fullWidth onClick={handleCompleteSale} disabled={checkoutDisabled} className="mt-4 !rounded-2xl !border-white !bg-white !text-[#0F5F56] hover:!bg-white/90">
+            <Button variant="primary" size="lg" fullWidth onClick={handleCompleteSale} disabled={checkoutDisabled} className="mt-4 !rounded-lg !border-white !bg-white !text-[#0F5F56] hover:!bg-white/90">
               {checkoutLabel}
             </Button>
 
@@ -1215,7 +1215,7 @@ export default function SalesTransactionPage() {
                 {!recentTransactions || recentTransactions.length === 0 ? (
                   <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-4">Belum ada transaksi</p>
                 ) : recentTransactions.map((t) => (
-                  <div key={t.id} className="p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div key={t.id} className="glass-tint p-2 bg-white/55 dark:bg-gray-700/50 rounded-lg border border-white/70 dark:border-gray-700">
                     <div className="flex items-start justify-between gap-1">
                       <p className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate flex-1">{t.productName}</p>
                       <p className="text-xs font-bold text-gray-900 dark:text-gray-100 shrink-0">{formatCurrency(t.revenue)}</p>
@@ -1271,7 +1271,7 @@ export default function SalesTransactionPage() {
       </div>
 
       {/* ── Mobile Sticky Bottom Bar ── */}
-      <div className="glass-bar sticky bottom-0 z-20 md:hidden shrink-0 rounded-b-[15px] border-t border-white/70 bg-white dark:bg-gray-900 px-3 py-2.5 flex items-center gap-3">
+      <div className="glass-bar sticky bottom-0 z-20 md:hidden shrink-0 rounded-b-xl border-t border-white/70 bg-white dark:bg-gray-900 px-3 py-2.5 flex items-center gap-3">
         {receiptData && cart.length === 0 ? (
           /* Post-payment: show print/preview actions */
           <>
@@ -1281,13 +1281,13 @@ export default function SalesTransactionPage() {
             </div>
             <button
               onClick={() => setIsPrintModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold text-sm transition-colors shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-semibold text-sm transition-colors shrink-0"
             >
               <Eye className="w-4 h-4" /> Preview
             </button>
             <button
               onClick={handleDirectPrint}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-colors shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-sm transition-colors shrink-0"
             >
               <Printer className="w-4 h-4" /> Print
             </button>
@@ -1301,7 +1301,7 @@ export default function SalesTransactionPage() {
             <button
               onClick={handleCompleteSale}
               disabled={checkoutDisabled}
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:dark:bg-gray-700 text-white rounded-xl font-bold text-sm transition-colors shrink-0"
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:dark:bg-gray-700 text-white rounded-lg font-bold text-sm transition-colors shrink-0"
             >
               {!selectedOutletId ? 'Pilih outlet' : checkoutDisabled || needsShift ? checkoutLabel : <span className="inline-flex items-center gap-1.5"><CreditCard className="w-4 h-4" /> Bayar</span>}
             </button>
@@ -1431,13 +1431,13 @@ export default function SalesTransactionPage() {
       {/* ── Modals ── */}
       {showUpgradeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-[18px] shadow-2xl max-w-md w-full p-4 md:p-8 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-4 md:p-8 text-center">
             <div className="flex items-center justify-center mx-auto mb-4"><Ban className="w-8 h-8 text-red-600 dark:text-red-400" /></div>
             <h2 className="text-base md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Batas Transaksi Tercapai</h2>
             <p className="text-gray-600 dark:text-gray-400 mb-2">Paket <span className="font-semibold text-blue-600">Gratis</span> hanya mendukung <span className="font-semibold">100 transaksi per bulan</span>.</p>
             <p className="text-gray-600 dark:text-gray-400 mb-3 md:mb-6">Upgrade ke paket <span className="font-semibold text-orange-500">Warung (Rp 99rb/bulan)</span> untuk transaksi tidak terbatas.</p>
             <div className="flex flex-col gap-3">
-              <a href={`https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${encodeURIComponent('Halo, saya ingin upgrade dari paket Gratis ke paket Warung Laku POS (Rp 99rb/bulan). Mohon bantuannya.')}`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-bold text-xs md:text-lg transition-colors"><MessageCircle className="w-4 h-4 md:w-5 md:h-5" /> Upgrade via WhatsApp</a>
+              <a href={`https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${encodeURIComponent('Halo, saya ingin upgrade dari paket Gratis ke paket Warung Laku POS (Rp 99rb/bulan). Mohon bantuannya.')}`} target="_blank" rel="noopener noreferrer" className="flex w-full items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-bold text-xs md:text-lg transition-colors"><MessageCircle className="w-4 h-4 md:w-5 md:h-5" /> Upgrade via WhatsApp</a>
               <button onClick={() => setShowUpgradeModal(false)} className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 transition-colors">Tutup</button>
             </div>
           </div>

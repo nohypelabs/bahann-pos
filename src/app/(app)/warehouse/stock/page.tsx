@@ -167,7 +167,7 @@ export default function StockManagementPage() {
   const selectedProduct = products.find(p => p.id === formData.productId)
   const selectedOutlet  = outlets.find(o => o.id === formData.outletId)
   const akhirNegative   = formData.stockAkhir < 0
-  const panelClass = 'glass-surface rounded-[14px] border border-neutral-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
+  const panelClass = 'glass-surface rounded-xl border border-neutral-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
 
   return (
     <div className="space-y-5">
@@ -217,7 +217,7 @@ export default function StockManagementPage() {
 
       {/* Info banner for filtered items */}
       {allProducts.length > products.length && (
-        <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-[#F8F9F9] p-3">
+        <div className="flex items-center gap-3 rounded-xl border border-white/70 bg-white/45 p-3">
           <Package className="w-4 h-4 text-neutral-400 shrink-0" />
           <p className="text-xs text-neutral-500">
             Item bertipe Jasa dan Menu (tanpa stok) tidak ditampilkan di halaman ini.
@@ -252,7 +252,7 @@ export default function StockManagementPage() {
                     onChange={e => setFormData({ ...formData, productId: e.target.value })}
                     required
                     disabled={productsLoading}
-                    className="w-full appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors disabled:opacity-50"
+                    className="w-full appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors disabled:opacity-50"
                   >
                     <option value="">Pilih produk...</option>
                     {products.map(p => (
@@ -283,7 +283,7 @@ export default function StockManagementPage() {
                     onChange={e => setFormData({ ...formData, outletId: e.target.value })}
                     required
                     disabled={outletsLoading}
-                    className="w-full appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-purple-400 dark:focus:border-purple-500 transition-colors disabled:opacity-50"
+                    className="w-full appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-purple-400 dark:focus:border-purple-500 transition-colors disabled:opacity-50"
                   >
                     <option value="">Pilih outlet...</option>
                     {outlets.map(o => (
@@ -319,13 +319,13 @@ export default function StockManagementPage() {
                 value={formData.stockDate}
                 onChange={e => setFormData({ ...formData, stockDate: e.target.value })}
                 required
-                className="flex-1 px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
+                className="flex-1 px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
               />
               {formData.stockDate !== today && (
                 <button
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, stockDate: today }))}
-                  className="px-3 py-2.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors whitespace-nowrap"
+                  className="px-3 py-2.5 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors whitespace-nowrap"
                 >
                   Hari ini
                 </button>
@@ -411,7 +411,7 @@ export default function StockManagementPage() {
               size="lg"
               fullWidth
               disabled={recordStockMutation.isPending || productsLoading || outletsLoading || akhirNegative}
-              className="!rounded-2xl !border-neutral-900 !bg-neutral-900 !text-white hover:!bg-neutral-800"
+              className="!rounded-lg !border-neutral-900 !bg-neutral-900 !text-white hover:!bg-neutral-800"
             >
               {recordStockMutation.isPending ? 'Menyimpan…' : 'Simpan Pergerakan Stok'}
             </Button>
@@ -437,7 +437,7 @@ export default function StockManagementPage() {
           </div>
 
           {/* How to use */}
-          <div className="rounded-[14px] border border-white/70 bg-white/40 p-4">
+          <div className="rounded-xl border border-white/70 bg-white/40 p-4">
             <p className="text-xs font-bold text-neutral-800 mb-2">Cara pakai</p>
             <ul className="text-[11px] text-neutral-600 space-y-1 leading-relaxed">
               <li>• Pilih produk dan outlet</li>
@@ -452,7 +452,7 @@ export default function StockManagementPage() {
       </div>
 
       {/* ── Penyesuaian Stok ── */}
-      <div className="rounded-[14px] border border-orange-200 bg-[#FFFFFF] shadow-[0_1px_0_rgba(28,25,23,0.04)] overflow-hidden">
+      <div className="glass-tint rounded-xl border border-orange-200 bg-white/70 shadow-[0_1px_0_rgba(28,25,23,0.04)] overflow-hidden">
         <div className="px-4 md:px-6 py-4 border-b border-orange-100">
           <p className="text-sm font-bold text-neutral-950">Penyesuaian Stok</p>
           <p className="text-xs text-neutral-500 mt-0.5">Untuk barang rusak, hilang, expired, atau koreksi cepat tanpa pindah halaman.</p>
@@ -477,7 +477,7 @@ export default function StockManagementPage() {
             <div>
               <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Produk</label>
               <select value={adjProductId} onChange={e => setAdjProductId(e.target.value)}
-                className="w-full appearance-none px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-orange-400 transition-colors">
+                className="w-full appearance-none px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-orange-400 transition-colors">
                 <option value="">Pilih produk...</option>
                 {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
@@ -487,7 +487,7 @@ export default function StockManagementPage() {
             <div>
               <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Outlet</label>
               <select value={adjOutletId} onChange={e => setAdjOutletId(e.target.value)}
-                className="w-full appearance-none px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-orange-400 transition-colors">
+                className="w-full appearance-none px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-orange-400 transition-colors">
                 <option value="">Pilih outlet...</option>
                 {outlets.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
               </select>
@@ -498,14 +498,14 @@ export default function StockManagementPage() {
               <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Jumlah Keluar</label>
               <input type="number" min={1} value={adjQty || ''} onChange={e => setAdjQty(parseInt(e.target.value) || 0)}
                 placeholder="0"
-                className="w-full px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-orange-400 transition-colors" />
+                className="w-full px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-orange-400 transition-colors" />
             </div>
 
             {/* Reason */}
             <div>
               <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Alasan</label>
               <select value={adjReason} onChange={e => setAdjReason(e.target.value)}
-                className="w-full appearance-none px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-orange-400 transition-colors">
+                className="w-full appearance-none px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-orange-400 transition-colors">
                 <option value="">Pilih alasan...</option>
                 <option value="Rusak">Barang Rusak</option>
                 <option value="Hilang">Barang Hilang</option>
@@ -522,7 +522,7 @@ export default function StockManagementPage() {
             {adjReason === 'Lainnya' && (
               <input type="text" value={adjCustomReason} onChange={e => setAdjCustomReason(e.target.value)}
                 placeholder="Jelaskan alasan..."
-                className="w-full px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-400 transition-colors" />
+                className="w-full px-3 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-orange-400 transition-colors" />
             )}
             <div>
               <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Foto Bukti (opsional)</label>
@@ -579,7 +579,7 @@ export default function StockManagementPage() {
                 setAdjError(friendlyError(err, 'Gagal menyimpan penyesuaian'))
               }
             }}
-            className="!rounded-2xl !border-orange-300 !bg-orange-500 !text-white hover:!bg-orange-600"
+            className="!rounded-lg !border-orange-300 !bg-orange-500 !text-white hover:!bg-orange-600"
           >
             Simpan Penyesuaian
           </Button>

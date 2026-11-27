@@ -69,7 +69,7 @@ export function QRISDisplay({
 
       {/* QR Code */}
       <div className="flex justify-center">
-        <div className="relative p-3 md:p-6 bg-white rounded-2xl shadow-lg border-2 border-gray-200">
+        <div className="relative p-3 md:p-6 bg-white rounded-xl shadow-lg border-2 border-gray-200">
           <div className="relative w-80 h-80 bg-white rounded-xl overflow-hidden">
             <Image
               src={qrisImage}

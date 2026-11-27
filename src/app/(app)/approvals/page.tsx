@@ -186,7 +186,7 @@ export default function ApprovalsPage() {
       )}
 
       {/* Filter Tabs */}
-      <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+      <div className="glass-tint flex gap-1 bg-white/45 border border-white/70 dark:bg-gray-800 rounded-xl p-1">
         {tabs.map((tab) => (
           <button
             key={tab.key}
@@ -213,7 +213,7 @@ export default function ApprovalsPage() {
       {allLoading && (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-gray-100 dark:bg-gray-800 rounded-2xl animate-pulse" />
+            <div key={i} className="h-24 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
           ))}
         </div>
       )}
@@ -269,7 +269,7 @@ export default function ApprovalsPage() {
               {nonPending.map((approval: any) => (
                 <div
                   key={approval.id}
-                  className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl p-4"
+                  className="bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
@@ -327,14 +327,14 @@ export default function ApprovalsPage() {
           <div className="flex gap-3 w-full">
             <button
               onClick={() => setRejectModal({ open: false, approvalId: null })}
-              className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="flex-1 py-2.5 rounded-lg border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               Batal
             </button>
             <button
               onClick={handleRejectConfirm}
               disabled={rejectMutation.isPending}
-              className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-sm font-semibold text-white transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-sm font-semibold text-white transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {rejectMutation.isPending ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Memproses...</>
@@ -354,7 +354,7 @@ export default function ApprovalsPage() {
             onChange={(e) => setRejectionReason(e.target.value)}
             placeholder="Contoh: Tidak ada bukti kerusakan barang"
             rows={3}
-            className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-red-400 dark:focus:border-red-500 resize-none"
+            className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-red-400 dark:focus:border-red-500 resize-none"
           />
         </div>
       </Modal>

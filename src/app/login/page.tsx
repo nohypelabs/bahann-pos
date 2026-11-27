@@ -80,16 +80,16 @@ function LoginContent() {
 
       <form onSubmit={handleLogin} className="space-y-4 lg:max-w-md">
         {showRegisteredMessage && (
-          <p className="flex items-start gap-2 rounded-2xl border border-green-200 bg-green-50 p-3 text-sm font-medium text-green-700">
+          <p className="flex items-start gap-2 rounded-xl border border-green-200 bg-green-50 p-3 text-sm font-medium text-green-700">
             <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{t('register.success')} {t('login.checkEmail')}</span>
           </p>
         )}
         {showVerifiedMessage && (
-          <p className="rounded-2xl border border-[#BFE3DA] bg-[#E3F1EE] p-3 text-sm font-medium text-[#0F5F56]">{t('login.verified')}</p>
+          <p className="rounded-xl border border-[#BFE3DA] bg-[#E3F1EE] p-3 text-sm font-medium text-[#0F5F56]">{t('login.verified')}</p>
         )}
         {error && (
-          <p role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>
+          <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>
         )}
 
         <div className="space-y-1.5">

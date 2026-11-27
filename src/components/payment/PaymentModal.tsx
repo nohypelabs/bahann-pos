@@ -336,7 +336,7 @@ export function PaymentModal({
                 <button
                   onClick={processQRISPayment}
                   disabled={loading}
-                  className="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Generating QRIS...' : 'Lanjut ke QRIS'}
                 </button>
@@ -346,7 +346,7 @@ export function PaymentModal({
                 <button
                   onClick={processBankTransfer}
                   disabled={loading}
-                  className="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Processing...' : 'Lanjut ke Transfer Bank'}
                 </button>
@@ -356,7 +356,7 @@ export function PaymentModal({
                 <button
                   onClick={processEWalletPayment}
                   disabled={loading}
-                  className="w-full py-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Processing...' : 'Lanjut ke E-Wallet'}
                 </button>
@@ -426,7 +426,7 @@ export function PaymentModal({
 
           {/* Loading Overlay */}
           {loading && step !== 'method' && (
-            <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-2xl">
+            <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-xl">
               <div className="text-center">
                 <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                 <p className="text-gray-600 font-medium">Processing...</p>

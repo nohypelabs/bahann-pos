@@ -349,7 +349,7 @@ export default function AuditLogsPage() {
           onClick={() => setSelectedLog(null)}
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-2xl max-w-3xl w-full max-h-[80vh] overflow-y-auto p-3 md:p-6"
+            className="bg-white dark:bg-gray-800 rounded-xl max-w-3xl w-full max-h-[80vh] overflow-y-auto p-3 md:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-3 md:mb-6">

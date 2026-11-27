@@ -134,7 +134,7 @@ export default function SalesHistoryPage() {
               <select
                 value={selectedProductId}
                 onChange={e => setSelectedProductId(e.target.value)}
-                className="w-full appearance-none pl-3 pr-8 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
+                className="w-full appearance-none pl-3 pr-8 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
               >
                 <option value="">Semua Produk</option>
                 {products.map(p => (
@@ -264,7 +264,7 @@ export default function SalesHistoryPage() {
       )}
 
       {/* Transaction List */}
-      <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+      <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 md:px-6 py-4 border-b border-gray-100 dark:border-gray-700">
           <p className="text-sm font-semibold text-gray-900 dark:text-white">Semua Transaksi</p>
           <span className="px-2.5 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-[11px] font-bold rounded-full">

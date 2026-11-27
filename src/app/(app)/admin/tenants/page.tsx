@@ -172,7 +172,7 @@ function TenantsContent() {
                 </button>
                 {detailIsFree && (
                   <button onClick={() => { setNewPlan('starter'); setPlanNote(''); setPlanAmount('299000'); setShowPlanModal(true) }}
-                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm shadow-blue-500/20 transition-all">
+                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm shadow-blue-500/20 transition-all">
                     <ArrowUpRight className="w-3.5 h-3.5" /> Upgrade
                   </button>
                 )}
@@ -303,7 +303,7 @@ function TenantsContent() {
                         if (meta.price > 0) setPlanAmount(String(meta.price))
                         else setPlanAmount('')
                       }}
-                      className={`relative p-3 rounded-xl border-2 text-left transition-all ${
+                      className={`relative p-3 rounded-lg border-2 text-left transition-all ${
                         isSelected
                           ? `${meta.bg} ${meta.border} ring-2 ring-blue-500/30`
                           : `border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 ${meta.bg}`
@@ -387,7 +387,7 @@ function TenantsContent() {
 
               <div className="flex gap-3 mt-5">
                 <button onClick={() => setShowPlanModal(false)}
-                  className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  className="flex-1 py-2.5 rounded-lg border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   Batal
                 </button>
                 <button
@@ -400,7 +400,7 @@ function TenantsContent() {
                       note: planNote || undefined,
                     }, { onSuccess: () => { setShowPlanModal(false); setPlanExpiry('') } })
                   }}
-                  className="flex-1 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-sm font-semibold text-white transition-colors">
+                  className="flex-1 py-2.5 rounded-lg bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-sm font-semibold text-white transition-colors">
                   {updatePlanMutation.isPending ? 'Menyimpan...' : 'Simpan'}
                 </button>
               </div>
@@ -431,7 +431,7 @@ function TenantsContent() {
               )}
               <div className="flex gap-3">
                 <button onClick={() => setShowSuspendModal(false)}
-                  className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  className="flex-1 py-2.5 rounded-lg border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   Batal
                 </button>
                 <button
@@ -443,7 +443,7 @@ function TenantsContent() {
                       reason: suspendReason || undefined,
                     }, { onSuccess: () => setShowSuspendModal(false) })
                   }}
-                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors ${
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors ${
                     detail.is_suspended ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
                   } disabled:opacity-50`}>
                   {suspendMutation.isPending ? '...' : detail.is_suspended ? 'Ya, Aktifkan' : 'Ya, Suspend'}
@@ -488,10 +488,10 @@ function TenantsContent() {
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
           <button
             onClick={() => setFilterPlan(filterPlan === 'free' ? '' : 'free')}
-            className={`relative rounded-xl p-3 text-left transition-all border ${
+            className={`relative rounded-lg p-3 text-left transition-all border ${
               filterPlan === 'free'
                 ? 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 ring-1 ring-gray-300 dark:ring-gray-600'
-                : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                : 'glass-tint bg-white/55 dark:bg-gray-800 border-white/70 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
             }`}
           >
             <p className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase">Free</p>
@@ -504,10 +504,10 @@ function TenantsContent() {
               <button
                 key={p}
                 onClick={() => setFilterPlan(filterPlan === p ? '' : p)}
-                className={`relative rounded-xl p-3 text-left transition-all border ${
+                className={`relative rounded-lg p-3 text-left transition-all border ${
                   filterPlan === p
                     ? `${meta.bg} ${meta.border} ring-1 ring-current/20`
-                    : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    : 'glass-tint bg-white/55 dark:bg-gray-800 border-white/70 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 <p className={`text-[10px] font-bold uppercase ${meta.color}`}>{meta.label}</p>

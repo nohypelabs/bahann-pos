@@ -87,7 +87,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
           <div className="max-w-2xl w-full">
-            <div className="bg-white rounded-2xl shadow-xl border-2 border-red-200 p-4 md:p-8">
+            <div className="bg-white rounded-xl shadow-xl border-2 border-red-200 p-4 md:p-8">
               {/* Error Icon */}
               <div className="flex justify-center mb-3 md:mb-6">
                 <div className="flex items-center justify-center">
@@ -139,13 +139,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               <div className="flex gap-4 justify-center">
                 <button
                   onClick={this.handleReset}
-                  className="px-3 md:px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+                  className="px-3 md:px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Coba Lagi
                 </button>
                 <button
                   onClick={() => window.location.href = '/'}
-                  className="px-3 md:px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-xl hover:bg-gray-300 transition-colors"
+                  className="px-3 md:px-6 py-3 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
                 >
                   Ke Halaman Utama
                 </button>

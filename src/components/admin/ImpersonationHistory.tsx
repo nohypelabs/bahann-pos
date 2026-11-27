@@ -36,7 +36,7 @@ export function ImpersonationHistory({ tenantId }: { tenantId: string }) {
   )
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+    <div className="glass-surface rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

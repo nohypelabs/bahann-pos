@@ -28,7 +28,7 @@ function VerifyEmailContent() {
   }, [token]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 text-center">
+    <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
       <div className="flex justify-center mb-4">
         {status === 'loading' && <Loader2 className="w-12 h-12 text-gray-400 animate-spin" />}
         {status === 'success' && <CheckCircle2 className="w-12 h-12 text-green-500" />}
@@ -59,7 +59,7 @@ function VerifyEmailContent() {
         <>
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Sudah Terverifikasi</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">Email kamu sudah pernah diverifikasi sebelumnya.</p>
-          <a href="/login?verified=true" className="inline-block px-6 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-colors">
+          <a href="/login?verified=true" className="inline-block px-6 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors">
             Lanjut Login →
           </a>
         </>
@@ -71,7 +71,7 @@ function VerifyEmailContent() {
           <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
             Link verifikasi tidak valid atau sudah kadaluarsa. Minta link baru dari dalam aplikasi.
           </p>
-          <a href="/login" className="inline-block px-6 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-colors">
+          <a href="/login" className="inline-block px-6 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-colors">
             Login →
           </a>
         </>
@@ -84,7 +84,7 @@ export default function VerifyEmailPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
       <Suspense fallback={
-        <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 text-center">
+        <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
           <div className="flex justify-center mb-4"><Loader2 className="w-12 h-12 text-gray-400 animate-spin" /></div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Memverifikasi email...</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm">Mohon tunggu sebentar.</p>

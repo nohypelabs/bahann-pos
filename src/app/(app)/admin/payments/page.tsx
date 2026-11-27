@@ -355,7 +355,7 @@ function PaymentsContent() {
               onChange={e => setReviewNote(e.target.value)}
               placeholder={reviewModal.action === 'approve' ? 'Catatan (opsional)' : 'Alasan penolakan (wajib)'}
               rows={3}
-              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
+              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
             />
 
             {(approveMutation.error || rejectMutation.error) && (
@@ -366,7 +366,7 @@ function PaymentsContent() {
 
             <div className="flex gap-3">
               <button onClick={() => setReviewModal(null)}
-                className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                className="flex-1 py-2.5 rounded-lg border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                 Batal
               </button>
               <button onClick={handleReviewSubmit}
@@ -374,7 +374,7 @@ function PaymentsContent() {
                   (reviewModal.action === 'reject' && !reviewNote.trim()) ||
                   approveMutation.isPending || rejectMutation.isPending
                 }
-                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors disabled:opacity-50 ${
+                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors disabled:opacity-50 ${
                   reviewModal.action === 'approve'
                     ? 'bg-green-600 hover:bg-green-700'
                     : 'bg-red-500 hover:bg-red-600'
@@ -394,7 +394,7 @@ function PaymentsContent() {
           onClick={() => setProofModal(null)}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <div className="relative max-w-lg w-full">
-            <img src={proofModal} alt="Bukti Pembayaran" className="w-full rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700" />
+            <img src={proofModal} alt="Bukti Pembayaran" className="w-full rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700" />
             <button onClick={() => setProofModal(null)}
               className="absolute top-3 right-3 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors">
               <XCircle className="w-5 h-5" />

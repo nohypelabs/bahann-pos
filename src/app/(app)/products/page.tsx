@@ -182,7 +182,7 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
         <div>
           <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Tipe Item</label>
           <select value={formData.itemType} onChange={handleItemTypeChange}
-            className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors">
+            className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors">
             <option value="PRODUCT">Produk Fisik</option>
             <option value="MENU">Menu / Makanan</option>
             <option value="SERVICE">Jasa / Layanan</option>
@@ -246,7 +246,7 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
         <div>
           <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Perilaku Stok</label>
           <select value={formData.stockBehavior} onChange={f('stockBehavior')}
-            className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors">
+            className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors">
             <option value="TRACKED">Stok Terlacak</option>
             <option value="UNTRACKED">Tanpa Stok</option>
             <option value="CONSUMED">Stok Bahan Baku (Resep)</option>
@@ -262,7 +262,7 @@ function ProductFormModal({ product, defaultItemType, defaultStockBehavior, onCl
         <div>
           <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-1">Model Harga</label>
           <select value={formData.pricingModel} onChange={f('pricingModel')}
-            className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors">
+            className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors">
             <option value="FIXED">Harga Tetap</option>
             <option value="TIERED">Harga Grosir (Tiered)</option>
             <option value="TIME_BASED">Harga Per Durasi</option>
@@ -493,7 +493,7 @@ export default function ProductsPage() {
 
       {/* Batch toolbar */}
       {selectedProducts.size > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-2xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl">
           <p className="text-sm font-semibold text-blue-900 dark:text-blue-200">
             {selectedProducts.size} produk dipilih
           </p>
@@ -514,11 +514,11 @@ export default function ProductsPage() {
           placeholder="Cari nama atau SKU..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="flex-1 px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
+          className="flex-1 px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
         />
         <div className="relative md:w-52">
           <select value={categoryFilter} onChange={(e: SelectChangeEvent) => setCategoryFilter(e.target.value)}
-            className="w-full appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
+            className="w-full appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
           >
             <option value="">Semua Kategori</option>
             {categories?.map(cat => <option key={cat} value={cat}>{cat}</option>)}
@@ -538,7 +538,7 @@ export default function ProductsPage() {
       )}
 
       {/* Table */}
-      <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+      <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
         <div className="px-4 md:px-6 py-4 border-b border-gray-100 dark:border-gray-700">
           <p className="text-sm font-semibold text-gray-900 dark:text-white">Daftar Produk</p>
         </div>

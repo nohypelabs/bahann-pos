@@ -78,7 +78,7 @@ export default function PaymentSettingsPage() {
     return (
       <div className="p-3 md:p-6 max-w-2xl mx-auto space-y-2 md:space-y-4">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-24 bg-gray-100 dark:bg-gray-800 rounded-2xl animate-pulse" />
+          <div key={i} className="h-24 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
         ))}
       </div>
     )
@@ -232,7 +232,7 @@ export default function PaymentSettingsPage() {
           {/* Preview */}
           {(qrisForm.imageBase64 || (!qrisForm.imageBase64 && settings?.qris.imageBase64)) && (
             <div className="flex flex-col items-center gap-2">
-              <div className="glass-surface p-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm">
+              <div className="glass-surface p-4 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={qrisForm.imageBase64 || settings?.qris.imageBase64}
@@ -275,7 +275,7 @@ function PaymentCard({
   children: React.ReactNode
 }) {
   return (
-    <div className={`border-2 rounded-2xl overflow-hidden transition-all ${isOpen ? 'border-blue-200 dark:border-blue-700 shadow-md' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'}`}>
+    <div className={`border-2 rounded-xl overflow-hidden transition-all ${isOpen ? 'border-blue-200 dark:border-blue-700 shadow-md' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'}`}>
       <button
         onClick={onToggle}
         className="w-full flex items-center gap-2 md:gap-4 p-5 text-left hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors"

@@ -273,7 +273,7 @@ function UserUpgradeView() {
               Fitur baru sudah aktif. Selamat menikmati!
             </p>
             <button onClick={() => setSuccessModal(null)}
-              className="mt-6 w-full py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-sm font-semibold text-white transition-colors">
+              className="mt-6 w-full py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-sm font-semibold text-white transition-colors">
               Oke, Mantap!
             </button>
           </div>
@@ -284,7 +284,7 @@ function UserUpgradeView() {
         title="Langganan"
         subtitle="Kelola dan upgrade paket berlangganan Anda."
         action={
-          <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700">
+          <div className="glass-tint flex items-center gap-2 bg-white/55 dark:bg-gray-800 px-4 py-2.5 rounded-xl border border-white/70 dark:border-gray-700">
             <span className="text-sm text-gray-500 dark:text-gray-400">Plan aktif:</span>
             <PlanBadge plan={currentPlan} />
           </div>
@@ -402,7 +402,7 @@ function UserUpgradeView() {
                   ] : []),
                 ]).map(m => (
                   <button key={m.key} onClick={() => setPaymentMethod(m.key)}
-                    className={`p-3 rounded-xl border-2 text-sm font-medium transition-colors ${
+                    className={`p-3 rounded-lg border-2 text-sm font-medium transition-colors ${
                       paymentMethod === m.key
                         ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
                         : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300'
@@ -574,11 +574,11 @@ function UserUpgradeView() {
 
             <div className="flex gap-3">
               <button onClick={() => { setCheckoutPlan(null); setPreviewAmount(null); setBankUniqueAmount(null) }}
-                className="flex-1 py-2.5 rounded-xl border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                className="flex-1 py-2.5 rounded-lg border-2 border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                 Batal
               </button>
               <button onClick={handleSubmitRequest} disabled={createMutation.isPending || (isCrypto && !previewAmount) || (!isCrypto && !bankUniqueAmount)}
-                className="flex-1 py-2.5 rounded-xl bg-green-600 hover:bg-green-700 text-sm font-semibold text-white transition-colors disabled:opacity-50">
+                className="flex-1 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-sm font-semibold text-white transition-colors disabled:opacity-50">
                 {createMutation.isPending ? 'Memproses...' : isCrypto ? 'Saya Sudah Kirim' : 'Saya Sudah Transfer'}
               </button>
             </div>
@@ -600,10 +600,10 @@ function UserUpgradeView() {
 
           return (
             <div key={plan.value}
-              className={`relative flex flex-col rounded-2xl border-2 p-5 transition-all ${
-                isCurrent ? `${plan.border} bg-white dark:bg-gray-900 shadow-md` :
+              className={`glass-tint relative flex flex-col rounded-xl border-2 p-5 transition-all ${
+                isCurrent ? `${plan.border} bg-white/75 dark:bg-gray-900 shadow-md` :
                 isDowngrade ? 'border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30 opacity-60' :
-                `border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:shadow-md`
+                `border-white/70 dark:border-gray-700 bg-white/55 dark:bg-gray-900 hover:shadow-md`
               }`}
             >
               {'popular' in plan && plan.popular && !isCurrent && (
@@ -642,12 +642,12 @@ function UserUpgradeView() {
                 <div className="py-2 text-center text-xs text-gray-300 dark:text-gray-600 border border-gray-100 dark:border-gray-800 rounded-xl">Downgrade tidak tersedia</div>
               ) : isEnterprise ? (
                 <a href={waNumber ? `https://wa.me/${waNumber.replace(/\D/g, '')}` : '#'} target="_blank" rel="noopener noreferrer"
-                  className="py-2 text-center text-xs font-semibold bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors block">
+                  className="py-2 text-center text-xs font-semibold bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors block">
                   Hubungi via WhatsApp
                 </a>
               ) : (
                 <button onClick={() => handleUpgradeClick(plan.value)} disabled={hasPending}
-                  className={`py-2 text-center text-xs font-semibold rounded-xl transition-colors w-full ${
+                  className={`py-2 text-center text-xs font-semibold rounded-lg transition-colors w-full ${
                     hasPending
                       ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 cursor-not-allowed'
                       : 'bg-green-600 hover:bg-green-700 text-white'
@@ -780,7 +780,7 @@ function ContractPlanView() {
         <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{t('subscriptions.contract.body')}</p>
         {waNumber && (
           <a href={`https://wa.me/${waNumber.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
-            className="inline-block mt-4 px-4 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-xl transition-colors">
+            className="inline-block mt-4 px-4 py-2 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
             {t('subscriptions.contract.contact')}
           </a>
         )}

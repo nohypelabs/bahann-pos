@@ -104,7 +104,7 @@ export default function RegisterPage() {
   }
 
   const errorBox = error && (
-    <p role="alert" className="flex items-start gap-2 rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+    <p role="alert" className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
       <XCircle className="mt-0.5 h-4 w-4 shrink-0" /> <span>{error}</span>
     </p>
   )
@@ -239,7 +239,7 @@ export default function RegisterPage() {
                   role="radio"
                   aria-checked={isSelected}
                   onClick={() => setSelectedType(bt.type)}
-                  className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition ${
+                  className={`flex items-center gap-3 rounded-lg border p-4 text-left transition ${
                     isSelected
                       ? 'border-[#0F5F56] bg-[#E3F1EE]/60 lg:border-[#F6C979] lg:bg-white/10'
                       : 'border-[#E4E6E7] bg-white hover:border-[#CDD1D3] lg:border-white/15 lg:bg-white/[0.04] lg:hover:border-white/30'

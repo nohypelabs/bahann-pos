@@ -79,7 +79,7 @@ export function BankTransferDisplay({
       </div>
 
       {/* Bank Account Info */}
-      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-3 md:p-6 text-white shadow-lg">
+      <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-3 md:p-6 text-white shadow-lg">
         <div className="space-y-4">
           {/* Bank Name */}
           <div>

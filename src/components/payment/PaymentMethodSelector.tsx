@@ -104,7 +104,7 @@ export function PaymentMethodSelector({
             disabled={disabled || !method.isActive}
             onClick={() => onChange(method.type)}
             className={`
-              relative p-4 rounded-xl border-2 transition-all
+              relative p-4 rounded-lg border-2 transition-all
               ${value === method.type
                 ? 'border-blue-500 bg-blue-50 shadow-md'
                 : 'border-gray-200 bg-white hover:border-gray-300'

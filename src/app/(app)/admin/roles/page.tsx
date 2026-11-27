@@ -115,14 +115,14 @@ export default function AdminRolesPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Cari nama atau email..."
-              className="w-full pl-9 pr-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400 dark:focus:border-blue-500"
+              className="w-full pl-9 pr-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400 dark:focus:border-blue-500"
             />
           </div>
           <div className="relative">
             <select
               value={filterRole}
               onChange={e => setFilterRole(e.target.value as UserRole | '')}
-              className="appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400 dark:focus:border-blue-500"
+              className="appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400 dark:focus:border-blue-500"
             >
               <option value="">Semua Role</option>
               {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}

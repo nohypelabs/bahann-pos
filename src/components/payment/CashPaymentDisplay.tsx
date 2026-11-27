@@ -56,7 +56,7 @@ export function CashPaymentDisplay({ amount, onConfirm, onCancel, loading }: Cas
       </div>
 
       {/* Total */}
-      <div className="bg-gray-50 rounded-2xl p-5 text-center">
+      <div className="bg-gray-50 rounded-xl p-5 text-center">
         <p className="text-sm font-medium text-gray-500 mb-1">Total Belanja</p>
         <p className="text-base md:text-4xl font-bold text-gray-900">{formatRupiah(amount)}</p>
       </div>
@@ -68,7 +68,7 @@ export function CashPaymentDisplay({ amount, onConfirm, onCancel, loading }: Cas
           <button
             onClick={() => selectQuick(amount)}
             disabled={amount <= 0}
-            className={`py-3 rounded-xl text-sm font-semibold border-2 transition-all ${
+            className={`py-3 rounded-lg text-sm font-semibold border-2 transition-all ${
               cashGiven === amount
                 ? 'border-blue-500 bg-blue-500 text-white shadow-md scale-105'
                 : amount <= 0
@@ -83,7 +83,7 @@ export function CashPaymentDisplay({ amount, onConfirm, onCancel, loading }: Cas
               key={val}
               onClick={() => selectQuick(val)}
               disabled={val < amount}
-              className={`py-3 rounded-xl text-sm font-semibold border-2 transition-all ${
+              className={`py-3 rounded-lg text-sm font-semibold border-2 transition-all ${
                 cashGiven === val
                   ? 'border-blue-500 bg-blue-500 text-white shadow-md scale-105'
                   : val < amount
@@ -109,13 +109,13 @@ export function CashPaymentDisplay({ amount, onConfirm, onCancel, loading }: Cas
             value={inputValue}
             onChange={e => handleInput(e.target.value)}
             placeholder="0"
-            className="w-full pl-12 pr-4 py-4 text-base md:text-2xl font-bold text-right border-2 border-gray-200 rounded-xl focus:border-blue-400 focus:outline-none transition-colors"
+            className="w-full pl-12 pr-4 py-4 text-base md:text-2xl font-bold text-right border-2 border-gray-200 rounded-lg focus:border-blue-400 focus:outline-none transition-colors"
           />
         </div>
       </div>
 
       {/* Change display */}
-      <div className={`rounded-2xl p-5 transition-all ${
+      <div className={`rounded-xl p-5 transition-all ${
         cashGiven === 0
           ? 'bg-gray-50'
           : isEnough

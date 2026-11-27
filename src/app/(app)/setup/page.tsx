@@ -66,7 +66,7 @@ export default function SetupPage() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: 'easeOut' }}
-            className="relative w-full max-w-md lg:max-w-4xl lg:rounded-[28px] lg:border lg:border-white/15 lg:bg-white/[0.07] lg:p-12 lg:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.5)] lg:backdrop-blur-2xl"
+            className="relative w-full max-w-md lg:max-w-4xl lg:rounded-2xl lg:border lg:border-white/15 lg:bg-white/[0.07] lg:p-12 lg:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.5)] lg:backdrop-blur-2xl"
           >
             <div className="mb-8 flex flex-col items-center text-center lg:items-start lg:text-left">
               <img src="/logo.svg" alt="Laku POS" className="mb-6 h-10 w-10 lg:hidden" />
@@ -78,7 +78,7 @@ export default function SetupPage() {
             </div>
 
             {error && (
-              <div role="alert" className="mb-5 flex items-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 lg:border-red-400/30 lg:bg-red-500/15 lg:text-red-200">
+              <div role="alert" className="mb-5 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 lg:border-red-400/30 lg:bg-red-500/15 lg:text-red-200">
                 <XCircle className="h-4 w-4 shrink-0" /> {error}
               </div>
             )}
@@ -93,7 +93,7 @@ export default function SetupPage() {
                     role="radio"
                     aria-checked={isSelected}
                     onClick={() => { setSelectedType(bt.type); setError('') }}
-                    className={`relative flex flex-col rounded-[20px] border p-5 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#0F5F56]/20 lg:focus-visible:ring-[#F6C979]/25 ${
+                    className={`relative flex flex-col rounded-lg border p-5 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#0F5F56]/20 lg:focus-visible:ring-[#F6C979]/25 ${
                       isSelected
                         ? 'border-[#0F5F56] bg-[#F1F8F6] ring-4 ring-[#0F5F56]/10 lg:border-[#F6C979]/80 lg:bg-[#F6C979]/10 lg:ring-[#F6C979]/15'
                         : 'border-[#E4E6E7] bg-white hover:border-[#B9CBBF] lg:border-white/12 lg:bg-black/20 lg:hover:border-white/30 lg:hover:bg-black/30'
@@ -110,7 +110,7 @@ export default function SetupPage() {
                       {isSelected && <Check className="h-3 w-3" strokeWidth={3} />}
                     </span>
 
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E8F3F0] text-[#0F5F56] lg:bg-white/10 lg:text-[#F6C979]">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#E8F3F0] text-[#0F5F56] lg:bg-white/10 lg:text-[#F6C979]">
                       <bt.icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
                     </span>
                     <span className="mt-4 pr-6 text-base font-semibold text-[#17201D] lg:text-white">

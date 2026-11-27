@@ -74,7 +74,7 @@ export default function BusinessSettingsPage() {
                     key={option.type}
                     type="button"
                     onClick={() => setSelected(option.type)}
-                    className={`relative cursor-pointer rounded-2xl border-2 p-4 text-left transition-all ${
+                    className={`relative cursor-pointer rounded-lg border-2 p-4 text-left transition-all ${
                       isSelected
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
                         : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600'

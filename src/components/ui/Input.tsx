@@ -29,7 +29,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             input-mobile w-full
             bg-white dark:bg-gray-800 text-[#17201D] dark:text-gray-100
             border border-[#E4E6E7] dark:border-gray-600
-            ${pill ? 'rounded-[40px]' : 'rounded-[20px]'}
+            ${pill ? 'rounded-[40px]' : 'rounded-lg'}
             focus:outline-none focus:border-[#0F5F56] focus:ring-2 focus:ring-[#8ECFC2]/35 dark:focus:border-gray-400
             transition-all duration-200
             disabled:opacity-50 disabled:cursor-not-allowed
@@ -78,7 +78,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             input-mobile w-full
             bg-white dark:bg-gray-800 text-[#17201D] dark:text-gray-100
             border border-[#E4E6E7] dark:border-gray-600
-            rounded-[20px]
+            rounded-lg
             focus:outline-none focus:border-[#0F5F56] focus:ring-2 focus:ring-[#8ECFC2]/35 dark:focus:border-gray-400
             transition-all duration-200
             disabled:opacity-50 disabled:cursor-not-allowed
@@ -127,7 +127,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             input-mobile w-full
             bg-white dark:bg-gray-800 text-[#17201D] dark:text-gray-100
             border border-[#E4E6E7] dark:border-gray-600
-            rounded-[20px]
+            rounded-lg
             focus:outline-none focus:border-[#0F5F56] focus:ring-2 focus:ring-[#8ECFC2]/35 dark:focus:border-gray-400
             transition-all duration-200
             disabled:opacity-50 disabled:cursor-not-allowed

@@ -20,7 +20,7 @@ function SettingField({ label, value, onChange, placeholder, type = 'text', hint
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+        className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
       />
       {hint && <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">{hint}</p>}
     </div>
@@ -240,7 +240,7 @@ export default function AdminSettingsPage() {
       {/* Save Button */}
       <div className="flex items-center gap-3">
         <button onClick={handleSave} disabled={updateMutation.isPending}
-          className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors disabled:opacity-50 shadow-sm">
+          className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 shadow-sm">
           {updateMutation.isPending ? (
             <><Loader2 className="w-4 h-4 animate-spin" /> Menyimpan...</>
           ) : saved ? (

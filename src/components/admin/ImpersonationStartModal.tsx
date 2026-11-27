@@ -53,7 +53,7 @@ export function ImpersonationStartModal({ tenantId, tenantName, onClose }: Imper
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-800">
+      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-gray-800">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
             <div className="flex items-center justify-center">
@@ -109,7 +109,7 @@ export function ImpersonationStartModal({ tenantId, tenantName, onClose }: Imper
           rows={2}
           maxLength={500}
           placeholder={t('impersonation.start.reasonPlaceholder')}
-          className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          className="w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-amber-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
         />
 
         {error && <p className="mt-2 text-xs font-medium text-red-600 dark:text-red-400">{error}</p>}
@@ -118,7 +118,7 @@ export function ImpersonationStartModal({ tenantId, tenantName, onClose }: Imper
           <button
             type="button"
             onClick={onClose}
-            className="cursor-pointer rounded-xl px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="cursor-pointer rounded-lg px-4 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             {t('common.cancel')}
           </button>
@@ -126,7 +126,7 @@ export function ImpersonationStartModal({ tenantId, tenantName, onClose }: Imper
             type="button"
             onClick={handleStart}
             disabled={startMutation.isPending}
-            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-amber-600 disabled:opacity-60"
+            className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-amber-500 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-amber-600 disabled:opacity-60"
           >
             <Crown className="h-4 w-4" />
             {startMutation.isPending ? t('common.loading') : t('impersonation.start.confirm')}

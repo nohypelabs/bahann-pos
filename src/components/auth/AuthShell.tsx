@@ -12,7 +12,7 @@ import { supportWhatsAppLink } from '@/lib/contact'
 // the product. /setup uses the same backdrop and card.
 
 /** Pill field: light on phones, dark translucent on the desktop glass. */
-export const authFieldClass = `w-full rounded-full border px-5 py-3 text-sm outline-none transition
+export const authFieldClass = `w-full rounded-lg border px-5 py-3 text-sm outline-none transition
   border-[#E4E6E7] bg-white text-[#17201D] placeholder:text-[#9AA19B]
   focus:border-[#0F5F56] focus:ring-4 focus:ring-[#0F5F56]/10
   lg:border-white/15 lg:bg-black/25 lg:text-white lg:placeholder:text-white/45
@@ -20,12 +20,12 @@ export const authFieldClass = `w-full rounded-full border px-5 py-3 text-sm outl
 
 export const authLabelClass = 'block text-sm font-medium text-[#2F3A35] lg:text-white/80'
 
-export const authPrimaryButtonClass = `w-full rounded-full bg-[#0F5F56] py-3.5 text-sm font-semibold text-white transition
+export const authPrimaryButtonClass = `w-full rounded-lg bg-[#0F5F56] py-3.5 text-sm font-semibold text-white transition
   hover:bg-[#0C4D46] disabled:cursor-not-allowed disabled:opacity-60
   lg:bg-gradient-to-r lg:from-[#F6C979] lg:to-[#E9A23B] lg:text-[#17201D]
   lg:shadow-[0_10px_30px_-10px_rgba(233,162,59,0.7)] lg:hover:brightness-105`
 
-export const authSecondaryButtonClass = `w-full rounded-full border py-3.5 text-sm font-semibold transition
+export const authSecondaryButtonClass = `w-full rounded-lg border py-3.5 text-sm font-semibold transition
   border-[#E4E6E7] bg-white text-[#17201D] hover:bg-[#F8F9F9]
   lg:border-white/20 lg:bg-white/5 lg:text-white lg:hover:bg-white/10`
 
@@ -35,10 +35,10 @@ export const authLinkClass = 'font-semibold text-[#0F5F56] hover:underline lg:te
 export function AuthTabs({ active }: { active: 'login' | 'register' }) {
   const { t } = useLanguage()
   const tab = (key: 'login' | 'register', href: string, label: string) => key === active
-    ? <span role="tab" aria-selected className="rounded-full bg-[#0F5F56] py-2.5 text-center text-sm font-semibold text-white shadow-sm">{label}</span>
-    : <Link role="tab" aria-selected={false} href={href} className="rounded-full py-2.5 text-center text-sm font-semibold text-[#5F675F] hover:text-[#17201D]">{label}</Link>
+    ? <span role="tab" aria-selected className="rounded-md bg-[#0F5F56] py-2.5 text-center text-sm font-semibold text-white shadow-sm">{label}</span>
+    : <Link role="tab" aria-selected={false} href={href} className="rounded-md py-2.5 text-center text-sm font-semibold text-[#5F675F] hover:text-[#17201D]">{label}</Link>
   return (
-    <div className="mb-6 grid grid-cols-2 rounded-full bg-[#F3F4F4] p-1 lg:hidden" role="tablist">
+    <div className="mb-6 grid grid-cols-2 rounded-lg bg-[#F3F4F4] p-1 lg:hidden" role="tablist">
       {tab('login', '/login', t('login.tabLogin'))}
       {tab('register', '/register', t('login.tabRegister'))}
     </div>
@@ -65,7 +65,7 @@ function ProductPanel() {
     { icon: <BarChart3 />, title: t('login.hero.f3'), body: t('login.hero.f3Body') },
   ]
   return (
-    <div className="relative hidden min-h-[600px] flex-col overflow-hidden rounded-[22px] bg-[#04201D]/85 p-10 text-white lg:flex">
+    <div className="relative hidden min-h-[600px] flex-col overflow-hidden rounded-2xl bg-[#04201D]/85 p-10 text-white lg:flex">
       <div aria-hidden className="absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-[#1E9E8A] opacity-40 blur-[90px]" />
       <svg aria-hidden viewBox="0 0 200 200" className="absolute -right-6 bottom-24 h-64 w-64 text-[#5FB3A6]/50">
         {Array.from({ length: 12 }, (_, i) => {
@@ -95,7 +95,7 @@ function ProductPanel() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.25, ease: 'easeOut' }}
-        className="relative mt-auto ml-auto w-72 rounded-[18px] border border-white/40 bg-white/90 p-5 text-[#17201D] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+        className="relative mt-auto ml-auto w-72 rounded-xl border border-white/40 bg-white/90 p-5 text-[#17201D] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.6)] backdrop-blur-xl"
       >
         <div className="flex items-center justify-between">
           <p className="text-xs font-medium text-[#5F675F]">{t('login.hero.revenueToday')}</p>
@@ -174,7 +174,7 @@ export function AuthShell({ children, footer = false }: { children: ReactNode; f
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
-          className="relative w-full max-w-md lg:grid lg:max-w-6xl lg:grid-cols-2 lg:gap-8 lg:rounded-[28px] lg:border lg:border-white/15 lg:bg-white/[0.07] lg:p-8 lg:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.5)] lg:backdrop-blur-2xl xl:p-10"
+          className="relative w-full max-w-md lg:grid lg:max-w-6xl lg:grid-cols-2 lg:gap-8 lg:rounded-2xl lg:border lg:border-white/15 lg:bg-white/[0.07] lg:p-8 lg:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.5)] lg:backdrop-blur-2xl xl:p-10"
         >
           <div className="flex flex-col justify-center lg:px-8 lg:py-6">{children}</div>
           <ProductPanel />

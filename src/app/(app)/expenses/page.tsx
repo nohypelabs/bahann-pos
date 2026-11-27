@@ -171,7 +171,7 @@ export default function ExpensesPage() {
           <select
             value={selectedOutlet}
             onChange={e => setSelectedOutlet(e.target.value)}
-            className="w-full appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
+            className="w-full appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
           >
             <option value="">Pilih outlet…</option>
             {outlets.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
@@ -192,7 +192,7 @@ export default function ExpensesPage() {
                   <button
                     key={cat.value}
                     onClick={() => setCategory(cat.value)}
-                    className={`flex flex-col items-center gap-1 p-2 rounded-xl border-2 text-[10px] font-medium transition-all ${
+                    className={`flex flex-col items-center gap-1 p-2 rounded-lg border-2 text-[10px] font-medium transition-all ${
                       category === cat.value
                         ? `${CATEGORY_COLORS[cat.value]} ring-2 ring-blue-500/30`
                         : 'border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
@@ -214,7 +214,7 @@ export default function ExpensesPage() {
                   value={amount}
                   onChange={e => setAmount(e.target.value)}
                   placeholder="0"
-                  className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400 dark:focus:border-blue-500"
+                  className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400 dark:focus:border-blue-500"
                 />
               </div>
               <div>
@@ -223,7 +223,7 @@ export default function ExpensesPage() {
                   type="date"
                   value={expenseDate}
                   onChange={e => setExpenseDate(e.target.value)}
-                  className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400 dark:focus:border-blue-500"
+                  className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400 dark:focus:border-blue-500"
                 />
               </div>
             </div>
@@ -236,7 +236,7 @@ export default function ExpensesPage() {
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 placeholder="Contoh: Bayar listrik bulan Juni"
-                className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-400 dark:focus:border-blue-500"
+                className="w-full px-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-blue-400 dark:focus:border-blue-500"
               />
             </div>
 
@@ -258,7 +258,7 @@ export default function ExpensesPage() {
               ) : (
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-sm text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 transition-colors flex items-center justify-center gap-2"
                 >
                   <Camera className="w-4 h-4" />
                   Foto Nota
@@ -332,7 +332,7 @@ export default function ExpensesPage() {
                     }`}
                   >
                     {/* Category icon */}
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${catColor}`}>
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${catColor}`}>
                       {catIcon}
                     </div>
 

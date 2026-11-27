@@ -486,7 +486,7 @@ export default function HelpPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari topik, fitur, atau pertanyaan..."
-                className="w-full px-4 md:px-6 py-3 md:py-4 text-base md:text-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 border-2 border-gray-300 dark:border-gray-600 rounded-2xl focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-900 transition-all shadow-lg"
+                className="w-full px-4 md:px-6 py-3 md:py-4 text-base md:text-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-900 transition-all shadow-lg"
               />
               {searchQuery && (
                 <button
@@ -509,7 +509,7 @@ export default function HelpPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
           {/* Table of Contents - Tablet & Desktop (sticky sidebar) */}
           <div className="hidden md:block md:col-span-1">
-            <div className="glass-surface sticky top-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 md:p-6 border-2 border-gray-200 dark:border-gray-700">
+            <div className="glass-surface sticky top-4 bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4 md:p-6 border-2 border-gray-200 dark:border-gray-700">
               <h2 className="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 md:mb-4 flex items-center gap-2">
                 <ListOrdered className="w-5 h-5" /> Daftar Isi
               </h2>
@@ -523,7 +523,7 @@ export default function HelpPage() {
                       window.scrollTo({ top: 0, behavior: 'smooth' })
                     }}
                     className={`
-                      w-full text-left px-3 md:px-4 py-2 md:py-3 rounded-xl transition-all text-xs md:text-sm
+                      w-full text-left px-3 md:px-4 py-2 md:py-3 rounded-lg transition-all text-xs md:text-sm
                       ${activeSection === section.id
                         ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold shadow-lg'
                         : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
@@ -543,7 +543,7 @@ export default function HelpPage() {
             <select
               value={activeSection}
               onChange={(e) => setActiveSection(e.target.value)}
-              className="w-full px-2 py-2 md:px-4 md:py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base font-semibold shadow-lg"
+              className="w-full px-2 py-2 md:px-4 md:py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base font-semibold shadow-lg"
             >
               {filteredSections.map((section) => (
                 <option key={section.id} value={section.id}>
@@ -557,7 +557,7 @@ export default function HelpPage() {
           {/* Main Content */}
           <div className="md:col-span-3">
             {currentSection ? (
-              <div className="glass-surface bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 md:p-6 lg:p-8 border-2 border-gray-200 dark:border-gray-700">
+              <div className="glass-surface bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4 md:p-6 lg:p-8 border-2 border-gray-200 dark:border-gray-700">
                 {/* Section Header */}
                 <div className="mb-4 md:mb-6 pb-4 md:pb-6 border-b-2 border-gray-200 dark:border-gray-700">
                   <h2 className="text-base md:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2 md:gap-3">
@@ -636,7 +636,7 @@ export default function HelpPage() {
                 </div>
               </div>
             ) : (
-              <div className="glass-surface bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 md:p-8 border-2 border-gray-200 dark:border-gray-700 text-center">
+              <div className="glass-surface bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4 md:p-8 border-2 border-gray-200 dark:border-gray-700 text-center">
                 <p className="text-sm md:text-xl text-gray-600 dark:text-gray-400">
                   {searchQuery
                     ? 'Tidak ada hasil yang ditemukan. Coba kata kunci lain.'
@@ -648,7 +648,7 @@ export default function HelpPage() {
         </div>
 
         {/* Footer */}
-        <div className="glass-surface mt-4 md:mt-8 md:mt-12 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-3 md:p-6 md:p-8 border-2 border-gray-200 dark:border-gray-700">
+        <div className="glass-surface mt-4 md:mt-8 md:mt-12 text-center bg-white dark:bg-gray-800 rounded-xl shadow-xl p-3 md:p-6 md:p-8 border-2 border-gray-200 dark:border-gray-700">
           <h3 className="text-sm md:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 md:mb-4">
             Masih Ada Pertanyaan?
           </h3>
@@ -658,13 +658,13 @@ export default function HelpPage() {
           <div className="flex flex-wrap justify-center gap-3 md:gap-4">
             <Link
               href="/about"
-              className="px-5 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all shadow-lg hover:shadow-xl text-sm md:text-base"
+              className="px-5 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all shadow-lg hover:shadow-xl text-sm md:text-base"
             >
               <Info className="w-4 h-4 inline-block mr-1" /> Tentang Sistem
             </Link>
             <Link
               href="/dashboard"
-              className="px-5 md:px-6 py-2.5 md:py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-xl border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl text-sm md:text-base"
+              className="px-5 md:px-6 py-2.5 md:py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-lg border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl text-sm md:text-base"
             >
               <LayoutDashboard className="w-4 h-4 inline-block mr-1" /> Kembali ke Dashboard
             </Link>

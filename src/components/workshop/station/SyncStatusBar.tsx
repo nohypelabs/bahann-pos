@@ -38,7 +38,7 @@ export function SyncStatusBar({ status, notes, snapshotAt }: Props) {
     <div className="space-y-2">
       <div
         role="status"
-        className={`flex flex-wrap items-center gap-x-4 gap-y-1 rounded-2xl border px-4 py-2.5 text-sm ${
+        className={`flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border px-4 py-2.5 text-sm ${
           offline ? 'border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-900/20 dark:text-amber-200' : 'border-teal-200 bg-teal-50/60 text-teal-900 dark:bg-teal-900/10 dark:text-teal-200'
         }`}
       >
@@ -67,7 +67,7 @@ export function SyncStatusBar({ status, notes, snapshotAt }: Props) {
       {offline && <p className="text-xs text-amber-800 dark:text-amber-300">{t('workshop.offline.offlineHelp')}</p>}
 
       {showFailed && notes.failed.length > 0 && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 dark:bg-red-900/20 p-3 space-y-2">
+        <div className="rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 p-3 space-y-2">
           <p className="text-sm font-semibold text-red-800">{t('workshop.offline.failedTitle')}</p>
           {notes.failed.map((item: WsOutboxItem) => (
             <div key={item.seq} className="flex flex-wrap items-center gap-2 text-sm">

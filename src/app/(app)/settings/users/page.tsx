@@ -39,7 +39,7 @@ function StyledSelect<T extends string>({ label, value, onChange, options }: {
       <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">{label}</label>
       <div className="relative">
         <select value={value} onChange={e => onChange(e.target.value as T)}
-          className="w-full appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
+          className="w-full appearance-none px-3 py-2.5 pr-9 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
         >
           {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -233,7 +233,7 @@ export default function UsersManagementPage() {
       />
 
       {/* Users Table */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+      <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
         <div className="px-4 md:px-6 py-4 border-b border-gray-100 dark:border-gray-700">
           <p className="text-sm font-semibold text-gray-900 dark:text-white">Daftar Pengguna</p>
         </div>
@@ -301,7 +301,7 @@ export default function UsersManagementPage() {
                           outletId: role.scope === 'OUTLET' ? f.outletId : '',
                           outletGroupId: role.scope === 'OUTLET_GROUP' ? f.outletGroupId : '',
                         }))}
-                        className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
+                        className={`flex items-center gap-3 p-3 rounded-lg border-2 text-left transition-all ${
                           form.roleKey === role.key
                             ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                             : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
@@ -364,7 +364,7 @@ export default function UsersManagementPage() {
                       <input type="tel" placeholder="8123456789"
                         value={form.whatsappNumber}
                         onChange={e => setForm(f => ({ ...f, whatsappNumber: e.target.value }))}
-                        className="w-full pl-12 pr-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
+                        className="w-full pl-12 pr-3 py-2.5 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
                       />
                     </div>
                   </div>
@@ -424,7 +424,7 @@ export default function UsersManagementPage() {
                             outletId: role.scope === 'OUTLET' ? current.outletId : '',
                             outletGroupId: role.scope === 'OUTLET_GROUP' ? current.outletGroupId : '',
                           }))}
-                          className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all ${
+                          className={`flex items-center gap-3 p-3 rounded-lg border-2 text-left transition-all ${
                             isCurrentRole
                               ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                               : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'

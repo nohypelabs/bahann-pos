@@ -38,7 +38,7 @@ function Panel({ title, action, children, className = '' }: { title?: string; ac
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className={`glass-panel rounded-[14px] p-4 md:p-5 ${className}`}
+      className={`glass-panel rounded-xl p-4 md:p-5 ${className}`}
     >
       {(title || action) && (
         <div className="mb-4 flex items-center justify-between gap-3">
@@ -150,13 +150,13 @@ export default function DashboardPage() {
         </div>
 
         {overview.error && (
-          <p className="rounded-[14px] border border-red-200 bg-red-50 p-4 text-sm text-red-700">{t('dashboard.loadFailed')}</p>
+          <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{t('dashboard.loadFailed')}</p>
         )}
 
         {/* KPIs */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 md:gap-4">
           {loading || !cur || !prev || !o ? (
-            [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-[136px] rounded-[14px]" />)
+            [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-[136px] rounded-xl" />)
           ) : (
             <>
               <KpiCard label={t('dashboard.kpi.revenue')} value={formatCurrency(cur.revenue)} icon={<Wallet />} tone="brand"
@@ -184,7 +184,7 @@ export default function DashboardPage() {
                 <button
                   key={q.href}
                   onClick={() => (!q.guarded || inventoryAccess.guard()) && router.push(q.href)}
-                  className="group flex items-center gap-3 rounded-[10px] border border-white/70 bg-white/55 px-3 py-3 text-left transition-colors hover:border-[#0F5F56]/40 hover:bg-[#E3F1EE]/50"
+                  className="group flex items-center gap-3 rounded-lg border border-white/70 bg-white/55 px-3 py-3 text-left transition-colors hover:border-[#0F5F56]/40 hover:bg-[#E3F1EE]/50"
                 >
                   <span className="shrink-0 text-[#0F5F56] [&>svg]:h-5 [&>svg]:w-5 [&>svg]:stroke-[1.75]">{q.icon}</span>
                   <span className="min-w-0 flex-1 truncate text-sm font-semibold text-[#17201D]">{q.label}</span>
@@ -195,7 +195,7 @@ export default function DashboardPage() {
           </Panel>
 
           <motion.section initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}
-            className="glass-panel-dark rounded-[14px] bg-[#0F5F56] p-4 text-white md:p-5">
+            className="glass-panel-dark rounded-xl bg-[#0F5F56] p-4 text-white md:p-5">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-[15px] font-semibold">{t('dashboard.topMember.title')}</h2>
               <Link href="/members" className="text-xs font-semibold text-white/80 underline-offset-2 hover:text-white hover:underline">{t('dashboard.viewAll')}</Link>
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                     </span>
                   ))}
                 </div>
-                <div className="mt-3 rounded-[10px] bg-white/10 p-3">
+                <div className="mt-3 rounded-lg bg-white/10 p-3">
                   <p className="truncate text-sm font-semibold">{o.topCustomers[0].name}{o.topCustomers[0].memberCode ? ` · ${o.topCustomers[0].memberCode}` : ''}</p>
                   <p className="mt-0.5 text-xl font-bold tabular-nums">{formatCurrency(o.topCustomers[0].spent)}</p>
                   <p className="text-xs text-white/75">{t('dashboard.topMember.visits').replace('{n}', String(o.topCustomers[0].visits))}</p>
@@ -331,8 +331,8 @@ export default function DashboardPage() {
               <div className="flex h-[220px] items-end gap-3">
                 {o.categories.slice(0, 5).map((c, i) => (
                   <div key={c.category} className="flex h-full min-w-0 flex-1 flex-col items-center gap-2">
-                    <div className="relative w-full flex-1 overflow-hidden rounded-[10px] bg-white/60">
-                      <motion.div className="absolute inset-x-0 bottom-0 rounded-[10px]" style={{ background: SERIES[i % SERIES.length] }}
+                    <div className="relative w-full flex-1 overflow-hidden rounded-lg bg-white/60">
+                      <motion.div className="absolute inset-x-0 bottom-0 rounded-lg" style={{ background: SERIES[i % SERIES.length] }}
                         initial={{ height: 0 }} animate={{ height: `${Math.max(4, c.share * 100)}%` }} transition={{ duration: 0.6, ease: 'easeOut' }} />
                     </div>
                     <span className="w-full truncate text-center text-xs text-[#5F675F]" title={c.category}>{c.category}</span>
@@ -359,7 +359,7 @@ export default function DashboardPage() {
                   ))}
                 </ul>
                 <button onClick={() => inventoryAccess.guard() && router.push('/warehouse/stock')}
-                  className="mt-3 w-full rounded-[10px] border border-[#E4E6E7] py-2 text-sm font-semibold text-[#0F5F56] hover:bg-[#E3F1EE]/50">
+                  className="mt-3 w-full rounded-lg border border-[#E4E6E7] py-2 text-sm font-semibold text-[#0F5F56] hover:bg-[#E3F1EE]/50">
                   {t('dashboard.lowStock.record')}
                 </button>
               </>

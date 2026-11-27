@@ -58,14 +58,14 @@ export default function LeadsPage() {
       </div>
 
       {list.error && <p className="text-sm text-red-600">{friendlyError(list.error)}</p>}
-      {list.isLoading && <div className="h-40 animate-pulse rounded-[14px] bg-[#F3F4F4]" />}
+      {list.isLoading && <div className="h-40 animate-pulse rounded-xl bg-white/50" />}
       {list.data && list.data.rows.length === 0 && (
         <EmptyState icon={<Inbox />} title="Belum ada pesan" description="Pesan dari formulir kontak di halaman depan akan muncul di sini." />
       )}
 
       <div className="space-y-3">
         {list.data?.rows.map((r) => (
-          <article key={r.id} className="rounded-[14px] border border-[#E4E6E7] bg-white p-4 md:p-5">
+          <article key={r.id} className="glass-surface rounded-xl border border-[#E4E6E7] bg-white p-4 md:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">

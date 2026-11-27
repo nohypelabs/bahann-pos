@@ -20,6 +20,23 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-28 · Full sweep for solid panels, Claude-style corner radii (local app → production DB, try-out tenant)
+
+Asked by the owner: scan again so no page is missed, and match the corner radii to claude.ai (radii only). A read-only
+sub-agent mapped every page under `src/app/(app)/` and the components they render for opaque panels without a glass
+class (outside dialogs, inputs, badges, table rows). Screens checked with Playwright, Chromium, 1440×900 and 390 px.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 30.1 | Sweep for solid panels | None left | **16 found in 10 files:** table panels on Transaksi and Pengguna, the stock page's info box and "Penyesuaian Stok", recent sales on the cashier, plan cards and the active-plan tile on Langganan, lead cards and skeleton, plan filter tiles on Tenants, impersonation history, the period switch (`FilterBar`) and the approvals tabs, the top bar, the service note's bottom bar. All made glass (`glass-surface`, `glass-tint` where the card keeps its own colour or border, `glass-bar` for bars) |
+| 30.2 | Corner radii | One scale | Controls (buttons, inputs, selects, tabs, small icon tiles) 8px, cards and panels 12px, dialogs and the big auth card 16px, chips and avatars stay round. Applied by element type to 62 files (codemod, then by hand for `Button`, date and rich-text inputs, the auth fields and tabs). The tablet override that shrank `rounded-xl`/`2xl` is gone, so the scale is the same at every width. The landing page keeps its own radii |
+| 30.3 | Check pages | Same look, nothing broken | `/pos/sales`, `/transactions`, `/approvals`, `/warehouse/stock`, `/settings/subscriptions`, `/pos/revenue`, `/products`, `/login`, desktop and phone: no sideways scroll |
+
+Lint 0 errors, `tsc` clean, Jest 219 passed / 2 skipped. Admin-only pages (Tenants, Leads) were changed but not
+screenshotted (the try-out owner cannot open them).
+
+---
+
 ## 2026-11-28 · First-run `/setup` in the login style (local app → production DB, try-out tenant)
 
 Playwright, Chromium, 1440×900 and 390 px (iPhone 13), signed in as the client try-out owner. That tenant already has

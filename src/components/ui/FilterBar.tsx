@@ -47,7 +47,7 @@ export function FilterBar({
           <select
             value={outletValue}
             onChange={e => onOutletChange(e.target.value)}
-            className="w-full appearance-none pl-3 pr-8 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
+            className="w-full appearance-none pl-3 pr-8 py-2 text-sm border-2 border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-medium focus:outline-none focus:border-blue-400 dark:focus:border-blue-500 transition-colors"
           >
             <option value="">{outletPlaceholder}</option>
             {outlets.map(o => (
@@ -59,7 +59,7 @@ export function FilterBar({
       )}
 
       {/* Period pills */}
-      <div className="flex items-center gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
+      <div className="glass-tint flex items-center gap-1 p-1 bg-white/45 border border-white/70 dark:bg-gray-800 rounded-xl">
         {periodOptions.map(opt => (
           <button
             key={opt.value}
