@@ -2,7 +2,8 @@
 // Caching strategies for offline POS support
 
 const CACHE_NAME = 'lakupos-v2'
-const STATIC_CACHE = 'lakupos-static-v1'
+// Bumped to v2 so phones drop the old "L" logo and icons cached by v1.
+const STATIC_CACHE = 'lakupos-static-v2'
 const DYNAMIC_CACHE = 'lakupos-dynamic-v1'
 const API_CACHE = 'lakupos-api-v1'
 
@@ -62,9 +63,16 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Static assets (JS, CSS, fonts, images): Cache-first
-  if (isStaticAsset(url.pathname)) {
+  // Hashed build output never changes under the same URL: Cache-first
+  if (url.pathname.startsWith('/_next/static/')) {
     event.respondWith(cacheFirst(request, STATIC_CACHE))
+    return
+  }
+
+  // Files from public/ keep their name when replaced (logo.svg, icons, landing
+  // images), so check the network first and use the cached copy only offline.
+  if (isStaticAsset(url.pathname)) {
+    event.respondWith(networkFirst(request, STATIC_CACHE))
     return
   }
 
