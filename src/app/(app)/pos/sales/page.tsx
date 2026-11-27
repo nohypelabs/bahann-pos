@@ -438,7 +438,7 @@ export default function SalesTransactionPage() {
         : cart.length === 0
           ? 'Keranjang kosong'
           : `Bayar ${formatCurrency(cartTotal)}`
-  const surfaceClass = 'rounded-[14px] border border-neutral-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
+  const surfaceClass = 'glass-surface rounded-[14px] border border-neutral-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
   const chipClass = 'inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 py-1 text-[11px] font-medium text-neutral-600'
 
   useEffect(() => {
@@ -597,10 +597,10 @@ export default function SalesTransactionPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col overflow-hidden rounded-[15px] border border-neutral-200 bg-[#F0F0F1] shadow-[0_20px_45px_-35px_rgba(28,25,23,0.45)]">
+    <div className="flex flex-col rounded-[15px] border border-white/70 bg-white/25 shadow-[0_20px_45px_-35px_rgba(28,25,23,0.45)] md:h-[calc(100vh-4rem)] md:overflow-hidden">
 
       {/* ── Top Bar ── */}
-      <div className="shrink-0 border-b border-neutral-200 bg-white/95 px-4 py-3">
+      <div className="glass-bar shrink-0 rounded-t-[15px] border-b border-white/70 bg-white px-4 py-3 md:rounded-none">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-neutral-500">Kasir Aktif</p>
@@ -615,12 +615,12 @@ export default function SalesTransactionPage() {
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               {selectedOutlet ? (
-                <span className={chipClass}>
+                <span className={`${chipClass} max-md:hidden`}>
                   <Store className="h-3.5 w-3.5 text-emerald-600" />
                   <span className="truncate">{selectedOutlet.name}</span>
                 </span>
               ) : (
-                <span className={chipClass}>Pilih outlet untuk mulai transaksi</span>
+                <span className={`${chipClass} max-md:hidden`}>Pilih outlet untuk mulai transaksi</span>
               )}
               {pendingTransactions > 0 && (
                 <span className={chipClass}>
@@ -639,6 +639,7 @@ export default function SalesTransactionPage() {
 
             <button
               onClick={() => setIsCartOpen(true)}
+              aria-label={t('pos.sales.cart')}
               className="relative inline-flex items-center gap-2 rounded-2xl bg-neutral-950 px-3.5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
             >
               <ShoppingCart className="h-4 w-4" />
@@ -678,15 +679,15 @@ export default function SalesTransactionPage() {
       )}
 
       {/* ── Main Content ── */}
-      <div className="flex flex-1 flex-col gap-4 overflow-hidden p-4 md:flex-row">
+      <div className="flex flex-1 flex-col gap-4 p-3 md:flex-row md:overflow-hidden md:p-4">
 
         {/* Left: Outlet picker + Product picker */}
-        <div className="flex flex-col gap-3 flex-1 overflow-hidden min-w-0">
+        <div className="flex flex-col gap-3 flex-1 min-w-0 md:overflow-hidden">
 
           {needsShift && (
-            <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3">
+            <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-amber-300 bg-amber-50 px-3 py-2.5 md:px-4 md:py-3">
               <Sunrise className="h-5 w-5 shrink-0 text-amber-700" />
-              <p className="flex-1 text-sm font-medium text-amber-900">{t('shift.banner')}</p>
+              <p className="flex-1 text-xs font-medium text-amber-900 md:text-sm">{t('shift.banner')}</p>
               <Button size="sm" onClick={() => setIsShiftModalOpen(true)}>{t('shift.open.button')}</Button>
             </div>
           )}
@@ -742,7 +743,7 @@ export default function SalesTransactionPage() {
           )}
 
           {/* Product Picker — fills remaining height */}
-          <div className={`${surfaceClass} flex flex-col flex-1 overflow-hidden min-h-0`}>
+          <div className={`${surfaceClass} flex flex-col overflow-hidden md:flex-1 md:min-h-0`}>
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 shrink-0 gap-2">
               <div>
@@ -832,7 +833,7 @@ export default function SalesTransactionPage() {
                   <span className="col-span-3 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Harga</span>
                   <span className="col-span-2 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Stok</span>
                 </div>
-                <div className="overflow-y-auto flex-1 divide-y divide-gray-100 dark:divide-gray-700">
+                <div className="max-h-[55dvh] overflow-y-auto flex-1 divide-y divide-gray-100 dark:divide-gray-700 md:max-h-none">
                   {showProductsLoading ? (
                     <ProductListSkeleton rows={6} />
                   ) : !selectedOutletId ? (
@@ -919,7 +920,7 @@ export default function SalesTransactionPage() {
                   </>
                 ) : (
                   /* Grid view */
-                  <div className="overflow-y-auto flex-1 p-3">
+                  <div className="max-h-[55dvh] overflow-y-auto flex-1 p-3 md:max-h-none">
                     {showProductsLoading ? (
                       <ProductGridSkeleton count={8} />
                     ) : !selectedOutletId ? (
@@ -1070,10 +1071,10 @@ export default function SalesTransactionPage() {
         <div className="hidden md:flex flex-col gap-4 w-[22rem] shrink-0 overflow-hidden">
 
           {/* Payment card */}
-          <div className="shrink-0 rounded-[18px] bg-neutral-950 p-4 text-white shadow-[0_20px_45px_-25px_rgba(28,25,23,0.75)]">
+          <div className="glass-panel-dark shrink-0 rounded-[18px] bg-[#0F5F56] p-4 text-white shadow-[0_20px_45px_-25px_rgba(28,25,23,0.75)]">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-neutral-400">Checkout</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-white/70">Checkout</p>
                 <p className="mt-1 text-sm font-semibold text-white">Ringkasan pembayaran</p>
               </div>
               <div className="rounded-2xl bg-white/10 p-2 text-white">
@@ -1098,11 +1099,11 @@ export default function SalesTransactionPage() {
                       {item.productName}
                       {priceOverrideOf(item) && <span className="ml-1 text-amber-300">*</span>}
                     </button>
-                    <button onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)} aria-label={`Kurangi ${item.productName}`} className="h-5 w-5 shrink-0 rounded border border-white/20 leading-none text-neutral-300 hover:border-emerald-400">−</button>
+                    <button onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)} aria-label={`Kurangi ${item.productName}`} className="h-5 w-5 shrink-0 rounded border border-white/20 leading-none text-white/80 hover:border-emerald-400">−</button>
                     <span className="w-5 shrink-0 text-center font-semibold text-white">{item.quantity}</span>
-                    <button onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)} aria-label={`Tambah ${item.productName}`} className="h-5 w-5 shrink-0 rounded border border-white/20 leading-none text-neutral-300 hover:border-emerald-400">+</button>
+                    <button onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)} aria-label={`Tambah ${item.productName}`} className="h-5 w-5 shrink-0 rounded border border-white/20 leading-none text-white/80 hover:border-emerald-400">+</button>
                     <span className="w-[4.75rem] shrink-0 text-right font-semibold text-white">{formatCurrency(item.total)}</span>
-                    <button onClick={() => handleRemoveFromCart(item.productId)} aria-label={`Hapus ${item.productName}`} className="shrink-0 px-0.5 text-neutral-500 hover:text-red-400"><X className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => handleRemoveFromCart(item.productId)} aria-label={`Hapus ${item.productName}`} className="shrink-0 px-0.5 text-white/60 hover:text-red-400"><X className="w-3.5 h-3.5" /></button>
                   </div>
                 ))}
               </div>
@@ -1112,14 +1113,14 @@ export default function SalesTransactionPage() {
             <div className="mt-3 rounded-[14px] border border-white/10 bg-white/5 px-4 py-3">
               <div className="flex items-end justify-between gap-3">
                 <div className="shrink-0 pb-1">
-                  <p className="text-xs text-neutral-300">Total tagihan</p>
-                  <p className="text-xs text-neutral-400">{cartItemCount} item</p>
+                  <p className="text-xs text-white/80">Total tagihan</p>
+                  <p className="text-xs text-white/70">{cartItemCount} item</p>
                 </div>
                 <p className="truncate text-3xl font-semibold tracking-tight text-white">
                   {cart.length > 0 ? formatCurrency(cartTotal) : 'Rp 0'}
                 </p>
               </div>
-              <div className="mt-2 flex items-center justify-between gap-2 border-t border-white/10 pt-2 text-sm text-neutral-300">
+              <div className="mt-2 flex items-center justify-between gap-2 border-t border-white/10 pt-2 text-sm text-white/80">
                 <span>Subtotal <span className="text-white">{formatCurrency(cartSubtotal)}</span></span>
                 <span>
                   Diskon{' '}
@@ -1133,11 +1134,11 @@ export default function SalesTransactionPage() {
             <div className="mt-4">
               <button onClick={() => setIsPromoExpanded(!isPromoExpanded)} className="flex items-center justify-between w-full text-left rounded-xl px-2 -mx-2 py-1 hover:bg-white/5 transition-colors">
                 <span className="text-xs font-semibold text-neutral-200">Kode Promo</span>
-                <span className="text-neutral-500 text-xs">{isPromoExpanded ? '▲' : '▼'}</span>
+                <span className="text-white/60 text-xs">{isPromoExpanded ? '▲' : '▼'}</span>
               </button>
               {isPromoExpanded && !appliedPromo && (
                 <div className="flex gap-2 mt-2">
-                  <Input type="text" placeholder="Kode promo" value={promoCode} onChange={(e) => setPromoCode(e.target.value.toUpperCase())} fullWidth className="!rounded-2xl !border-white/15 !bg-white/10 !text-white !placeholder:text-neutral-500" />
+                  <Input type="text" placeholder="Kode promo" value={promoCode} onChange={(e) => setPromoCode(e.target.value.toUpperCase())} fullWidth className="!rounded-2xl !border-white/15 !bg-white/10 !text-white !placeholder:text-white/50" />
                   <Button variant="outline" size="sm" onClick={handleApplyPromo} disabled={!promoCode || validatePromoMutation.isPending} className="!rounded-2xl !border-white/15 !bg-white/10 !text-white hover:!bg-white/15">{validatePromoMutation.isPending ? '...' : 'Pakai'}</Button>
                 </div>
               )}
@@ -1163,7 +1164,7 @@ export default function SalesTransactionPage() {
                 {manualDiscount && <span className="text-emerald-300">-{formatCurrency(manualDiscount.amount)}</span>}
               </button>
               {manualDiscount && (
-                <p className={`mt-1 text-xs ${discountProblem ? 'text-red-300' : 'text-neutral-400'}`}>
+                <p className={`mt-1 text-xs ${discountProblem ? 'text-red-300' : 'text-white/70'}`}>
                   {discountProblem ? t('discount.total.tooLarge') : t(`discount.reason.${manualDiscount.reason}`)}
                 </p>
               )}
@@ -1189,13 +1190,13 @@ export default function SalesTransactionPage() {
               </div>
             )}
 
-            <Button variant="primary" size="lg" fullWidth onClick={handleCompleteSale} disabled={checkoutDisabled} className="mt-4 !rounded-2xl !border-emerald-500 !bg-emerald-500 !text-white hover:!bg-emerald-400">
+            <Button variant="primary" size="lg" fullWidth onClick={handleCompleteSale} disabled={checkoutDisabled} className="mt-4 !rounded-2xl !border-white !bg-white !text-[#0F5F56] hover:!bg-white/90">
               {checkoutLabel}
             </Button>
 
             <div className="mt-4 space-y-1.5">
-              <p className="text-xs font-semibold text-neutral-400 uppercase tracking-wide">Shortcut</p>
-              <div className="flex gap-2 text-xs text-neutral-300 flex-wrap">
+              <p className="text-xs font-semibold text-white/70 uppercase tracking-wide">Shortcut</p>
+              <div className="flex gap-2 text-xs text-white/80 flex-wrap">
                 <span><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 text-neutral-200 font-mono">F2</kbd> Cari produk</span>
                 <span><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 text-neutral-200 font-mono">Enter</kbd> Tambah</span>
                 <span><kbd className="px-1.5 py-0.5 bg-white/10 rounded border border-white/10 text-neutral-200 font-mono">F8</kbd> Bayar</span>
@@ -1270,7 +1271,7 @@ export default function SalesTransactionPage() {
       </div>
 
       {/* ── Mobile Sticky Bottom Bar ── */}
-      <div className="md:hidden shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2.5 flex items-center gap-3">
+      <div className="glass-bar sticky bottom-0 z-20 md:hidden shrink-0 rounded-b-[15px] border-t border-white/70 bg-white dark:bg-gray-900 px-3 py-2.5 flex items-center gap-3">
         {receiptData && cart.length === 0 ? (
           /* Post-payment: show print/preview actions */
           <>
@@ -1314,7 +1315,7 @@ export default function SalesTransactionPage() {
       {isCartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/40 cursor-pointer" onClick={() => setIsCartOpen(false)} />
-          <div className="relative w-96 bg-white dark:bg-gray-900 shadow-2xl flex flex-col h-full">
+          <div className="relative w-full max-w-96 bg-white dark:bg-gray-900 shadow-2xl flex flex-col h-full">
             <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 shrink-0">
               <h2 className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-gray-100"><ShoppingCart className="w-4 h-4" /> Keranjang</h2>
               <div className="flex items-center gap-2">
@@ -1375,6 +1376,34 @@ export default function SalesTransactionPage() {
                   <span className="text-sm text-gray-500 dark:text-gray-400">{cartItemCount} item</span>
                   {totalDiscount > 0 && <span className="text-sm text-green-600 font-semibold">Diskon -{formatCurrency(totalDiscount)}</span>}
                 </div>
+                {/* Promo code: on phones the checkout card with this field is hidden, so it lives here too */}
+                {appliedPromo ? (
+                  <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-3 py-2">
+                    <div>
+                      <p className="text-xs font-semibold text-green-700">{appliedPromo.promoName}</p>
+                      <p className="text-xs text-green-700">{t('pos.sales.promo.saved').replace('{amount}', formatCurrency(appliedPromo.discountAmount))}</p>
+                    </div>
+                    <button onClick={handleRemovePromo} aria-label={t('pos.sales.promo.remove')} className="p-1.5 text-green-700 hover:text-red-600"><X className="h-4 w-4" /></button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      placeholder={t('pos.sales.promo.label')}
+                      aria-label={t('pos.sales.promo.label')}
+                      className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white/70 px-3 py-2 text-sm focus:border-[#0F5F56] focus:outline-none"
+                    />
+                    <button
+                      onClick={handleApplyPromo}
+                      disabled={!promoCode || validatePromoMutation.isPending}
+                      className="shrink-0 rounded-lg border border-gray-200 bg-white/70 px-3 py-2 text-sm font-semibold text-[#0F5F56] disabled:opacity-50"
+                    >
+                      {validatePromoMutation.isPending ? '...' : t('pos.sales.promo.apply')}
+                    </button>
+                  </div>
+                )}
                 <button
                   onClick={() => setIsDiscountOpen(true)}
                   className="flex w-full items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-sm"
