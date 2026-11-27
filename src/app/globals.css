@@ -435,6 +435,12 @@ button:not(:disabled) { cursor: pointer; }
     backdrop-filter: blur(14px) saturate(140%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 10px 30px -18px rgba(15, 95, 86, 0.6);
   }
+  /* Tinted cards (StatCard): keep their own translucent colour, add the blur. */
+  .glass-scope .glass-tint {
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    backdrop-filter: blur(14px) saturate(150%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 10px 30px -20px rgba(15, 95, 86, 0.3);
+  }
   /* Secondary and outline buttons. Primary and danger buttons stay solid so the main action stands out. */
   .glass-scope .glass-button {
     background: rgba(255, 255, 255, 0.55);
@@ -458,6 +464,7 @@ button:not(:disabled) { cursor: pointer; }
   .glass-panel-dark { background: #0F5F56; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
   .glass-bar { background: #FFFFFF; backdrop-filter: none; -webkit-backdrop-filter: none; }
   .glass-scope .glass-button { background: #FFFFFF; border-color: #E4E6E7; backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .glass-scope .glass-tint { backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
   .glass-backdrop { display: none; }
 }
 /* Inside a white dialog there is nothing to see through: cards and buttons stay plain there. */

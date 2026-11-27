@@ -127,7 +127,7 @@ export default function OutletsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           {outlets.map(outlet => (
-            <div key={outlet.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm p-4 md:p-5 space-y-4">
+            <div key={outlet.id} className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm p-4 md:p-5 space-y-4">
               <div className="flex flex-col items-center text-center gap-2">
                 <div className="flex items-center justify-center text-white">
                   <Store className="w-7 h-7" />

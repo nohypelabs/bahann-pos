@@ -538,7 +538,7 @@ export default function ProductsPage() {
       )}
 
       {/* Table */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
+      <div className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden">
         <div className="px-4 md:px-6 py-4 border-b border-gray-100 dark:border-gray-700">
           <p className="text-sm font-semibold text-gray-900 dark:text-white">Daftar Produk</p>
         </div>
@@ -561,7 +561,7 @@ export default function ProductsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
+                <tr className="bg-gray-50/60 dark:bg-gray-800/60 border-b border-gray-100 dark:border-gray-700">
                   <th className="w-10 px-3 md:px-4 py-2.5">
                     <input type="checkbox" className="w-4 h-4 accent-blue-500 cursor-pointer"
                       checked={selectedProducts.size === products.length && products.length > 0}

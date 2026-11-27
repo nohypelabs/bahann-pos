@@ -34,6 +34,7 @@ machine-made (emoji in the title, button and module chips) and had no glass.
 | 29.3 | Text | No emoji | Removed from the title, the button and the Stok/Resep/Janji temu chips (the chips on Settings → Jenis Usaha lose them too) |
 | 29.4 | Pick a type | Clear selected state, readable | Radio tiles (`role="radio"`), teal ring on phones, amber on desktop; button turns active |
 | 29.5 | A way out | The page has no sidebar, so sign-out must be on it | "Masuk sebagai …" and "Bukan akun Anda? Keluar" at the bottom |
+| 29.6 | `/products`, `/outlets` (owner: "not glass yet") | Glass like the other pages | **Gap:** the stat cards were solid tints, the product table and outlet cards hand-made white panels. Stat cards keep their tint at 70% with the blur (`.glass-tint`), table and outlet cards got `.glass-surface`. Checked on desktop |
 
 `tsc` clean, Jest 219 passed / 2 skipped.
 
