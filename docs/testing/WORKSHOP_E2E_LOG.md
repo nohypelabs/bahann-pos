@@ -20,6 +20,26 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-27 · Phone cart and payment, glass panels on cashier and warehouse (local app → production DB, try-out tenant)
+
+Playwright, Chromium, signed in as the client try-out owner, at 390×844 (iPhone 13) and 360×780, plus 1440×900 on
+desktop. No sale was made and no shift was opened: the test browser answered `shifts.getActive` with a made-up open
+shift (route stub, service worker blocked so the stub applies), which is enough to open the payment sheet. The
+payment was never confirmed.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 27.1 | `/pos/sales` on a 360 px phone, pick a product | List of products stays usable with the add panel open | **Bug:** the page was a fixed-height frame, so the list shrank to half a row once the add panel opened (and to nothing with the shift banner). Fixed: on phones the page scrolls, the list has its own height (55% of the screen), the bottom bar sticks |
+| 27.2 | Add two products, open the cart | Cart sheet fits the screen, items, discount, total, pay button | Fits (360 px wide at 360, 384 at 390). **Gap:** no promo code field on phones, because the checkout card that has it is hidden there. Added a promo field to the cart sheet |
+| 27.3 | Pay from the cart, choose cash | Payment sheet fits, amount buttons, change, confirm | Fits at 360 and 390, no sideways scroll |
+| 27.4 | Cart button on phones | Has a name for screen readers | **Bug:** the label text is hidden on phones, so the button had no name. Added `aria-label` |
+| 27.5 | Glass panels on `/pos/*` and `/warehouse/*` | Frosted panels over the brand-coloured light, like the dashboard | The light now comes from `AppLayout` for `/dashboard`, `/pos`, `/warehouse`; shared cards (`Card`, `SectionCard`) and the page panels turn to glass only inside those routes. Checked on all nine pages, phone and desktop, no sideways scroll |
+| 27.6 | Checkout card text on the teal glass | Readable | Grey text raised to white at 60–80%, pay button white with teal text |
+
+Lint 0 errors, `tsc` clean, Jest 219 passed / 2 skipped. Not yet checked on a real phone.
+
+---
+
 ## 2026-11-27 · Phone menu icon and landing logo (local app → production DB, try-out tenant)
 
 Playwright, Chromium with the iPhone 13 profile, signed in as the client try-out owner. Reported by the owner: on a
