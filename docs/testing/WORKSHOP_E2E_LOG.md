@@ -20,6 +20,25 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-27 · Phone menu icon and landing logo (local app → production DB, try-out tenant)
+
+Playwright, Chromium with the iPhone 13 profile, signed in as the client try-out owner. Reported by the owner: on a
+phone the menu button was still the old hamburger, and the landing page still showed the old "L" logo.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 26.1 | Open `/` on a phone | Chevron logo in the header | Chevron shown (`m-landing.png`) |
+| 26.2 | Sign in, look at the page header | Panel toggle icon on the menu button | Panel icon (was the `Menu` hamburger in `AppLayout.tsx`) |
+| 26.3 | Open the drawer | Close button uses the same panel icon | Panel icon (was an `X`) |
+
+Root cause of the old logo on real phones: `public/sw.js` served every `.svg/.png/.jpg` cache-first and never
+checked again, so a phone that had opened the site kept `logo.svg` and the icons from before the rebrand. Fix: only
+hashed `/_next/static/` stays cache-first; files from `public/` are network-first with the cache as the offline
+fallback, and the static cache moved to `lakupos-static-v2` so the stale copies are dropped on activate.
+Commits 7822657 (icon) and 1ae3dd3 (service worker). Not yet seen on a real phone after deploy.
+
+---
+
 ## 2026-11-27 · Phone layout of POS, warehouse and dashboard (local app → production DB, try-out tenant)
 
 Playwright, Chromium at 390 × 844 (mobile, touch), signed in as the client try-out owner. Nine pages: `/dashboard`,
