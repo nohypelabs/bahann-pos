@@ -509,7 +509,7 @@ export default function HelpPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
           {/* Table of Contents - Tablet & Desktop (sticky sidebar) */}
           <div className="hidden md:block md:col-span-1">
-            <div className="sticky top-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 md:p-6 border-2 border-gray-200 dark:border-gray-700">
+            <div className="glass-surface sticky top-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 md:p-6 border-2 border-gray-200 dark:border-gray-700">
               <h2 className="text-base md:text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 md:mb-4 flex items-center gap-2">
                 <ListOrdered className="w-5 h-5" /> Daftar Isi
               </h2>
@@ -547,7 +547,8 @@ export default function HelpPage() {
             >
               {filteredSections.map((section) => (
                 <option key={section.id} value={section.id}>
-                  {section.icon} {section.title}
+                  {/* An <option> holds text only; the icon (an svg) broke hydration */}
+                  {section.title}
                 </option>
               ))}
             </select>
@@ -556,7 +557,7 @@ export default function HelpPage() {
           {/* Main Content */}
           <div className="md:col-span-3">
             {currentSection ? (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 md:p-6 lg:p-8 border-2 border-gray-200 dark:border-gray-700">
+              <div className="glass-surface bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 md:p-6 lg:p-8 border-2 border-gray-200 dark:border-gray-700">
                 {/* Section Header */}
                 <div className="mb-4 md:mb-6 pb-4 md:pb-6 border-b-2 border-gray-200 dark:border-gray-700">
                   <h2 className="text-base md:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 flex items-center gap-2 md:gap-3">
@@ -635,7 +636,7 @@ export default function HelpPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 md:p-8 border-2 border-gray-200 dark:border-gray-700 text-center">
+              <div className="glass-surface bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-4 md:p-8 border-2 border-gray-200 dark:border-gray-700 text-center">
                 <p className="text-sm md:text-xl text-gray-600 dark:text-gray-400">
                   {searchQuery
                     ? 'Tidak ada hasil yang ditemukan. Coba kata kunci lain.'
@@ -647,7 +648,7 @@ export default function HelpPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-4 md:mt-8 md:mt-12 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-3 md:p-6 md:p-8 border-2 border-gray-200 dark:border-gray-700">
+        <div className="glass-surface mt-4 md:mt-8 md:mt-12 text-center bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-3 md:p-6 md:p-8 border-2 border-gray-200 dark:border-gray-700">
           <h3 className="text-sm md:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 md:mb-4">
             Masih Ada Pertanyaan?
           </h3>
