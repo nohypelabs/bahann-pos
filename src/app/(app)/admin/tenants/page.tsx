@@ -281,7 +281,7 @@ function TenantsContent() {
 
         {/* Change Plan Modal */}
         {showPlanModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 cursor-pointer" onClick={e => e.target === e.currentTarget && setShowPlanModal(false)}>
+          <div role="dialog" aria-modal="true" className="fixed inset-0 z-[60] flex items-center justify-center p-4 cursor-pointer" onClick={e => e.target === e.currentTarget && setShowPlanModal(false)}>
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-default" />
             <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-100 dark:border-gray-800 max-h-[90vh] overflow-y-auto">
               <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-1">Ubah Plan</h3>
@@ -410,7 +410,7 @@ function TenantsContent() {
 
         {/* Suspend Modal */}
         {showSuspendModal && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 cursor-pointer" onClick={e => e.target === e.currentTarget && setShowSuspendModal(false)}>
+          <div role="dialog" aria-modal="true" className="fixed inset-0 z-[60] flex items-center justify-center p-4 cursor-pointer" onClick={e => e.target === e.currentTarget && setShowSuspendModal(false)}>
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-default" />
             <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-gray-100 dark:border-gray-800">
               <div className={`mx-auto flex items-center justify-center mb-4 ${detail.is_suspended ? 'text-green-500' : 'text-red-500'}`}>

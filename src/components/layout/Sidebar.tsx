@@ -539,7 +539,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
 
       {/* ── Logout Modal ── */}
       {showLogoutModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-[60] flex items-center justify-center p-4"
           onClick={e => e.target === e.currentTarget && setShowLogoutModal(false)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-5 border border-[#E4E6E7] dark:border-gray-800">

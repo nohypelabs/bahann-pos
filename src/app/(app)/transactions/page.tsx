@@ -297,7 +297,7 @@ export default function TransactionsPage() {
 
       {/* Void Modal */}
       {showVoid && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="w-full max-w-md">
             <SectionCard title="Void Transaksi"
               action={<button onClick={closeVoid} aria-label={t('common.close')} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none"><X className="w-5 h-5" /></button>}
@@ -320,7 +320,7 @@ export default function TransactionsPage() {
 
       {/* Refund Modal */}
       {showRefund && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="w-full max-w-md">
             <SectionCard title="Refund Transaksi"
               action={<button onClick={closeRefund} aria-label={t('common.close')} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xl leading-none"><X className="w-5 h-5" /></button>}

@@ -165,7 +165,7 @@ export function BulkImportModal({ onClose, onSuccess }: BulkImportModalProps) {
   const count = (status: Outcome['status']) => outcomes.filter((o) => o.status === status).length
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       <Card variant="elevated" padding="lg" className="w-full max-w-5xl max-h-[90vh] flex flex-col">
         <CardHeader>
           <div className="flex items-center justify-between">

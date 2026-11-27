@@ -86,7 +86,7 @@ export function UpgradeModal({ isOpen, onClose, feature, currentPlan, title, des
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="w-full max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
 

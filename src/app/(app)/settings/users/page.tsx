@@ -274,7 +274,7 @@ export default function UsersManagementPage() {
 
       {/* Add User Modal */}
       {showAddUser && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <SectionCard title="Tambah Pengguna"
               action={<button onClick={closeForm} aria-label="Tutup" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X className="w-5 h-5" /></button>}
@@ -402,7 +402,7 @@ export default function UsersManagementPage() {
 
       {/* Edit User Modal */}
       {editingUser && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <SectionCard title={`Edit: ${editingUser.name}`}
               action={<button onClick={closeEditUser} aria-label="Tutup" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X className="w-5 h-5" /></button>}

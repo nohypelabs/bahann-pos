@@ -258,7 +258,7 @@ function UserUpgradeView() {
     <div className="space-y-4 md:space-y-6">
       {/* Success Modal */}
       {successModal && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 cursor-pointer" onClick={e => e.target === e.currentTarget && setSuccessModal(null)}>
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-[70] flex items-center justify-center p-4 cursor-pointer" onClick={e => e.target === e.currentTarget && setSuccessModal(null)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-default" />
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-8 border border-gray-100 dark:border-gray-800 flex flex-col items-center text-center">
             <div className="flex items-center justify-center mb-4">
@@ -380,7 +380,7 @@ function UserUpgradeView() {
 
       {/* Checkout Modal */}
       {checkoutPlan && checkoutPlanData && !pendingRequest && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 cursor-pointer" onClick={e => e.target === e.currentTarget && setCheckoutPlan(null)}>
+        <div role="dialog" aria-modal="true" className="fixed inset-0 z-[60] flex items-center justify-center p-4 cursor-pointer" onClick={e => e.target === e.currentTarget && setCheckoutPlan(null)}>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-default" />
           <div className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md p-6 border border-gray-100 dark:border-gray-800 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Upgrade ke {checkoutPlanData.label}</h3>

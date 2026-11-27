@@ -115,7 +115,7 @@ export function BarcodeScanner({ onScan, onClose }: BarcodeScannerProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-900 rounded-xl max-w-lg w-full p-3 md:p-6 space-y-4 border border-gray-200 dark:border-gray-700">
         {/* Header */}
         <div className="flex items-center justify-between">

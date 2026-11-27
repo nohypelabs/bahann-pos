@@ -52,7 +52,7 @@ export function ImpersonationStartModal({ tenantId, tenantName, onClose }: Imper
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-gray-800">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">

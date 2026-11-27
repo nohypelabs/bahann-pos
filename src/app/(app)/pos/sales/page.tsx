@@ -1316,7 +1316,7 @@ export default function SalesTransactionPage() {
       {isCartOpen && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/40 cursor-pointer" onClick={() => setIsCartOpen(false)} />
-          <div className="relative w-full max-w-96 bg-white dark:bg-gray-900 shadow-2xl flex flex-col h-full">
+          <div role="dialog" aria-modal="true" aria-label={t('pos.sales.cart')} className="relative w-full max-w-96 bg-white dark:bg-gray-900 shadow-2xl flex flex-col h-full">
             <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 shrink-0">
               <h2 className="flex items-center gap-2 text-base font-bold text-gray-900 dark:text-gray-100"><ShoppingCart className="w-4 h-4" /> Keranjang</h2>
               <div className="flex items-center gap-2">

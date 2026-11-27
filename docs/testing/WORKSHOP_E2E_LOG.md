@@ -20,6 +20,23 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-28 · Contrast QA inside modals: murky glass forms (local app → production DB, try-out tenant)
+
+The contrast QA now also opens the main modals and drawers (`STATES` in `scripts/contrast-qa.mjs`) and checks inside
+them. It finds the new layer as a full-screen fixed element that was not there before the click, because most modals
+here are hand-rolled overlays without `role="dialog"`. A trigger that is missing is printed as skipped, not as passing.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 33.1 | Open Tambah produk, Import Excel, Tambah outlet, Pelanggan baru, Tambah pengguna, Nota baru, Buka Shift, and on 390 px the cart drawer | 0 | **12 flagged, both sizes:** helper text and close icons at 2.1–2.6:1 in the product, import, outlet and user forms. The panels were still translucent glass over the black backdrop: the "dialogs are solid white" rule keys on `role="dialog"`, which these overlays lacked |
+| 33.2 | Fix | | `role="dialog" aria-modal="true"` on the 19 hand-rolled overlays (products, outlets, users, transactions, audit log, subscriptions, admin payments/tenants, payment, upgrade, import, scanner, impersonation, sidebar dialog) and on the cashier cart drawer; also gives screen readers a dialog |
+| 33.3 | Rerun | 0 | 0 on 30 pages + 7 open states (desktop) and 8 (390 px); screenshots of the product and user forms checked |
+
+The expenses form is open by default, so the page scan already covers it. Not covered yet: the payment modal at
+checkout (needs items in the cart and an open shift), print preview, and admin-only pages.
+
+---
+
 ## 2026-11-28 · Contrast QA on every page: white outlet icon and faint grey text (local app → production DB, try-out tenant)
 
 Reported by the owner on production `/outlets`: the store icon on the outlet card was white on the white card. The
