@@ -383,7 +383,7 @@ export default function StockManagementPage() {
                 }`}>
                   {formData.stockAkhir}
                 </div>
-                <span className={`text-[10px] font-medium ${akhirNegative ? 'text-red-500' : 'text-green-500'}`}>
+                <span className={`text-[10px] font-medium ${akhirNegative ? 'text-red-600' : 'text-green-700'}`}>
                   {akhirNegative ? 'negatif!' : 'unit'}
                 </span>
               </div>

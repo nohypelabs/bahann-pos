@@ -54,6 +54,14 @@ html {
   color-scheme: light;
 }
 
+/* Secondary text sits on light glass: Tailwind's gray-400 and neutral-400 (about 2.6:1 there) are darkened to
+   reach about 3.9:1 on white. Used for helper text, SKUs, timestamps and placeholders across the app.
+   Set on :root, outside any layer, so it wins over Tailwind's theme layer (an @theme block here was ignored). */
+:root {
+  --color-gray-400: #7A8380;
+  --color-neutral-400: #7D7D7D;
+}
+
 @theme inline {
   --color-bg: var(--background);
   --color-fg: var(--foreground);

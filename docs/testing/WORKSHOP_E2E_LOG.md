@@ -20,6 +20,27 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-28 · Contrast QA on every page: white outlet icon and faint grey text (local app → production DB, try-out tenant)
+
+Reported by the owner on production `/outlets`: the store icon on the outlet card was white on the white card. The
+cause is old: when emoji were replaced by icons (8ae7418), the purple tile behind the 🏪 was dropped but its
+`text-white` stayed; the glass card made it invisible. Screenshots before pushing had not caught it.
+
+Added `scripts/contrast-qa.mjs` (`pnpm qa:contrast [desk|phone]`, needs `QA_EMAIL`/`QA_PASSWORD` of a test login): it
+signs in, opens all 30 static app pages and checks every visible text run and icon against the colour really behind it
+(backgrounds stacked over the glass backdrop, `oklch` read through a canvas). Text under 3:1 and icons under 2.2:1 fail.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 32.1 | First run, desktop and 390 px | 0 | **64 / 69 flagged:** empty-state icons at 1.47:1 on six pages (`EmptyState` used gray-300); `gray-400`/`neutral-400` helper text at about 2.6:1 on the glass (SKUs, timestamps, shares, step labels); dashboard top-customer line white/60 on teal; "unit" in green-500 on the stock page; low-stock count in yellow-600 on inventory |
+| 32.2 | Fixes | | Outlet icon teal on a light teal tile; `EmptyState` icon `#8A9188`; `--color-gray-400` and `--color-neutral-400` darkened on `:root` (an `@theme` override was ignored by the build, checked in the compiled CSS); white/75, green-700, amber-700 for the three single cases |
+| 32.3 | Rerun, desktop and 390 px | 0 | 0 on all 30 pages, both sizes |
+| 32.4 | Does the QA catch the original bug | Flags it | Put the old outlet card back for one run: flagged `lucide-store` at 1:1; fix restored |
+
+Admin-only pages are not in the run (the try-out owner cannot open them).
+
+---
+
 ## 2026-11-28 · Dashboard reworked (local app → production DB, try-out tenant)
 
 Playwright, Chromium, 1440 px and 390 px, signed in as the client try-out owner, 7-day period. Asked by the owner: the

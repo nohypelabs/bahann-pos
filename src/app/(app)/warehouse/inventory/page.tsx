@@ -193,7 +193,7 @@ export default function InventoryMonitorPage() {
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {filteredProducts.map(product => {
                   const status = product.currentStock === 0 ? 'out' : product.currentStock <= 10 ? 'low' : 'ok'
-                  const stockColor = status === 'out' ? 'text-red-600' : status === 'low' ? 'text-yellow-600' : 'text-green-600'
+                  const stockColor = status === 'out' ? 'text-red-600' : status === 'low' ? 'text-amber-700' : 'text-green-700'
                   return (
                     <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                       <td className="px-3 md:px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">

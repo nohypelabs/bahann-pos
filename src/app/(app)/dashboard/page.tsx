@@ -224,7 +224,7 @@ export default function DashboardPage() {
                       <span className={`w-5 shrink-0 font-mono text-xs tabular-nums ${i === 0 ? 'text-[#F6C979]' : 'text-white/50'}`}>{String(i + 1).padStart(2, '0')}</span>
                       <div className="min-w-0 flex-1">
                         <p className={`truncate ${i === 0 ? 'text-[15px] font-semibold' : 'text-sm'}`}>{c.name}</p>
-                        <p className="text-xs text-white/60">{c.memberCode ? `${c.memberCode} · ` : ''}{t('dashboard.topMember.visits').replace('{n}', String(c.visits))}</p>
+                        <p className="text-xs text-white/75">{c.memberCode ? `${c.memberCode} · ` : ''}{t('dashboard.topMember.visits').replace('{n}', String(c.visits))}</p>
                       </div>
                       <span className={`shrink-0 tabular-nums ${i === 0 ? 'text-[15px] font-semibold' : 'text-sm text-white/85'}`}>{formatCurrency(c.spent)}</span>
                     </li>

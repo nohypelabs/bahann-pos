@@ -129,8 +129,8 @@ export default function OutletsPage() {
           {outlets.map(outlet => (
             <div key={outlet.id} className="glass-surface bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-4 md:p-5 space-y-4">
               <div className="flex flex-col items-center text-center gap-2">
-                <div className="flex items-center justify-center text-white">
-                  <Store className="w-7 h-7" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#E8F3F0] text-[#0F5F56]">
+                  <Store className="h-6 w-6" strokeWidth={1.75} />
                 </div>
                 <div>
                   <p className="font-bold text-sm md:text-base text-gray-900 dark:text-white">{outlet.name}</p>
