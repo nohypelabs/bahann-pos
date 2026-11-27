@@ -920,6 +920,7 @@
   "sidebar.closeMenu": "Tutup menu",
 
   "dashboard.loadFailed": "Data dasbor gagal dimuat. Muat ulang halaman.",
+  "dashboard.heading": "Ringkasan toko",
   "dashboard.empty": "Belum ada penjualan di periode ini.",
   "dashboard.viewAll": "Lihat semua",
   "dashboard.kpi.revenue": "Omzet",
@@ -951,6 +952,7 @@
   "dashboard.methods.credit_card": "Kartu kredit",
   "dashboard.methods.ewallet": "E-wallet",
   "dashboard.hourly.title": "Omzet per jam hari ini",
+  "dashboard.hourly.empty": "Belum ada penjualan hari ini. Grafik per jam muncul setelah transaksi pertama.",
   "dashboard.mechanics.title": "Mekanik hari ini",
   "dashboard.mechanics.done": "{n} nota selesai hari ini",
   "dashboard.mechanics.busy": "{n} nota dikerjakan",

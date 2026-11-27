@@ -50,7 +50,7 @@ const ROUTE_META = [
   },
   {
     match: (pathname: string) => pathname.startsWith('/dashboard'),
-    title: 'Ringkasan Toko',
+    title: 'Dasbor',
     description: 'Lihat kondisi outlet, peringatan, dan performa penjualan dari satu tempat.',
     badge: 'Overview',
   },

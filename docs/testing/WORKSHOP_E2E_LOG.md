@@ -20,6 +20,29 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-28 · Dashboard reworked (local app → production DB, try-out tenant)
+
+Playwright, Chromium, 1440 px and 390 px, signed in as the client try-out owner, 7-day period. Asked by the owner: the
+dashboard still looked machine-made next to the login page; fix what is weak without copying the login look.
+
+What was weak and what changed:
+
+| # | Before | After |
+|---|---|---|
+| 31.1 | Title "Dasbor" repeated the top bar, no date or outlet | Date and outlet on top, title "Ringkasan toko"; the top bar says "Dasbor" |
+| 31.2 | Four identical KPI cards, each with a corner icon | One band: revenue large with its change and the period's bars, profit, transactions and service notes as smaller figures beside it; no decorative icons |
+| 31.3 | A whole "Aksi cepat" panel for four buttons | The four shortcuts sit under the title (a 4-across row on phones) |
+| 31.4 | Donut chart, a full ring for a single payment method | One split bar with count, share and amount per method |
+| 31.5 | Flat empty hourly chart at Rp 0 | A short line saying there are no sales today yet; the chart shows once there is one |
+| 31.6 | Top customer: avatar stack plus a nested box | Ranked list of the top three |
+| 31.7 | Category bars with % chips, best sellers with thick bars | Both as ranked lists with thin bars; categories show amount and share |
+| 31.8 | Status pills and badges everywhere | Plain coloured text and dots |
+
+Checked desktop and phone: no sideways scroll; the phone figure labels wrap instead of cutting off. `tsc` clean,
+Jest 219 passed / 2 skipped. The unused donut chart component was removed.
+
+---
+
 ## 2026-11-28 · Full sweep for solid panels, Claude-style corner radii (local app → production DB, try-out tenant)
 
 Asked by the owner: scan again so no page is missed, and match the corner radii to claude.ai (radii only). A read-only

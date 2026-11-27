@@ -2,7 +2,7 @@
 
 // Recharts is heavy, so the dashboard loads this file lazily.
 import {
-  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
 import { formatCurrency } from '@/lib/utils'
 import type { DashboardOverview } from '@/domain/dashboard/overview'
@@ -83,21 +83,6 @@ export function HourlyChart({ hours }: { hours: DashboardOverview['hourlyToday']
         <Area type="monotone" dataKey="revenue" stroke={CHART.brand} strokeWidth={2} fill="url(#hourFill)" animationDuration={700}
           dot={false} activeDot={{ r: 4, fill: CHART.brand, stroke: '#fff', strokeWidth: 2 }} />
       </AreaChart>
-    </ResponsiveContainer>
-  )
-}
-
-export function PaymentDonut({ methods, labelOf }: { methods: DashboardOverview['paymentMethods']; labelOf: (m: string) => string }) {
-  const data = methods.map((m) => ({ ...m, name: labelOf(m.method) }))
-  return (
-    <ResponsiveContainer width="100%" height={180}>
-      <PieChart>
-        <Pie data={data} dataKey="revenue" nameKey="name" innerRadius="62%" outerRadius="92%" paddingAngle={data.length > 1 ? 2 : 0}
-          stroke="none" animationDuration={700}>
-          {data.map((_, i) => <Cell key={i} fill={CHART.series[i % CHART.series.length]} />)}
-        </Pie>
-        <Tooltip {...tooltipStyle} formatter={(v) => formatCurrency(Number(v))} />
-      </PieChart>
     </ResponsiveContainer>
   )
 }

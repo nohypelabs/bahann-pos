@@ -920,6 +920,7 @@
   "sidebar.closeMenu": "Close menu",
 
   "dashboard.loadFailed": "The dashboard could not load. Reload the page.",
+  "dashboard.heading": "Store overview",
   "dashboard.empty": "No sales in this period yet.",
   "dashboard.viewAll": "View all",
   "dashboard.kpi.revenue": "Revenue",
@@ -951,6 +952,7 @@
   "dashboard.methods.credit_card": "Credit card",
   "dashboard.methods.ewallet": "E-wallet",
   "dashboard.hourly.title": "Revenue by hour today",
+  "dashboard.hourly.empty": "No sales yet today. The hourly chart appears after the first sale.",
   "dashboard.mechanics.title": "Mechanics today",
   "dashboard.mechanics.done": "{n} notes done today",
   "dashboard.mechanics.busy": "{n} notes in progress",
