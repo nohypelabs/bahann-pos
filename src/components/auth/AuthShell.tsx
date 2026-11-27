@@ -9,7 +9,7 @@ import { supportWhatsAppLink } from '@/lib/contact'
 
 // The login and sign-up pages share this frame. Phones get a plain white page (lg:hidden parts);
 // from lg up the form sits on a glass card over a Laku teal backdrop, next to a dark panel about
-// the product.
+// the product. /setup uses the same backdrop and card.
 
 /** Pill field: light on phones, dark translucent on the desktop glass. */
 export const authFieldClass = `w-full rounded-full border px-5 py-3 text-sm outline-none transition
@@ -143,21 +143,31 @@ function AuthFooter() {
   )
 }
 
+/** Behind the auth card: a faint grid on phones, soft brand-coloured light from lg up.
+ * Goes inside a `relative overflow-hidden` page whose background is white, lg:#062925. */
+export function AuthBackdrop() {
+  return (
+    <>
+      {/* Phone: a faint grid behind the heading */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[linear-gradient(#EEF0F0_1px,transparent_1px),linear-gradient(90deg,#EEF0F0_1px,transparent_1px)] bg-[size:36px_36px] [mask-image:linear-gradient(to_bottom,black,transparent)] lg:hidden" />
+
+      {/* Desktop: soft light in brand colours behind the glass */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
+        <div className="absolute -left-40 -top-40 h-[560px] w-[560px] rounded-full bg-[#1E9E8A] opacity-50 blur-[120px]" />
+        <div className="absolute -right-32 top-10 h-[520px] w-[520px] rounded-full bg-[#E9A23B] opacity-35 blur-[130px]" />
+        <div className="absolute bottom-[-220px] left-1/3 h-[520px] w-[620px] rounded-full bg-[#0F5F56] opacity-70 blur-[120px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:48px_48px]" />
+      </div>
+    </>
+  )
+}
+
 /** `footer` adds copyright, product links and a WhatsApp contact under the card (login only; sign-up is too tall). */
 export function AuthShell({ children, footer = false }: { children: ReactNode; footer?: boolean }) {
   return (
     <MotionConfig reducedMotion="user">
       <div className="relative flex min-h-screen flex-col overflow-hidden bg-white px-5 py-10 lg:bg-[#062925] lg:p-8">
-        {/* Phone: a faint grid behind the heading */}
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[linear-gradient(#EEF0F0_1px,transparent_1px),linear-gradient(90deg,#EEF0F0_1px,transparent_1px)] bg-[size:36px_36px] [mask-image:linear-gradient(to_bottom,black,transparent)] lg:hidden" />
-
-        {/* Desktop: soft light in brand colours behind the glass */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 hidden lg:block">
-          <div className="absolute -left-40 -top-40 h-[560px] w-[560px] rounded-full bg-[#1E9E8A] opacity-50 blur-[120px]" />
-          <div className="absolute -right-32 top-10 h-[520px] w-[520px] rounded-full bg-[#E9A23B] opacity-35 blur-[130px]" />
-          <div className="absolute bottom-[-220px] left-1/3 h-[520px] w-[620px] rounded-full bg-[#0F5F56] opacity-70 blur-[120px]" />
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:48px_48px]" />
-        </div>
+        <AuthBackdrop />
 
         <div className="relative flex flex-1 items-center justify-center">
         <motion.div

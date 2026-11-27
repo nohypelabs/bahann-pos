@@ -20,6 +20,25 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-28 · First-run `/setup` in the login style (local app → production DB, try-out tenant)
+
+Playwright, Chromium, 1440×900 and 390 px (iPhone 13), signed in as the client try-out owner. That tenant already has
+a business profile, so the test browser answered `businessProfile.getMyProfile` with `null` to show `/setup`. A type was
+clicked to see the selected state; "Mulai" was never pressed, nothing was saved. Asked by the owner: the page looked
+machine-made (emoji in the title, button and module chips) and had no glass.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 29.1 | Open `/setup` on desktop | Login-style page: glass card over the teal backdrop | Card over the same backdrop as login (`AuthBackdrop`, now shared), white mark, amber "Mulai" button, no sidebar or top menu |
+| 29.2 | Open `/setup` on a phone | Plain white page like login on phones | White page with the faint grid, light tiles, teal button; no scan button over "Mulai" any more; no sideways scroll |
+| 29.3 | Text | No emoji | Removed from the title, the button and the Stok/Resep/Janji temu chips (the chips on Settings → Jenis Usaha lose them too) |
+| 29.4 | Pick a type | Clear selected state, readable | Radio tiles (`role="radio"`), teal ring on phones, amber on desktop; button turns active |
+| 29.5 | A way out | The page has no sidebar, so sign-out must be on it | "Masuk sebagai …" and "Bukan akun Anda? Keluar" at the bottom |
+
+`tsc` clean, Jest 219 passed / 2 skipped.
+
+---
+
 ## 2026-11-27 · Glass on every app page, PWA splash colour (local app → production DB, try-out tenant)
 
 Playwright, Chromium, signed in as the client try-out owner, 1440×900 and 390 px (iPhone 13). Asked by the owner: the

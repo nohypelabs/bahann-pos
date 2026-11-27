@@ -103,6 +103,9 @@ export default function AppGroupLayout({
     )
   }
 
+  // First-run setup is a page of its own, like login: no sidebar or menu to wander off into yet.
+  if (isSetupPage) return <>{children}</>
+
   return (
     <AppLayout>
       <ImpersonationBanner />
