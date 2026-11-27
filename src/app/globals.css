@@ -411,15 +411,18 @@ button:not(:disabled) { cursor: pointer; }
   }
 }
 
-/* Frosted glass panels (dashboard). Needs a coloured backdrop behind it to read as glass.
-   Falls back to solid white when the user asks for less transparency, and where
-   backdrop-filter is unsupported. */
-.glass-panel {
+/* Frosted glass panels (dashboard, cashier, warehouse). Needs a coloured backdrop behind it to read as
+   glass: AppLayout draws it and adds .glass-scope on those routes. .glass-surface only turns to glass
+   inside .glass-scope, so shared cards stay plain white elsewhere. Falls back to solid white when the
+   user asks for less transparency, and where backdrop-filter is unsupported. */
+.glass-panel,
+.glass-scope .glass-surface {
   background: rgba(255, 255, 255, 0.92);
   border: 1px solid #E4E6E7;
 }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .glass-panel {
+  .glass-panel,
+  .glass-scope .glass-surface {
     background: rgba(255, 255, 255, 0.58);
     border-color: rgba(255, 255, 255, 0.75);
     -webkit-backdrop-filter: blur(14px) saturate(150%);
@@ -432,9 +435,17 @@ button:not(:disabled) { cursor: pointer; }
     backdrop-filter: blur(14px) saturate(140%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 10px 30px -18px rgba(15, 95, 86, 0.6);
   }
+  /* Bars and sheets that sit over content: lighter blur, mostly opaque. */
+  .glass-bar {
+    background: rgba(255, 255, 255, 0.84);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    backdrop-filter: blur(16px) saturate(150%);
+  }
 }
 @media (prefers-reduced-transparency: reduce) {
-  .glass-panel { background: #FFFFFF; border-color: #E4E6E7; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
+  .glass-panel,
+  .glass-scope .glass-surface { background: #FFFFFF; border-color: #E4E6E7; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
   .glass-panel-dark { background: #0F5F56; backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
+  .glass-bar { background: #FFFFFF; backdrop-filter: none; -webkit-backdrop-filter: none; }
   .glass-backdrop { display: none; }
 }

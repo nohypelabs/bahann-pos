@@ -132,7 +132,7 @@ function ServiceNotesStation() {
             <button
               key={note.id}
               onClick={() => go(note.id)}
-              className="text-left rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 hover:border-[#0F5F56] hover:shadow-md transition-all"
+              className="glass-surface text-left rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4 hover:border-[#0F5F56] hover:shadow-md transition-all"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>

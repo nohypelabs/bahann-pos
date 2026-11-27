@@ -136,14 +136,7 @@ export default function DashboardPage() {
 
   return (
     <MotionConfig reducedMotion="user">
-      {/* Soft brand-coloured light behind the glass panels; static, so it costs one paint. */}
-      <div aria-hidden className="glass-backdrop pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute -left-24 top-24 h-[420px] w-[520px] rounded-full bg-[#5FB3A6] opacity-35 blur-[110px]" />
-        <div className="absolute right-[-120px] top-[-60px] h-[460px] w-[560px] rounded-full bg-[#BFE3DA] opacity-70 blur-[120px]" />
-        <div className="absolute bottom-[-160px] left-1/3 h-[420px] w-[620px] rounded-full bg-[#F6C979] opacity-25 blur-[120px]" />
-        <div className="absolute bottom-10 right-10 h-[300px] w-[380px] rounded-full bg-[#0F5F56] opacity-15 blur-[110px]" />
-      </div>
-      <div className="relative z-10 space-y-4 md:space-y-5">
+      <div className="space-y-4 md:space-y-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-bold text-[#17201D]">{t('dashboard.title')}</h1>
           <FilterBar

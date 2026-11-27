@@ -167,7 +167,7 @@ export default function StockManagementPage() {
   const selectedProduct = products.find(p => p.id === formData.productId)
   const selectedOutlet  = outlets.find(o => o.id === formData.outletId)
   const akhirNegative   = formData.stockAkhir < 0
-  const panelClass = 'rounded-[14px] border border-neutral-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
+  const panelClass = 'glass-surface rounded-[14px] border border-neutral-200 bg-white shadow-[0_1px_0_rgba(28,25,23,0.04)]'
 
   return (
     <div className="space-y-5">
@@ -437,7 +437,7 @@ export default function StockManagementPage() {
           </div>
 
           {/* How to use */}
-          <div className="rounded-[14px] border border-neutral-200 bg-[#F3F3F4] p-4">
+          <div className="rounded-[14px] border border-white/70 bg-white/40 p-4">
             <p className="text-xs font-bold text-neutral-800 mb-2">Cara pakai</p>
             <ul className="text-[11px] text-neutral-600 space-y-1 leading-relaxed">
               <li>• Pilih produk dan outlet</li>

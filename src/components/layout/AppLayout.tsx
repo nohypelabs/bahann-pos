@@ -56,6 +56,24 @@ const ROUTE_META = [
   },
 ]
 
+// Pages whose panels are frosted glass; they get the coloured light behind them.
+const GLASS_ROUTES = ['/dashboard', '/pos', '/warehouse']
+
+/** Soft brand-coloured light behind the glass panels. Static, so it costs one paint.
+ * It sticks to the top of the scrolling <main>, takes no room, and stays under the page content. */
+function GlassBackdrop() {
+  return (
+    <div aria-hidden className="glass-backdrop pointer-events-none sticky top-0 h-0">
+      <div className="absolute inset-x-0 top-0 h-screen overflow-hidden">
+        <div className="absolute -left-24 top-24 h-[420px] w-[520px] rounded-full bg-[#5FB3A6] opacity-35 blur-[110px]" />
+        <div className="absolute right-[-120px] top-[-60px] h-[460px] w-[560px] rounded-full bg-[#BFE3DA] opacity-70 blur-[120px]" />
+        <div className="absolute bottom-[-160px] left-1/3 h-[420px] w-[620px] rounded-full bg-[#F6C979] opacity-25 blur-[120px]" />
+        <div className="absolute bottom-10 right-10 h-[300px] w-[380px] rounded-full bg-[#0F5F56] opacity-15 blur-[110px]" />
+      </div>
+    </div>
+  )
+}
+
 function getRouteMeta(pathname: string) {
   return (
     ROUTE_META.find((item) => item.match(pathname)) ?? {
@@ -69,6 +87,7 @@ function getRouteMeta(pathname: string) {
 export function AppLayout({ children }: AppLayoutProps) {
   const pathname = usePathname()
   const isPosSales = pathname === '/pos/sales'
+  const isGlass = GLASS_ROUTES.some((route) => pathname.startsWith(route))
   const [mobileOpen, setMobileOpen] = useState(false)
   const sidebar = useSidebarOpen()
   useSidebarShortcut(sidebar.toggle)
@@ -128,6 +147,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         className="flex-1 overflow-y-auto bg-white"
         role="main"
       >
+        {isGlass && <GlassBackdrop />}
         <header className="sticky top-0 z-30 border-b border-[#E4E6E7]/90 bg-[#FFFFFF]/95 backdrop-blur-md">
           <div className="flex min-h-16 items-center justify-between gap-3 px-3 sm:px-4 lg:px-6">
             <div className="flex min-w-0 items-center gap-3">
@@ -189,7 +209,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </header>
 
-        <div className="min-h-full px-3 pb-3 pt-3 sm:px-4 sm:pb-4 sm:pt-4 lg:px-6 lg:pb-6 lg:pt-5">
+        {/* relative without a z-index: paints over the backdrop and keeps page modals above the header */}
+        <div className={`relative min-h-full px-3 pb-3 pt-3 sm:px-4 sm:pb-4 sm:pt-4 lg:px-6 lg:pb-6 lg:pt-5 ${isGlass ? 'glass-scope' : ''}`}>
           {children}
         </div>
       </main>

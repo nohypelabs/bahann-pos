@@ -80,7 +80,7 @@ export default function StockMovementsPage() {
         </div>
 
         {/* Table */}
-        <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+        <div className="glass-surface border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
           {/* Desktop header */}
           <div className="hidden md:grid grid-cols-12 gap-2 px-4 py-3 bg-gray-100 dark:bg-gray-700 border-b-2 border-gray-200 dark:border-gray-600">
             <span className="col-span-2 text-xs font-bold text-gray-500 uppercase tracking-wider">Waktu</span>
