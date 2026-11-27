@@ -688,7 +688,8 @@ export default function SalesTransactionPage() {
             <div className="flex shrink-0 items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2.5 md:px-4 md:py-3">
               <Sunrise className="h-5 w-5 shrink-0 text-amber-700" />
               <p className="flex-1 text-xs font-medium text-amber-900 md:text-sm">{t('shift.banner')}</p>
-              <Button size="sm" onClick={() => setIsShiftModalOpen(true)}>{t('shift.open.button')}</Button>
+              {/* From md the checkout card's big button opens the shift; phones hide that card, so they keep this one. */}
+              <Button size="sm" onClick={() => setIsShiftModalOpen(true)} className="md:hidden">{t('shift.open.button')}</Button>
             </div>
           )}
 
