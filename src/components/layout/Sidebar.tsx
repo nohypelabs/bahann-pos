@@ -15,20 +15,11 @@ import { Inbox,
   CreditCard, Ticket, Briefcase, Bell,
   Tag, Store, Users, Shield, Trash2, Star,
   User, HelpCircle, Info,
-  LogOut, Download, X,
+  LogOut, Download,
   Settings, ChevronDown, Crown,
   Receipt, ArrowDownUp, CheckCircle, Wrench, IdCard,
 } from 'lucide-react'
-
-/** Panel icon for the sidebar toggle: a rounded square with a short bar on the left, the same open or closed. */
-function SidebarToggleIcon({ className = '' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" aria-hidden className={className}>
-      <rect x="3" y="3" width="18" height="18" rx="4.5" />
-      <path d="M8.5 9v6" />
-    </svg>
-  )
-}
+import { SidebarToggleIcon } from './SidebarToggleIcon'
 
 function SidebarItem({ href, icon, label, badge, isCollapsed }: {
   href: string; icon: ReactNode; label: string; badge?: string; isCollapsed: boolean
@@ -303,7 +294,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, desktopOpen = true, onToggl
                 <button type="button" onClick={() => setMobileOpen(false)}
                   className="md:hidden rounded-md p-2 text-[#6f776f] transition-colors hover:bg-[#17201d]/[0.06] hover:text-[#17201d]"
                   aria-label={t('sidebar.closeMenu')}>
-                  <X className="w-5 h-5" />
+                  <SidebarToggleIcon className="h-5 w-5" />
                 </button>
               </>
             )}

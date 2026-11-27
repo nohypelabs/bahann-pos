@@ -3,7 +3,8 @@
 import { ReactNode, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bell, CheckCircle, LayoutDashboard, Menu, Receipt, Settings, Warehouse, Wrench } from 'lucide-react'
+import { Bell, CheckCircle, LayoutDashboard, Receipt, Settings, Warehouse, Wrench } from 'lucide-react'
+import { SidebarToggleIcon } from './SidebarToggleIcon'
 import { Sidebar } from './Sidebar'
 import { OfflineIndicator } from '@/components/OfflineIndicator'
 import { MobileScanFab } from './MobileScanFab'
@@ -137,7 +138,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl border border-[#E4E6E7] bg-white text-[#5f675f] transition-colors hover:bg-[#F4F5F5] hover:text-[#17201d] md:hidden"
                 aria-label={t('sidebar.openMenu')}
               >
-                <Menu className="h-5 w-5" />
+                <SidebarToggleIcon className="h-5 w-5" />
               </button>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
