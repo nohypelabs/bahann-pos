@@ -38,12 +38,13 @@ export class AccountSuspendedError extends Error {
 
 /**
  * A superadmin suspends a tenant by flagging its owner (users.id = tenant_id), so
- * staff are checked against the owner's flag as well as their own.
+ * staff are checked against the owner's flag as well as their own. A tenant_id with
+ * no owner row (the superadmin's own account has one) has no owner flag to inherit.
  */
 async function suspensionOf(user: { id: string; tenant_id: string | null; is_suspended: boolean | null }): Promise<SuspensionReason | null> {
   if (user.is_suspended) return 'USER'
   if (!user.tenant_id || user.tenant_id === user.id) return null
-  const { data: owner, error } = await supabase.from('users').select('is_suspended').eq('id', user.tenant_id).single()
+  const { data: owner, error } = await supabase.from('users').select('is_suspended').eq('id', user.tenant_id).maybeSingle()
   if (error) throw new Error(`Failed to check tenant suspension: ${error.message}`)
   return owner?.is_suspended ? 'TENANT' : null
 }

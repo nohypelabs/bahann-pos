@@ -15,6 +15,7 @@ jest.mock('@/infra/supabase/server', () => ({
         select: () => ({
           eq: (_column: string, id: string) => ({
             single: async () => (users.has(id) ? { data: users.get(id), error: null } : { data: null, error: { message: 'not found' } }),
+            maybeSingle: async () => ({ data: users.get(id) ?? null, error: null }),
           }),
         }),
       }
@@ -53,5 +54,10 @@ describe('createRefreshToken and suspension', () => {
     await expect(createRefreshToken('cashier')).rejects.toMatchObject({ reason: 'TENANT' })
     await expect(createRefreshToken('staff-admin')).rejects.toMatchObject({ reason: 'TENANT' })
     expect(inserted).toHaveLength(0)
+  })
+
+  it('signs in an account whose tenant_id has no owner row (the superadmin)', async () => {
+    add({ id: 'superadmin', role: 'super_admin', tenant_id: 'no-such-user' })
+    await expect(createRefreshToken('superadmin')).resolves.toMatchObject({ accessToken: 'signed-access-token' })
   })
 })

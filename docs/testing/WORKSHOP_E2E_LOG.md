@@ -20,6 +20,28 @@ stale CSS and JS under `next dev`. Unregister it and clear caches in the test br
 
 ---
 
+## 2026-11-28 · Superadmin login refused: "Failed to check tenant suspension" (local app → production DB)
+
+Reported by the owner on production `/login` with the superadmin account: the red box said
+`Failed to check tenant suspension: Cannot coerce the result to a single JSON object`.
+
+Cause: the suspension check added in be0b3f6 looks up the tenant owner (`users.id = tenant_id`) with `.single()`.
+The superadmin's `tenant_id` points at no user row, so the lookup returned 0 rows, `.single()` failed and the login
+was refused. A read-only query on production found this is the only account with such a `tenant_id`. Second fault:
+the login page printed any non-`UNAUTHORIZED` server message as it was, in developer English.
+
+| # | Step | Expected | Actual |
+|---|---|---|---|
+| 34.1 | Fix | | `.maybeSingle()`: a `tenant_id` without an owner row has no owner flag to inherit (the account's own `is_suspended` still applies). Login page sends other errors through `friendlyError` |
+| 34.2 | Unit test `refreshTokenSuspension.test.ts` | pass | 4/4, new case: `super_admin` with a dangling `tenant_id` gets a session; suspended owner/staff cases still refused |
+| 34.3 | Login with the server stubbed to fail with the same message, desktop and 390 px | Indonesian | "Terjadi kendala. Coba lagi sebentar. Kalau masih gagal, hubungi admin." |
+| 34.4 | Try-out owner signs in for real | lands in the app | `/dashboard` |
+
+Not done: signing in with the superadmin itself (never used as a test login); the owner confirms on production after
+the deploy. The local dev server showed a Turbopack overlay for the Google font fetch, unrelated to this change.
+
+---
+
 ## 2026-11-28 · Contrast QA inside modals: murky glass forms (local app → production DB, try-out tenant)
 
 The contrast QA now also opens the main modals and drawers (`STATES` in `scripts/contrast-qa.mjs`) and checks inside

@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import { trpc } from '@/lib/trpc/client'
 import { useLanguage } from '@/lib/i18n/LanguageContext'
+import { friendlyError } from '@/lib/errors/friendlyError'
 import { AuthHeading, AuthShell, AuthTabs, authFieldClass, authLabelClass, authLinkClass, authPrimaryButtonClass } from '@/components/auth/AuthShell'
 
 function LoginContent() {
@@ -64,9 +65,10 @@ function LoginContent() {
       // Full reload ensures React Query cache from any previous user session is cleared
       window.location.href = redirect
     } catch (err: unknown) {
-      // A wrong email or password comes back as UNAUTHORIZED; show it in the user's language.
+      // A wrong email or password comes back as UNAUTHORIZED. Anything else goes through friendlyError, so a
+      // server fault reads as plain Indonesian instead of the developer's English.
       const code = (err as { data?: { code?: string } } | null)?.data?.code
-      const errorMessage = code === 'UNAUTHORIZED' || !(err instanceof Error) ? t('login.error') : err.message
+      const errorMessage = code === 'UNAUTHORIZED' ? t('login.error') : friendlyError(err)
       setError(errorMessage)
     } finally {
       setIsLoading(false)
